@@ -40,30 +40,47 @@ export function HackathonCard({ event, isBookmarked = false, onBookmarkChange }:
   return (
     <>
       <div className="group relative flex flex-col justify-between overflow-hidden rounded-2xl bg-white border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-[#0099e6]/40 transition-all duration-300">
-        {/* Top Header */}
-        <div className="h-20 w-full bg-gradient-to-r from-sky-50 via-slate-50 to-orange-50/60 relative p-4 flex items-start justify-between border-b border-slate-100">
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white text-[#0099e6] border border-[#0099e6]/20 shadow-2xs">
-              {categoryInfo.label}
-            </span>
-            {event.featured && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-100/80 text-[#ea580c] border border-orange-200 flex items-center gap-1">
-                <Sparkles className="w-3 h-3" /> FEATURED
-              </span>
-            )}
-          </div>
+        {/* Top Image / Banner Header */}
+        <div className="h-44 w-full relative overflow-hidden bg-slate-900 border-b border-slate-100">
+          {event.image || event.bannerUrl ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={event.image || event.bannerUrl || ''}
+                alt={event.title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/20" />
+            </>
+          ) : (
+            <div className={`w-full h-full bg-gradient-to-r ${event.bannerGradient || 'from-sky-900 via-slate-900 to-black'}`} />
+          )}
 
-          <button
-            onClick={handleBookmark}
-            title={bookmarked ? 'Remove Bookmark' : 'Save Hackathon'}
-            className={`p-2 rounded-xl border transition-all cursor-pointer ${
-              bookmarked
-                ? 'bg-[#0099e6] text-white border-[#0099e6] shadow-sm'
-                : 'bg-white text-slate-400 hover:text-slate-700 border-slate-200 shadow-2xs hover:border-slate-300'
-            }`}
-          >
-            <Bookmark className="w-4 h-4 fill-current" />
-          </button>
+          {/* Badges & Bookmark */}
+          <div className="absolute inset-0 p-3.5 flex items-start justify-between z-10 pointer-events-none">
+            <div className="flex items-center gap-1.5 flex-wrap pointer-events-auto">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white/90 backdrop-blur-md text-[#0099e6] border border-white/40 shadow-xs">
+                {categoryInfo.label}
+              </span>
+              {event.featured && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#ea580c] text-white shadow-xs flex items-center gap-1">
+                  <Sparkles className="w-3 h-3" /> FEATURED
+                </span>
+              )}
+            </div>
+
+            <button
+              onClick={handleBookmark}
+              title={bookmarked ? 'Remove Bookmark' : 'Save Hackathon'}
+              className={`p-2 rounded-xl border backdrop-blur-md transition-all cursor-pointer pointer-events-auto ${
+                bookmarked
+                  ? 'bg-[#0099e6] text-white border-[#0099e6] shadow-sm'
+                  : 'bg-white/90 text-slate-700 hover:text-slate-900 border-white/60 shadow-xs hover:bg-white'
+              }`}
+            >
+              <Bookmark className="w-4 h-4 fill-current" />
+            </button>
+          </div>
         </div>
 
         {/* Content Body */}

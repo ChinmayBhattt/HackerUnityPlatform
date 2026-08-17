@@ -191,6 +191,18 @@ export default function HackathonDetailPage({ params }: PageProps) {
             {/* TAB CONTENT: Overview */}
             {activeTab === 'overview' && (
               <div className="space-y-6 animate-in fade-in">
+                {/* Event Photo / Poster */}
+                {(event.image || event.bannerUrl) && (
+                  <div className="w-full h-64 sm:h-80 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-sm relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={event.image || event.bannerUrl || ''}
+                      alt={event.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+
                 {/* Description */}
                 <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
                   <h3 className="text-lg font-bold text-slate-900">About the Hackathon</h3>

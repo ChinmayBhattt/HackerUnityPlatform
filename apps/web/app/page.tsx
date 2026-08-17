@@ -126,21 +126,21 @@ export default function HomePage() {
 
           {/* Metrics Ticker */}
           <div className="w-full max-w-4xl grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-slate-200">
-            <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm text-center">
-              <div className="text-2xl sm:text-3xl font-black text-slate-900 font-mono">45,000+</div>
-              <div className="text-[11px] text-slate-500 mt-1 uppercase tracking-wider font-bold">Active Builders</div>
+            <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col items-center justify-center text-center min-h-[104px] hover:shadow-md hover:border-slate-300 transition-all">
+              <div className="text-2xl sm:text-3xl font-black text-slate-900 font-mono whitespace-nowrap">10+</div>
+              <div className="text-[11px] text-slate-500 mt-1 uppercase tracking-wider font-bold whitespace-nowrap">Hackathons Hosted</div>
             </div>
-            <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm text-center">
-              <div className="text-2xl sm:text-3xl font-black text-[#ea580c] font-mono">$1,850,000+</div>
-              <div className="text-[11px] text-slate-500 mt-1 uppercase tracking-wider font-bold">Total Prize Pool</div>
+            <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col items-center justify-center text-center min-h-[104px] hover:shadow-md hover:border-slate-300 transition-all">
+              <div className="text-2xl sm:text-3xl font-black text-[#ea580c] font-mono whitespace-nowrap">30+</div>
+              <div className="text-[11px] text-slate-500 mt-1 uppercase tracking-wider font-bold whitespace-nowrap">Events Conducted</div>
             </div>
-            <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm text-center">
-              <div className="text-2xl sm:text-3xl font-black text-[#0099e6] font-mono">85+</div>
-              <div className="text-[11px] text-slate-500 mt-1 uppercase tracking-wider font-bold">Live Events</div>
+            <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col items-center justify-center text-center min-h-[104px] hover:shadow-md hover:border-slate-300 transition-all">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-black text-[#0099e6] font-mono whitespace-nowrap">5M+</div>
+              <div className="text-[11px] text-slate-500 mt-1 uppercase tracking-wider font-bold whitespace-nowrap">Impressions</div>
             </div>
-            <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm text-center">
-              <div className="text-2xl sm:text-3xl font-black text-emerald-600 font-mono">100%</div>
-              <div className="text-[11px] text-slate-500 mt-1 uppercase tracking-wider font-bold">Escrow Verified</div>
+            <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col items-center justify-center text-center min-h-[104px] hover:shadow-md hover:border-slate-300 transition-all">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-black text-emerald-600 font-mono whitespace-nowrap">50,000+</div>
+              <div className="text-[11px] text-slate-500 mt-1 uppercase tracking-wider font-bold whitespace-nowrap">Community Members</div>
             </div>
           </div>
         </div>
@@ -402,7 +402,7 @@ export default function HomePage() {
               Hosting a Hackathon or Developer Sprint?
             </h3>
             <p className="text-xs sm:text-sm text-sky-100 leading-relaxed font-medium">
-              Launch registration in under 5 minutes. Get access to our 45,000+ builder network, automated submission review sandboxes, and verified judge scorecards.
+              Launch registration in under 5 minutes. Get access to our 50,000+ builder network, automated submission review sandboxes, and verified judge scorecards.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">

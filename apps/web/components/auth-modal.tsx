@@ -170,7 +170,7 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                 {mode === 'login' ? 'Sign In to Hacker\'s Unity' : 'Create Builder Account'}
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                Join 45,000+ developers competing in premier hackathons.
+                Join 50,000+ developers competing in premier hackathons.
               </p>
             </div>
 

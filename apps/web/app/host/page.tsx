@@ -141,7 +141,7 @@ export default function HostHackathonPage() {
           Host a Hackathon on Hacker&apos;s Unity
         </h1>
         <p className="text-xs sm:text-sm text-slate-500 mt-2 max-w-2xl font-medium">
-          Launch your hackathon in minutes. Tap into our 45,000+ developer ecosystem, automated submission portals, and instant registration workflows.
+          Launch your hackathon in minutes. Tap into our 50,000+ developer ecosystem, automated submission portals, and instant registration workflows.
         </p>
       </div>
 
@@ -448,7 +448,7 @@ export default function HostHackathonPage() {
 
             <HackathonCard event={previewEvent} />
             <p className="text-[11px] text-slate-400 text-center font-medium">
-              This is how your hackathon will appear to 45,000+ builders worldwide.
+              This is how your hackathon will appear to 50,000+ builders worldwide.
             </p>
           </div>
         </div>
