@@ -51,11 +51,11 @@ export default function HostHackathonPage() {
     organizerId: 'usr_me',
     organizerName: organizerName || 'Innovators Guild',
     organizerAvatar: '⚡',
-    title: title || 'Global Autonomous AI Sprint 2026',
+    title: title || 'Untitled Hackathon',
     slug: slug,
     description:
       description ||
-      'Build groundbreaking autonomous apps and multi-agent workflows with production APIs and verifiable compute.',
+      'Join this hackathon to innovate, build real-world solutions, and compete for prizes.',
     category: category,
     eventType: eventType,
     startDate: `${startDate}T00:00:00Z`,

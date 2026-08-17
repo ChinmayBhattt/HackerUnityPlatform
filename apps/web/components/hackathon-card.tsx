@@ -121,10 +121,10 @@ export function HackathonCard({ event, isBookmarked = false, onBookmarkChange }:
               <div className="w-8 h-8 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center text-[#ea580c]">
                 <Trophy className="w-4 h-4" />
               </div>
-              <div>
+              <div className="overflow-hidden">
                 <div className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Prize Pool</div>
-                <div className="font-extrabold text-[#ea580c] text-sm">
-                  {formatCurrency(event.totalPrizeValue)}
+                <div className="font-extrabold text-[#ea580c] text-sm truncate" title={event.prize || formatCurrency(event.totalPrizeValue)}>
+                  {event.prize || formatCurrency(event.totalPrizeValue)}
                 </div>
               </div>
             </div>
@@ -136,7 +136,7 @@ export function HackathonCard({ event, isBookmarked = false, onBookmarkChange }:
               <div>
                 <div className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Hackers</div>
                 <div className="font-bold text-slate-800 text-xs">
-                  {event.participantsCount.toLocaleString()}+ Registered
+                  {event.participantsDisplay || `${event.participantsCount.toLocaleString()}+`} Registered
                 </div>
               </div>
             </div>
@@ -148,16 +148,27 @@ export function HackathonCard({ event, isBookmarked = false, onBookmarkChange }:
               href={`/hackathons/${event.slug}`}
               className="flex-1 py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 hover:text-slate-900 border border-slate-200 text-xs font-bold flex items-center justify-center gap-1 transition-all"
             >
-              <span>Explore Details</span>
+              <span>{event.ctaText || 'Explore Details'}</span>
               <ArrowUpRight className="w-3.5 h-3.5 text-slate-500" />
             </Link>
 
-            <button
-              onClick={() => setShowRegModal(true)}
-              className="py-2 px-4 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-bold text-xs shadow-xs shadow-sky-500/30 transition-all cursor-pointer"
-            >
-              Register
-            </button>
+            {event.registrationLink && event.registrationLink.startsWith('http') ? (
+              <a
+                href={event.registrationLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="py-2 px-4 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-bold text-xs shadow-xs shadow-sky-500/30 transition-all text-center inline-block"
+              >
+                Register
+              </a>
+            ) : (
+              <button
+                onClick={() => setShowRegModal(true)}
+                className="py-2 px-4 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-bold text-xs shadow-xs shadow-sky-500/30 transition-all cursor-pointer"
+              >
+                Register
+              </button>
+            )}
           </div>
         </div>
       </div>

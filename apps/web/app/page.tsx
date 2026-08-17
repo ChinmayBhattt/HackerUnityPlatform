@@ -36,7 +36,7 @@ export default function HomePage() {
     return () => window.removeEventListener('hackers_unity_storage_change', handleStorage);
   }, []);
 
-  const tags = ['ALL', 'GenAI', 'Web3', 'Cybersecurity', 'React 19', 'Robotics'];
+  const tags = ['ALL', 'AI/ML', 'Blockchain', 'Web3', 'Open Source', 'Innovation', 'IoT', 'DevOps'];
 
   const filteredEvents = events.filter((evt) => {
     const matchesTag = selectedTag === 'ALL' || evt.tags.some((t) => t.toLowerCase() === selectedTag.toLowerCase());

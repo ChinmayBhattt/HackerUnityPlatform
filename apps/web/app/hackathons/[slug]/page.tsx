@@ -400,7 +400,7 @@ export default function HackathonDetailPage({ params }: PageProps) {
               <div>
                 <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Prize Pool</div>
                 <div className="text-3xl font-black text-[#ea580c] font-mono mt-0.5">
-                  {formatCurrency(event.totalPrizeValue)}
+                  {event.prize || formatCurrency(event.totalPrizeValue)}
                 </div>
               </div>
 
@@ -416,12 +416,23 @@ export default function HackathonDetailPage({ params }: PageProps) {
               </div>
 
               {/* Primary Register CTA */}
-              <button
-                onClick={() => setShowRegModal(true)}
-                className="w-full py-3.5 rounded-2xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-extrabold text-sm shadow-md shadow-sky-500/20 transition-all cursor-pointer"
-              >
-                Register for Hackathon
-              </button>
+              {event.registrationLink && event.registrationLink.startsWith('http') ? (
+                <a
+                  href={event.registrationLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-3.5 rounded-2xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-extrabold text-sm shadow-md shadow-sky-500/20 transition-all text-center block"
+                >
+                  Register on External Portal ↗
+                </a>
+              ) : (
+                <button
+                  onClick={() => setShowRegModal(true)}
+                  className="w-full py-3.5 rounded-2xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-extrabold text-sm shadow-md shadow-sky-500/20 transition-all cursor-pointer"
+                >
+                  Register for Hackathon
+                </button>
+              )}
 
               {/* Quick Info Grid */}
               <div className="space-y-3 pt-3 border-t border-slate-100 text-xs">

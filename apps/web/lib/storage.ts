@@ -97,7 +97,15 @@ export function getCustomEvents(): ExtendedEvent[] {
   if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.HOSTED_EVENTS);
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) return [];
+    const parsed: ExtendedEvent[] = JSON.parse(raw);
+    return parsed.filter(
+      (e) =>
+        e &&
+        e.title &&
+        !e.title.toLowerCase().includes('global autonomous ai sprint') &&
+        !e.id?.includes('global-autonomous')
+    );
   } catch {
     return [];
   }
