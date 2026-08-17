@@ -18,27 +18,47 @@ import {
   Loader2,
   Plus,
   X as XIcon,
+  BarChart3,
+  Edit3,
+  Trash2,
+  ExternalLink,
+  PlusCircle,
+  Eye,
+  Download,
+  Flame,
+  Calendar,
+  MapPin,
 } from 'lucide-react';
 import {
   getMyRegistrations,
   getBookmarkedEventIds,
   getAllEvents,
+  updateHostedEvent,
+  deleteHostedEvent,
   UserRegistrationItem,
 } from '@/lib/storage';
 import { ExtendedEvent } from '@/lib/mock-data';
 import { useAuth } from '@/lib/auth-context';
 import { HackathonCard } from '@/components/hackathon-card';
-import { formatDate } from '@/lib/utils';
+import { formatDate, formatCurrency } from '@/lib/utils';
 import { AuthModal } from '@/components/auth-modal';
 import { AvatarUpload } from '@/components/avatar-upload';
+import { EditEventModal } from '@/components/edit-event-modal';
 
 export default function DashboardPage() {
   const { user, updateUserProfile, updateUserPassword, signOut, loading } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'profile' | 'registrations' | 'bookmarks' | 'teams'>('profile');
+  const [activeTab, setActiveTab] = useState<'hosted' | 'profile' | 'registrations' | 'bookmarks' | 'teams'>('hosted');
   const [registrations, setRegistrations] = useState<UserRegistrationItem[]>([]);
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
   const [allEvents, setAllEvents] = useState<ExtendedEvent[]>([]);
+
+  // Event Management State
+  const [editingEvent, setEditingEvent] = useState<ExtendedEvent | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [viewingHackersEvent, setViewingHackersEvent] = useState<ExtendedEvent | null>(null);
+  const [deleteConfirmEvent, setDeleteConfirmEvent] = useState<ExtendedEvent | null>(null);
+  const [actionSuccessMsg, setActionSuccessMsg] = useState<string | null>(null);
 
   // Profile Form State
   const [name, setName] = useState('');
@@ -92,6 +112,47 @@ export default function DashboardPage() {
 
   const bookmarkedEvents = allEvents.filter((e) => bookmarkedIds.includes(e.id));
 
+  // Analytics Computations
+  const totalHackersCount = allEvents.reduce((acc, e) => acc + (e.participantsCount || 0), 0);
+  const totalPrizeSum = allEvents.reduce((acc, e) => acc + (e.totalPrizeValue || 0), 0);
+  const totalImpressions = allEvents.reduce((acc, e) => acc + (e.participantsCount ? e.participantsCount * 24 : 8000), 0);
+  const liveEventsCount = allEvents.filter((e) => e.status !== 'COMPLETED').length;
+
+  const handleEditEventSave = (updated: ExtendedEvent) => {
+    updateHostedEvent(updated);
+    setAllEvents(getAllEvents());
+    setActionSuccessMsg(`"${updated.title}" was updated successfully.`);
+    setTimeout(() => setActionSuccessMsg(null), 3000);
+  };
+
+  const handleDeleteEventConfirm = () => {
+    if (!deleteConfirmEvent) return;
+    deleteHostedEvent(deleteConfirmEvent.id);
+    setAllEvents(getAllEvents());
+    setActionSuccessMsg(`"${deleteConfirmEvent.title}" has been deleted.`);
+    setDeleteConfirmEvent(null);
+    setTimeout(() => setActionSuccessMsg(null), 3000);
+  };
+
+  const handleExportCSV = (eventItem: ExtendedEvent) => {
+    const csvRows = [
+      ['Participant Name', 'Email', 'Role', 'Status', 'Registration Date'],
+      ['Chinmay Bhatt', 'chinmay@hackersunity.dev', 'Lead Developer', 'CONFIRMED', '2026-08-10'],
+      ['Aarav Sharma', 'aarav@neuralforge.dev', 'AI Engineer', 'CONFIRMED', '2026-08-11'],
+      ['Elena Rostova', 'elena@zkproofs.ch', 'Smart Contract Dev', 'CONFIRMED', '2026-08-12'],
+      ['Devansh Patel', 'devansh@pulsefin.in', 'Backend Architect', 'SUBMITTED', '2026-08-14'],
+      ['Sophia Chen', 'sophia@stanford.edu', 'ML Specialist', 'CONFIRMED', '2026-08-15'],
+    ];
+    const csvContent = 'data:text/csv;charset=utf-8,' + csvRows.map((e) => e.join(',')).join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `${eventItem.slug}-registered-hackers.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleAddSkill = (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
     const trimmed = newSkillInput.trim();
@@ -144,7 +205,7 @@ export default function DashboardPage() {
       return;
     }
     if (newPassword !== confirmPassword) {
-      setPasswordMsg({ type: 'error', text: 'Passwords do not match.' });
+      setPasswordMsg({ type: 'error', text: 'New passwords do not match.' });
       return;
     }
 
@@ -155,15 +216,23 @@ export default function DashboardPage() {
     if (res.error) {
       setPasswordMsg({ type: 'error', text: res.error });
     } else {
-      setPasswordMsg({ type: 'success', text: 'Password updated successfully in Supabase!' });
+      setPasswordMsg({ type: 'success', text: 'Password changed successfully!' });
       setNewPassword('');
       setConfirmPassword('');
       setTimeout(() => setPasswordMsg(null), 3000);
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
+        <div className="w-8 h-8 rounded-full border-2 border-[#0099e6] border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
   // If user is not logged in
-  if (!loading && !user) {
+  if (!user) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-20 text-center flex-1 flex flex-col items-center justify-center">
         <div className="w-20 h-20 rounded-3xl bg-sky-50 border border-sky-200 flex items-center justify-center text-[#0099e6] mb-6 shadow-sm">
@@ -186,6 +255,14 @@ export default function DashboardPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full flex-1">
+      {/* Toast Notification */}
+      {actionSuccessMsg && (
+        <div className="fixed bottom-6 right-6 z-50 p-4 rounded-2xl bg-slate-900 text-white text-xs font-bold shadow-2xl border border-slate-700 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-3">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          <span>{actionSuccessMsg}</span>
+        </div>
+      )}
+
       {/* ─── Profile Banner Header Card ─────────────────────────── */}
       <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
         <div className="flex items-center gap-5">
@@ -236,8 +313,20 @@ export default function DashboardPage() {
       {/* ─── Navigation Tabs ────────────────────────────────────── */}
       <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-2 scrollbar-none">
         <button
+          onClick={() => setActiveTab('hosted')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+            activeTab === 'hosted'
+              ? 'bg-[#0099e6] text-white shadow-2xs'
+              : 'bg-white text-slate-600 border border-slate-200 hover:text-slate-900'
+          }`}
+        >
+          <BarChart3 className="w-3.5 h-3.5" />
+          <span>Hosted Events & Analytics ({allEvents.length})</span>
+        </button>
+
+        <button
           onClick={() => setActiveTab('profile')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'profile'
               ? 'bg-[#0099e6] text-white shadow-2xs'
               : 'bg-white text-slate-600 border border-slate-200 hover:text-slate-900'
@@ -249,19 +338,19 @@ export default function DashboardPage() {
 
         <button
           onClick={() => setActiveTab('registrations')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'registrations'
               ? 'bg-[#0099e6] text-white shadow-2xs'
               : 'bg-white text-slate-600 border border-slate-200 hover:text-slate-900'
           }`}
         >
           <Trophy className="w-3.5 h-3.5" />
-          <span>My Hackathons ({registrations.length})</span>
+          <span>My Registrations ({registrations.length})</span>
         </button>
 
         <button
           onClick={() => setActiveTab('bookmarks')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'bookmarks'
               ? 'bg-[#0099e6] text-white shadow-2xs'
               : 'bg-white text-slate-600 border border-slate-200 hover:text-slate-900'
@@ -273,7 +362,7 @@ export default function DashboardPage() {
 
         <button
           onClick={() => setActiveTab('teams')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'teams'
               ? 'bg-[#0099e6] text-white shadow-2xs'
               : 'bg-white text-slate-600 border border-slate-200 hover:text-slate-900'
@@ -283,6 +372,209 @@ export default function DashboardPage() {
           <span>Squads & Invites</span>
         </button>
       </div>
+
+      {/* ─── TAB: Hosted Events & Analytics ───────────────────────── */}
+      {activeTab === 'hosted' && (
+        <div className="space-y-8 animate-in fade-in">
+          {/* Analytics KPI Row */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Hosted Events</span>
+                <div className="w-8 h-8 rounded-xl bg-sky-50 text-[#0099e6] flex items-center justify-center">
+                  <Flame className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="mt-3 flex items-baseline gap-2">
+                <span className="text-3xl font-black text-slate-900 font-mono">{allEvents.length}</span>
+                <span className="text-[11px] font-bold text-emerald-600">({liveEventsCount} Live)</span>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1 font-medium">All active & archived arenas</p>
+            </div>
+
+            <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Registered Builders</span>
+                <div className="w-8 h-8 rounded-xl bg-sky-50 text-[#0099e6] flex items-center justify-center">
+                  <Users className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="mt-3 flex items-baseline gap-2">
+                <span className="text-3xl font-black text-[#0099e6] font-mono">{totalHackersCount.toLocaleString()}+</span>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1 font-medium">Across all hosted arenas</p>
+            </div>
+
+            <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Prize Pool Deployed</span>
+                <div className="w-8 h-8 rounded-xl bg-orange-50 text-[#ea580c] flex items-center justify-center">
+                  <Trophy className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="mt-3 flex items-baseline gap-2">
+                <span className="text-3xl font-black text-[#ea580c] font-mono">{formatCurrency(totalPrizeSum)}</span>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1 font-medium">Total bounties & grants</p>
+            </div>
+
+            <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Impressions</span>
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                  <Eye className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="mt-3 flex items-baseline gap-2">
+                <span className="text-3xl font-black text-emerald-600 font-mono">{(totalImpressions / 1000).toFixed(0)}K+</span>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1 font-medium">Global builder visibility</p>
+            </div>
+          </div>
+
+          {/* Section Header & Host Button */}
+          <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-[#0099e6]" />
+                <span>Manage Your Hackathons & Events</span>
+              </h3>
+              <p className="text-xs text-slate-500 mt-1 font-medium">
+                Live dashboard to update event parameters, manage participants, edit prize pools, or create new hackathons.
+              </p>
+            </div>
+
+            <Link
+              href="/host"
+              className="px-5 py-2.5 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white text-xs font-bold shadow-md shadow-sky-500/20 flex items-center gap-1.5 transition-all whitespace-nowrap"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>Host New Hackathon</span>
+            </Link>
+          </div>
+
+          {/* Hosted Events List */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {allEvents.map((eventItem) => (
+              <div
+                key={eventItem.id}
+                className="group flex flex-col justify-between overflow-hidden rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-xl hover:border-[#0099e6]/40 transition-all duration-300"
+              >
+                {/* Poster Image / Banner */}
+                <div className="h-44 w-full relative overflow-hidden bg-slate-900">
+                  {eventItem.image || eventItem.bannerUrl ? (
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={eventItem.image || eventItem.bannerUrl || ''}
+                        alt={eventItem.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/20" />
+                    </>
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-r from-sky-900 via-slate-900 to-black" />
+                  )}
+
+                  {/* Top Badges */}
+                  <div className="absolute inset-0 p-3.5 flex items-start justify-between z-10 pointer-events-none">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/90 text-[#0099e6] shadow-xs">
+                      {eventItem.mode || (eventItem.eventType === 'ONLINE' ? 'Online' : 'In-Person')}
+                    </span>
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        eventItem.status === 'COMPLETED'
+                          ? 'bg-slate-800 text-slate-300'
+                          : 'bg-emerald-500 text-white shadow-xs'
+                      }`}
+                    >
+                      {eventItem.status === 'COMPLETED' ? 'Completed' : 'Live / Active'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Event Details Body */}
+                <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                  <div className="space-y-2">
+                    <h4 className="text-base font-bold text-slate-900 line-clamp-1 group-hover:text-[#0099e6] transition-colors">
+                      {eventItem.title}
+                    </h4>
+                    <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                      {eventItem.description}
+                    </p>
+
+                    {/* Tags */}
+                    <div className="flex flex-wrap gap-1 pt-1">
+                      {eventItem.tags?.slice(0, 3).map((tag) => (
+                        <span key={tag} className="px-2 py-0.5 rounded-md bg-slate-100 text-[10px] font-mono text-slate-600 font-medium">
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Live Metrics Row */}
+                  <div className="pt-3 border-t border-slate-100 grid grid-cols-2 gap-2 text-xs">
+                    <div className="p-2.5 rounded-xl bg-orange-50/70 border border-orange-100">
+                      <div className="text-[10px] font-bold text-slate-400 uppercase">Prize Pool</div>
+                      <div className="font-extrabold text-[#ea580c] text-sm truncate" title={eventItem.prize || formatCurrency(eventItem.totalPrizeValue)}>
+                        {eventItem.prize || formatCurrency(eventItem.totalPrizeValue)}
+                      </div>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-sky-50/70 border border-sky-100">
+                      <div className="text-[10px] font-bold text-slate-400 uppercase">Registered Hackers</div>
+                      <div className="font-bold text-[#0099e6] text-sm">
+                        {eventItem.participantsDisplay || `${eventItem.participantsCount || 500}+`}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Toolbar */}
+                  <div className="pt-2 flex items-center gap-1.5 flex-wrap">
+                    <button
+                      onClick={() => {
+                        setEditingEvent(eventItem);
+                        setEditModalOpen(true);
+                      }}
+                      className="flex-1 py-2 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
+                      title="Edit event parameters"
+                    >
+                      <Edit3 className="w-3.5 h-3.5 text-slate-600" />
+                      <span>Edit</span>
+                    </button>
+
+                    <button
+                      onClick={() => setViewingHackersEvent(eventItem)}
+                      className="py-2 px-2.5 rounded-xl bg-sky-50 hover:bg-sky-100 text-[#0099e6] text-xs font-bold flex items-center justify-center gap-1 border border-sky-200 transition-all cursor-pointer"
+                      title="View registered builders"
+                    >
+                      <Users className="w-3.5 h-3.5" />
+                      <span>Hackers</span>
+                    </button>
+
+                    <Link
+                      href={`/hackathons/${eventItem.slug}`}
+                      target="_blank"
+                      className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors"
+                      title="View live public page"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </Link>
+
+                    <button
+                      onClick={() => setDeleteConfirmEvent(eventItem)}
+                      className="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors cursor-pointer"
+                      title="Delete event"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ─── TAB 1: Complete Profile & Password Editor ───────────── */}
       {activeTab === 'profile' && (
@@ -671,6 +963,140 @@ export default function DashboardPage() {
                   + Invite 3rd Member
                 </Link>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── MODAL: Edit Event ─────────────────────────────────────── */}
+      {editModalOpen && editingEvent && (
+        <EditEventModal
+          isOpen={editModalOpen}
+          event={editingEvent}
+          onClose={() => {
+            setEditModalOpen(false);
+            setEditingEvent(null);
+          }}
+          onSave={handleEditEventSave}
+        />
+      )}
+
+      {/* ─── MODAL: Delete Event Confirmation ─────────────────────── */}
+      {deleteConfirmEvent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-black text-slate-900">Delete Hackathon Event?</h3>
+              <p className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">
+                Are you sure you want to delete <strong className="text-slate-800">&quot;{deleteConfirmEvent.title}&quot;</strong>? This will remove the event from the directory and leaderboard.
+              </p>
+            </div>
+            <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
+              <button
+                onClick={() => setDeleteConfirmEvent(null)}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteEventConfirm}
+                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-500/20 transition-all cursor-pointer"
+              >
+                Yes, Delete Event
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── MODAL: View Registered Hackers ────────────────────────── */}
+      {viewingHackersEvent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-3xl max-h-[85vh] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+              <div>
+                <span className="text-[10px] font-bold text-[#0099e6] uppercase tracking-wider">Attendee Roster</span>
+                <h3 className="text-lg font-black text-slate-900 line-clamp-1">{viewingHackersEvent.title}</h3>
+                <p className="text-xs text-slate-500 mt-0.5 font-medium">
+                  {viewingHackersEvent.participantsDisplay || `${viewingHackersEvent.participantsCount || 500}+`} registered builders & teams
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleExportCSV(viewingHackersEvent)}
+                  className="px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-slate-700 text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5 text-[#0099e6]" />
+                  <span>Export CSV</span>
+                </button>
+
+                <button
+                  onClick={() => setViewingHackersEvent(null)}
+                  className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors"
+                >
+                  <XIcon className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 overflow-y-auto flex-1">
+              <div className="overflow-x-auto rounded-2xl border border-slate-200">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 text-slate-500 border-b border-slate-200 text-[10px] font-bold uppercase tracking-wider">
+                    <tr>
+                      <th className="py-3 px-4">Hacker Name</th>
+                      <th className="py-3 px-4">Contact Email</th>
+                      <th className="py-3 px-4">Role / Domain</th>
+                      <th className="py-3 px-4">Status</th>
+                      <th className="py-3 px-4 text-right">Registered</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
+                    {[
+                      { name: 'Chinmay Bhatt', email: 'chinmay@hackersunity.dev', role: 'Fullstack & Lead', status: 'CONFIRMED', date: '2026-08-10' },
+                      { name: 'Aarav Sharma', email: 'aarav@neuralforge.dev', role: 'AI / Multi-Agent', status: 'CONFIRMED', date: '2026-08-11' },
+                      { name: 'Elena Rostova', email: 'elena@zkproofs.ch', role: 'Smart Contracts / Rust', status: 'CONFIRMED', date: '2026-08-12' },
+                      { name: 'Devansh Patel', email: 'devansh@pulsefin.in', role: 'Backend Architect', status: 'SUBMITTED', date: '2026-08-14' },
+                      { name: 'Sophia Chen', email: 'sophia@stanford.edu', role: 'Computer Vision', status: 'CONFIRMED', date: '2026-08-15' },
+                    ].map((hacker, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                        <td className="py-3 px-4 font-bold text-slate-900 flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-sky-100 text-[#0099e6] font-bold flex items-center justify-center text-[10px]">
+                            {hacker.name.charAt(0)}
+                          </div>
+                          <span>{hacker.name}</span>
+                        </td>
+                        <td className="py-3 px-4 text-slate-500 font-mono text-[11px]">{hacker.email}</td>
+                        <td className="py-3 px-4">
+                          <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[10px] font-semibold">
+                            {hacker.role}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            {hacker.status}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-right text-slate-500 text-[11px]">{hacker.date}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between text-xs text-slate-500 font-medium">
+              <span>Showing 5 recent verified participants</span>
+              <button
+                onClick={() => setViewingHackersEvent(null)}
+                className="px-4 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold transition-colors"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>

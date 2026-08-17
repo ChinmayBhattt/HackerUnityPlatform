@@ -15,6 +15,8 @@ const STORAGE_KEYS = {
   BOOKMARKS: 'hackers_unity_bookmarks',
   REGISTRATIONS: 'hackers_unity_registrations',
   HOSTED_EVENTS: 'hackers_unity_hosted_events',
+  DELETED_EVENTS: 'hackers_unity_deleted_events',
+  MODIFIED_EVENTS: 'hackers_unity_modified_events',
   USER_PROFILE: 'hackers_unity_user_profile',
   INVITES: 'hackers_unity_invites',
 };
@@ -92,7 +94,7 @@ export function registerForEventStorage(reg: UserRegistrationItem): void {
   }
 }
 
-// Custom Hosted Events
+// Custom Hosted Events & Platform Overrides
 export function getCustomEvents(): ExtendedEvent[] {
   if (typeof window === 'undefined') return [];
   try {
@@ -114,7 +116,8 @@ export function getCustomEvents(): ExtendedEvent[] {
 export function saveHostedEvent(event: ExtendedEvent): void {
   if (typeof window === 'undefined') return;
   const current = getCustomEvents();
-  const updated = [event, ...current];
+  const filtered = current.filter((e) => e.id !== event.id && e.slug !== event.slug);
+  const updated = [event, ...filtered];
   try {
     localStorage.setItem(STORAGE_KEYS.HOSTED_EVENTS, JSON.stringify(updated));
     window.dispatchEvent(new Event('hackers_unity_storage_change'));
@@ -123,9 +126,78 @@ export function saveHostedEvent(event: ExtendedEvent): void {
   }
 }
 
-export function getAllEvents(): ExtendedEvent[] {
+export function updateHostedEvent(event: ExtendedEvent): void {
+  if (typeof window === 'undefined') return;
+  // If it's a custom event, update it in custom events
   const custom = getCustomEvents();
-  return [...custom, ...MOCK_EVENTS];
+  const isCustom = custom.some((e) => e.id === event.id || e.slug === event.slug);
+  if (isCustom) {
+    const updatedCustom = custom.map((e) => (e.id === event.id || e.slug === event.slug ? event : e));
+    try {
+      localStorage.setItem(STORAGE_KEYS.HOSTED_EVENTS, JSON.stringify(updatedCustom));
+      window.dispatchEvent(new Event('hackers_unity_storage_change'));
+    } catch (e) {
+      console.error(e);
+    }
+    return;
+  }
+
+  // Otherwise save to modified events map
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.MODIFIED_EVENTS);
+    const modifiedMap: Record<string, ExtendedEvent> = raw ? JSON.parse(raw) : {};
+    modifiedMap[event.id] = event;
+    localStorage.setItem(STORAGE_KEYS.MODIFIED_EVENTS, JSON.stringify(modifiedMap));
+    window.dispatchEvent(new Event('hackers_unity_storage_change'));
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+export function deleteHostedEvent(eventId: string): void {
+  if (typeof window === 'undefined') return;
+  // 1. Remove from custom events
+  const custom = getCustomEvents();
+  const updatedCustom = custom.filter((e) => e.id !== eventId && e.slug !== eventId);
+  try {
+    localStorage.setItem(STORAGE_KEYS.HOSTED_EVENTS, JSON.stringify(updatedCustom));
+
+    // 2. Add to deleted events blacklist
+    const rawDeleted = localStorage.getItem(STORAGE_KEYS.DELETED_EVENTS);
+    const deletedList: string[] = rawDeleted ? JSON.parse(rawDeleted) : [];
+    if (!deletedList.includes(eventId)) {
+      deletedList.push(eventId);
+      localStorage.setItem(STORAGE_KEYS.DELETED_EVENTS, JSON.stringify(deletedList));
+    }
+
+    window.dispatchEvent(new Event('hackers_unity_storage_change'));
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+export function getAllEvents(): ExtendedEvent[] {
+  if (typeof window === 'undefined') return MOCK_EVENTS;
+  try {
+    const rawDeleted = localStorage.getItem(STORAGE_KEYS.DELETED_EVENTS);
+    const deletedIds: string[] = rawDeleted ? JSON.parse(rawDeleted) : [];
+
+    const rawModified = localStorage.getItem(STORAGE_KEYS.MODIFIED_EVENTS);
+    const modifiedMap: Record<string, ExtendedEvent> = rawModified ? JSON.parse(rawModified) : {};
+
+    const custom = getCustomEvents();
+
+    // Merge mock events with any user modifications, excluding deleted
+    const processedMock = MOCK_EVENTS.filter((e) => !deletedIds.includes(e.id) && !deletedIds.includes(e.slug)).map(
+      (e) => modifiedMap[e.id] || e
+    );
+
+    const processedCustom = custom.filter((e) => !deletedIds.includes(e.id) && !deletedIds.includes(e.slug));
+
+    return [...processedCustom, ...processedMock];
+  } catch {
+    return MOCK_EVENTS;
+  }
 }
 
 export function getEventBySlug(slug: string): ExtendedEvent | undefined {
