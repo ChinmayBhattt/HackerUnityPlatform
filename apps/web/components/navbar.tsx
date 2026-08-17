@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -13,27 +13,22 @@ import {
   Menu,
   X,
   Compass,
+  LogOut,
+  User,
 } from 'lucide-react';
 import { Logo } from './logo';
 import { SearchDialog } from './search-dialog';
 import { AuthModal } from './auth-modal';
-import { getStoredUser } from '@/lib/storage';
-import { UserPublic } from '@hackers-unity/shared-types';
+import { useAuth } from '@/lib/auth-context';
 
 export function Navbar() {
   const pathname = usePathname();
+  const { user: currentUser, signOut } = useAuth();
   const [searchOpen, setSearchOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<UserPublic | null>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-
-  useEffect(() => {
-    setCurrentUser(getStoredUser());
-    const handleStorage = () => setCurrentUser(getStoredUser());
-    window.addEventListener('hackers_unity_storage_change', handleStorage);
-    return () => window.removeEventListener('hackers_unity_storage_change', handleStorage);
-  }, []);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
   const navLinks = [
     { name: 'Hackathons', href: '/hackathons', icon: Trophy },
@@ -76,7 +71,7 @@ export function Navbar() {
           </nav>
 
           {/* Right: Action Bar */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
             {/* Quick Search Button */}
             <button
               onClick={() => setSearchOpen(true)}
@@ -128,19 +123,60 @@ export function Navbar() {
               )}
             </div>
 
-            {/* User Profile / Login */}
+            {/* User Profile / Supabase Login */}
             {currentUser ? (
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-2 p-1.5 pl-2.5 pr-3.5 rounded-xl bg-sky-50 border border-[#0099e6]/30 hover:border-[#0099e6] transition-colors whitespace-nowrap"
-              >
-                <div className="w-6 h-6 rounded-lg bg-[#0099e6] text-white font-bold text-xs flex items-center justify-center shadow-xs">
-                  {currentUser.name.charAt(0)}
-                </div>
-                <span className="text-xs font-bold text-slate-800 max-w-[90px] truncate hidden sm:inline">
-                  {currentUser.name.split(' ')[0]}
-                </span>
-              </Link>
+              <div className="relative">
+                <button
+                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                  className="flex items-center gap-2 p-1.5 pl-2.5 pr-3 rounded-xl bg-sky-50 border border-[#0099e6]/30 hover:border-[#0099e6] transition-colors cursor-pointer"
+                >
+                  <div className="w-6 h-6 rounded-lg bg-[#0099e6] text-white font-bold text-xs flex items-center justify-center shadow-xs">
+                    {currentUser.name.charAt(0)}
+                  </div>
+                  <span className="text-xs font-bold text-slate-800 max-w-[90px] truncate hidden sm:inline">
+                    {currentUser.name.split(' ')[0]}
+                  </span>
+                </button>
+
+                {userDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-56 p-2 rounded-2xl bg-white border border-slate-200 shadow-xl z-50 animate-in fade-in zoom-in-95">
+                    <div className="p-2.5 border-b border-slate-100">
+                      <div className="text-xs font-bold text-slate-900 truncate">{currentUser.name}</div>
+                      <div className="text-[10px] text-slate-400 truncate">{currentUser.email}</div>
+                    </div>
+                    <div className="py-1 space-y-1 text-xs font-medium">
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 hover:text-slate-950 transition-colors"
+                      >
+                        <User className="w-3.5 h-3.5 text-[#0099e6]" />
+                        <span>Account & Settings</span>
+                      </Link>
+                      <Link
+                        href="/host"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 hover:text-slate-950 transition-colors"
+                      >
+                        <PlusCircle className="w-3.5 h-3.5 text-[#ea580c]" />
+                        <span>Organizer Studio</span>
+                      </Link>
+                    </div>
+                    <div className="pt-1 border-t border-slate-100">
+                      <button
+                        onClick={() => {
+                          signOut();
+                          setUserDropdownOpen(false);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-rose-600 hover:bg-rose-50 text-xs font-bold transition-colors cursor-pointer"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        <span>Sign Out</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : (
               <button
                 onClick={() => setAuthOpen(true)}

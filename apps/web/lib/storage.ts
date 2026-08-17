@@ -29,7 +29,7 @@ export const DEFAULT_USER: UserPublic = {
   organization: 'Hackers Unity Core',
   graduationYear: 2026,
   bio: 'Fullstack builder, AI agent enthusiast, and competitive hackathon winner.',
-  avatarUrl: null,
+  avatarUrl: '⚡',
   skills: ['Next.js 16', 'TypeScript', 'Node.js', 'PyTorch', 'TailwindCSS', 'PostgreSQL'],
   resumeUrl: null,
   socialLinks: {
@@ -43,12 +43,12 @@ export const DEFAULT_USER: UserPublic = {
 
 // Bookmarks
 export function getBookmarkedEventIds(): string[] {
-  if (typeof window === 'undefined') return ['evt_1', 'evt_3'];
+  if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.BOOKMARKS);
-    return raw ? JSON.parse(raw) : ['evt_1', 'evt_3'];
+    return raw ? JSON.parse(raw) : [];
   } catch {
-    return ['evt_1', 'evt_3'];
+    return [];
   }
 }
 
@@ -69,36 +69,11 @@ export function toggleBookmarkEvent(eventId: string): string[] {
 // Registrations
 export function getMyRegistrations(): UserRegistrationItem[] {
   if (typeof window === 'undefined') {
-    return [
-      {
-        eventId: 'evt_1',
-        eventName: 'AI Nexus Global Hackathon 2026',
-        registeredAt: '2026-08-16T12:00:00Z',
-        teamName: 'CyberSynthetics',
-        isTeam: true,
-        role: 'Team Lead & Fullstack Engineer',
-        status: 'CONFIRMED',
-      },
-    ];
+    return [];
   }
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.REGISTRATIONS);
-    if (!raw) {
-      const initial: UserRegistrationItem[] = [
-        {
-          eventId: 'evt_1',
-          eventName: 'AI Nexus Global Hackathon 2026',
-          registeredAt: '2026-08-16T12:00:00Z',
-          teamName: 'CyberSynthetics',
-          isTeam: true,
-          role: 'Team Lead & Fullstack Engineer',
-          status: 'CONFIRMED',
-        },
-      ];
-      localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(initial));
-      return initial;
-    }
-    return JSON.parse(raw);
+    return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
   }
@@ -151,13 +126,13 @@ export function getEventBySlug(slug: string): ExtendedEvent | undefined {
 }
 
 // User Profile
-export function getStoredUser(): UserPublic {
-  if (typeof window === 'undefined') return DEFAULT_USER;
+export function getStoredUser(): UserPublic | null {
+  if (typeof window === 'undefined') return null;
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.USER_PROFILE);
-    return raw ? JSON.parse(raw) : DEFAULT_USER;
+    return raw ? JSON.parse(raw) : null;
   } catch {
-    return DEFAULT_USER;
+    return null;
   }
 }
 
@@ -165,6 +140,16 @@ export function saveStoredUser(user: UserPublic): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(user));
+    window.dispatchEvent(new Event('hackers_unity_storage_change'));
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+export function clearStoredUser(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(STORAGE_KEYS.USER_PROFILE);
     window.dispatchEvent(new Event('hackers_unity_storage_change'));
   } catch (e) {
     console.error(e);
