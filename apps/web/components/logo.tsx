@@ -20,6 +20,7 @@ export function Logo({
           alt="Hacker's Unity Logo"
           width={size}
           height={size}
+          unoptimized
           className="object-contain w-auto h-14 sm:h-16 lg:h-[68px] transition-transform duration-200 group-hover:scale-105"
           priority
         />

@@ -24,6 +24,7 @@ interface HackathonCardProps {
 export function HackathonCard({ event, isBookmarked = false, onBookmarkChange }: HackathonCardProps) {
   const [bookmarked, setBookmarked] = useState(isBookmarked);
   const [showRegModal, setShowRegModal] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   const statusInfo = getStatusBadge(event.status);
   const categoryInfo = getCategoryBadge(event.category);
@@ -42,18 +43,21 @@ export function HackathonCard({ event, isBookmarked = false, onBookmarkChange }:
       <div className="group relative flex flex-col justify-between overflow-hidden rounded-2xl bg-white border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-[#0099e6]/40 transition-all duration-300">
         {/* Top Image / Banner Header */}
         <div className="h-44 w-full relative overflow-hidden bg-slate-900 border-b border-slate-100">
-          {event.image || event.bannerUrl ? (
+          {(event.image || event.bannerUrl) && !imgError ? (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={event.image || event.bannerUrl || ''}
                 alt={event.title}
+                onError={() => setImgError(true)}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/20" />
             </>
           ) : (
-            <div className={`w-full h-full bg-gradient-to-r ${event.bannerGradient || 'from-sky-900 via-slate-900 to-black'}`} />
+            <div className={`w-full h-full bg-gradient-to-r ${event.bannerGradient || 'from-sky-900 via-slate-900 to-black'} flex items-center justify-center p-4 text-center`}>
+              <span className="text-white/80 font-bold text-lg tracking-tight drop-shadow-md">{event.title}</span>
+            </div>
           )}
 
           {/* Badges & Bookmark */}

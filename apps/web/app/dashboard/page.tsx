@@ -309,7 +309,14 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <Link
+            href="/settings"
+            className="px-4 py-2.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all"
+          >
+            <Settings className="w-4 h-4 text-[#0099e6]" />
+            <span>Account & Settings</span>
+          </Link>
           <Link
             href="/host"
             className="px-5 py-2.5 rounded-2xl bg-[#0099e6] hover:bg-[#0284c7] text-white text-xs font-bold shadow-md shadow-sky-500/20 flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap"
@@ -331,19 +338,7 @@ export default function DashboardPage() {
           }`}
         >
           <BarChart3 className="w-3.5 h-3.5" />
-          <span>Hackathon Management & Analytics ({allEvents.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('profile')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'profile'
-              ? 'bg-[#0099e6] text-white shadow-2xs'
-              : 'bg-white text-slate-600 border border-slate-200 hover:text-slate-900'
-          }`}
-        >
-          <Settings className="w-3.5 h-3.5" />
-          <span>Profile & Security</span>
+          <span>Hackathon Operations & Analytics ({allEvents.length})</span>
         </button>
 
         <button
@@ -355,7 +350,7 @@ export default function DashboardPage() {
           }`}
         >
           <Trophy className="w-3.5 h-3.5" />
-          <span>My Hackathons ({registrations.length})</span>
+          <span>My Registrations ({registrations.length})</span>
         </button>
 
         <button
@@ -934,270 +929,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* ─── TAB 1: Complete Profile & Password Editor ───────────── */}
-      {activeTab === 'profile' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-in fade-in">
-          {/* Left 8 Cols: Editable Profile Details */}
-          <div className="lg:col-span-8 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <div className="flex items-center gap-2 text-slate-900 font-black text-lg">
-                <UserIcon className="w-5 h-5 text-[#0099e6]" />
-                <span>Complete Profile Information</span>
-              </div>
-              <span className="text-xs text-slate-400 font-semibold">All fields editable</span>
-            </div>
-
-            {profileSaved && (
-              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Profile updated and synced successfully with Supabase!</span>
-              </div>
-            )}
-
-            {profileError && (
-              <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                <span>{profileError}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleSaveProfile} className="space-y-6">
-              {/* Photo / Avatar Upload Section */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-2">Profile Logo / Photo</label>
-                <AvatarUpload
-                  currentAvatar={avatar}
-                  onAvatarChange={(newAvatar) => setAvatar(newAvatar)}
-                  onAvatarRemove={() => setAvatar(null)}
-                />
-              </div>
-
-              {/* Name & Email Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5">Full Name *</label>
-                  <div className="relative">
-                    <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      required
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Your full name"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#0099e6] focus:border-transparent"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5">Email Address</label>
-                  <div className="relative">
-                    <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="email"
-                      disabled
-                      value={email}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-xs font-medium cursor-not-allowed"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Phone & College Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5">Mobile / Phone Number</label>
-                  <div className="relative">
-                    <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+91 98765 43210"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#0099e6] focus:border-transparent"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5">University / Organization</label>
-                  <input
-                    type="text"
-                    value={college}
-                    onChange={(e) => setCollege(e.target.value)}
-                    placeholder="IIT Delhi / Self-employed"
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#0099e6] focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              {/* Bio */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">Bio & Specialties</label>
-                <textarea
-                  rows={3}
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  placeholder="Tell other builders about what you build, languages, models, etc."
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#0099e6] focus:border-transparent resize-none leading-relaxed"
-                />
-              </div>
-
-              {/* Skills Tags Manager */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">Skills & Tech Stack</label>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {skills.map((skill) => (
-                    <span
-                      key={skill}
-                      className="px-3 py-1 rounded-lg bg-sky-50 border border-sky-200 text-[#0099e6] text-xs font-mono font-bold flex items-center gap-1.5 shadow-2xs"
-                    >
-                      <span>{skill}</span>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveSkill(skill)}
-                        className="hover:text-rose-600 transition-colors cursor-pointer"
-                      >
-                        <XIcon className="w-3 h-3" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newSkillInput}
-                    onChange={(e) => setNewSkillInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleAddSkill();
-                      }
-                    }}
-                    placeholder="Add a new skill (e.g. Next.js 16, PyTorch, Rust)..."
-                    className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#0099e6] focus:border-transparent"
-                  />
-                  <button
-                    type="button"
-                    onClick={(e) => handleAddSkill(e)}
-                    className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Add</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Social Links */}
-              <div className="space-y-3 pt-2">
-                <label className="block text-xs font-bold text-slate-700">Online Profiles</label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <input
-                    type="url"
-                    value={github}
-                    onChange={(e) => setGithub(e.target.value)}
-                    placeholder="GitHub URL"
-                    className="px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#0099e6]"
-                  />
-                  <input
-                    type="url"
-                    value={linkedin}
-                    onChange={(e) => setLinkedin(e.target.value)}
-                    placeholder="LinkedIn URL"
-                    className="px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#0099e6]"
-                  />
-                  <input
-                    type="url"
-                    value={portfolio}
-                    onChange={(e) => setPortfolio(e.target.value)}
-                    placeholder="Portfolio URL"
-                    className="px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#0099e6]"
-                  />
-                </div>
-              </div>
-
-              {/* Submit Save Button */}
-              <div className="pt-4 border-t border-slate-100 flex items-center justify-end">
-                <button
-                  type="submit"
-                  disabled={isSavingProfile}
-                  className="px-8 py-3 rounded-2xl bg-[#0099e6] hover:bg-[#0284c7] disabled:opacity-50 text-white font-extrabold text-xs shadow-md shadow-sky-500/20 flex items-center gap-2 transition-all cursor-pointer"
-                >
-                  {isSavingProfile && <Loader2 className="w-4 h-4 animate-spin" />}
-                  <span>Save Profile Changes</span>
-                </button>
-              </div>
-            </form>
-          </div>
-
-          {/* Right 4 Cols: Password & Security Box */}
-          <div className="lg:col-span-4 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
-            <div className="flex items-center gap-2 text-slate-900 font-black text-lg border-b border-slate-100 pb-4">
-              <KeyRound className="w-5 h-5 text-[#ea580c]" />
-              <span>Change Account Password</span>
-            </div>
-
-            <p className="text-xs text-slate-500 font-medium leading-relaxed">
-              Update your password securely in Supabase. You will remain logged in on this session.
-            </p>
-
-            {passwordMsg && (
-              <div
-                className={`p-4 rounded-2xl text-xs font-bold flex items-center gap-2 ${
-                  passwordMsg.type === 'success'
-                    ? 'bg-emerald-50 border border-emerald-200 text-emerald-700'
-                    : 'bg-rose-50 border border-rose-200 text-rose-700'
-                }`}
-              >
-                {passwordMsg.type === 'success' ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                ) : (
-                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                )}
-                <span>{passwordMsg.text}</span>
-              </div>
-            )}
-
-            <form onSubmit={handlePasswordChange} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">New Password *</label>
-                <input
-                  type="password"
-                  required
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="At least 6 characters"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#0099e6] focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">Confirm New Password *</label>
-                <input
-                  type="password"
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Repeat new password"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#0099e6] focus:border-transparent"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={isUpdatingPassword}
-                className="w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer mt-2"
-              >
-                {isUpdatingPassword && <Loader2 className="w-4 h-4 animate-spin" />}
-                <span>Update Password in Supabase</span>
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ─── TAB 2: My Registrations ─────────────────────────────── */}
+      {/* ─── TAB: My Registrations ─────────────────────────────── */}
       {activeTab === 'registrations' && (
         <div className="space-y-6 animate-in fade-in">
           <div className="flex items-center justify-between">

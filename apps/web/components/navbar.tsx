@@ -146,12 +146,20 @@ export function Navbar() {
                     </div>
                     <div className="py-1 space-y-1 text-xs font-medium">
                       <Link
-                        href="/dashboard"
+                        href="/settings"
                         onClick={() => setUserDropdownOpen(false)}
                         className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 hover:text-slate-950 transition-colors"
                       >
                         <User className="w-3.5 h-3.5 text-[#0099e6]" />
                         <span>Account & Settings</span>
+                      </Link>
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 hover:text-slate-950 transition-colors"
+                      >
+                        <Compass className="w-3.5 h-3.5 text-[#0099e6]" />
+                        <span>My Dashboard & Analytics</span>
                       </Link>
                       <Link
                         href="/host"
