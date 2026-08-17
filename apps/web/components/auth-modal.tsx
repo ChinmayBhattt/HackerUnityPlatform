@@ -13,7 +13,7 @@ import {
   KeyRound,
   Info,
 } from 'lucide-react';
-import { UserRole } from '@hackers-unity/shared-types';
+
 import { useAuth } from '@/lib/auth-context';
 import { Logo } from './logo';
 
@@ -34,7 +34,6 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
 
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [method, setMethod] = useState<'email' | 'phone'>('email');
-  const [role, setRole] = useState<UserRole>(UserRole.PARTICIPANT);
 
   // Form Fields
   const [email, setEmail] = useState('');
@@ -108,7 +107,7 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
       }, 1000);
     } else {
       // 3. Email Sign Up
-      const res = await signUpWithEmail(email, password, name, phoneNumber, role);
+      const res = await signUpWithEmail(email, password, name, phoneNumber);
       if (res.error) {
         setErrorMessage(res.error);
         setIsLoading(false);
@@ -297,29 +296,6 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
               </div>
             </div>
 
-            {/* Role switch on register */}
-            {mode === 'register' && method === 'email' && (
-              <div className="flex gap-2 mb-3.5 p-1 bg-slate-100 rounded-xl border border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => setRole(UserRole.PARTICIPANT)}
-                  className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                    role === UserRole.PARTICIPANT ? 'bg-white text-[#0099e6] shadow-xs' : 'text-slate-500 hover:text-slate-900'
-                  }`}
-                >
-                  Hacker / Builder
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRole(UserRole.ORGANIZER)}
-                  className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                    role === UserRole.ORGANIZER ? 'bg-white text-[#ea580c] shadow-xs' : 'text-slate-500 hover:text-slate-900'
-                  }`}
-                >
-                  Organizer
-                </button>
-              </div>
-            )}
 
             <form onSubmit={handleSubmit} className="space-y-3">
               {/* Method 1: Email Mode */}

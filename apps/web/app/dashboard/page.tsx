@@ -203,7 +203,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2.5 flex-wrap">
               <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">{name || user?.name || 'Hacker'}</h1>
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-50 text-[#0099e6] border border-sky-200">
-                {user?.role === 'ORGANIZER' ? 'Event Organizer' : 'Verified Hacker'}
+                Hacker's Unity Member
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-1 font-medium flex items-center gap-2">
