@@ -45,15 +45,15 @@ export function Navbar() {
   return (
     <>
       <header className="sticky top-0 z-40 w-full bg-white/95 border-b border-slate-200/80 backdrop-blur-xl shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-6">
-          {/* Left: Brand Logo (aligned with content grid) */}
-          <div className="flex items-center shrink-0 pl-1 sm:pl-2">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-22 flex items-center justify-between gap-6">
+          {/* Left: Brand Logo (shifted comfortably right with padding) */}
+          <div className="flex items-center shrink-0 pl-3 sm:pl-6 lg:pl-8">
             <Link href="/" className="flex items-center group py-1">
-              <Logo size={62} showText={false} />
+              <Logo size={74} showText={false} />
             </Link>
           </div>
 
-          {/* Center-Right: Desktop Nav Links (shifted comfortably right) */}
+          {/* Center-Right: Desktop Nav Links */}
           <nav className="hidden md:flex items-center justify-center gap-2 lg:gap-4 flex-1 ml-4 lg:ml-8">
             {navLinks.map((item) => {
               const isActive = pathname === item.href;

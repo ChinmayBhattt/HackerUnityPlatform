@@ -9,7 +9,7 @@ interface LogoProps {
 
 export function Logo({
   className = '',
-  size = 56,
+  size = 72,
   showText = false,
 }: LogoProps) {
   return (
@@ -20,7 +20,7 @@ export function Logo({
           alt="Hacker's Unity Logo"
           width={size}
           height={size}
-          className="object-contain w-auto h-12 sm:h-14 transition-transform duration-200 group-hover:scale-105"
+          className="object-contain w-auto h-14 sm:h-16 lg:h-[68px] transition-transform duration-200 group-hover:scale-105"
           priority
         />
       </div>
