@@ -18,7 +18,7 @@ import { Logo } from './logo';
 import { SearchDialog } from './search-dialog';
 import { AuthModal } from './auth-modal';
 import { getStoredUser } from '@/lib/storage';
-import { UserPublic, UserRole } from '@hackers-unity/shared-types';
+import { UserPublic } from '@hackers-unity/shared-types';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -44,43 +44,43 @@ export function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full bg-white/90 border-b border-slate-200/80 backdrop-blur-xl shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-          {/* Brand Logo */}
-          <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center group">
-              <Logo size={34} showText={true} />
+      <header className="sticky top-0 z-40 w-full bg-white/95 border-b border-slate-200/80 backdrop-blur-xl shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-6">
+          {/* Left: Brand Logo (aligned with content grid) */}
+          <div className="flex items-center shrink-0 pl-1 sm:pl-2">
+            <Link href="/" className="flex items-center group py-1">
+              <Logo size={62} showText={false} />
             </Link>
-
-            {/* Desktop Nav Links */}
-            <nav className="hidden md:flex items-center gap-1 ml-4">
-              {navLinks.map((item) => {
-                const isActive = pathname === item.href;
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                      isActive
-                        ? 'bg-[#0099e6]/10 text-[#0099e6] border border-[#0099e6]/20'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
-                    }`}
-                  >
-                    <Icon className="w-3.5 h-3.5" />
-                    <span>{item.name}</span>
-                  </Link>
-                );
-              })}
-            </nav>
           </div>
 
-          {/* Right Action Bar */}
-          <div className="flex items-center gap-2.5">
+          {/* Center-Right: Desktop Nav Links (shifted comfortably right) */}
+          <nav className="hidden md:flex items-center justify-center gap-2 lg:gap-4 flex-1 ml-4 lg:ml-8">
+            {navLinks.map((item) => {
+              const isActive = pathname === item.href;
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-[13px] sm:text-sm font-bold whitespace-nowrap transition-all ${
+                    isActive
+                      ? 'bg-[#0099e6]/10 text-[#0099e6] border border-[#0099e6]/25 shadow-2xs'
+                      : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100/90'
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span>{item.name}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Right: Action Bar */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {/* Quick Search Button */}
             <button
               onClick={() => setSearchOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 border border-slate-200 text-xs text-slate-500 hover:text-slate-900 transition-all cursor-pointer"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 border border-slate-200 text-xs text-slate-500 hover:text-slate-900 transition-all cursor-pointer whitespace-nowrap"
             >
               <Search className="w-3.5 h-3.5 text-[#0099e6]" />
               <span className="hidden sm:inline">Search...</span>
@@ -92,7 +92,7 @@ export function Navbar() {
             {/* Host Hackathon Button */}
             <Link
               href="/host"
-              className="hidden lg:flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#f97316]/10 to-[#ea580c]/10 hover:from-[#f97316]/20 hover:to-[#ea580c]/20 text-[#ea580c] border border-[#f97316]/30 text-xs font-bold transition-all"
+              className="hidden lg:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#f97316]/10 to-[#ea580c]/10 hover:from-[#f97316]/20 hover:to-[#ea580c]/20 text-[#ea580c] border border-[#f97316]/30 text-xs font-bold transition-all whitespace-nowrap shadow-2xs"
             >
               <PlusCircle className="w-3.5 h-3.5" />
               <span>Host Event</span>
@@ -102,14 +102,14 @@ export function Navbar() {
             <div className="relative">
               <button
                 onClick={() => setNotificationsOpen(!notificationsOpen)}
-                className="relative p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                className="relative p-2.5 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
               >
                 <Bell className="w-4 h-4" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#f97316]" />
+                <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#f97316]" />
               </button>
 
               {notificationsOpen && (
-                <div className="absolute right-0 mt-2 w-80 p-3 rounded-2xl bg-white border border-slate-200 shadow-xl z-50 animate-in fade-in zoom-in-95">
+                <div className="absolute right-0 mt-2 w-80 p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xl z-50 animate-in fade-in zoom-in-95">
                   <div className="flex items-center justify-between pb-2 border-b border-slate-100 mb-2">
                     <span className="text-xs font-bold text-slate-900">Notifications</span>
                     <span className="text-[10px] text-[#0099e6] font-semibold cursor-pointer">Mark all read</span>
@@ -132,7 +132,7 @@ export function Navbar() {
             {currentUser ? (
               <Link
                 href="/dashboard"
-                className="flex items-center gap-2 p-1 pl-2 pr-3 rounded-xl bg-sky-50 border border-[#0099e6]/30 hover:border-[#0099e6] transition-colors"
+                className="flex items-center gap-2 p-1.5 pl-2.5 pr-3.5 rounded-xl bg-sky-50 border border-[#0099e6]/30 hover:border-[#0099e6] transition-colors whitespace-nowrap"
               >
                 <div className="w-6 h-6 rounded-lg bg-[#0099e6] text-white font-bold text-xs flex items-center justify-center shadow-xs">
                   {currentUser.name.charAt(0)}
@@ -144,7 +144,7 @@ export function Navbar() {
             ) : (
               <button
                 onClick={() => setAuthOpen(true)}
-                className="px-4 py-1.5 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-bold text-xs transition-all shadow-sm shadow-sky-500/20 cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-bold text-xs transition-all shadow-sm shadow-sky-500/20 cursor-pointer whitespace-nowrap"
               >
                 Sign In
               </button>
@@ -153,7 +153,7 @@ export function Navbar() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-slate-600 hover:text-slate-900 rounded-lg"
+              className="md:hidden p-2 text-slate-600 hover:text-slate-900 rounded-lg cursor-pointer"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>

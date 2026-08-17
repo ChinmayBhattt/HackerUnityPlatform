@@ -7,22 +7,26 @@ interface LogoProps {
   showText?: boolean;
 }
 
-export function Logo({ className = '', size = 36, showText = true }: LogoProps) {
+export function Logo({
+  className = '',
+  size = 56,
+  showText = false,
+}: LogoProps) {
   return (
-    <div className={`flex items-center gap-2.5 ${className}`}>
+    <div className={`flex items-center ${className}`}>
       <div className="relative shrink-0 flex items-center justify-center">
         <Image
           src="/logo-black.png"
           alt="Hacker's Unity Logo"
           width={size}
           height={size}
-          className="object-contain transition-transform duration-200 group-hover:scale-105"
+          className="object-contain w-auto h-12 sm:h-14 transition-transform duration-200 group-hover:scale-105"
           priority
         />
       </div>
 
       {showText && (
-        <div className="flex items-center font-black italic tracking-tighter select-none text-2xl sm:text-[26px] leading-none">
+        <div className="flex items-center font-black italic tracking-tight select-none text-xl sm:text-2xl leading-none whitespace-nowrap ml-2">
           <span className="text-[#0099e6] font-extrabold pr-1">
             Hacker&apos;s
           </span>

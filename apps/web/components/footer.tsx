@@ -10,7 +10,7 @@ export function Footer() {
           {/* Brand Col */}
           <div className="md:col-span-2 space-y-4">
             <Link href="/" className="inline-block">
-              <Logo size={32} showText={true} />
+              <Logo size={52} showText={false} />
             </Link>
             <p className="text-xs text-slate-500 max-w-sm leading-relaxed">
               The premier global arena for hackers, founders, and community builders. Discover hackathons, find your dream squad, and ship venture-grade software.
