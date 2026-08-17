@@ -146,6 +146,66 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ─── Partners Marquee ─────────────────────────────────────── */}
+      <section className="py-10 border-b border-slate-200/80 bg-white overflow-hidden">
+        <div className="text-center mb-6">
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+            Trusted by builders from leading organizations worldwide
+          </p>
+        </div>
+
+        {/* Marquee wrapper — CSS animation scrolls right-to-left */}
+        <div className="relative w-full overflow-hidden">
+          {/* Fade edges */}
+          <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
+          <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+
+          <div className="flex animate-marquee whitespace-nowrap gap-16 items-center">
+            {/* First set */}
+            {[
+              { name: 'OpenAI', style: 'font-extrabold text-2xl tracking-tighter' },
+              { name: 'Google', style: 'font-bold text-2xl tracking-tight' },
+              { name: 'Microsoft', style: 'font-semibold text-2xl tracking-tight' },
+              { name: 'amazon', style: 'font-extrabold text-2xl lowercase tracking-tight' },
+              { name: 'n8n', style: 'font-black text-3xl lowercase tracking-tighter' },
+              { name: 'ElevenLabs', style: 'font-bold text-2xl tracking-tight' },
+              { name: 'ORACLE', style: 'font-black text-2xl tracking-widest font-mono' },
+              { name: 'Meta', style: 'font-extrabold text-2xl tracking-tight' },
+              { name: 'GitHub', style: 'font-bold text-2xl tracking-tight' },
+              { name: '▲ Vercel', style: 'font-extrabold text-2xl tracking-tight' },
+            ].map((partner) => (
+              <div
+                key={partner.name}
+                className="shrink-0 flex items-center text-slate-400 hover:text-slate-900 transition-colors px-3 cursor-pointer"
+              >
+                <span className={partner.style}>{partner.name}</span>
+              </div>
+            ))}
+
+            {/* Duplicate set for seamless continuous loop */}
+            {[
+              { name: 'OpenAI-2', label: 'OpenAI', style: 'font-extrabold text-2xl tracking-tighter' },
+              { name: 'Google-2', label: 'Google', style: 'font-bold text-2xl tracking-tight' },
+              { name: 'Microsoft-2', label: 'Microsoft', style: 'font-semibold text-2xl tracking-tight' },
+              { name: 'amazon-2', label: 'amazon', style: 'font-extrabold text-2xl lowercase tracking-tight' },
+              { name: 'n8n-2', label: 'n8n', style: 'font-black text-3xl lowercase tracking-tighter' },
+              { name: 'ElevenLabs-2', label: 'ElevenLabs', style: 'font-bold text-2xl tracking-tight' },
+              { name: 'ORACLE-2', label: 'ORACLE', style: 'font-black text-2xl tracking-widest font-mono' },
+              { name: 'Meta-2', label: 'Meta', style: 'font-extrabold text-2xl tracking-tight' },
+              { name: 'GitHub-2', label: 'GitHub', style: 'font-bold text-2xl tracking-tight' },
+              { name: '▲ Vercel-2', label: '▲ Vercel', style: 'font-extrabold text-2xl tracking-tight' },
+            ].map((partner) => (
+              <div
+                key={partner.name}
+                className="shrink-0 flex items-center text-slate-400 hover:text-slate-900 transition-colors px-3 cursor-pointer"
+              >
+                <span className={partner.style}>{partner.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ─── Featured & Trending Hackathons ──────────────────────── */}
       <section className="py-16 md:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
