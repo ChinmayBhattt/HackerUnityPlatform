@@ -2,10 +2,44 @@ import React from 'react';
 
 export interface PartnerLogoItem {
   name: string;
+  url?: string;
   svg: React.ReactNode;
 }
 
 export const PARTNER_LOGOS: PartnerLogoItem[] = [
+  {
+    name: 'Trainzex AI',
+    url: 'https://trainzexai.in',
+    svg: (
+      <div className="flex items-center gap-2">
+        <svg className="w-7 h-7 shrink-0" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="8" fill="#0099e6" />
+          <path d="M7 10h18M16 10v14M11 24h10" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="23" cy="11" r="2.5" fill="#bae6fd" />
+        </svg>
+        <div className="flex items-baseline gap-1">
+          <span className="font-extrabold text-slate-900 text-lg tracking-tight">Trainzex</span>
+          <span className="font-black text-[#0099e6] text-xs px-1.5 py-0.5 rounded bg-sky-50 border border-sky-200">AI</span>
+        </div>
+      </div>
+    ),
+  },
+  {
+    name: 'NextEase Solution',
+    url: 'https://www.linkedin.com/company/nextease-solution/?originalSubdomain=in',
+    svg: (
+      <div className="flex items-center gap-2">
+        <svg className="w-7 h-7 shrink-0" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="8" fill="#0f172a" />
+          <path d="M9 23V9l10 14V9" stroke="#38bdf8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M20 16h5M20 23h5" stroke="#f97316" strokeWidth="2.5" strokeLinecap="round" />
+        </svg>
+        <span className="font-extrabold text-slate-900 text-lg tracking-tight">
+          NextEase <span className="font-medium text-slate-500 text-sm">Solution</span>
+        </span>
+      </div>
+    ),
+  },
   {
     name: 'OpenAI',
     svg: (

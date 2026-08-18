@@ -364,10 +364,10 @@ export default function SettingsPage() {
               <form onSubmit={handleSaveProfile} className="space-y-6">
                 {/* Avatar Uploader */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-2">Profile Photo / Avatar</label>
                   <AvatarUpload
-                    currentAvatarUrl={avatar}
+                    currentAvatar={avatar}
                     onAvatarChange={(newUrl) => setAvatar(newUrl)}
+                    onAvatarRemove={() => setAvatar(null)}
                   />
                 </div>
 

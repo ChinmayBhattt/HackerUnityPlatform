@@ -164,7 +164,9 @@ export default function HomePage() {
             {/* First set */}
             {[
               { name: 'OpenAI', style: 'font-extrabold text-2xl tracking-tighter' },
+              { name: 'Trainzex AI', href: 'https://trainzexai.in', style: 'font-extrabold text-2xl tracking-tight text-slate-700 hover:text-[#0099e6]' },
               { name: 'Google', style: 'font-bold text-2xl tracking-tight' },
+              { name: 'NextEase Solution', href: 'https://www.linkedin.com/company/nextease-solution/?originalSubdomain=in', style: 'font-bold text-2xl tracking-tight text-slate-700 hover:text-[#0099e6]' },
               { name: 'Microsoft', style: 'font-semibold text-2xl tracking-tight' },
               { name: 'amazon', style: 'font-extrabold text-2xl lowercase tracking-tight' },
               { name: 'n8n', style: 'font-black text-3xl lowercase tracking-tighter' },
@@ -174,18 +176,32 @@ export default function HomePage() {
               { name: 'GitHub', style: 'font-bold text-2xl tracking-tight' },
               { name: '▲ Vercel', style: 'font-extrabold text-2xl tracking-tight' },
             ].map((partner) => (
-              <div
-                key={partner.name}
-                className="shrink-0 flex items-center text-slate-400 hover:text-slate-900 transition-colors px-3 cursor-pointer"
-              >
-                <span className={partner.style}>{partner.name}</span>
-              </div>
+              partner.href ? (
+                <a
+                  key={partner.name}
+                  href={partner.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 flex items-center text-slate-400 hover:text-slate-900 transition-colors px-3 cursor-pointer"
+                >
+                  <span className={partner.style}>{partner.name}</span>
+                </a>
+              ) : (
+                <div
+                  key={partner.name}
+                  className="shrink-0 flex items-center text-slate-400 hover:text-slate-900 transition-colors px-3 cursor-pointer"
+                >
+                  <span className={partner.style}>{partner.name}</span>
+                </div>
+              )
             ))}
 
             {/* Duplicate set for seamless continuous loop */}
             {[
               { name: 'OpenAI-2', label: 'OpenAI', style: 'font-extrabold text-2xl tracking-tighter' },
+              { name: 'Trainzex-2', label: 'Trainzex AI', href: 'https://trainzexai.in', style: 'font-extrabold text-2xl tracking-tight text-slate-700 hover:text-[#0099e6]' },
               { name: 'Google-2', label: 'Google', style: 'font-bold text-2xl tracking-tight' },
+              { name: 'NextEase-2', label: 'NextEase Solution', href: 'https://www.linkedin.com/company/nextease-solution/?originalSubdomain=in', style: 'font-bold text-2xl tracking-tight text-slate-700 hover:text-[#0099e6]' },
               { name: 'Microsoft-2', label: 'Microsoft', style: 'font-semibold text-2xl tracking-tight' },
               { name: 'amazon-2', label: 'amazon', style: 'font-extrabold text-2xl lowercase tracking-tight' },
               { name: 'n8n-2', label: 'n8n', style: 'font-black text-3xl lowercase tracking-tighter' },
@@ -195,12 +211,24 @@ export default function HomePage() {
               { name: 'GitHub-2', label: 'GitHub', style: 'font-bold text-2xl tracking-tight' },
               { name: '▲ Vercel-2', label: '▲ Vercel', style: 'font-extrabold text-2xl tracking-tight' },
             ].map((partner) => (
-              <div
-                key={partner.name}
-                className="shrink-0 flex items-center text-slate-400 hover:text-slate-900 transition-colors px-3 cursor-pointer"
-              >
-                <span className={partner.style}>{partner.label}</span>
-              </div>
+              partner.href ? (
+                <a
+                  key={partner.name}
+                  href={partner.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 flex items-center text-slate-400 hover:text-slate-900 transition-colors px-3 cursor-pointer"
+                >
+                  <span className={partner.style}>{partner.label}</span>
+                </a>
+              ) : (
+                <div
+                  key={partner.name}
+                  className="shrink-0 flex items-center text-slate-400 hover:text-slate-900 transition-colors px-3 cursor-pointer"
+                >
+                  <span className={partner.style}>{partner.label}</span>
+                </div>
+              )
             ))}
           </div>
         </div>
