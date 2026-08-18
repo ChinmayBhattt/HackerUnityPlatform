@@ -1,10 +1,44 @@
 import { supabase } from './supabase';
 import { ExtendedEvent } from './mock-data';
-import { UserRegistrationItem, registerForEventStorage, saveHostedEvent, saveStoredUser } from './storage';
+import {
+  UserRegistrationItem,
+  EventRegistration,
+  registerForEventStorage,
+  saveHostedEvent,
+  saveStoredUser,
+  saveEventRegistration,
+} from './storage';
 import { UserPublic } from '@hackers-unity/shared-types';
 
 /**
- * 1. Event Service (Supabase + Local fallback)
+ * 1. Asset Upload (Supabase Storage)
+ */
+export async function uploadHackathonAsset(
+  file: File,
+  path: string
+): Promise<{ url: string | null; error?: string }> {
+  try {
+    const { data, error } = await supabase.storage
+      .from('hackathon-assets')
+      .upload(path, file, { upsert: true });
+
+    if (error) {
+      console.warn('Upload warning:', error.message);
+      return { url: null, error: error.message };
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from('hackathon-assets')
+      .getPublicUrl(data.path);
+
+    return { url: publicUrlData.publicUrl };
+  } catch {
+    return { url: null, error: 'Upload failed' };
+  }
+}
+
+/**
+ * 2. Event Service (Supabase + Local fallback)
  */
 export async function fetchEventsFromSupabase(): Promise<ExtendedEvent[] | null> {
   try {
@@ -33,7 +67,7 @@ export async function fetchEventsFromSupabase(): Promise<ExtendedEvent[] | null>
       eligibilityRules: { openGlobally: true },
       prizes: item.prizes || [],
       totalPrizeValue: Number(item.total_prize_value || 0),
-      bannerUrl: null,
+      bannerUrl: item.banner_url || null,
       rulesDocUrl: null,
       status: item.status,
       maxParticipants: 2000,
@@ -50,6 +84,18 @@ export async function fetchEventsFromSupabase(): Promise<ExtendedEvent[] | null>
       stages: item.stages || [],
       faqs: item.faqs || [],
       sponsors: item.sponsors || [],
+      // New fields
+      tagline: item.tagline || '',
+      logoUrl: item.logo_url || null,
+      registrationStart: item.registration_start,
+      timezone: item.timezone || 'Asia/Kolkata',
+      eligibility: item.eligibility || '',
+      difficulty: item.difficulty || 'OPEN',
+      rulesText: item.rules_text || '',
+      registrationType: item.registration_type || 'FREE',
+      registrationCapacity: item.registration_capacity,
+      approvalMode: item.approval_mode || 'AUTO',
+      customQuestions: item.custom_questions || [],
     }));
   } catch (err) {
     console.warn('Supabase fetchEvents fallback to local store:', err);
@@ -85,6 +131,19 @@ export async function createEventInSupabase(event: ExtendedEvent): Promise<{ suc
       is_team_event: event.isTeamEvent,
       featured: event.featured,
       status: event.status,
+      // New fields
+      tagline: event.tagline || null,
+      logo_url: event.logoUrl || null,
+      banner_url: event.bannerUrl || null,
+      registration_start: event.registrationStart || null,
+      timezone: event.timezone || 'Asia/Kolkata',
+      eligibility: event.eligibility || null,
+      difficulty: event.difficulty || 'OPEN',
+      rules_text: event.rulesText || null,
+      registration_type: event.registrationType || 'FREE',
+      registration_capacity: event.registrationCapacity || null,
+      approval_mode: event.approvalMode || 'AUTO',
+      custom_questions: event.customQuestions || [],
     });
 
     if (error) {
@@ -99,7 +158,7 @@ export async function createEventInSupabase(event: ExtendedEvent): Promise<{ suc
 }
 
 /**
- * 2. Registration Service
+ * 3. Registration Service
  */
 export async function registerForEventInSupabase(reg: UserRegistrationItem): Promise<{ success: boolean }> {
   try {
@@ -120,8 +179,29 @@ export async function registerForEventInSupabase(reg: UserRegistrationItem): Pro
   }
 }
 
+export async function submitEventRegistration(reg: EventRegistration): Promise<{ success: boolean }> {
+  try {
+    // Always save to local first
+    saveEventRegistration(reg);
+
+    // Try Supabase
+    await supabase.from('registrations').insert({
+      event_id: reg.eventId,
+      user_name: reg.userName,
+      user_email: reg.userEmail,
+      phone: reg.phone,
+      college: reg.college,
+      status: reg.status,
+    });
+
+    return { success: true };
+  } catch {
+    return { success: true };
+  }
+}
+
 /**
- * 3. Profile Service
+ * 4. Profile Service
  */
 export async function saveProfileToSupabase(user: UserPublic): Promise<{ success: boolean }> {
   try {
@@ -145,3 +225,4 @@ export async function saveProfileToSupabase(user: UserPublic): Promise<{ success
     return { success: true };
   }
 }
+

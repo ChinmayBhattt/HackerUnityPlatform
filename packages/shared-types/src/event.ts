@@ -28,6 +28,14 @@ export enum EventCategory {
 
 // ─── Types ───────────────────────────────────────────────
 
+export interface CustomQuestion {
+  id: string;
+  label: string;
+  type: 'text' | 'select' | 'textarea';
+  required: boolean;
+  options?: string[]; // for select type
+}
+
 export interface EventPublic {
   id: string;
   organizerId: string;
@@ -50,6 +58,18 @@ export interface EventPublic {
   isTeamEvent: boolean;
   location: string | null;
   createdAt: string;
+  // New hosting fields
+  tagline?: string;
+  logoUrl?: string | null;
+  registrationStart?: string;
+  timezone?: string;
+  eligibility?: string;
+  difficulty?: string;
+  rulesText?: string;
+  registrationType?: 'FREE' | 'PAID';
+  registrationCapacity?: number | null;
+  approvalMode?: 'AUTO' | 'MANUAL';
+  customQuestions?: CustomQuestion[];
 }
 
 export interface Prize {

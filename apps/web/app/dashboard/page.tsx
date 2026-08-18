@@ -895,14 +895,14 @@ export default function DashboardPage() {
                           <span>Edit</span>
                         </button>
 
-                        <button
-                          onClick={() => setViewingHackersEvent(eventItem)}
+                        <Link
+                          href={`/dashboard/events/${eventItem.id}/registrations`}
                           className="py-2 px-2.5 rounded-xl bg-sky-50 hover:bg-sky-100 text-[#0099e6] text-xs font-bold flex items-center justify-center gap-1 border border-sky-200 transition-all cursor-pointer"
-                          title="View registered builders"
+                          title="Manage registered applicants"
                         >
                           <Users className="w-3.5 h-3.5" />
-                          <span>Hackers</span>
-                        </button>
+                          <span>Applicants</span>
+                        </Link>
 
                         <Link
                           href={`/hackathons/${eventItem.slug}`}

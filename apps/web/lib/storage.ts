@@ -222,3 +222,98 @@ export function clearStoredUser(): void {
     console.error(e);
   }
 }
+
+// ─── Event Registration Management ──────────────────────────
+
+export interface EventRegistration {
+  id: string;
+  eventId: string;
+  userName: string;
+  userEmail: string;
+  phone: string;
+  college: string;
+  city: string;
+  githubUrl: string;
+  linkedinUrl: string;
+  skills: string[];
+  customAnswers: Record<string, string>;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CONFIRMED';
+  registeredAt: string;
+}
+
+const EVENT_REGS_PREFIX = 'hackers_unity_event_regs_';
+
+export function getEventRegistrations(eventId: string): EventRegistration[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(`${EVENT_REGS_PREFIX}${eventId}`);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveEventRegistration(reg: EventRegistration): void {
+  if (typeof window === 'undefined') return;
+  const current = getEventRegistrations(reg.eventId);
+  // Prevent duplicate by email
+  const filtered = current.filter((r) => r.userEmail !== reg.userEmail);
+  const updated = [reg, ...filtered];
+  try {
+    localStorage.setItem(`${EVENT_REGS_PREFIX}${reg.eventId}`, JSON.stringify(updated));
+    window.dispatchEvent(new Event('hackers_unity_storage_change'));
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+export function updateRegistrationStatus(
+  eventId: string,
+  regId: string,
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CONFIRMED'
+): void {
+  if (typeof window === 'undefined') return;
+  const current = getEventRegistrations(eventId);
+  const updated = current.map((r) => (r.id === regId ? { ...r, status } : r));
+  try {
+    localStorage.setItem(`${EVENT_REGS_PREFIX}${eventId}`, JSON.stringify(updated));
+    window.dispatchEvent(new Event('hackers_unity_storage_change'));
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+export function getRegistrationStats(eventId: string): {
+  total: number;
+  approved: number;
+  pending: number;
+  rejected: number;
+} {
+  const regs = getEventRegistrations(eventId);
+  return {
+    total: regs.length,
+    approved: regs.filter((r) => r.status === 'APPROVED' || r.status === 'CONFIRMED').length,
+    pending: regs.filter((r) => r.status === 'PENDING').length,
+    rejected: regs.filter((r) => r.status === 'REJECTED').length,
+  };
+}
+
+export function saveDraftEvent(event: ExtendedEvent): void {
+  if (typeof window === 'undefined') return;
+  const draftEvent = { ...event, status: 'DRAFT' as any };
+  const current = getCustomEvents();
+  const existingIdx = current.findIndex((e) => e.id === draftEvent.id);
+  let updated: ExtendedEvent[];
+  if (existingIdx >= 0) {
+    updated = [...current];
+    updated[existingIdx] = draftEvent;
+  } else {
+    updated = [draftEvent, ...current];
+  }
+  try {
+    localStorage.setItem(STORAGE_KEYS.HOSTED_EVENTS, JSON.stringify(updated));
+    window.dispatchEvent(new Event('hackers_unity_storage_change'));
+  } catch (e) {
+    console.error(e);
+  }
+}

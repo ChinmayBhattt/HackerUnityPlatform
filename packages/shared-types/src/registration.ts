@@ -3,8 +3,9 @@
 export enum RegistrationStatus {
   PENDING = 'PENDING',
   CONFIRMED = 'CONFIRMED',
-  WAITLISTED = 'WAITLISTED',
+  APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',
+  WAITLISTED = 'WAITLISTED',
   WITHDRAWN = 'WITHDRAWN',
 }
 
@@ -19,6 +20,16 @@ export interface Registration {
   submissionUrl: string | null;
   answers: Record<string, unknown> | null;
   registeredAt: string;
+  // Extended registration fields
+  userName?: string;
+  userEmail?: string;
+  phone?: string;
+  college?: string;
+  city?: string;
+  githubUrl?: string;
+  linkedinUrl?: string;
+  skills?: string[];
+  customAnswers?: Record<string, unknown>;
 }
 
 // ─── DTOs ────────────────────────────────────────────────
