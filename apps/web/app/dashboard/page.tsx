@@ -51,6 +51,7 @@ import {
 } from '@/lib/storage';
 import { ExtendedEvent } from '@/lib/mock-data';
 import { useAuth } from '@/lib/auth-context';
+import { updateEventInSupabase, deleteEventInSupabase } from '@/lib/supabase-service';
 import { HackathonCard } from '@/components/hackathon-card';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { AuthModal } from '@/components/auth-modal';
@@ -137,16 +138,18 @@ export default function DashboardPage() {
   const totalPrizeSum = allEvents.reduce((acc, e) => acc + (e.totalPrizeValue || 0), 0);
   const liveEventsCount = allEvents.filter((e) => e.status !== 'COMPLETED').length;
 
-  const handleEditEventSave = (updated: ExtendedEvent) => {
+  const handleEditEventSave = async (updated: ExtendedEvent) => {
     updateHostedEvent(updated);
+    await updateEventInSupabase(updated.id, updated);
     setAllEvents(getAllEvents());
     setActionSuccessMsg(`"${updated.title}" was updated successfully.`);
     setTimeout(() => setActionSuccessMsg(null), 3000);
   };
 
-  const handleDeleteEventConfirm = () => {
+  const handleDeleteEventConfirm = async () => {
     if (!deleteConfirmEvent) return;
     deleteHostedEvent(deleteConfirmEvent.id);
+    await deleteEventInSupabase(deleteConfirmEvent.id);
     setAllEvents(getAllEvents());
     setActionSuccessMsg(`"${deleteConfirmEvent.title}" has been removed.`);
     setDeleteConfirmEvent(null);

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Trophy,
   Users,
@@ -11,6 +12,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { ExtendedEvent } from '@/lib/mock-data';
+import { EVENT_IMAGE_MAP } from '@/lib/event-images';
 import { formatCurrency, getDaysLeft, getStatusBadge, getCategoryBadge } from '@/lib/utils';
 import { toggleBookmarkEvent } from '@/lib/storage';
 import { RegistrationModal } from './registration-modal';

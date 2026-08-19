@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Search, X, Trophy, Users, ArrowRight, Zap } from 'lucide-react';
 import Link from 'next/link';
-import { getAllEvents } from '@/lib/storage';
-import { MOCK_HACKERS, ExtendedEvent } from '@/lib/mock-data';
+import { usePublishedEvents } from '@/lib/hooks/use-events';
+import { MOCK_HACKERS } from '@/lib/mock-data';
 import { formatCurrency } from '@/lib/utils';
 
 interface SearchDialogProps {
@@ -14,11 +14,7 @@ interface SearchDialogProps {
 
 export function SearchDialog({ isOpen, onClose }: SearchDialogProps) {
   const [query, setQuery] = useState('');
-  const [events, setEvents] = useState<ExtendedEvent[]>([]);
-
-  useEffect(() => {
-    setEvents(getAllEvents());
-  }, [isOpen]);
+  const { events } = usePublishedEvents();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

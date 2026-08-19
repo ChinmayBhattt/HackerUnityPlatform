@@ -1,12 +1,10 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, use } from 'react';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
 import {
   Trophy,
   Calendar,
-  Users,
   MapPin,
   Bookmark,
   Share2,
@@ -17,11 +15,15 @@ import {
   ChevronDown,
   Layers,
   Award,
+  Users,
+  ShieldCheck,
 } from 'lucide-react';
-import { getEventBySlug, getBookmarkedEventIds, toggleBookmarkEvent } from '@/lib/storage';
-import { ExtendedEvent } from '@/lib/mock-data';
+import { useEvent } from '@/lib/hooks/use-events';
+import { useEventRegistration } from '@/lib/hooks/use-registration';
+import { toggleBookmarkEvent, getBookmarkedEventIds } from '@/lib/storage';
 import { formatCurrency, formatDate, formatDateTime, getDaysLeft, getStatusBadge, getCategoryBadge, getEventTypeBadge } from '@/lib/utils';
 import { RegistrationModal } from '@/components/registration-modal';
+import { TeamRegistrationModal } from '@/components/team-registration-modal';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -29,23 +31,20 @@ interface PageProps {
 
 export default function HackathonDetailPage({ params }: PageProps) {
   const resolvedParams = use(params);
-  const [event, setEvent] = useState<ExtendedEvent | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isBookmarked, setIsBookmarked] = useState(false);
+  const { event, loading, refresh } = useEvent(resolvedParams.slug);
+  const { isRegistered } = useEventRegistration(event?.id || '');
+
+  const [isBookmarked, setIsBookmarked] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const bookmarks = getBookmarkedEventIds();
+    return event ? bookmarks.includes(event.id) : false;
+  });
+
   const [activeTab, setActiveTab] = useState<'overview' | 'timeline' | 'prizes' | 'rules' | 'sponsors' | 'faqs'>('overview');
   const [showRegModal, setShowRegModal] = useState(false);
+  const [showTeamModal, setShowTeamModal] = useState(false);
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
-
-  useEffect(() => {
-    const found = getEventBySlug(resolvedParams.slug);
-    if (found) {
-      setEvent(found);
-      const bookmarks = getBookmarkedEventIds();
-      setIsBookmarked(bookmarks.includes(found.id));
-    }
-    setLoading(false);
-  }, [resolvedParams.slug]);
 
   if (loading) {
     return (
@@ -56,7 +55,18 @@ export default function HackathonDetailPage({ params }: PageProps) {
   }
 
   if (!event) {
-    return notFound();
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-20 text-center">
+        <h2 className="text-2xl font-black text-slate-900">Event Not Found</h2>
+        <p className="text-xs text-slate-500 mt-2">The event you are looking for does not exist or has been removed.</p>
+        <Link
+          href="/hackathons"
+          className="inline-block mt-4 px-4 py-2 rounded-xl bg-[#0099e6] text-white text-xs font-bold"
+        >
+          Explore All Events
+        </Link>
+      </div>
+    );
   }
 
   const statusInfo = getStatusBadge(event.status);
@@ -119,12 +129,24 @@ export default function HackathonDetailPage({ params }: PageProps) {
                     <Sparkles className="w-3.5 h-3.5" /> Featured Flagship
                   </span>
                 )}
+                {isRegistered && (
+                  <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Registered
+                  </span>
+                )}
               </div>
 
               {/* Title */}
               <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight">
                 {event.title}
               </h1>
+
+              {/* Tagline if available */}
+              {event.tagline && (
+                <p className="text-base sm:text-lg font-medium text-slate-700">
+                  {event.tagline}
+                </p>
+              )}
 
               {/* Organizer & Location */}
               <div className="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-slate-600 font-medium">
@@ -222,44 +244,50 @@ export default function HackathonDetailPage({ params }: PageProps) {
                 </div>
 
                 {/* Tracks */}
-                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                  <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                    <Layers className="w-5 h-5 text-[#0099e6]" />
-                    <span>Challenge Tracks & Problem Statements</span>
-                  </h3>
-                  <div className="grid grid-cols-1 gap-4">
-                    {event.tracks.map((track) => (
-                      <div
-                        key={track.title}
-                        className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5"
-                      >
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-sm font-bold text-slate-900">{track.title}</h4>
-                          <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-orange-100 text-[#ea580c] border border-orange-200">
-                            {track.prize}
-                          </span>
+                {event.tracks && event.tracks.length > 0 && (
+                  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                      <Layers className="w-5 h-5 text-[#0099e6]" />
+                      <span>Challenge Tracks & Problem Statements</span>
+                    </h3>
+                    <div className="grid grid-cols-1 gap-4">
+                      {event.tracks.map((track) => (
+                        <div
+                          key={track.title}
+                          className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5"
+                        >
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-bold text-slate-900">{track.title}</h4>
+                            {track.prize && (
+                              <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-orange-100 text-[#ea580c] border border-orange-200">
+                                {track.prize}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-600 leading-relaxed font-medium">{track.description}</p>
                         </div>
-                        <p className="text-xs text-slate-600 leading-relaxed font-medium">{track.description}</p>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
-                {/* Find Teammates callout */}
-                <div className="p-6 rounded-2xl bg-gradient-to-r from-sky-50 via-white to-orange-50 border border-sky-200 flex items-center justify-between gap-4 shadow-sm">
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-900">Looking for teammates for this event?</h4>
-                    <p className="text-xs text-slate-600 mt-0.5">
-                      Join our team matchmaker to find designers, AI developers, and fullstack hackers.
-                    </p>
+                {/* Squad Callout for Team Events */}
+                {event.isTeamEvent && (
+                  <div className="p-6 rounded-2xl bg-gradient-to-r from-sky-50 via-white to-orange-50 border border-sky-200 flex items-center justify-between gap-4 shadow-sm">
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-900">Form or Join a Squad</h4>
+                      <p className="text-xs text-slate-600 mt-0.5">
+                        This event allows squads of {event.minTeamSize}-{event.maxTeamSize} builders.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setShowTeamModal(true)}
+                      className="px-4 py-2 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white text-xs font-bold transition-all shadow-xs whitespace-nowrap cursor-pointer"
+                    >
+                      Squad Portal
+                    </button>
                   </div>
-                  <Link
-                    href="/teammates"
-                    className="px-4 py-2 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white text-xs font-bold transition-all shadow-xs whitespace-nowrap"
-                  >
-                    Find Squad
-                  </Link>
-                </div>
+                )}
               </div>
             )}
 
@@ -271,20 +299,39 @@ export default function HackathonDetailPage({ params }: PageProps) {
                   <span>Stages & Timeline</span>
                 </h3>
                 <div className="relative pl-6 space-y-8 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-sky-200">
-                  {event.stages.map((stage) => (
-                    <div key={stage.id} className="relative space-y-1">
-                      <div className="absolute -left-6 top-1 w-5 h-5 rounded-full bg-[#0099e6] border-4 border-white flex items-center justify-center text-[10px] font-bold text-white shadow-xs" />
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-bold text-slate-900">
-                          Stage {stage.stageOrder}: {stage.stageName}
-                        </h4>
+                  {event.stages && event.stages.length > 0 ? (
+                    event.stages.map((stage) => (
+                      <div key={stage.id} className="relative space-y-1">
+                        <div className="absolute -left-6 top-1 w-5 h-5 rounded-full bg-[#0099e6] border-4 border-white flex items-center justify-center text-[10px] font-bold text-white shadow-xs" />
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-bold text-slate-900">
+                            Stage {stage.stageOrder}: {stage.stageName}
+                          </h4>
+                          <span className="text-xs text-[#0099e6] font-mono font-bold">
+                            {formatDate(stage.startDate || event.startDate)} - {formatDate(stage.endDate || event.endDate)}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-600 leading-relaxed font-medium">{stage.description}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="relative space-y-1">
+                        <div className="absolute -left-6 top-1 w-5 h-5 rounded-full bg-[#0099e6] border-4 border-white shadow-xs" />
+                        <h4 className="text-sm font-bold text-slate-900">Registration Phase</h4>
                         <span className="text-xs text-[#0099e6] font-mono font-bold">
-                          {formatDate(stage.startDate || event.startDate)} - {formatDate(stage.endDate || event.endDate)}
+                          Deadline: {formatDate(event.registrationDeadline)}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-600 leading-relaxed font-medium">{stage.description}</p>
+                      <div className="relative space-y-1">
+                        <div className="absolute -left-6 top-1 w-5 h-5 rounded-full bg-[#ea580c] border-4 border-white shadow-xs" />
+                        <h4 className="text-sm font-bold text-slate-900">Hacking Sprint</h4>
+                        <span className="text-xs text-[#ea580c] font-mono font-bold">
+                          {formatDate(event.startDate)} - {formatDate(event.endDate)}
+                        </span>
+                      </div>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             )}
@@ -303,20 +350,29 @@ export default function HackathonDetailPage({ params }: PageProps) {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {event.prizes.map((prize) => (
-                    <div
-                      key={prize.position}
-                      className="p-4 rounded-xl bg-orange-50/50 border border-orange-100 space-y-2 relative overflow-hidden"
-                    >
-                      <div className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                        {prize.position}
+                  {event.prizes && event.prizes.length > 0 ? (
+                    event.prizes.map((prize) => (
+                      <div
+                        key={prize.position}
+                        className="p-4 rounded-xl bg-orange-50/50 border border-orange-100 space-y-2 relative overflow-hidden"
+                      >
+                        <div className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                          {prize.position}
+                        </div>
+                        <div className="text-2xl font-black text-[#ea580c] font-mono">
+                          {formatCurrency(prize.amount)}
+                        </div>
+                        <p className="text-xs text-slate-600 font-medium">{prize.description}</p>
                       </div>
+                    ))
+                  ) : (
+                    <div className="p-4 rounded-xl bg-orange-50/50 border border-orange-100">
                       <div className="text-2xl font-black text-[#ea580c] font-mono">
-                        {formatCurrency(prize.amount)}
+                        {formatCurrency(event.totalPrizeValue)}
                       </div>
-                      <p className="text-xs text-slate-600 font-medium">{prize.description}</p>
+                      <p className="text-xs text-slate-600 font-medium mt-1">Cash prizes, grants, and exclusive swags.</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             )}
@@ -325,24 +381,30 @@ export default function HackathonDetailPage({ params }: PageProps) {
             {activeTab === 'rules' && (
               <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4 animate-in fade-in">
                 <h3 className="text-lg font-bold text-slate-900">Rules & Guidelines</h3>
-                <ul className="space-y-3 text-xs text-slate-700 font-medium">
-                  <li className="flex items-start gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-[#0099e6] shrink-0 mt-0.5" />
-                    <span>All code must be newly written during the official hackathon sprint duration. Existing open-source libraries and APIs are permitted.</span>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-[#0099e6] shrink-0 mt-0.5" />
-                    <span>Teams can consist of <strong>{event.minTeamSize || 1}</strong> to <strong>{event.maxTeamSize || 4}</strong> hackers. Cross-university and international teams are welcome.</span>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-[#0099e6] shrink-0 mt-0.5" />
-                    <span>A public GitHub repository and working demo video (2 minutes max) must be submitted before the deadline.</span>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-[#0099e6] shrink-0 mt-0.5" />
-                    <span>100% intellectual property (IP) is retained by the builders.</span>
-                  </li>
-                </ul>
+                {event.rulesText ? (
+                  <p className="text-xs text-slate-700 font-medium whitespace-pre-line leading-relaxed">
+                    {event.rulesText}
+                  </p>
+                ) : (
+                  <ul className="space-y-3 text-xs text-slate-700 font-medium">
+                    <li className="flex items-start gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-[#0099e6] shrink-0 mt-0.5" />
+                      <span>All code must be newly written during the official hackathon sprint duration.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-[#0099e6] shrink-0 mt-0.5" />
+                      <span>Teams can consist of <strong>{event.minTeamSize || 1}</strong> to <strong>{event.maxTeamSize || 4}</strong> hackers.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-[#0099e6] shrink-0 mt-0.5" />
+                      <span>A public repository and working demo video must be submitted before deadline.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-[#0099e6] shrink-0 mt-0.5" />
+                      <span>100% intellectual property (IP) is retained by the builders.</span>
+                    </li>
+                  </ul>
+                )}
               </div>
             )}
 
@@ -354,18 +416,25 @@ export default function HackathonDetailPage({ params }: PageProps) {
                   <span>Sponsors & Partners</span>
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  {event.sponsors.map((sponsor) => (
-                    <div
-                      key={sponsor.name}
-                      className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 text-center flex flex-col items-center justify-center space-y-2"
-                    >
-                      <div className="w-12 h-12 rounded-xl bg-sky-100 border border-sky-200 flex items-center justify-center font-mono font-bold text-xs text-[#0099e6]">
-                        {sponsor.logoText}
+                  {event.sponsors && event.sponsors.length > 0 ? (
+                    event.sponsors.map((sponsor) => (
+                      <div
+                        key={sponsor.name}
+                        className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 text-center flex flex-col items-center justify-center space-y-2"
+                      >
+                        <div className="w-12 h-12 rounded-xl bg-sky-100 border border-sky-200 flex items-center justify-center font-mono font-bold text-xs text-[#0099e6]">
+                          {sponsor.logoText || 'PARTNER'}
+                        </div>
+                        <div className="text-xs font-bold text-slate-900">{sponsor.name}</div>
+                        <div className="text-[10px] text-slate-500 uppercase font-semibold">{sponsor.tier}</div>
                       </div>
-                      <div className="text-xs font-bold text-slate-900">{sponsor.name}</div>
-                      <div className="text-[10px] text-slate-500 uppercase font-semibold">{sponsor.tier}</div>
+                    ))
+                  ) : (
+                    <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-center col-span-2">
+                      <div className="text-xs font-bold text-slate-900">{event.organizerName}</div>
+                      <div className="text-[10px] text-slate-500 uppercase">Lead Organizer</div>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             )}
@@ -378,28 +447,32 @@ export default function HackathonDetailPage({ params }: PageProps) {
                   <span>Frequently Asked Questions</span>
                 </h3>
                 <div className="space-y-3">
-                  {event.faqs.map((faq) => {
-                    const isOpen = expandedFaq === faq.id;
-                    return (
-                      <div
-                        key={faq.id}
-                        className="rounded-xl bg-slate-50 border border-slate-200/80 overflow-hidden"
-                      >
-                        <button
-                          onClick={() => setExpandedFaq(isOpen ? null : faq.id)}
-                          className="w-full p-4 flex items-center justify-between text-left text-xs font-bold text-slate-900 hover:text-[#0099e6] transition-colors cursor-pointer"
+                  {event.faqs && event.faqs.length > 0 ? (
+                    event.faqs.map((faq) => {
+                      const isOpen = expandedFaq === faq.id;
+                      return (
+                        <div
+                          key={faq.id}
+                          className="rounded-xl bg-slate-50 border border-slate-200/80 overflow-hidden"
                         >
-                          <span>{faq.question}</span>
-                          <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-                        </button>
-                        {isOpen && (
-                          <div className="px-4 pb-4 text-xs text-slate-600 leading-relaxed border-t border-slate-200/60 pt-3 font-medium">
-                            {faq.answer}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                          <button
+                            onClick={() => setExpandedFaq(isOpen ? null : faq.id)}
+                            className="w-full p-4 flex items-center justify-between text-left text-xs font-bold text-slate-900 hover:text-[#0099e6] transition-colors cursor-pointer"
+                          >
+                            <span>{faq.question}</span>
+                            <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                          </button>
+                          {isOpen && (
+                            <div className="px-4 pb-4 text-xs text-slate-600 leading-relaxed border-t border-slate-200/60 pt-3 font-medium">
+                              {faq.answer}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p className="text-xs text-slate-500">No FAQs available for this event yet.</p>
+                  )}
                 </div>
               </div>
             )}
@@ -428,7 +501,12 @@ export default function HackathonDetailPage({ params }: PageProps) {
               </div>
 
               {/* Primary Register CTA */}
-              {event.registrationLink && event.registrationLink.startsWith('http') ? (
+              {isRegistered ? (
+                <div className="w-full py-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 font-extrabold text-sm text-center flex items-center justify-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  <span>You Are Registered</span>
+                </div>
+              ) : event.registrationLink && event.registrationLink.startsWith('http') ? (
                 <a
                   href={event.registrationLink}
                   target="_blank"
@@ -437,6 +515,22 @@ export default function HackathonDetailPage({ params }: PageProps) {
                 >
                   Register on External Portal ↗
                 </a>
+              ) : event.isTeamEvent && (event.minTeamSize || 1) > 1 ? (
+                <div className="space-y-2">
+                  <button
+                    onClick={() => setShowTeamModal(true)}
+                    className="w-full py-3.5 rounded-2xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-extrabold text-sm shadow-md shadow-sky-500/20 transition-all cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <Users className="w-4 h-4" />
+                    <span>Create / Join Squad</span>
+                  </button>
+                  <button
+                    onClick={() => setShowRegModal(true)}
+                    className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
+                  >
+                    Individual Registration
+                  </button>
+                </div>
               ) : (
                 <button
                   onClick={() => setShowRegModal(true)}
@@ -465,17 +559,17 @@ export default function HackathonDetailPage({ params }: PageProps) {
                   <span className="font-bold text-slate-900">{formatDate(event.endDate)}</span>
                 </div>
                 <div className="flex items-center justify-between text-slate-600">
-                  <span className="font-medium">Participants</span>
+                  <span className="font-medium">Live Participants</span>
                   <span className="font-bold text-[#0099e6] font-mono">
-                    {event.participantsCount.toLocaleString()}+ Builders
+                    {event.participantsCount || 1}+ Builders
                   </span>
                 </div>
               </div>
 
               {/* Verified Badge */}
               <div className="pt-3 border-t border-slate-100 flex items-center gap-2 text-[11px] text-emerald-600 font-bold">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Verified Escrow Prize Guarantee</span>
+                <ShieldCheck className="w-4 h-4" />
+                <span>Verified Realtime Event Arena</span>
               </div>
             </div>
           </div>
@@ -486,6 +580,20 @@ export default function HackathonDetailPage({ params }: PageProps) {
         event={event}
         isOpen={showRegModal}
         onClose={() => setShowRegModal(false)}
+        onSuccess={() => {
+          setShowRegModal(false);
+          refresh();
+        }}
+      />
+
+      <TeamRegistrationModal
+        event={event}
+        isOpen={showTeamModal}
+        onClose={() => setShowTeamModal(false)}
+        onSuccess={() => {
+          setShowTeamModal(false);
+          refresh();
+        }}
       />
     </div>
   );

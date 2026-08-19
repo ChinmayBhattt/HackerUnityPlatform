@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { X, CheckCircle2, Rocket } from 'lucide-react';
+import { X, CheckCircle2, Rocket, AlertCircle } from 'lucide-react';
 import { ExtendedEvent } from '@/lib/mock-data';
-import { registerForEventStorage, saveEventRegistration, EventRegistration } from '@/lib/storage';
 import { formatCurrency } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
+import { registerForEventSupabase } from '@/lib/supabase-service';
+import { TeamRegistrationModal } from './team-registration-modal';
 
 interface RegistrationModalProps {
   event: ExtendedEvent;
@@ -15,8 +16,13 @@ interface RegistrationModalProps {
 }
 
 export function RegistrationModal({ event, isOpen, onClose, onSuccess }: RegistrationModalProps) {
-  const { user } = useAuth();
+  const { user, supabaseUser } = useAuth();
   const [step, setStep] = useState<'form' | 'success'>('form');
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // If event is a team event, we can show the team registration modal
+  const [showTeamModal, setShowTeamModal] = useState(false);
 
   // Default fields
   const [fullName, setFullName] = useState(user?.name || '');
@@ -32,48 +38,73 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
 
   if (!isOpen) return null;
 
+  if (event.isTeamEvent && (event.minTeamSize || 1) > 1 && showTeamModal) {
+    return (
+      <TeamRegistrationModal
+        event={event}
+        isOpen={isOpen}
+        onClose={() => {
+          setShowTeamModal(false);
+          onClose();
+        }}
+        onSuccess={onSuccess}
+      />
+    );
+  }
+
   const handleCustomAnswer = (questionId: string, value: string) => {
     setCustomAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg(null);
+    setSubmitting(true);
 
-    const approvalMode = event.approvalMode || 'AUTO';
-    const status = approvalMode === 'AUTO' ? 'CONFIRMED' : 'PENDING';
+    try {
+      const approvalMode = event.approvalMode || 'AUTO';
+      const status = approvalMode === 'AUTO' ? 'CONFIRMED' : 'PENDING';
+      const userId = supabaseUser?.id || user?.id || null;
+      const userEmail = supabaseUser?.email || user?.email || email.trim();
 
-    // Save detailed registration
-    const registration: EventRegistration = {
-      id: `reg_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
-      eventId: event.id,
-      userName: fullName,
-      userEmail: email,
-      phone: phone || '',
-      college: college || '',
-      city: city || '',
-      githubUrl: githubUrl || '',
-      linkedinUrl: linkedinUrl || '',
-      skills: skillsInput.split(',').map((s) => s.trim()).filter(Boolean),
-      customAnswers,
-      status: status as any,
-      registeredAt: new Date().toISOString(),
-    };
-    saveEventRegistration(registration);
+      if (!userEmail) {
+        setErrorMsg('Please provide a valid email address.');
+        setSubmitting(false);
+        return;
+      }
 
-    // Also save in the legacy format for dashboard compatibility
-    registerForEventStorage({
-      eventId: event.id,
-      eventName: event.title,
-      registeredAt: new Date().toISOString(),
-      isTeam: false,
-      role: 'Builder',
-      status: status === 'CONFIRMED' ? 'CONFIRMED' : 'UNDER_REVIEW',
-    });
+      const res = await registerForEventSupabase({
+        eventId: event.id,
+        userId,
+        userEmail,
+        userName: fullName || user?.name || 'Hacker',
+        phone,
+        college,
+        city,
+        githubUrl,
+        linkedinUrl,
+        skills: skillsInput.split(',').map((s) => s.trim()).filter(Boolean),
+        customAnswers,
+        isTeam: false,
+        role: 'Individual Hacker',
+        status,
+      });
 
-    setStep('success');
-    setTimeout(() => {
-      onSuccess?.();
-    }, 1200);
+      if (!res.success) {
+        setErrorMsg(res.error || 'Registration failed.');
+        setSubmitting(false);
+        return;
+      }
+
+      setStep('success');
+      setTimeout(() => {
+        onSuccess?.();
+      }, 1200);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'An unexpected error occurred.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -84,7 +115,9 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
       >
         <div className="sticky top-0 z-10 bg-white border-b border-slate-100 p-4 flex items-center justify-between rounded-t-3xl">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-[#0099e6]">Register</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-[#0099e6]">
+              {event.isTeamEvent && (event.minTeamSize || 1) > 1 ? 'Team / Individual Registration' : 'Individual Registration'}
+            </span>
             <h2 className="text-lg font-black text-slate-900 pr-6 leading-tight">{event.title}</h2>
           </div>
           <button
@@ -109,10 +142,15 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
                   {event.approvalMode === 'MANUAL' ? 'Application Submitted!' : 'You are in!'}
                 </h3>
                 <p className="text-sm text-slate-600 max-w-sm">
-                  {event.approvalMode === 'MANUAL'
-                    ? <>Your registration for <span className="text-[#0099e6] font-bold">{event.title}</span> is pending approval by the organizer.</>
-                    : <>You are registered for <span className="text-[#0099e6] font-bold">{event.title}</span>. We have added this to your Builder Dashboard.</>
-                  }
+                  {event.approvalMode === 'MANUAL' ? (
+                    <>
+                      Your registration for <span className="text-[#0099e6] font-bold">{event.title}</span> is pending review.
+                    </>
+                  ) : (
+                    <>
+                      You are officially registered for <span className="text-[#0099e6] font-bold">{event.title}</span>.
+                    </>
+                  )}
                 </p>
               </div>
               <button
@@ -124,56 +162,126 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Prize info */}
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs text-[#ea580c] font-bold">{formatCurrency(event.totalPrizeValue)} Pool</span>
-                {event.registrationType === 'FREE' && (
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-200">FREE ENTRY</span>
+              {/* Prize & mode banner */}
+              <div className="flex items-center justify-between gap-2 p-3 bg-slate-50 border border-slate-100 rounded-2xl">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-[#ea580c] font-black">{formatCurrency(event.totalPrizeValue)} Pool</span>
+                  {event.registrationType === 'FREE' && (
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-200">
+                      FREE ENTRY
+                    </span>
+                  )}
+                </div>
+                {event.isTeamEvent && (event.minTeamSize || 1) > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowTeamModal(true)}
+                    className="text-[11px] text-[#0099e6] font-bold hover:underline"
+                  >
+                    Switch to Team Squad Flow →
+                  </button>
                 )}
               </div>
+
+              {errorMsg && (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-600 font-medium flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
 
               {/* Default Fields */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2 sm:col-span-1">
                   <label className="block text-xs font-bold text-slate-700 mb-1">Full Name *</label>
-                  <input type="text" required placeholder="Your name" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors" />
+                  <input
+                    type="text"
+                    required
+                    placeholder="Your name"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                  />
                 </div>
                 <div className="col-span-2 sm:col-span-1">
                   <label className="block text-xs font-bold text-slate-700 mb-1">Email *</label>
-                  <input type="email" required placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors" />
+                  <input
+                    type="email"
+                    required
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                  />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">Phone</label>
-                  <input type="tel" placeholder="+91 99887 76655" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors" />
+                  <input
+                    type="tel"
+                    placeholder="+91 99887 76655"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                  />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">City</label>
-                  <input type="text" placeholder="e.g. Jaipur" value={city} onChange={(e) => setCity(e.target.value)} className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors" />
+                  <input
+                    type="text"
+                    placeholder="e.g. Jaipur"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                  />
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">College / Organization</label>
-                <input type="text" placeholder="e.g. IIT Delhi" value={college} onChange={(e) => setCollege(e.target.value)} className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors" />
+                <input
+                  type="text"
+                  placeholder="e.g. IIT Delhi"
+                  value={college}
+                  onChange={(e) => setCollege(e.target.value)}
+                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">GitHub URL</label>
-                  <input type="url" placeholder="https://github.com/..." value={githubUrl} onChange={(e) => setGithubUrl(e.target.value)} className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors" />
+                  <input
+                    type="url"
+                    placeholder="https://github.com/..."
+                    value={githubUrl}
+                    onChange={(e) => setGithubUrl(e.target.value)}
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                  />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">LinkedIn URL</label>
-                  <input type="url" placeholder="https://linkedin.com/in/..." value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors" />
+                  <input
+                    type="url"
+                    placeholder="https://linkedin.com/in/..."
+                    value={linkedinUrl}
+                    onChange={(e) => setLinkedinUrl(e.target.value)}
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                  />
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">Skills (comma separated)</label>
-                <input type="text" placeholder="Next.js, Python, PyTorch, TypeScript" value={skillsInput} onChange={(e) => setSkillsInput(e.target.value)} className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors" />
+                <input
+                  type="text"
+                  placeholder="Next.js, Python, PyTorch, TypeScript"
+                  value={skillsInput}
+                  onChange={(e) => setSkillsInput(e.target.value)}
+                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                />
               </div>
 
               {/* Custom Questions */}
@@ -186,14 +294,35 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
                         {q.label} {q.required && '*'}
                       </label>
                       {q.type === 'textarea' ? (
-                        <textarea rows={2} required={q.required} value={customAnswers[q.id] || ''} onChange={(e) => handleCustomAnswer(q.id, e.target.value)} className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 placeholder-slate-400 outline-none resize-none" />
+                        <textarea
+                          rows={2}
+                          required={q.required}
+                          value={customAnswers[q.id] || ''}
+                          onChange={(e) => handleCustomAnswer(q.id, e.target.value)}
+                          className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 placeholder-slate-400 outline-none resize-none"
+                        />
                       ) : q.type === 'select' && q.options ? (
-                        <select required={q.required} value={customAnswers[q.id] || ''} onChange={(e) => handleCustomAnswer(q.id, e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 outline-none focus:border-[#0099e6]">
+                        <select
+                          required={q.required}
+                          value={customAnswers[q.id] || ''}
+                          onChange={(e) => handleCustomAnswer(q.id, e.target.value)}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 outline-none focus:border-[#0099e6]"
+                        >
                           <option value="">Select...</option>
-                          {q.options.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+                          {q.options.map((opt) => (
+                            <option key={opt} value={opt}>
+                              {opt}
+                            </option>
+                          ))}
                         </select>
                       ) : (
-                        <input type="text" required={q.required} value={customAnswers[q.id] || ''} onChange={(e) => handleCustomAnswer(q.id, e.target.value)} className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors" />
+                        <input
+                          type="text"
+                          required={q.required}
+                          value={customAnswers[q.id] || ''}
+                          onChange={(e) => handleCustomAnswer(q.id, e.target.value)}
+                          className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                        />
                       )}
                     </div>
                   ))}
@@ -224,11 +353,17 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
                 </button>
                 <button
                   type="submit"
-                  disabled={!agreeRules}
+                  disabled={!agreeRules || submitting}
                   className="flex-[2] py-2.5 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   <Rocket className="w-4 h-4" />
-                  <span>{event.approvalMode === 'MANUAL' ? 'Submit Application' : 'Confirm Registration'}</span>
+                  <span>
+                    {submitting
+                      ? 'Processing...'
+                      : event.approvalMode === 'MANUAL'
+                      ? 'Submit Application'
+                      : 'Confirm Registration'}
+                  </span>
                 </button>
               </div>
             </form>

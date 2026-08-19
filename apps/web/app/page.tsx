@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import {
   Sparkles,
@@ -11,30 +11,19 @@ import {
   ShieldCheck,
   Zap,
   Flame,
+  ChevronDown,
 } from 'lucide-react';
 import { HackathonCard } from '@/components/hackathon-card';
-import { getAllEvents, getBookmarkedEventIds } from '@/lib/storage';
-import { ExtendedEvent, MOCK_HACKERS } from '@/lib/mock-data';
+import { usePublishedEvents } from '@/lib/hooks/use-events';
+import { MOCK_HACKERS } from '@/lib/mock-data';
 import { AuthModal } from '@/components/auth-modal';
 
 export default function HomePage() {
-  const [events, setEvents] = useState<ExtendedEvent[]>([]);
-  const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
+  const { events, loading } = usePublishedEvents();
   const [selectedTag, setSelectedTag] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [authOpen, setAuthOpen] = useState(false);
-
-  useEffect(() => {
-    setEvents(getAllEvents());
-    setBookmarkedIds(getBookmarkedEventIds());
-
-    const handleStorage = () => {
-      setEvents(getAllEvents());
-      setBookmarkedIds(getBookmarkedEventIds());
-    };
-    window.addEventListener('hackers_unity_storage_change', handleStorage);
-    return () => window.removeEventListener('hackers_unity_storage_change', handleStorage);
-  }, []);
+  const [showAll, setShowAll] = useState(false);
 
   const tags = ['ALL', 'AI/ML', 'Blockchain', 'Web3', 'Open Source', 'Innovation', 'IoT', 'DevOps'];
 
@@ -47,6 +36,8 @@ export default function HomePage() {
       evt.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesTag && matchesQuery;
   });
+
+  const displayedEvents = showAll ? filteredEvents : filteredEvents.slice(0, 6);
 
   return (
     <div className="flex flex-col flex-1">
@@ -261,14 +252,34 @@ export default function HomePage() {
 
         {/* Hackathon Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredEvents.map((event) => (
+          {displayedEvents.map((event) => (
             <HackathonCard
               key={event.id}
               event={event}
-              isBookmarked={bookmarkedIds.includes(event.id)}
             />
           ))}
         </div>
+
+        {/* Show More / Show Less Toggle Button */}
+        {filteredEvents.length > 6 && (
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="px-6 py-3 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 font-extrabold text-xs border border-slate-200 shadow-xs hover:border-[#0099e6]/40 transition-all flex items-center gap-2 cursor-pointer"
+            >
+              <span>{showAll ? 'Show Less' : `Show More (${filteredEvents.length - 6} more)`}</span>
+              <ChevronDown className={`w-4 h-4 text-[#0099e6] transition-transform ${showAll ? 'rotate-180' : ''}`} />
+            </button>
+
+            <Link
+              href="/hackathons"
+              className="px-6 py-3 rounded-2xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-extrabold text-xs shadow-md shadow-sky-500/20 transition-all flex items-center gap-2"
+            >
+              <span>Explore All {filteredEvents.length}+ Events</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        )}
 
         {filteredEvents.length === 0 && (
           <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">

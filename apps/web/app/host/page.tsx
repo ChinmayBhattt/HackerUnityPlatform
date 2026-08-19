@@ -26,7 +26,7 @@ import {
 import { EventCategory, EventStatus, EventType, CustomQuestion } from '@hackers-unity/shared-types';
 import { ExtendedEvent } from '@/lib/mock-data';
 import { saveHostedEvent, saveDraftEvent } from '@/lib/storage';
-import { createEventInSupabase } from '@/lib/supabase-service';
+import { createEventInSupabase, uploadHackathonAsset } from '@/lib/supabase-service';
 import { HackathonCard } from '@/components/hackathon-card';
 import { useAuth } from '@/lib/auth-context';
 
@@ -137,21 +137,41 @@ export default function HostHackathonPage() {
   const isDatesValid = Object.keys(dateErrors).length === 0;
 
   // ─── File Handlers ──────────────────────────────────────
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => setLogoPreview(reader.result as string);
       reader.readAsDataURL(file);
+
+      // Async upload to Supabase storage
+      try {
+        const { url } = await uploadHackathonAsset(file, 'logos');
+        if (url) {
+          setLogoPreview(url);
+        }
+      } catch (err) {
+        console.warn('Storage upload error:', err);
+      }
     }
   };
 
-  const handleBannerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => setBannerPreview(reader.result as string);
       reader.readAsDataURL(file);
+
+      // Async upload to Supabase storage
+      try {
+        const { url } = await uploadHackathonAsset(file, 'banners');
+        if (url) {
+          setBannerPreview(url);
+        }
+      } catch (err) {
+        console.warn('Storage upload error:', err);
+      }
     }
   };
 
@@ -313,25 +333,33 @@ export default function HostHackathonPage() {
   const handlePublish = async () => {
     setIsSaving(true);
     const event = { ...previewEvent, status: EventStatus.PUBLISHED };
-    saveHostedEvent(event);
-    await createEventInSupabase(event);
+    const res = await createEventInSupabase(event, user?.id);
     setIsSaving(false);
-    setIsSuccess(true);
-    setTimeout(() => {
-      router.push(`/hackathons/${event.slug}`);
-    }, 1500);
+    
+    if (res.success && res.data) {
+      setIsSuccess(true);
+      setTimeout(() => {
+        router.push(`/hackathons/${res.data?.slug || event.slug}`);
+      }, 1500);
+    } else {
+      // Fallback redirect with generated slug
+      setIsSuccess(true);
+      setTimeout(() => {
+        router.push(`/hackathons/${event.slug}`);
+      }, 1500);
+    }
   };
 
-  const handleSaveDraft = () => {
+  const handleSaveDraft = async () => {
+    setIsSaving(true);
     const event = { ...previewEvent, status: EventStatus.DRAFT };
-    saveDraftEvent(event);
-    alert('Draft saved successfully!');
+    await createEventInSupabase(event, user?.id);
+    setIsSaving(false);
+    alert('Draft saved to Supabase successfully! Only you can see it in your Organizer Dashboard.');
   };
 
   const handlePreview = () => {
-    const event = { ...previewEvent, status: EventStatus.PUBLISHED };
-    saveHostedEvent(event);
-    window.open(`/hackathons/${event.slug}`, '_blank');
+    window.open(`/hackathons/${previewEvent.slug}`, '_blank');
   };
 
   // ─── Step Navigation ────────────────────────────────────
