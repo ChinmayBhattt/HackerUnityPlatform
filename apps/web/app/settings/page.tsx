@@ -10,6 +10,12 @@ import {
   Phone,
   GraduationCap,
   Building,
+  Building2,
+  Briefcase,
+  Code2,
+  BookOpen,
+  Award,
+  Laptop,
   Github,
   Linkedin,
   Globe,
@@ -28,10 +34,92 @@ import {
   ArrowLeft,
   Smartphone,
   Trash2,
+  Eye,
+  Share2,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { AvatarUpload } from '@/components/avatar-upload';
 import { AuthModal } from '@/components/auth-modal';
+import { RichTextEditor } from '@/components/rich-text-editor';
+import { PublicProfileModal } from '@/components/public-profile-modal';
+
+const POPULAR_DEGREES = [
+  'B.Tech / B.E (Engineering)',
+  'BCA (Computer Applications)',
+  'MCA (Master of Computer Applications)',
+  'B.Sc (Computer Science / IT)',
+  'M.Sc (Computer Science / IT / AI)',
+  'M.Tech / M.E',
+  'B.Des / M.Des (Design / UI/UX)',
+  'Diploma / Polytechnic',
+  'Dual Degree (B.Tech + M.Tech)',
+  'PhD / Research Scholar',
+  'High School / K-12',
+  'Bootcamp / Self-Taught',
+  'Other',
+];
+
+const POPULAR_BRANCHES = [
+  'Computer Science & Engineering (CSE)',
+  'Artificial Intelligence & Data Science (AI/DS)',
+  'Information Technology (IT)',
+  'Electronics & Communication (ECE)',
+  'Electrical & Electronics Engineering (EEE)',
+  'Mechanical Engineering',
+  'Civil Engineering',
+  'Chemical & Biotechnology Engineering',
+  'Aerospace & Aeronautical Engineering',
+  'Mechatronics & Robotics',
+  'Design & Human-Computer Interaction',
+  'Mathematics & Computing',
+  'Physics & Applied Sciences',
+  'Business Administration / Management',
+  'Other',
+];
+
+const ALL_GRADUATION_YEARS = [
+  '2018 or earlier',
+  '2019',
+  '2020',
+  '2021',
+  '2022',
+  '2023',
+  '2024',
+  '2025',
+  '2026',
+  '2027',
+  '2028',
+  '2029',
+  '2030',
+  '2031',
+  '2032+',
+  'Other',
+];
+
+const POPULAR_INDUSTRIES = [
+  'AI/ML, GenAI & Autonomous Systems',
+  'FinTech, Payments & Web3 Blockchain',
+  'SaaS, Cloud & Developer Infrastructure',
+  'Cybersecurity & Privacy',
+  'E-Commerce & Consumer Internet',
+  'HealthTech & BioTech',
+  'Gaming, AR/VR & Metaverse',
+  'EdTech & Learning Platforms',
+  'CleanTech, EV & Energy',
+  'Other',
+];
+
+const POPULAR_FREELANCE_DOMAINS = [
+  'Fullstack Web & AI (Next.js, Python, Supabase)',
+  'Autonomous AI Agents, RAG & LLM Workflows',
+  'Smart Contracts, Solidity & Web3 dApps',
+  'Mobile Apps (Flutter, React Native, Swift)',
+  'UI/UX Design Systems & Product Strategy',
+  'DevOps, Kubernetes & Cloud Architecture',
+  'Cybersecurity & Smart Contract Auditing',
+  'Data Engineering & MLOps Pipelines',
+  'Other',
+];
 
 export default function SettingsPage() {
   const { user, updateUserProfile, updateUserPassword, signOut, loading } = useAuth();
@@ -39,6 +127,7 @@ export default function SettingsPage() {
 
   // Settings Tabs
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'socials' | 'notifications' | 'danger'>('profile');
+  const [showPublicPreview, setShowPublicPreview] = useState(false);
 
   // Profile Form States
   const [name, setName] = useState('');
@@ -50,6 +139,30 @@ export default function SettingsPage() {
   const [skills, setSkills] = useState<string[]>([]);
   const [newSkillInput, setNewSkillInput] = useState('');
   const [avatar, setAvatar] = useState<string | null>(null);
+
+  // Dynamic Profession & Background States
+  const [professionType, setProfessionType] = useState<'STUDENT' | 'PROFESSIONAL' | 'FREELANCER'>('STUDENT');
+  
+  // Student-specific fields
+  const [degree, setDegree] = useState('B.Tech / B.E (Engineering)');
+  const [customDegree, setCustomDegree] = useState('');
+  const [branch, setBranch] = useState('Computer Science & Engineering (CSE)');
+  const [customBranch, setCustomBranch] = useState('');
+  const [customGradYear, setCustomGradYear] = useState('');
+  const [studentId, setStudentId] = useState('');
+  
+  // Working Professional-specific fields
+  const [company, setCompany] = useState('');
+  const [jobTitle, setJobTitle] = useState('');
+  const [experienceYears, setExperienceYears] = useState('1-3 years');
+  const [industry, setIndustry] = useState('AI/ML, GenAI & Autonomous Systems');
+  const [customIndustry, setCustomIndustry] = useState('');
+
+  // Freelancer-specific fields
+  const [freelanceTitle, setFreelanceTitle] = useState('Full Stack AI Builder');
+  const [freelanceLevel, setFreelanceLevel] = useState('Intermediate Builder');
+  const [freelanceDomain, setFreelanceDomain] = useState('Fullstack Web & AI (Next.js, Python, Supabase)');
+  const [customDomain, setCustomDomain] = useState('');
 
   // Social Links
   const [github, setGithub] = useState('');
@@ -78,13 +191,58 @@ export default function SettingsPage() {
       setEmail(user.email || '');
       setPhone(user.phone || '');
       setBio(user.bio || '');
-      setCollege(user.college || user.organization || '');
-      setGraduationYear(user.graduationYear ? String(user.graduationYear) : '2026');
+      setCollege(user.college || '');
+      
+      const userGradYear = user.graduationYear ? String(user.graduationYear) : '2026';
+      if (ALL_GRADUATION_YEARS.includes(userGradYear)) {
+        setGraduationYear(userGradYear);
+      } else {
+        setGraduationYear('Other');
+        setCustomGradYear(userGradYear);
+      }
+
       setSkills(user.skills && user.skills.length > 0 ? user.skills : ['Next.js 16', 'TypeScript', 'PostgreSQL']);
       setAvatar(user.avatarUrl || null);
       setGithub(user.socialLinks?.github || '');
       setLinkedin(user.socialLinks?.linkedin || '');
       setPortfolio(user.socialLinks?.portfolio || '');
+      
+      // Load dynamic profession fields
+      if (user.professionType === 'PROFESSIONAL' || user.professionType === 'FREELANCER' || user.professionType === 'STUDENT') {
+        setProfessionType(user.professionType);
+      } else if (user.organization && !user.college) {
+        setProfessionType('PROFESSIONAL');
+      } else {
+        setProfessionType('STUDENT');
+      }
+
+      const userDegree = user.degree || 'B.Tech / B.E (Engineering)';
+      if (POPULAR_DEGREES.includes(userDegree)) {
+        setDegree(userDegree);
+      } else {
+        setDegree('Other');
+        setCustomDegree(userDegree);
+      }
+
+      const userBranch = user.branch || 'Computer Science & Engineering (CSE)';
+      if (POPULAR_BRANCHES.includes(userBranch)) {
+        setBranch(userBranch);
+      } else {
+        setBranch('Other');
+        setCustomBranch(userBranch);
+      }
+
+      setCompany(user.company || user.organization || '');
+      setJobTitle(user.jobTitle || '');
+      setExperienceYears(user.experienceYears || '1-3 years');
+
+      const userIndustry = user.industry || 'AI/ML, GenAI & Autonomous Systems';
+      if (POPULAR_INDUSTRIES.includes(userIndustry)) {
+        setIndustry(userIndustry);
+      } else {
+        setIndustry('Other');
+        setCustomIndustry(userIndustry);
+      }
     }
   }, [user]);
 
@@ -107,19 +265,49 @@ export default function SettingsPage() {
     setProfileError(null);
     setProfileSaved(false);
 
+    const finalDegree = degree === 'Other' ? (customDegree.trim() || 'Other') : degree;
+    const finalBranch = branch === 'Other' ? (customBranch.trim() || 'Other') : branch;
+    const finalGradYear = graduationYear === 'Other' ? (Number(customGradYear) || 2026) : (Number(graduationYear.replace(/\D/g, '')) || 2026);
+    const finalIndustry = industry === 'Other' ? (customIndustry.trim() || 'Other') : industry;
+    const finalDomain = freelanceDomain === 'Other' ? (customDomain.trim() || 'Other') : freelanceDomain;
+
+    const cleanUrl = (input: string, prefixDomain: string) => {
+      const val = input.trim();
+      if (!val) return '';
+      if (val.startsWith('http://') || val.startsWith('https://')) return val;
+      if (val.includes('.') || val.includes('/')) return `https://${val}`;
+      if (prefixDomain) return `https://${prefixDomain}/${val.replace(/^@/, '')}`;
+      return `https://${val}`;
+    };
+
+    const finalGithub = cleanUrl(github, 'github.com');
+    const finalLinkedin = cleanUrl(linkedin, 'linkedin.com/in');
+    const finalPortfolio = cleanUrl(portfolio, '');
+
+    setGithub(finalGithub);
+    setLinkedin(finalLinkedin);
+    setPortfolio(finalPortfolio);
+
     const res = await updateUserProfile({
       name: name.trim() || undefined,
       phone: phone.trim() || undefined,
       bio: bio.trim() || undefined,
-      college: college.trim() || undefined,
-      organization: college.trim() || undefined,
-      graduationYear: Number(graduationYear) || 2026,
+      professionType: professionType,
+      college: professionType === 'STUDENT' ? college.trim() || undefined : undefined,
+      organization: professionType === 'PROFESSIONAL' ? company.trim() || undefined : professionType === 'STUDENT' ? college.trim() || undefined : 'Independent',
+      graduationYear: professionType === 'STUDENT' ? finalGradYear : undefined,
+      degree: professionType === 'STUDENT' ? finalDegree : undefined,
+      branch: professionType === 'STUDENT' ? finalBranch : undefined,
+      company: professionType === 'PROFESSIONAL' ? company.trim() || undefined : undefined,
+      jobTitle: professionType === 'PROFESSIONAL' ? jobTitle.trim() || undefined : professionType === 'FREELANCER' ? freelanceTitle.trim() || undefined : undefined,
+      experienceYears: professionType === 'PROFESSIONAL' ? experienceYears : professionType === 'FREELANCER' ? freelanceLevel : undefined,
+      industry: professionType === 'PROFESSIONAL' ? finalIndustry : professionType === 'FREELANCER' ? finalDomain : undefined,
       skills: skills,
       avatarUrl: avatar || undefined,
       socialLinks: {
-        github: github.trim(),
-        linkedin: linkedin.trim(),
-        portfolio: portfolio.trim(),
+        github: finalGithub,
+        linkedin: finalLinkedin,
+        portfolio: finalPortfolio,
       },
     });
 
@@ -193,9 +381,20 @@ export default function SettingsPage() {
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-1">
       {/* Toast Notification */}
       {profileSaved && (
-        <div className="fixed bottom-6 right-6 z-50 p-4 rounded-2xl bg-slate-900 text-white text-xs font-bold shadow-2xl border border-slate-700 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-3">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-          <span>Account changes saved successfully!</span>
+        <div className="fixed bottom-6 right-6 z-50 p-4 rounded-2xl bg-slate-950 text-white text-xs font-bold shadow-2xl border border-sky-500/30 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-3 backdrop-blur-xl">
+          <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+            <CheckCircle2 className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="font-extrabold text-white">Profile Synchronized in Realtime!</div>
+            <div className="text-[11px] text-slate-400 font-normal">All updates saved to Supabase cloud.</div>
+          </div>
+          <button
+            onClick={() => setShowPublicPreview(true)}
+            className="ml-2 px-3.5 py-1.5 rounded-xl bg-[#0099e6] hover:bg-sky-500 text-white text-[11px] font-black transition-all cursor-pointer whitespace-nowrap"
+          >
+            View Public Card
+          </button>
         </div>
       )}
 
@@ -220,6 +419,14 @@ export default function SettingsPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setShowPublicPreview(true)}
+            className="px-4 py-2.5 rounded-2xl bg-sky-50 hover:bg-sky-100 text-[#0099e6] border border-sky-200 text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+          >
+            <Eye className="w-4 h-4" />
+            <span>Preview Public Profile</span>
+          </button>
           <Link
             href="/dashboard"
             className="px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-all"
@@ -418,48 +625,367 @@ export default function SettingsPage() {
                   <span className="text-[10px] text-slate-400 mt-1 block">Primary login email address cannot be modified directly.</span>
                 </div>
 
-                {/* Bio / Summary */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5">Short Bio & Specialties</label>
-                  <textarea
-                    rows={3}
-                    value={bio}
-                    onChange={(e) => setBio(e.target.value)}
-                    placeholder="Tell hackathon organizers and squads what you love building..."
-                    className="w-full p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0099e6] leading-relaxed"
-                  />
+                {/* Bio / Summary with Rich Text Toolbar */}
+                <RichTextEditor
+                  label="Short Bio & Specialties"
+                  value={bio}
+                  onChange={(val) => setBio(val)}
+                  rows={4}
+                  placeholder="Tell hackathon organizers and squads what you love building (supports **bold**, *italic*, bullets, headings)..."
+                  helperText="Use toolbar or markdown syntax for formatting"
+                />
+
+                {/* ═══ Dynamic Profession Selector ═══ */}
+                <div className="space-y-3 pt-2">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-800 mb-1">
+                      Current Occupation / Status *
+                    </label>
+                    <span className="text-[11px] text-slate-400">
+                      Select your current role so squads and hackathon organizers can discover your background.
+                    </span>
+                  </div>
+
+                  {/* 3 Profession Toggle Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {/* Student Card */}
+                    <button
+                      type="button"
+                      onClick={() => setProfessionType('STUDENT')}
+                      className={`p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer flex flex-col justify-between gap-2 ${
+                        professionType === 'STUDENT'
+                          ? 'border-[#0099e6] bg-sky-50/60 shadow-xs ring-2 ring-[#0099e6]/20'
+                          : 'border-slate-200 bg-white hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className={`p-2 rounded-xl ${professionType === 'STUDENT' ? 'bg-[#0099e6] text-white' : 'bg-slate-100 text-slate-600'}`}>
+                          <GraduationCap className="w-4 h-4" />
+                        </div>
+                        {professionType === 'STUDENT' && (
+                          <span className="px-2 py-0.5 rounded-full bg-[#0099e6] text-white text-[9px] font-extrabold uppercase tracking-wider">
+                            Active
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <div className="text-xs font-black text-slate-900">Student / Learner</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5 leading-tight">
+                          College / School student, fresher & campus builder
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Working Professional Card */}
+                    <button
+                      type="button"
+                      onClick={() => setProfessionType('PROFESSIONAL')}
+                      className={`p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer flex flex-col justify-between gap-2 ${
+                        professionType === 'PROFESSIONAL'
+                          ? 'border-[#0099e6] bg-sky-50/60 shadow-xs ring-2 ring-[#0099e6]/20'
+                          : 'border-slate-200 bg-white hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className={`p-2 rounded-xl ${professionType === 'PROFESSIONAL' ? 'bg-[#0099e6] text-white' : 'bg-slate-100 text-slate-600'}`}>
+                          <Briefcase className="w-4 h-4" />
+                        </div>
+                        {professionType === 'PROFESSIONAL' && (
+                          <span className="px-2 py-0.5 rounded-full bg-[#0099e6] text-white text-[9px] font-extrabold uppercase tracking-wider">
+                            Active
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <div className="text-xs font-black text-slate-900">Working Professional</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5 leading-tight">
+                          Employed at startup, MNC, enterprise or tech lab
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Independent / Freelancer Card */}
+                    <button
+                      type="button"
+                      onClick={() => setProfessionType('FREELANCER')}
+                      className={`p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer flex flex-col justify-between gap-2 ${
+                        professionType === 'FREELANCER'
+                          ? 'border-[#0099e6] bg-sky-50/60 shadow-xs ring-2 ring-[#0099e6]/20'
+                          : 'border-slate-200 bg-white hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className={`p-2 rounded-xl ${professionType === 'FREELANCER' ? 'bg-[#0099e6] text-white' : 'bg-slate-100 text-slate-600'}`}>
+                          <Code2 className="w-4 h-4" />
+                        </div>
+                        {professionType === 'FREELANCER' && (
+                          <span className="px-2 py-0.5 rounded-full bg-[#0099e6] text-white text-[9px] font-extrabold uppercase tracking-wider">
+                            Active
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <div className="text-xs font-black text-slate-900">Independent Hacker</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5 leading-tight">
+                          Full-time builder, freelancer, or solo founder
+                        </div>
+                      </div>
+                    </button>
+                  </div>
                 </div>
 
-                {/* College & Grad Year */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5">College / Organization</label>
-                    <div className="relative">
-                      <GraduationCap className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        value={college}
-                        onChange={(e) => setCollege(e.target.value)}
-                        placeholder="e.g. IIT Delhi / Developer Guild"
-                        className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0099e6]"
-                      />
-                    </div>
-                  </div>
+                {/* ═══ Conditional Fields based on Profession ═══ */}
+                <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-4 animate-in fade-in duration-200">
+                  {/* IF STUDENT */}
+                  {professionType === 'STUDENT' && (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
+                        <BookOpen className="w-4 h-4 text-[#0099e6]" />
+                        <span>Academic & College Details</span>
+                      </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Graduation Year</label>
-                    <select
-                      value={graduationYear}
-                      onChange={(e) => setGraduationYear(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0099e6]"
-                    >
-                      <option value="2024">2024 or earlier</option>
-                      <option value="2025">2025</option>
-                      <option value="2026">2026</option>
-                      <option value="2027">2027</option>
-                      <option value="2028">2028+</option>
-                    </select>
-                  </div>
+                      {/* College Name & Passout Year */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5">College / University Name *</label>
+                          <div className="relative">
+                            <GraduationCap className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                            <input
+                              type="text"
+                              value={college}
+                              onChange={(e) => setCollege(e.target.value)}
+                              placeholder="e.g. IIT Delhi / BITS Pilani / Stanford"
+                              className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0099e6]"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5">Passout / Graduation Year *</label>
+                          <select
+                            value={graduationYear}
+                            onChange={(e) => setGraduationYear(e.target.value)}
+                            className="w-full px-4 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0099e6] cursor-pointer"
+                          >
+                            {ALL_GRADUATION_YEARS.map((yr) => (
+                              <option key={yr} value={yr}>
+                                {yr === '2026' ? '2026 (Pre-Final Year)' : yr === '2025' ? '2025 (Final Year)' : yr === 'Other' ? 'Other (Enter custom year)' : yr}
+                              </option>
+                            ))}
+                          </select>
+                          {graduationYear === 'Other' && (
+                            <input
+                              type="number"
+                              placeholder="Type graduation year (e.g. 2017, 2033)"
+                              value={customGradYear}
+                              onChange={(e) => setCustomGradYear(e.target.value)}
+                              className="mt-2 w-full px-4 py-2 rounded-xl bg-white border border-[#0099e6] text-xs font-semibold text-slate-900 focus:outline-none ring-2 ring-sky-100"
+                            />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Degree & Branch */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5">Degree / Program</label>
+                          <select
+                            value={degree}
+                            onChange={(e) => setDegree(e.target.value)}
+                            className="w-full px-4 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0099e6] cursor-pointer"
+                          >
+                            {POPULAR_DEGREES.map((d) => (
+                              <option key={d} value={d}>{d}</option>
+                            ))}
+                          </select>
+                          {degree === 'Other' && (
+                            <input
+                              type="text"
+                              placeholder="Specify your Degree / Course (e.g. B.Voc, B.F.A)..."
+                              value={customDegree}
+                              onChange={(e) => setCustomDegree(e.target.value)}
+                              className="mt-2 w-full px-4 py-2 rounded-xl bg-white border border-[#0099e6] text-xs font-semibold text-slate-900 focus:outline-none ring-2 ring-sky-100"
+                            />
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5">Branch / Department</label>
+                          <select
+                            value={branch}
+                            onChange={(e) => setBranch(e.target.value)}
+                            className="w-full px-4 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0099e6] cursor-pointer"
+                          >
+                            {POPULAR_BRANCHES.map((b) => (
+                              <option key={b} value={b}>{b}</option>
+                            ))}
+                          </select>
+                          {branch === 'Other' && (
+                            <input
+                              type="text"
+                              placeholder="Specify your Branch (e.g. Cyber Forensics, Marine, Petroleum)..."
+                              value={customBranch}
+                              onChange={(e) => setCustomBranch(e.target.value)}
+                              className="mt-2 w-full px-4 py-2 rounded-xl bg-white border border-[#0099e6] text-xs font-semibold text-slate-900 focus:outline-none ring-2 ring-sky-100 animate-in fade-in"
+                            />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Optional Student Roll / ID */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5">Student ID / Roll No (Optional)</label>
+                        <input
+                          type="text"
+                          value={studentId}
+                          onChange={(e) => setStudentId(e.target.value)}
+                          placeholder="e.g. 21BCE10482 (Optional for campus verification)"
+                          className="w-full px-4 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0099e6]"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* IF WORKING PROFESSIONAL */}
+                  {professionType === 'PROFESSIONAL' && (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
+                        <Building2 className="w-4 h-4 text-[#0099e6]" />
+                        <span>Workplace & Professional Details</span>
+                      </div>
+
+                      {/* Company Name & Role / Designation */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5">Company / Organization Name *</label>
+                          <div className="relative">
+                            <Building className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                            <input
+                              type="text"
+                              value={company}
+                              onChange={(e) => setCompany(e.target.value)}
+                              placeholder="e.g. Google / Microsoft / NextEase / Startup"
+                              className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0099e6]"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5">Role / Designation *</label>
+                          <div className="relative">
+                            <Briefcase className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                            <input
+                              type="text"
+                              value={jobTitle}
+                              onChange={(e) => setJobTitle(e.target.value)}
+                              placeholder="e.g. Senior Frontend Engineer / AI Architect"
+                              className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0099e6]"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Experience & Industry */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5">Total Experience</label>
+                          <select
+                            value={experienceYears}
+                            onChange={(e) => setExperienceYears(e.target.value)}
+                            className="w-full px-4 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0099e6] cursor-pointer"
+                          >
+                            <option value="Fresher (< 1 year)">Fresher (&lt; 1 year)</option>
+                            <option value="1-2 years">1 - 2 years (Associate / Junior)</option>
+                            <option value="3-5 years">3 - 5 years (Mid-Level / Senior)</option>
+                            <option value="5-8 years">5 - 8 years (Staff / Lead)</option>
+                            <option value="8+ years">8+ years (Principal / Architect / Director)</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5">Industry / Domain</label>
+                          <select
+                            value={industry}
+                            onChange={(e) => setIndustry(e.target.value)}
+                            className="w-full px-4 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0099e6] cursor-pointer"
+                          >
+                            {POPULAR_INDUSTRIES.map((ind) => (
+                              <option key={ind} value={ind}>{ind}</option>
+                            ))}
+                          </select>
+                          {industry === 'Other' && (
+                            <input
+                              type="text"
+                              placeholder="Specify your Industry / Sector..."
+                              value={customIndustry}
+                              onChange={(e) => setCustomIndustry(e.target.value)}
+                              className="mt-2 w-full px-4 py-2 rounded-xl bg-white border border-[#0099e6] text-xs font-semibold text-slate-900 focus:outline-none ring-2 ring-sky-100"
+                            />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* IF FREELANCER / INDEPENDENT */}
+                  {professionType === 'FREELANCER' && (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
+                        <Code2 className="w-4 h-4 text-[#0099e6]" />
+                        <span>Independent Builder & Specialty</span>
+                      </div>
+
+                      {/* Title & Level */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5">Primary Title / Specialty *</label>
+                          <input
+                            type="text"
+                            value={freelanceTitle}
+                            onChange={(e) => setFreelanceTitle(e.target.value)}
+                            placeholder="e.g. Full-Stack Web3 Builder / AI Consultant"
+                            className="w-full px-4 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0099e6]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5">Experience Level</label>
+                          <select
+                            value={freelanceLevel}
+                            onChange={(e) => setFreelanceLevel(e.target.value)}
+                            className="w-full px-4 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0099e6] cursor-pointer"
+                          >
+                            <option value="Early Stage Builder">Early Stage Builder (&lt; 2 yrs)</option>
+                            <option value="Intermediate Builder">Intermediate Builder (2-4 yrs)</option>
+                            <option value="Senior Architect / Lead">Senior Architect / Lead (5+ yrs)</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Tech Domain */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5">Primary Focus Domain</label>
+                        <select
+                          value={freelanceDomain}
+                          onChange={(e) => setFreelanceDomain(e.target.value)}
+                          className="w-full px-4 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0099e6] cursor-pointer"
+                        >
+                          {POPULAR_FREELANCE_DOMAINS.map((dom) => (
+                            <option key={dom} value={dom}>{dom}</option>
+                          ))}
+                        </select>
+                        {freelanceDomain === 'Other' && (
+                          <input
+                            type="text"
+                            placeholder="Specify your Focus Domain / Tech Stack..."
+                            value={customDomain}
+                            onChange={(e) => setCustomDomain(e.target.value)}
+                            className="mt-2 w-full px-4 py-2 rounded-xl bg-white border border-[#0099e6] text-xs font-semibold text-slate-900 focus:outline-none ring-2 ring-sky-100"
+                          />
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Skills Tag Management */}
@@ -509,7 +1035,10 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Submit Action */}
-                <div className="pt-4 border-t border-slate-100 flex items-center justify-end">
+                <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                  <div className="text-[11px] text-slate-500 font-medium hidden sm:block">
+                    ⚡ Saves to Supabase and broadcasts to squads in real-time
+                  </div>
                   <button
                     type="submit"
                     disabled={isSavingProfile}
@@ -538,28 +1067,28 @@ export default function SettingsPage() {
 
               <form onSubmit={handleSaveProfile} className="space-y-5">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5">GitHub Profile URL</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">GitHub Profile URL or Handle</label>
                   <div className="relative">
                     <Github className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                     <input
-                      type="url"
+                      type="text"
                       value={github}
                       onChange={(e) => setGithub(e.target.value)}
-                      placeholder="https://github.com/your-username"
+                      placeholder="github.com/your-username or username"
                       className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0099e6]"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5">LinkedIn Profile URL</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">LinkedIn Profile URL or Handle</label>
                   <div className="relative">
                     <Linkedin className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                     <input
-                      type="url"
+                      type="text"
                       value={linkedin}
                       onChange={(e) => setLinkedin(e.target.value)}
-                      placeholder="https://linkedin.com/in/your-profile"
+                      placeholder="linkedin.com/in/your-profile or username"
                       className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0099e6]"
                     />
                   </div>
@@ -570,10 +1099,10 @@ export default function SettingsPage() {
                   <div className="relative">
                     <Globe className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                     <input
-                      type="url"
+                      type="text"
                       value={portfolio}
                       onChange={(e) => setPortfolio(e.target.value)}
-                      placeholder="https://yourportfolio.dev"
+                      placeholder="yourportfolio.dev or https://..."
                       className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0099e6]"
                     />
                   </div>
@@ -787,6 +1316,36 @@ export default function SettingsPage() {
           )}
         </div>
       </div>
+
+      {/* Public Profile Preview Modal */}
+      <PublicProfileModal
+        isOpen={showPublicPreview}
+        onClose={() => setShowPublicPreview(false)}
+        user={user}
+        livePreviewData={{
+          name,
+          bio,
+          avatarUrl: avatar,
+          professionType,
+          college,
+          graduationYear: graduationYear === 'Other' ? customGradYear : graduationYear,
+          degree: degree === 'Other' ? customDegree : degree,
+          branch: branch === 'Other' ? customBranch : branch,
+          company,
+          jobTitle,
+          experienceYears,
+          industry: industry === 'Other' ? customIndustry : industry,
+          freelanceTitle,
+          freelanceLevel,
+          freelanceDomain: freelanceDomain === 'Other' ? customDomain : freelanceDomain,
+          skills,
+          socialLinks: {
+            github,
+            linkedin,
+            portfolio,
+          },
+        }}
+      />
     </div>
   );
 }

@@ -57,6 +57,7 @@ import { formatDate, formatCurrency } from '@/lib/utils';
 import { AuthModal } from '@/components/auth-modal';
 import { AvatarUpload } from '@/components/avatar-upload';
 import { EditEventModal } from '@/components/edit-event-modal';
+import { PublicProfileModal } from '@/components/public-profile-modal';
 
 export default function DashboardPage() {
   const { user, updateUserProfile, updateUserPassword, signOut, loading } = useAuth();
@@ -78,6 +79,7 @@ export default function DashboardPage() {
   const [viewingHackersEvent, setViewingHackersEvent] = useState<ExtendedEvent | null>(null);
   const [deleteConfirmEvent, setDeleteConfirmEvent] = useState<ExtendedEvent | null>(null);
   const [actionSuccessMsg, setActionSuccessMsg] = useState<string | null>(null);
+  const [showPublicProfileModal, setShowPublicProfileModal] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'LIVE' | 'COMPLETED'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -313,6 +315,14 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setShowPublicProfileModal(true)}
+            className="px-4 py-2.5 rounded-2xl bg-sky-50 hover:bg-sky-100 text-[#0099e6] border border-sky-200 text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+          >
+            <Eye className="w-4 h-4" />
+            <span>View Public Profile</span>
+          </button>
           <Link
             href="/settings"
             className="px-4 py-2.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all"
@@ -1194,6 +1204,13 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Public Profile Preview Modal */}
+      <PublicProfileModal
+        isOpen={showPublicProfileModal}
+        onClose={() => setShowPublicProfileModal(false)}
+        user={user}
+      />
     </div>
   );
 }

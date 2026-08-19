@@ -18,6 +18,14 @@ export interface UserPublic {
   socialLinks: SocialLinks | null;
   emailVerified: boolean;
   createdAt: string;
+  // Dynamic Profession Fields
+  professionType?: 'STUDENT' | 'PROFESSIONAL' | 'FREELANCER' | string;
+  degree?: string | null;
+  branch?: string | null;
+  company?: string | null;
+  jobTitle?: string | null;
+  experienceYears?: string | null;
+  industry?: string | null;
 }
 
 export interface SocialLinks {
@@ -36,6 +44,14 @@ export interface UpdateProfileDto {
   bio?: string;
   skills?: string[];
   socialLinks?: SocialLinks;
+  // Dynamic Profession Fields
+  professionType?: 'STUDENT' | 'PROFESSIONAL' | 'FREELANCER' | string;
+  degree?: string;
+  branch?: string;
+  company?: string;
+  jobTitle?: string;
+  experienceYears?: string;
+  industry?: string;
 }
 
 // ─── Organizer Profile ───────────────────────────────────

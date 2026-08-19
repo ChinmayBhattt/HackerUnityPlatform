@@ -277,3 +277,24 @@ SET registration_count = (
   SELECT COUNT(*) FROM public.registrations r WHERE r.event_id = e.id
 )
 WHERE EXISTS (SELECT 1 FROM public.registrations r WHERE r.event_id = e.id);
+
+-- ─── 11. ENHANCED PROFILE COLUMNS FOR BUILDERS & PROFESSIONALS ─────────────
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS phone TEXT,
+  ADD COLUMN IF NOT EXISTS college TEXT,
+  ADD COLUMN IF NOT EXISTS organization TEXT,
+  ADD COLUMN IF NOT EXISTS graduation_year INTEGER,
+  ADD COLUMN IF NOT EXISTS profession_type TEXT DEFAULT 'STUDENT',
+  ADD COLUMN IF NOT EXISTS degree TEXT,
+  ADD COLUMN IF NOT EXISTS branch TEXT,
+  ADD COLUMN IF NOT EXISTS company TEXT,
+  ADD COLUMN IF NOT EXISTS job_title TEXT,
+  ADD COLUMN IF NOT EXISTS experience_years TEXT,
+  ADD COLUMN IF NOT EXISTS industry TEXT,
+  ADD COLUMN IF NOT EXISTS skills TEXT[] DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS github_url TEXT,
+  ADD COLUMN IF NOT EXISTS linkedin_url TEXT,
+  ADD COLUMN IF NOT EXISTS portfolio_url TEXT,
+  ADD COLUMN IF NOT EXISTS avatar_url TEXT,
+  ADD COLUMN IF NOT EXISTS bio TEXT;
+

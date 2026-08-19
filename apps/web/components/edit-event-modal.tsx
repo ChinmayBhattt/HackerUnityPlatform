@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { X, Save, Trophy, Calendar, MapPin, Tag, Globe, Sparkles } from 'lucide-react';
 import { ExtendedEvent } from '@/lib/mock-data';
 import { EventStatus, EventType } from '@hackers-unity/shared-types';
+import { RichTextEditor } from '@/components/rich-text-editor';
 
 interface EditEventModalProps {
   isOpen: boolean;
@@ -109,18 +110,14 @@ export function EditEventModal({ isOpen, event, onClose, onSave }: EditEventModa
             />
           </div>
 
-          {/* Description */}
+          {/* Description with Rich Text Toolbar */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">
-              Description & Problem Statement *
-            </label>
-            <textarea
-              required
-              rows={3}
+            <RichTextEditor
+              label="Description & Problem Statement *"
+              rows={4}
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#0099e6] focus:border-transparent resize-none leading-relaxed"
-              placeholder="Detailed overview of the event..."
+              onChange={(val) => setDescription(val)}
+              placeholder="Detailed overview of the event (supports bold, lists, headings)..."
             />
           </div>
 

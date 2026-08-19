@@ -83,24 +83,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', sbUser.id)
         .single();
 
+      const meta = sbUser.user_metadata || {};
       if (profile) {
         const fullUser: UserPublic = {
           id: profile.id,
-          name: profile.name || sbUser.user_metadata?.name || sbUser.user_metadata?.full_name || sbUser.email?.split('@')[0] || 'Hacker',
+          name: profile.name || meta.name || meta.full_name || sbUser.email?.split('@')[0] || 'Hacker',
           email: profile.email || sbUser.email || '',
-          phone: profile.phone || sbUser.phone || null,
-          role: (profile.role as UserRole) || UserRole.PARTICIPANT,
-          college: profile.college || 'Developer Guild',
-          organization: profile.organization || 'Hackers Unity',
-          graduationYear: 2026,
-          bio: profile.bio || 'Passionate builder & hackathon enthusiast.',
-          avatarUrl: profile.avatar_url || sbUser.user_metadata?.avatar_url || '⚡',
-          skills: profile.skills || ['Next.js', 'TypeScript', 'PostgreSQL'],
+          phone: profile.phone || meta.phone || sbUser.phone || null,
+          role: (profile.role as UserRole) || (meta.role as UserRole) || UserRole.PARTICIPANT,
+          college: profile.college || meta.college || 'Developer Guild',
+          organization: profile.organization || meta.organization || profile.company || meta.company || 'Developer Community',
+          graduationYear: profile.graduation_year || meta.graduation_year || 2026,
+          bio: profile.bio || meta.bio || 'Passionate builder & hackathon enthusiast.',
+          avatarUrl: profile.avatar_url || meta.avatar_url || '⚡',
+          skills: (profile.skills && profile.skills.length > 0) ? profile.skills : (meta.skills || ['Next.js', 'TypeScript', 'PostgreSQL']),
           resumeUrl: null,
           socialLinks: {
-            github: profile.github_url || 'https://github.com',
-            linkedin: profile.linkedin_url || 'https://linkedin.com',
+            github: profile.github_url || meta.github_url || '',
+            linkedin: profile.linkedin_url || meta.linkedin_url || '',
+            portfolio: profile.portfolio_url || meta.portfolio_url || '',
           },
+          professionType: profile.profession_type || meta.profession_type || 'STUDENT',
+          degree: profile.degree || meta.degree || 'B.Tech / B.E (Engineering)',
+          branch: profile.branch || meta.branch || 'Computer Science & Engineering (CSE)',
+          company: profile.company || meta.company || profile.organization || meta.organization || '',
+          jobTitle: profile.job_title || meta.job_title || 'Software Engineer',
+          experienceYears: profile.experience_years || meta.experience_years || '1-3 years',
+          industry: profile.industry || meta.industry || 'AI/ML, GenAI & Autonomous Systems',
           emailVerified: !!sbUser.email_confirmed_at,
           createdAt: profile.created_at || sbUser.created_at,
         };
@@ -109,18 +118,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         const initialUser: UserPublic = {
           id: sbUser.id,
-          name: sbUser.user_metadata?.name || sbUser.user_metadata?.full_name || sbUser.email?.split('@')[0] || 'Hacker',
+          name: meta.name || meta.full_name || sbUser.email?.split('@')[0] || 'Hacker',
           email: sbUser.email || '',
-          phone: sbUser.user_metadata?.phone || sbUser.phone || null,
-          role: (sbUser.user_metadata?.role as UserRole) || UserRole.PARTICIPANT,
-          college: 'Developer Community',
-          organization: 'Hackers Unity',
-          graduationYear: 2026,
-          bio: 'Building future technologies.',
-          avatarUrl: sbUser.user_metadata?.avatar_url || '⚡',
-          skills: ['Next.js', 'TypeScript'],
+          phone: meta.phone || sbUser.phone || null,
+          role: (meta.role as UserRole) || UserRole.PARTICIPANT,
+          college: meta.college || 'Developer Community',
+          organization: meta.organization || meta.company || 'Hackers Unity',
+          graduationYear: meta.graduation_year || 2026,
+          bio: meta.bio || 'Building future technologies.',
+          avatarUrl: meta.avatar_url || '⚡',
+          skills: meta.skills || ['Next.js', 'TypeScript'],
           resumeUrl: null,
-          socialLinks: {},
+          socialLinks: {
+            github: meta.github_url || '',
+            linkedin: meta.linkedin_url || '',
+            portfolio: meta.portfolio_url || '',
+          },
+          professionType: meta.profession_type || 'STUDENT',
+          degree: meta.degree || 'B.Tech / B.E (Engineering)',
+          branch: meta.branch || 'Computer Science & Engineering (CSE)',
+          company: meta.company || meta.organization || '',
+          jobTitle: meta.job_title || 'Software Engineer',
+          experienceYears: meta.experience_years || '1-3 years',
+          industry: meta.industry || 'AI/ML, GenAI & Autonomous Systems',
           emailVerified: !!sbUser.email_confirmed_at,
           createdAt: sbUser.created_at,
         };
@@ -279,26 +299,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const updatedUser: UserPublic = {
         ...user,
         ...updates,
+        socialLinks: {
+          github: updates.socialLinks?.github !== undefined ? updates.socialLinks.github : user.socialLinks?.github || '',
+          linkedin: updates.socialLinks?.linkedin !== undefined ? updates.socialLinks.linkedin : user.socialLinks?.linkedin || '',
+          portfolio: updates.socialLinks?.portfolio !== undefined ? updates.socialLinks.portfolio : user.socialLinks?.portfolio || '',
+        },
       };
+
+      // 1. Instant local optimistic update
       setUser(updatedUser);
       saveStoredUser(updatedUser);
 
-      // Save to Supabase if authenticated
+      // 2. Fast background cloud sync with Supabase
       if (supabaseUser) {
-        const { error } = await supabase.from('profiles').upsert({
-          id: user.id,
-          name: updatedUser.name,
-          college: updatedUser.college,
-          organization: updatedUser.organization,
-          bio: updatedUser.bio,
-          skills: updatedUser.skills,
-          avatar_url: updatedUser.avatarUrl,
-          phone: updatedUser.phone,
-          github_url: updatedUser.socialLinks?.github,
-          linkedin_url: updatedUser.socialLinks?.linkedin,
-          updated_at: new Date().toISOString(),
-        });
-        if (error) console.warn('Supabase profile update warning:', error);
+        Promise.allSettled([
+          supabase.auth.updateUser({
+            data: {
+              name: updatedUser.name,
+              full_name: updatedUser.name,
+              phone: updatedUser.phone,
+              avatar_url: updatedUser.avatarUrl,
+              profession_type: updatedUser.professionType,
+              degree: updatedUser.degree,
+              branch: updatedUser.branch,
+              college: updatedUser.college,
+              company: updatedUser.company,
+              job_title: updatedUser.jobTitle,
+              experience_years: updatedUser.experienceYears,
+              industry: updatedUser.industry,
+              graduation_year: updatedUser.graduationYear,
+              bio: updatedUser.bio,
+              skills: updatedUser.skills,
+              github_url: updatedUser.socialLinks?.github,
+              linkedin_url: updatedUser.socialLinks?.linkedin,
+              portfolio_url: updatedUser.socialLinks?.portfolio,
+            },
+          }),
+          supabase.from('profiles').upsert({
+            id: user.id,
+            name: updatedUser.name,
+            college: updatedUser.college,
+            organization: updatedUser.organization,
+            graduation_year: updatedUser.graduationYear,
+            bio: updatedUser.bio,
+            skills: updatedUser.skills,
+            avatar_url: updatedUser.avatarUrl,
+            phone: updatedUser.phone,
+            github_url: updatedUser.socialLinks?.github,
+            linkedin_url: updatedUser.socialLinks?.linkedin,
+            portfolio_url: updatedUser.socialLinks?.portfolio,
+            profession_type: updatedUser.professionType,
+            degree: updatedUser.degree,
+            branch: updatedUser.branch,
+            company: updatedUser.company,
+            job_title: updatedUser.jobTitle,
+            experience_years: updatedUser.experienceYears,
+            industry: updatedUser.industry,
+            updated_at: new Date().toISOString(),
+          }),
+        ]).catch((e) => console.warn('Supabase profile sync warning:', e));
       }
       return {};
     } catch (err: any) {

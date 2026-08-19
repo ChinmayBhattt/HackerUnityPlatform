@@ -28,6 +28,7 @@ import { ExtendedEvent } from '@/lib/mock-data';
 import { saveHostedEvent, saveDraftEvent } from '@/lib/storage';
 import { createEventInSupabase, uploadHackathonAsset } from '@/lib/supabase-service';
 import { HackathonCard } from '@/components/hackathon-card';
+import { RichTextEditor } from '@/components/rich-text-editor';
 import { useAuth } from '@/lib/auth-context';
 
 const TOTAL_STEPS = 6;
@@ -542,14 +543,13 @@ export default function HostHackathonPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Description & Mission *</label>
-                    <textarea
-                      rows={4}
-                      required
-                      placeholder="What are hackers building? What tools and problem statements are in scope?"
+                    <RichTextEditor
+                      label="Description & Mission *"
+                      rows={5}
+                      placeholder="What are hackers building? What tools, problem statements, and judging criteria are in scope? (supports bold, lists, headings, links)..."
                       value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 placeholder-slate-400 outline-none resize-none leading-relaxed"
+                      onChange={(val) => setDescription(val)}
+                      helperText="Rich formatting enabled (Bold, Lists, Headings, Code, Links)"
                     />
                   </div>
 
@@ -744,8 +744,14 @@ export default function HostHackathonPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Rules & Guidelines</label>
-                    <textarea rows={4} placeholder="Enter the rules, submission criteria, judging parameters, and code of conduct..." value={rulesText} onChange={(e) => setRulesText(e.target.value)} className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 placeholder-slate-400 outline-none resize-none leading-relaxed" />
+                    <RichTextEditor
+                      label="Rules & Guidelines"
+                      rows={4}
+                      placeholder="Enter the rules, submission criteria, judging parameters, and code of conduct..."
+                      value={rulesText}
+                      onChange={(val) => setRulesText(val)}
+                      helperText="Use bullet points, numbered lists, or bold highlights"
+                    />
                   </div>
 
                   <div className="pt-2 flex justify-between">

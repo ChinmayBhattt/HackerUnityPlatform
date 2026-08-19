@@ -20,21 +20,17 @@ import { AuthModal } from '@/components/auth-modal';
 
 export default function HomePage() {
   const { events, loading } = usePublishedEvents();
-  const [selectedTag, setSelectedTag] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [authOpen, setAuthOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
 
-  const tags = ['ALL', 'AI/ML', 'Blockchain', 'Web3', 'Open Source', 'Innovation', 'IoT', 'DevOps'];
-
   const filteredEvents = events.filter((evt) => {
-    const matchesTag = selectedTag === 'ALL' || evt.tags.some((t) => t.toLowerCase() === selectedTag.toLowerCase());
     const matchesQuery =
       !searchQuery ||
       evt.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       evt.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       evt.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesTag && matchesQuery;
+    return matchesQuery;
   });
 
   const displayedEvents = showAll ? filteredEvents : filteredEvents.slice(0, 6);
@@ -97,23 +93,7 @@ export default function HomePage() {
             </Link>
           </div>
 
-          {/* Tag Quick Filters */}
-          <div className="flex flex-wrap justify-center items-center gap-2 mb-10">
-            <span className="text-xs text-slate-500 font-bold mr-1">Trending Tracks:</span>
-            {tags.map((tag) => (
-              <button
-                key={tag}
-                onClick={() => setSelectedTag(tag)}
-                className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  selectedTag === tag
-                    ? 'bg-[#0099e6] text-white shadow-sm'
-                    : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                {tag === 'ALL' ? '🔥 All Categories' : `#${tag}`}
-              </button>
-            ))}
-          </div>
+
 
           {/* Metrics Ticker */}
           <div className="w-full max-w-4xl grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-slate-200">
@@ -245,7 +225,7 @@ export default function HomePage() {
             href="/hackathons"
             className="inline-flex items-center gap-2 text-xs font-bold text-[#0099e6] hover:text-[#0284c7] hover:underline"
           >
-            <span>View All 85+ Events</span>
+            <span>View All Events</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
@@ -287,10 +267,7 @@ export default function HomePage() {
             <h3 className="text-base font-bold text-slate-900">No hackathons found matching your criteria</h3>
             <p className="text-xs text-slate-500 mt-1">Try searching for other keywords or reset your filters.</p>
             <button
-              onClick={() => {
-                setSelectedTag('ALL');
-                setSearchQuery('');
-              }}
+              onClick={() => setSearchQuery('')}
               className="mt-4 px-4 py-2 rounded-xl bg-slate-100 text-xs font-bold text-slate-800 hover:bg-slate-200 transition-colors cursor-pointer"
             >
               Reset Filters
