@@ -96,6 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           graduationYear: profile.graduation_year || meta.graduation_year || 2026,
           bio: profile.bio || meta.bio || 'Passionate builder & hackathon enthusiast.',
           avatarUrl: profile.avatar_url || meta.avatar_url || '⚡',
+          bannerUrl: profile.banner_url || meta.banner_url || null,
           skills: (profile.skills && profile.skills.length > 0) ? profile.skills : (meta.skills || ['Next.js', 'TypeScript', 'PostgreSQL']),
           resumeUrl: null,
           socialLinks: {
@@ -127,6 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           graduationYear: meta.graduation_year || 2026,
           bio: meta.bio || 'Building future technologies.',
           avatarUrl: meta.avatar_url || '⚡',
+          bannerUrl: meta.banner_url || null,
           skills: meta.skills || ['Next.js', 'TypeScript'],
           resumeUrl: null,
           socialLinks: {
@@ -319,6 +321,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               full_name: updatedUser.name,
               phone: updatedUser.phone,
               avatar_url: updatedUser.avatarUrl,
+              banner_url: updatedUser.bannerUrl,
               profession_type: updatedUser.professionType,
               degree: updatedUser.degree,
               branch: updatedUser.branch,
@@ -344,6 +347,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             bio: updatedUser.bio,
             skills: updatedUser.skills,
             avatar_url: updatedUser.avatarUrl,
+            banner_url: updatedUser.bannerUrl,
             phone: updatedUser.phone,
             github_url: updatedUser.socialLinks?.github,
             linkedin_url: updatedUser.socialLinks?.linkedin,

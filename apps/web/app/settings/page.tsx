@@ -39,6 +39,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { AvatarUpload } from '@/components/avatar-upload';
+import { BannerUpload } from '@/components/banner-upload';
 import { AuthModal } from '@/components/auth-modal';
 import { RichTextEditor } from '@/components/rich-text-editor';
 import { PublicProfileModal } from '@/components/public-profile-modal';
@@ -139,6 +140,7 @@ export default function SettingsPage() {
   const [skills, setSkills] = useState<string[]>([]);
   const [newSkillInput, setNewSkillInput] = useState('');
   const [avatar, setAvatar] = useState<string | null>(null);
+  const [banner, setBanner] = useState<string | null>(null);
 
   // Dynamic Profession & Background States
   const [professionType, setProfessionType] = useState<'STUDENT' | 'PROFESSIONAL' | 'FREELANCER'>('STUDENT');
@@ -203,6 +205,7 @@ export default function SettingsPage() {
 
       setSkills(user.skills && user.skills.length > 0 ? user.skills : ['Next.js 16', 'TypeScript', 'PostgreSQL']);
       setAvatar(user.avatarUrl || null);
+      setBanner(user.bannerUrl || null);
       setGithub(user.socialLinks?.github || '');
       setLinkedin(user.socialLinks?.linkedin || '');
       setPortfolio(user.socialLinks?.portfolio || '');
@@ -304,6 +307,7 @@ export default function SettingsPage() {
       industry: professionType === 'PROFESSIONAL' ? finalIndustry : professionType === 'FREELANCER' ? finalDomain : undefined,
       skills: skills,
       avatarUrl: avatar || undefined,
+      bannerUrl: banner || null,
       socialLinks: {
         github: finalGithub,
         linkedin: finalLinkedin,
@@ -569,8 +573,23 @@ export default function SettingsPage() {
               )}
 
               <form onSubmit={handleSaveProfile} className="space-y-6">
+                {/* Profile Cover Banner */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-800 mb-2">
+                    Profile Cover Banner & Theme
+                  </label>
+                  <BannerUpload
+                    currentBanner={banner}
+                    onBannerChange={(newBanner) => setBanner(newBanner)}
+                    onBannerRemove={() => setBanner(null)}
+                  />
+                </div>
+
                 {/* Avatar Uploader */}
                 <div>
+                  <label className="block text-xs font-bold text-slate-800 mb-2">
+                    Profile Photo / Logo
+                  </label>
                   <AvatarUpload
                     currentAvatar={avatar}
                     onAvatarChange={(newUrl) => setAvatar(newUrl)}
@@ -1326,6 +1345,7 @@ export default function SettingsPage() {
           name,
           bio,
           avatarUrl: avatar,
+          bannerUrl: banner,
           professionType,
           college,
           graduationYear: graduationYear === 'Other' ? customGradYear : graduationYear,

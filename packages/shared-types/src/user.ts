@@ -13,6 +13,7 @@ export interface UserPublic {
   graduationYear: number | null;
   bio: string | null;
   avatarUrl: string | null;
+  bannerUrl?: string | null;
   skills: string[];
   resumeUrl: string | null;
   socialLinks: SocialLinks | null;
@@ -42,6 +43,8 @@ export interface UpdateProfileDto {
   organization?: string;
   graduationYear?: number;
   bio?: string;
+  avatarUrl?: string;
+  bannerUrl?: string | null;
   skills?: string[];
   socialLinks?: SocialLinks;
   // Dynamic Profession Fields
