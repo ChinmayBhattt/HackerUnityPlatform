@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Hacker's Unity — The Global Arena for Builders & Hackathons",
+  title: "Hacker's Unity Platform",
   description:
     "Discover premier AI, Web3, and Fullstack hackathons. Find world-class teammates, build groundbreaking projects, and win venture-backed prize pools on Hacker's Unity.",
   keywords: [

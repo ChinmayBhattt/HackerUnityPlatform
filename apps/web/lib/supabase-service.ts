@@ -760,6 +760,368 @@ export async function joinTeamSupabase(
 }
 
 /**
+ * ─── 6.5 TEAM INVITATIONS ─────────────────────────────────────────────────────
+ */
+
+/**
+ * Send a team invite to an email address
+ */
+export async function sendTeamInvite(
+  teamId: string,
+  eventId: string,
+  invitedByUserId: string,
+  invitedEmail: string
+): Promise<{ success: boolean; invite?: any; inviteLink?: string; error?: string }> {
+  try {
+    // Check if invite already exists for this email + team
+    const { data: existing } = await supabase
+      .from('team_invitations')
+      .select('id, status, invite_token')
+      .eq('team_id', teamId)
+      .eq('invited_email', invitedEmail.toLowerCase().trim())
+      .maybeSingle();
+
+    // Fetch team and event metadata for link and email
+    const { data: teamData } = await supabase
+      .from('teams')
+      .select('name, events(id, title, slug)')
+      .eq('id', teamId)
+      .maybeSingle();
+
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('name')
+      .eq('id', invitedByUserId)
+      .maybeSingle();
+
+    const teamName = teamData?.name || 'Squad';
+    const eventSlug = (teamData?.events as any)?.slug || eventId;
+    const eventTitle = (teamData?.events as any)?.title || 'Hackathon';
+    const inviterName = profileData?.name || 'A teammate';
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+
+    let inviteRecord: any = null;
+
+    if (existing) {
+      if (existing.status === 'ACCEPTED') {
+        return { success: false, error: 'This person has already accepted the invite and is on the team.' };
+      }
+      if (existing.status === 'PENDING') {
+        // Already pending, still resend the email
+        inviteRecord = existing;
+      } else {
+        // If DECLINED or EXPIRED, update to PENDING again
+        const { data: updated, error: updateErr } = await supabase
+          .from('team_invitations')
+          .update({
+            status: 'PENDING',
+            responded_at: null,
+            invited_by: invitedByUserId,
+          })
+          .eq('id', existing.id)
+          .select('*')
+          .single();
+
+        if (updateErr) {
+          return { success: false, error: updateErr.message };
+        }
+        inviteRecord = updated;
+      }
+    } else {
+      // Create new invite
+      const { data: invite, error } = await supabase
+        .from('team_invitations')
+        .insert({
+          team_id: teamId,
+          event_id: eventId,
+          invited_by: invitedByUserId,
+          invited_email: invitedEmail.toLowerCase().trim(),
+          status: 'PENDING',
+        })
+        .select('*')
+        .single();
+
+      if (error || !invite) {
+        return { success: false, error: error?.message || 'Failed to create invite' };
+      }
+      inviteRecord = invite;
+    }
+
+    const inviteLink = `${origin}/hackathons/${eventSlug}/invite?token=${inviteRecord.invite_token}`;
+
+    // Dispatch email via API route
+    try {
+      if (typeof window !== 'undefined') {
+        fetch('/api/invite-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            toEmail: invitedEmail.toLowerCase().trim(),
+            teamName,
+            hackathonTitle: eventTitle,
+            hackathonSlug: eventSlug,
+            invitedByName: inviterName,
+            inviteToken: inviteRecord.invite_token,
+            origin,
+          }),
+        }).catch((e) => console.warn('Email dispatch warning:', e));
+      }
+    } catch (e) {
+      console.warn('Could not trigger invite email:', e);
+    }
+
+    return { success: true, invite: inviteRecord, inviteLink };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Failed to send invite' };
+  }
+}
+
+/**
+ * Fetch all invites for a specific team (leader view)
+ */
+export async function fetchTeamInvites(teamId: string): Promise<any[]> {
+  try {
+    const { data, error } = await supabase
+      .from('team_invitations')
+      .select('*, profiles:invited_by(name, email, avatar_url)')
+      .eq('team_id', teamId)
+      .order('created_at', { ascending: false });
+
+    if (error || !data) return [];
+    return data;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Fetch all pending invites for a user by their email
+ */
+export async function fetchPendingInvitesForUser(email: string): Promise<any[]> {
+  try {
+    if (!email) return [];
+    const { data, error } = await supabase
+      .from('team_invitations')
+      .select('*, teams(id, name, event_id, leader_id, description, profiles:leader_id(name, email, avatar_url)), events(id, title, slug, start_date, end_date)')
+      .eq('invited_email', email.toLowerCase().trim())
+      .eq('status', 'PENDING')
+      .order('created_at', { ascending: false });
+
+    if (error || !data) return [];
+    return data;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Get invite details by token (for the accept page)
+ */
+export async function getInviteByToken(token: string): Promise<{ invite: any | null; error?: string }> {
+  try {
+    const { data, error } = await supabase
+      .from('team_invitations')
+      .select('*, teams(id, name, event_id, leader_id, description, max_members, profiles:leader_id(name, email, avatar_url), team_members(id, user_id, role, profiles:user_id(name, email, avatar_url))), events(id, title, slug, start_date, end_date, banner_url, location)')
+      .eq('invite_token', token)
+      .maybeSingle();
+
+    if (error) return { invite: null, error: error.message };
+    if (!data) return { invite: null, error: 'Invite not found or has expired.' };
+
+    return { invite: data };
+  } catch (err: any) {
+    return { invite: null, error: err.message || 'Failed to fetch invite' };
+  }
+}
+
+/**
+ * Accept a team invite by token
+ */
+export async function acceptTeamInvite(
+  inviteToken: string,
+  userId: string
+): Promise<{ success: boolean; teamId?: string; eventSlug?: string; error?: string }> {
+  try {
+    // 1. Get the invite
+    const { invite, error: fetchErr } = await getInviteByToken(inviteToken);
+    if (fetchErr || !invite) {
+      return { success: false, error: fetchErr || 'Invite not found.' };
+    }
+
+    if (invite.status !== 'PENDING') {
+      return { success: false, error: `This invite has already been ${invite.status.toLowerCase()}.` };
+    }
+
+    const team = invite.teams;
+    if (!team) {
+      return { success: false, error: 'Team not found.' };
+    }
+
+    // 2. Check team capacity
+    const currentMembers = team.team_members?.length || 0;
+    const maxMembers = team.max_members || 4;
+    if (currentMembers >= maxMembers) {
+      return { success: false, error: 'This team has already reached its maximum capacity.' };
+    }
+
+    // 3. Check if user is already a member
+    const isAlreadyMember = team.team_members?.some((m: any) => m.user_id === userId);
+    if (isAlreadyMember) {
+      // Mark invite as accepted anyway
+      await supabase
+        .from('team_invitations')
+        .update({ status: 'ACCEPTED', responded_at: new Date().toISOString() })
+        .eq('invite_token', inviteToken);
+
+      return { success: true, teamId: team.id, eventSlug: invite.events?.slug };
+    }
+
+    // 4. Add user to team_members
+    const { error: joinErr } = await supabase.from('team_members').insert({
+      team_id: team.id,
+      user_id: userId,
+      role: 'MEMBER',
+      status: 'ACCEPTED',
+    });
+
+    if (joinErr) {
+      return { success: false, error: joinErr.message };
+    }
+
+    // 5. Update invite status
+    await supabase
+      .from('team_invitations')
+      .update({ status: 'ACCEPTED', responded_at: new Date().toISOString() })
+      .eq('invite_token', inviteToken);
+
+    return {
+      success: true,
+      teamId: team.id,
+      eventSlug: invite.events?.slug,
+    };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Failed to accept invite' };
+  }
+}
+
+/**
+ * Decline a team invite by token
+ */
+export async function declineTeamInvite(
+  inviteToken: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase
+      .from('team_invitations')
+      .update({ status: 'DECLINED', responded_at: new Date().toISOString() })
+      .eq('invite_token', inviteToken)
+      .eq('status', 'PENDING');
+
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Failed to decline invite' };
+  }
+}
+
+/**
+ * Leave a team (remove self from team_members)
+ */
+export async function leaveTeam(
+  teamId: string,
+  userId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // Check if user is leader — leaders can't leave (must delete team)
+    const { data: team } = await supabase
+      .from('teams')
+      .select('leader_id')
+      .eq('id', teamId)
+      .maybeSingle();
+
+    if (team?.leader_id === userId) {
+      return { success: false, error: 'Team leaders cannot leave their own team. Delete the team instead.' };
+    }
+
+    const { error } = await supabase
+      .from('team_members')
+      .delete()
+      .eq('team_id', teamId)
+      .eq('user_id', userId);
+
+    if (error) return { success: false, error: error.message };
+
+    // Also update any corresponding invite
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (userProfile?.email) {
+      await supabase
+        .from('team_invitations')
+        .update({ status: 'DECLINED', responded_at: new Date().toISOString() })
+        .eq('team_id', teamId)
+        .eq('invited_email', userProfile.email);
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Failed to leave team' };
+  }
+}
+
+/**
+ * Fetch full team details with all members (for team view)
+ */
+export async function fetchTeamWithMembers(teamId: string): Promise<any | null> {
+  try {
+    const { data, error } = await supabase
+      .from('teams')
+      .select('*, profiles:leader_id(name, email, avatar_url), team_members(*, profiles:user_id(name, email, avatar_url)), team_invitations(id, invited_email, status, created_at)')
+      .eq('id', teamId)
+      .maybeSingle();
+
+    if (error || !data) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Fetch all teams a user is part of (for dashboard)
+ */
+export async function fetchUserTeams(userId: string): Promise<any[]> {
+  try {
+    if (!userId) return [];
+
+    // Get team IDs the user is a member of
+    const { data: memberRows, error: memberErr } = await supabase
+      .from('team_members')
+      .select('team_id')
+      .eq('user_id', userId);
+
+    if (memberErr || !memberRows || memberRows.length === 0) return [];
+
+    const teamIds = memberRows.map((r: any) => r.team_id);
+
+    // Fetch full team details
+    const { data: teams, error: teamErr } = await supabase
+      .from('teams')
+      .select('*, profiles:leader_id(name, email, avatar_url), team_members(*, profiles:user_id(name, email, avatar_url)), events(id, title, slug, start_date, end_date), team_invitations(id, invited_email, status, created_at)')
+      .in('id', teamIds)
+      .order('created_at', { ascending: false });
+
+    if (teamErr || !teams) return [];
+    return teams;
+  } catch {
+    return [];
+  }
+}
+
+/**
  * ─── 7. REALTIME SUBSCRIPTION HELPERS ─────────────────────────────────────────
  */
 export function subscribeToPublishedEvents(onEventChange: (payload?: any) => void): () => void {

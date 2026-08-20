@@ -20,11 +20,23 @@ import {
   ArrowRight,
   Sparkles,
   Check,
+  Copy,
+  Send,
+  Mail,
+  UserPlus,
+  Share2,
+  Clock,
+  Loader2,
 } from 'lucide-react';
 import { useEvent } from '@/lib/hooks/use-events';
 import { useAuth } from '@/lib/auth-context';
 import { useEventTeams } from '@/lib/hooks/use-registration';
-import { registerForEventSupabase } from '@/lib/supabase-service';
+import {
+  registerForEventSupabase,
+  sendTeamInvite,
+  fetchTeamInvites,
+  fetchTeamWithMembers,
+} from '@/lib/supabase-service';
 import { formatCurrency, formatDate, formatDateTime, getDaysLeft } from '@/lib/utils';
 
 interface RegisterPageProps {
@@ -47,6 +59,16 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
   const [teamName, setTeamName] = useState('');
   const [teamDescription, setTeamDescription] = useState('');
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+
+  // Step 3: Squad Invitation State
+  const [createdTeamId, setCreatedTeamId] = useState<string | null>(null);
+  const [createdTeamData, setCreatedTeamData] = useState<any | null>(null);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [sendingInvite, setSendingInvite] = useState(false);
+  const [inviteSuccessMsg, setInviteSuccessMsg] = useState<string | null>(null);
+  const [inviteErrorMsg, setInviteErrorMsg] = useState<string | null>(null);
+  const [copiedInvite, setCopiedInvite] = useState(false);
+  const [teamInvitesList, setTeamInvitesList] = useState<any[]>([]);
 
   // Step 2: Participant details (Pre-filled from auth profile)
   const [fullName, setFullName] = useState(user?.name || '');
@@ -174,6 +196,12 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
           return;
         }
 
+        if (teamRes.team?.id) {
+          setCreatedTeamId(teamRes.team.id);
+          fetchTeamWithMembers(teamRes.team.id).then((t) => setCreatedTeamData(t));
+          fetchTeamInvites(teamRes.team.id).then((invs) => setTeamInvitesList(invs));
+        }
+
         // 2. Register leader
         const regRes = await registerForEventSupabase({
           eventId: event.id,
@@ -278,6 +306,59 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleSendInviteSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setInviteErrorMsg(null);
+    setInviteSuccessMsg(null);
+
+    if (!createdTeamId) {
+      setInviteErrorMsg('Squad ID not found. Please refresh.');
+      return;
+    }
+    if (!inviteEmail.trim() || !inviteEmail.includes('@')) {
+      setInviteErrorMsg('Please enter a valid email address.');
+      return;
+    }
+
+    setSendingInvite(true);
+    try {
+      const userId = supabaseUser?.id || user?.id || '';
+      const res = await sendTeamInvite(createdTeamId, event.id, userId, inviteEmail.trim());
+
+      if (!res.success) {
+        setInviteErrorMsg(res.error || 'Failed to send invite.');
+      } else {
+        setInviteSuccessMsg(`Invite sent to ${inviteEmail.trim()}!`);
+        setInviteEmail('');
+        const updatedInvites = await fetchTeamInvites(createdTeamId);
+        setTeamInvitesList(updatedInvites);
+        const updatedTeam = await fetchTeamWithMembers(createdTeamId);
+        setCreatedTeamData(updatedTeam);
+      }
+    } catch (err: any) {
+      setInviteErrorMsg(err.message || 'An error occurred.');
+    } finally {
+      setSendingInvite(false);
+    }
+  };
+
+  const getShareableInviteLink = () => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    // If we have an existing pending invite with a token, use it, or link to the hackathon invite page
+    const latestInvite = teamInvitesList.find((i) => i.status === 'PENDING');
+    if (latestInvite?.invite_token) {
+      return `${origin}/hackathons/${event.slug}/invite?token=${latestInvite.invite_token}`;
+    }
+    return `${origin}/hackathons/${event.slug}/register`;
+  };
+
+  const handleCopyLink = () => {
+    const link = getShareableInviteLink();
+    navigator.clipboard.writeText(link);
+    setCopiedInvite(true);
+    setTimeout(() => setCopiedInvite(false), 2500);
   };
 
   return (
@@ -887,6 +968,104 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                   </span>
                 </div>
               </div>
+
+              {/* ─── Invite Teammates Section (Team Leaders Only) ─── */}
+              {createdTeamId && mode === 'CREATE_TEAM' && (
+                <div className="max-w-md mx-auto w-full space-y-4 text-left">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-sky-50 border border-sky-200 text-[#0099e6] flex items-center justify-center">
+                      <UserPlus className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900">Invite Your Teammates</h3>
+                      <p className="text-[10px] text-slate-500">Send invite links via email — they'll join your squad instantly.</p>
+                    </div>
+                  </div>
+
+                  {/* Email Invite Form */}
+                  <form onSubmit={handleSendInviteSubmit} className="flex gap-2">
+                    <div className="flex-1 relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                      <input
+                        type="email"
+                        value={inviteEmail}
+                        onChange={(e) => setInviteEmail(e.target.value)}
+                        placeholder="teammate@email.com"
+                        className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-sky-200 focus:border-[#0099e6] outline-none transition-all"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={sendingInvite}
+                      className="px-4 py-2.5 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-sky-500/20 disabled:opacity-50 transition-all cursor-pointer"
+                    >
+                      {sendingInvite ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                      Send
+                    </button>
+                  </form>
+
+                  {/* Share Link Button */}
+                  <button
+                    onClick={handleCopyLink}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-700 transition-colors cursor-pointer"
+                  >
+                    {copiedInvite ? (
+                      <>
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                        <span className="text-emerald-700">Link Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Share2 className="w-3.5 h-3.5" />
+                        <span>Copy Shareable Invite Link</span>
+                      </>
+                    )}
+                  </button>
+
+                  {/* Status Messages */}
+                  {inviteSuccessMsg && (
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-700 font-medium">
+                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                      <span>{inviteSuccessMsg}</span>
+                    </div>
+                  )}
+                  {inviteErrorMsg && (
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 font-medium">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{inviteErrorMsg}</span>
+                    </div>
+                  )}
+
+                  {/* Sent Invites List */}
+                  {teamInvitesList.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Sent Invites</p>
+                      {teamInvitesList.map((inv: any) => (
+                        <div
+                          key={inv.id}
+                          className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Mail className="w-3.5 h-3.5 text-slate-400" />
+                            <span className="font-medium text-slate-700">{inv.invited_email}</span>
+                          </div>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              inv.status === 'ACCEPTED'
+                                ? 'bg-emerald-100 text-emerald-700'
+                                : inv.status === 'DECLINED'
+                                ? 'bg-red-100 text-red-700'
+                                : 'bg-amber-100 text-amber-700'
+                            }`}
+                          >
+                            {inv.status === 'ACCEPTED' ? '✓ Joined' : inv.status === 'DECLINED' ? '✗ Declined' : '⏳ Pending'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Navigation CTAs */}
               <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
