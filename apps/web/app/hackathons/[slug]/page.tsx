@@ -17,6 +17,7 @@ import {
   Award,
   Users,
   ShieldCheck,
+  Rocket,
 } from 'lucide-react';
 import { useEvent } from '@/lib/hooks/use-events';
 import { useEventRegistration } from '@/lib/hooks/use-registration';
@@ -292,12 +293,12 @@ export default function HackathonDetailPage({ params }: PageProps) {
                         This event allows squads of {event.minTeamSize}-{event.maxTeamSize} builders.
                       </p>
                     </div>
-                    <button
-                      onClick={() => setShowTeamModal(true)}
-                      className="px-4 py-2 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white text-xs font-bold transition-all shadow-xs whitespace-nowrap cursor-pointer"
+                    <Link
+                      href={`/hackathons/${event.slug}/register`}
+                      className="px-4 py-2 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white text-xs font-bold transition-all shadow-xs whitespace-nowrap"
                     >
-                      Squad Portal
-                    </button>
+                      Squad Registration Portal
+                    </Link>
                   </div>
                 )}
               </div>
@@ -527,29 +528,14 @@ export default function HackathonDetailPage({ params }: PageProps) {
                 >
                   Register on External Portal ↗
                 </a>
-              ) : event.isTeamEvent && (event.minTeamSize || 1) > 1 ? (
-                <div className="space-y-2">
-                  <button
-                    onClick={() => setShowTeamModal(true)}
-                    className="w-full py-3.5 rounded-2xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-extrabold text-sm shadow-md shadow-sky-500/20 transition-all cursor-pointer flex items-center justify-center gap-2"
-                  >
-                    <Users className="w-4 h-4" />
-                    <span>Create / Join Squad</span>
-                  </button>
-                  <button
-                    onClick={() => setShowRegModal(true)}
-                    className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
-                  >
-                    Individual Registration
-                  </button>
-                </div>
               ) : (
-                <button
-                  onClick={() => setShowRegModal(true)}
-                  className="w-full py-3.5 rounded-2xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-extrabold text-sm shadow-md shadow-sky-500/20 transition-all cursor-pointer"
+                <Link
+                  href={`/hackathons/${event.slug}/register`}
+                  className="w-full py-3.5 rounded-2xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-extrabold text-sm shadow-md shadow-sky-500/20 transition-all text-center flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  Register for Hackathon
-                </button>
+                  <Rocket className="w-4 h-4" />
+                  <span>Register for Hackathon</span>
+                </Link>
               )}
 
               {/* Quick Info Grid */}

@@ -208,22 +208,16 @@ export function HackathonCard({ event, isBookmarked, onBookmarkChange }: Hackath
                 Register
               </a>
             ) : (
-              <button
-                onClick={() => setShowRegModal(true)}
-                className="py-2 px-4 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-bold text-xs shadow-xs shadow-sky-500/30 transition-all cursor-pointer"
+              <Link
+                href={`/hackathons/${event.slug}/register`}
+                className="py-2 px-4 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-bold text-xs shadow-xs shadow-sky-500/30 transition-all text-center inline-block"
               >
                 Register
-              </button>
+              </Link>
             )}
           </div>
         </div>
       </div>
-
-      <RegistrationModal
-        event={event}
-        isOpen={showRegModal}
-        onClose={() => setShowRegModal(false)}
-      />
     </>
   );
 }
