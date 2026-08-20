@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS public.submissions (
 );
 
 -- ==============================================================================
--- Row Level Security (RLS) Policies
+-- Row Level Security (RLS) Policies (Idempotent)
 -- ==============================================================================
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
@@ -123,28 +123,52 @@ ALTER TABLE public.teams ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.submissions ENABLE ROW LEVEL SECURITY;
 
 -- Profiles: Public read, authenticated user update own profile
+DROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON public.profiles;
 CREATE POLICY "Public profiles are viewable by everyone" ON public.profiles FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Users can insert their own profile" ON public.profiles;
 CREATE POLICY "Users can insert their own profile" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
 CREATE POLICY "Users can update their own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
 
 -- Events: Public read published events, organizers manage own events
+DROP POLICY IF EXISTS "Published events are viewable by everyone" ON public.events;
 CREATE POLICY "Published events are viewable by everyone" ON public.events FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Authenticated users can create events" ON public.events;
 CREATE POLICY "Authenticated users can create events" ON public.events FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+DROP POLICY IF EXISTS "Organizers can update own events" ON public.events;
 CREATE POLICY "Organizers can update own events" ON public.events FOR UPDATE USING (auth.uid() = organizer_id);
 
 -- Registrations: User can view & manage their own registrations
+DROP POLICY IF EXISTS "Users can view their own registrations" ON public.registrations;
 CREATE POLICY "Users can view their own registrations" ON public.registrations FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can register for events" ON public.registrations;
 CREATE POLICY "Users can register for events" ON public.registrations FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Bookmarks: User can view & manage their own bookmarks
+DROP POLICY IF EXISTS "Users can view own bookmarks" ON public.bookmarks;
 CREATE POLICY "Users can view own bookmarks" ON public.bookmarks FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert bookmarks" ON public.bookmarks;
 CREATE POLICY "Users can insert bookmarks" ON public.bookmarks FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can delete own bookmarks" ON public.bookmarks;
 CREATE POLICY "Users can delete own bookmarks" ON public.bookmarks FOR DELETE USING (auth.uid() = user_id);
 
 -- Teams: Public read, squad leaders manage squad
+DROP POLICY IF EXISTS "Teams are viewable by everyone" ON public.teams;
 CREATE POLICY "Teams are viewable by everyone" ON public.teams FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Authenticated users can create teams" ON public.teams;
 CREATE POLICY "Authenticated users can create teams" ON public.teams FOR INSERT WITH CHECK (auth.uid() = leader_id);
 
 -- Submissions: Public read submitted projects, submitter can insert/update
+DROP POLICY IF EXISTS "Submissions viewable by everyone" ON public.submissions;
 CREATE POLICY "Submissions viewable by everyone" ON public.submissions FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Users can submit projects" ON public.submissions;
 CREATE POLICY "Users can submit projects" ON public.submissions FOR INSERT WITH CHECK (auth.uid() = submitter_id);

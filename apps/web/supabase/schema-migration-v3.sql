@@ -17,18 +17,21 @@ CREATE TABLE IF NOT EXISTS public.team_members (
 ALTER TABLE public.team_members ENABLE ROW LEVEL SECURITY;
 
 -- Team members: viewable by team members, manageable by leader
+DROP POLICY IF EXISTS "Team members can view their team" ON public.team_members;
 CREATE POLICY "Team members can view their team" ON public.team_members
   FOR SELECT USING (
     auth.uid() = user_id
     OR auth.uid() IN (SELECT leader_id FROM public.teams WHERE id = team_id)
   );
 
+DROP POLICY IF EXISTS "Team leaders can add members" ON public.team_members;
 CREATE POLICY "Team leaders can add members" ON public.team_members
   FOR INSERT WITH CHECK (
     auth.uid() IN (SELECT leader_id FROM public.teams WHERE id = team_id)
     OR auth.uid() = user_id
   );
 
+DROP POLICY IF EXISTS "Team leaders can remove members" ON public.team_members;
 CREATE POLICY "Team leaders can remove members" ON public.team_members
   FOR DELETE USING (
     auth.uid() IN (SELECT leader_id FROM public.teams WHERE id = team_id)

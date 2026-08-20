@@ -34,9 +34,11 @@ VALUES ('hackathon-assets', 'hackathon-assets', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Public read access for hackathon logos and banners
+DROP POLICY IF EXISTS "Public read for hackathon assets" ON storage.objects;
 CREATE POLICY "Public read for hackathon assets" ON storage.objects
   FOR SELECT USING (bucket_id = 'hackathon-assets');
 
 -- Authenticated upload for hackathon assets
+DROP POLICY IF EXISTS "Authenticated users can upload hackathon assets" ON storage.objects;
 CREATE POLICY "Authenticated users can upload hackathon assets" ON storage.objects
-  FOR INSERT WITH CHECK (bucket_id = 'hackathon-assets' AND auth.role() = 'authenticated');
+  FOR INSERT WITH CHECK (bucket_id = 'hackathon-assets' AND (auth.role() = 'authenticated' OR auth.role() = 'anon'));

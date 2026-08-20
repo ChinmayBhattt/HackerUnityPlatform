@@ -280,7 +280,21 @@ export async function createEventInSupabase(
       return { success: false, error: error.message };
     }
 
-    return { success: true, data: mapDbEventToExtended(data) };
+    const createdEvent = mapDbEventToExtended(data);
+
+    // Instant Realtime Broadcast to all connected clients/browsers
+    try {
+      const channel = supabase.channel('public:events_realtime');
+      channel.send({
+        type: 'broadcast',
+        event: 'event_created',
+        payload: { event: createdEvent },
+      });
+    } catch (e) {
+      console.warn('Broadcast send error:', e);
+    }
+
+    return { success: true, data: createdEvent };
   } catch (err: any) {
     return { success: false, error: err.message || 'Creation failed' };
   }
@@ -329,6 +343,18 @@ export async function updateEventInSupabase(
     if (error) {
       return { success: false, error: error.message };
     }
+
+    try {
+      const channel = supabase.channel('public:events_realtime');
+      channel.send({
+        type: 'broadcast',
+        event: 'event_updated',
+        payload: { eventId, updates },
+      });
+    } catch (e) {
+      console.warn('Broadcast send error:', e);
+    }
+
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err.message || 'Update failed' };
@@ -339,6 +365,18 @@ export async function deleteEventInSupabase(eventId: string): Promise<{ success:
   try {
     const { error } = await supabase.from('events').delete().eq('id', eventId);
     if (error) return { success: false, error: error.message };
+
+    try {
+      const channel = supabase.channel('public:events_realtime');
+      channel.send({
+        type: 'broadcast',
+        event: 'event_deleted',
+        payload: { eventId },
+      });
+    } catch (e) {
+      console.warn('Broadcast send error:', e);
+    }
+
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err.message || 'Delete failed' };
@@ -435,6 +473,18 @@ export async function registerForEventSupabase(
     if (error) {
       console.warn('Supabase registration error:', error.message);
       return { success: false, error: error.message };
+    }
+
+    // Realtime Broadcast registration to update counters everywhere
+    try {
+      const channel = supabase.channel('public:events_realtime');
+      channel.send({
+        type: 'broadcast',
+        event: 'registration_created',
+        payload: { eventId: input.eventId, userEmail: input.userEmail },
+      });
+    } catch (e) {
+      console.warn('Broadcast registration error:', e);
     }
 
     return { success: true };
@@ -570,7 +620,7 @@ export async function joinTeamSupabase(
 /**
  * ─── 7. REALTIME SUBSCRIPTION HELPERS ─────────────────────────────────────────
  */
-export function subscribeToPublishedEvents(onEventChange: () => void): () => void {
+export function subscribeToPublishedEvents(onEventChange: (payload?: any) => void): () => void {
   try {
     // Remove any existing channel with the same name first to prevent
     // "cannot add callbacks after subscribe()" errors on React StrictMode re-mounts
@@ -582,12 +632,37 @@ export function subscribeToPublishedEvents(onEventChange: () => void): () => voi
 
     const channel = supabase
       .channel(channelName)
+      // Listen to instant client-to-client Broadcasts
+      .on('broadcast', { event: 'event_created' }, (payload) => {
+        onEventChange(payload);
+      })
+      .on('broadcast', { event: 'event_updated' }, (payload) => {
+        onEventChange(payload);
+      })
+      .on('broadcast', { event: 'event_deleted' }, (payload) => {
+        onEventChange(payload);
+      })
+      .on('broadcast', { event: 'registration_created' }, (payload) => {
+        onEventChange(payload);
+      })
+      // Listen to direct Postgres DB changes
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'events',
+        },
+        () => {
+          onEventChange();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'registrations',
         },
         () => {
           onEventChange();
@@ -606,7 +681,7 @@ export function subscribeToPublishedEvents(onEventChange: () => void): () => voi
 
 export function subscribeToEventDetails(
   eventIdOrSlug: string,
-  onUpdate: () => void
+  onUpdate: (payload?: any) => void
 ): () => void {
   try {
     const channelName = `public:event_${eventIdOrSlug}`;
@@ -617,6 +692,17 @@ export function subscribeToEventDetails(
 
     const channel = supabase
       .channel(channelName)
+      // Broadcast events
+      .on('broadcast', { event: 'event_updated' }, (payload) => {
+        onUpdate(payload);
+      })
+      .on('broadcast', { event: 'registration_created' }, (payload) => {
+        onUpdate(payload);
+      })
+      .on('broadcast', { event: 'team_created' }, (payload) => {
+        onUpdate(payload);
+      })
+      // Postgres changes
       .on(
         'postgres_changes',
         {
@@ -634,6 +720,17 @@ export function subscribeToEventDetails(
           event: '*',
           schema: 'public',
           table: 'registrations',
+        },
+        () => {
+          onUpdate();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'teams',
         },
         () => {
           onUpdate();
