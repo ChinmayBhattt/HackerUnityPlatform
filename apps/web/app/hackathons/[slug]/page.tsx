@@ -25,6 +25,9 @@ import { formatCurrency, formatDate, formatDateTime, getDaysLeft, getStatusBadge
 import { RegistrationModal } from '@/components/registration-modal';
 import { TeamRegistrationModal } from '@/components/team-registration-modal';
 
+import { useAuth } from '@/lib/auth-context';
+import { useEffect } from 'react';
+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
@@ -33,12 +36,20 @@ export default function HackathonDetailPage({ params }: PageProps) {
   const resolvedParams = use(params);
   const { event, loading, refresh } = useEvent(resolvedParams.slug);
   const { isRegistered } = useEventRegistration(event?.id || '');
+  const { user, supabaseUser } = useAuth();
 
-  const [isBookmarked, setIsBookmarked] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    const bookmarks = getBookmarkedEventIds();
-    return event ? bookmarks.includes(event.id) : false;
-  });
+  const [isBookmarked, setIsBookmarked] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!event) return;
+    const checkState = () => {
+      const bookmarks = getBookmarkedEventIds();
+      setIsBookmarked(bookmarks.includes(event.id) || bookmarks.includes(event.slug));
+    };
+    checkState();
+    window.addEventListener('hackers_unity_storage_change', checkState);
+    return () => window.removeEventListener('hackers_unity_storage_change', checkState);
+  }, [event]);
 
   const [activeTab, setActiveTab] = useState<'overview' | 'timeline' | 'prizes' | 'rules' | 'sponsors' | 'faqs'>('overview');
   const [showRegModal, setShowRegModal] = useState(false);
@@ -75,7 +86,8 @@ export default function HackathonDetailPage({ params }: PageProps) {
   const deadlineInfo = getDaysLeft(event.registrationDeadline);
 
   const handleBookmarkToggle = () => {
-    toggleBookmarkEvent(event.id);
+    const userId = supabaseUser?.id || user?.id;
+    toggleBookmarkEvent(event.id, userId);
     setIsBookmarked(!isBookmarked);
   };
 

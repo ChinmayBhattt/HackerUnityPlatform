@@ -14,7 +14,9 @@ import {
 import { ExtendedEvent } from '@/lib/mock-data';
 import { EVENT_IMAGE_MAP } from '@/lib/event-images';
 import { formatCurrency, getDaysLeft, getStatusBadge, getCategoryBadge } from '@/lib/utils';
-import { toggleBookmarkEvent } from '@/lib/storage';
+import { toggleBookmarkEvent, getBookmarkedEventIds } from '@/lib/storage';
+import { useAuth } from '@/lib/auth-context';
+import { useEffect } from 'react';
 import { RegistrationModal } from './registration-modal';
 
 interface HackathonCardProps {
@@ -23,10 +25,30 @@ interface HackathonCardProps {
   onBookmarkChange?: () => void;
 }
 
-export function HackathonCard({ event, isBookmarked = false, onBookmarkChange }: HackathonCardProps) {
-  const [bookmarked, setBookmarked] = useState(isBookmarked);
+export function HackathonCard({ event, isBookmarked, onBookmarkChange }: HackathonCardProps) {
+  const { user, supabaseUser } = useAuth();
+  const [bookmarked, setBookmarked] = useState<boolean>(() => {
+    if (isBookmarked !== undefined) return isBookmarked;
+    if (typeof window === 'undefined') return false;
+    const ids = getBookmarkedEventIds();
+    return ids.includes(event.id) || ids.includes(event.slug);
+  });
   const [showRegModal, setShowRegModal] = useState(false);
   const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    if (isBookmarked !== undefined) {
+      setBookmarked(isBookmarked);
+      return;
+    }
+    const updateState = () => {
+      const ids = getBookmarkedEventIds();
+      setBookmarked(ids.includes(event.id) || ids.includes(event.slug));
+    };
+    updateState();
+    window.addEventListener('hackers_unity_storage_change', updateState);
+    return () => window.removeEventListener('hackers_unity_storage_change', updateState);
+  }, [event.id, event.slug, isBookmarked]);
 
   const statusInfo = getStatusBadge(event.status);
   const categoryInfo = getCategoryBadge(event.category);
@@ -35,7 +57,8 @@ export function HackathonCard({ event, isBookmarked = false, onBookmarkChange }:
   const handleBookmark = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    toggleBookmarkEvent(event.id);
+    const userId = supabaseUser?.id || user?.id;
+    toggleBookmarkEvent(event.id, userId);
     setBookmarked(!bookmarked);
     onBookmarkChange?.();
   };

@@ -1,5 +1,6 @@
 import { ExtendedEvent, MOCK_EVENTS } from './mock-data';
 import { UserPublic, UserRole } from '@hackers-unity/shared-types';
+import { toggleBookmarkInSupabase, fetchUserBookmarks } from './supabase-service';
 
 export interface UserRegistrationItem {
   eventId: string;
@@ -52,7 +53,7 @@ export function getBookmarkedEventIds(): string[] {
   }
 }
 
-export function toggleBookmarkEvent(eventId: string): string[] {
+export function toggleBookmarkEvent(eventId: string, userId?: string): string[] {
   if (typeof window === 'undefined') return [];
   const current = getBookmarkedEventIds();
   const exists = current.includes(eventId);
@@ -63,7 +64,30 @@ export function toggleBookmarkEvent(eventId: string): string[] {
   } catch (e) {
     console.error(e);
   }
+
+  // If user is authenticated, sync with Supabase in background
+  const targetUserId = userId || getStoredUser()?.id;
+  if (targetUserId && targetUserId.length > 10 && targetUserId.includes('-')) {
+    toggleBookmarkInSupabase(targetUserId, eventId).catch((err) => {
+      console.warn('Supabase bookmark toggle sync warning:', err);
+    });
+  }
+
   return updated;
+}
+
+export async function syncBookmarksWithSupabase(userId: string): Promise<string[]> {
+  if (typeof window === 'undefined' || !userId) return getBookmarkedEventIds();
+  try {
+    const remoteIds = await fetchUserBookmarks(userId);
+    const localIds = getBookmarkedEventIds();
+    const merged = Array.from(new Set([...localIds, ...remoteIds]));
+    localStorage.setItem(STORAGE_KEYS.BOOKMARKS, JSON.stringify(merged));
+    window.dispatchEvent(new Event('hackers_unity_storage_change'));
+    return merged;
+  } catch {
+    return getBookmarkedEventIds();
+  }
 }
 
 // Registrations

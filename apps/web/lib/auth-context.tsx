@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from './supabase';
 import { UserPublic, UserRole } from '@hackers-unity/shared-types';
-import { getStoredUser, saveStoredUser, clearStoredUser } from './storage';
+import { getStoredUser, saveStoredUser, clearStoredUser, syncBookmarksWithSupabase } from './storage';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
@@ -156,6 +156,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role: initialUser.role,
         });
       }
+
+      // Sync bookmarks from Supabase for this user
+      syncBookmarksWithSupabase(sbUser.id).catch((e) => {
+        console.warn('Bookmarks sync warning on signin:', e);
+      });
     } catch {
       setUser(getStoredUser());
     }

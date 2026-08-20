@@ -47,11 +47,12 @@ import {
   getAllEvents,
   updateHostedEvent,
   deleteHostedEvent,
+  syncBookmarksWithSupabase,
   UserRegistrationItem,
 } from '@/lib/storage';
 import { ExtendedEvent } from '@/lib/mock-data';
 import { useAuth } from '@/lib/auth-context';
-import { updateEventInSupabase, deleteEventInSupabase } from '@/lib/supabase-service';
+import { updateEventInSupabase, deleteEventInSupabase, fetchPublishedEvents } from '@/lib/supabase-service';
 import { HackathonCard } from '@/components/hackathon-card';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { AuthModal } from '@/components/auth-modal';
@@ -60,7 +61,7 @@ import { EditEventModal } from '@/components/edit-event-modal';
 import { PublicProfileModal } from '@/components/public-profile-modal';
 
 export default function DashboardPage() {
-  const { user, updateUserProfile, updateUserPassword, signOut, loading } = useAuth();
+  const { user, supabaseUser, updateUserProfile, updateUserPassword, signOut, loading } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
   
   // Default to 'hosted' (Organizer Management & Analytics)
@@ -106,10 +107,32 @@ export default function DashboardPage() {
   const [profileError, setProfileError] = useState<string | null>(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
+  const loadAllEvents = async () => {
+    try {
+      const published = await fetchPublishedEvents();
+      const local = getAllEvents();
+      const eventMap = new Map<string, ExtendedEvent>();
+      local.forEach((e) => eventMap.set(e.id, e));
+      published.forEach((e) => eventMap.set(e.id, e));
+      setAllEvents(Array.from(eventMap.values()));
+    } catch {
+      setAllEvents(getAllEvents());
+    }
+  };
+
   useEffect(() => {
     setRegistrations(getMyRegistrations());
     setBookmarkedIds(getBookmarkedEventIds());
-    setAllEvents(getAllEvents());
+    loadAllEvents();
+
+    const userId = supabaseUser?.id || user?.id;
+    if (userId && userId.length > 10 && userId.includes('-')) {
+      syncBookmarksWithSupabase(userId).then((ids) => {
+        if (ids && ids.length > 0) {
+          setBookmarkedIds(ids);
+        }
+      });
+    }
 
     if (user) {
       setName(user.name || '');
@@ -127,13 +150,15 @@ export default function DashboardPage() {
     const handleStorage = () => {
       setRegistrations(getMyRegistrations());
       setBookmarkedIds(getBookmarkedEventIds());
-      setAllEvents(getAllEvents());
+      loadAllEvents();
     };
     window.addEventListener('hackers_unity_storage_change', handleStorage);
     return () => window.removeEventListener('hackers_unity_storage_change', handleStorage);
-  }, [user]);
+  }, [user, supabaseUser]);
 
-  const bookmarkedEvents = allEvents.filter((e) => bookmarkedIds.includes(e.id));
+  const bookmarkedEvents = allEvents.filter(
+    (e) => bookmarkedIds.includes(e.id) || (e.slug && bookmarkedIds.includes(e.slug))
+  );
 
   // Analytics Computations
   const totalHackersCount = allEvents.reduce((acc, e) => acc + (e.participantsCount || 500), 0);

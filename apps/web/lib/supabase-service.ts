@@ -180,23 +180,55 @@ export async function fetchPublishedEvents(): Promise<ExtendedEvent[]> {
 }
 
 export async function fetchEventBySlug(slugOrId: string): Promise<ExtendedEvent | null> {
-  try {
-    // Try matching slug or id
-    const { data, error } = await supabase
-      .from('events')
-      .select('*')
-      .or(`slug.eq."${slugOrId}",id.eq."${slugOrId}"`)
-      .single();
+  if (!slugOrId) return null;
+  const decoded = decodeURIComponent(slugOrId).trim();
 
-    if (error || !data) {
+  try {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decoded);
+
+    let data: any = null;
+
+    if (isUuid) {
+      const res = await supabase
+        .from('events')
+        .select('*')
+        .or(`id.eq.${decoded},slug.eq.${decoded}`)
+        .maybeSingle();
+      data = res.data;
+    } else {
+      // Query by slug without touching the UUID id column
+      const res = await supabase
+        .from('events')
+        .select('*')
+        .eq('slug', decoded)
+        .maybeSingle();
+      data = res.data;
+
+      // Fallback to case-insensitive match if needed
+      if (!data) {
+        const ilikeRes = await supabase
+          .from('events')
+          .select('*')
+          .ilike('slug', decoded)
+          .maybeSingle();
+        data = ilikeRes.data;
+      }
+    }
+
+    if (!data) {
       // Fallback to mock search
-      const found = MOCK_EVENTS.find((e) => e.slug === slugOrId || e.id === slugOrId);
+      const found = MOCK_EVENTS.find(
+        (e) => e.slug === decoded || e.id === decoded || e.slug.toLowerCase() === decoded.toLowerCase()
+      );
       return found || null;
     }
 
     return mapDbEventToExtended(data);
-  } catch {
-    const found = MOCK_EVENTS.find((e) => e.slug === slugOrId || e.id === slugOrId);
+  } catch (err) {
+    console.warn('fetchEventBySlug exception:', err);
+    const found = MOCK_EVENTS.find(
+      (e) => e.slug === decoded || e.id === decoded || e.slug.toLowerCase() === decoded.toLowerCase()
+    );
     return found || null;
   }
 }
@@ -520,6 +552,116 @@ export async function fetchUserRegistrations(userId: string): Promise<any[]> {
     return data;
   } catch {
     return [];
+  }
+}
+
+/**
+ * ─── 5.5 BOOKMARK OPERATIONS ──────────────────────────────────────────────────
+ */
+export async function fetchUserBookmarks(userId: string): Promise<string[]> {
+  try {
+    if (!userId) return [];
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+    if (!isUuid) return [];
+
+    const { data, error } = await supabase
+      .from('bookmarks')
+      .select('event_id, events(slug)')
+      .eq('user_id', userId);
+
+    if (error || !data) {
+      console.warn('fetchUserBookmarks error:', error?.message);
+      return [];
+    }
+
+    const ids: string[] = [];
+    data.forEach((row: any) => {
+      if (row.event_id) ids.push(row.event_id);
+      if (row.events?.slug) ids.push(row.events.slug);
+    });
+
+    return Array.from(new Set(ids));
+  } catch (err) {
+    console.warn('fetchUserBookmarks exception:', err);
+    return [];
+  }
+}
+
+export async function toggleBookmarkInSupabase(
+  userId: string,
+  eventIdOrSlug: string
+): Promise<{ isBookmarked: boolean; error?: string }> {
+  try {
+    if (!userId) return { isBookmarked: false, error: 'User not authenticated' };
+    const isUserUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+    if (!isUserUuid) return { isBookmarked: false, error: 'Invalid user ID' };
+
+    let targetEventId = eventIdOrSlug;
+    const isEventUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventIdOrSlug);
+
+    // If not a UUID, resolve event UUID by slug
+    if (!isEventUuid) {
+      const { data: eventData } = await supabase
+        .from('events')
+        .select('id')
+        .eq('slug', eventIdOrSlug)
+        .maybeSingle();
+
+      if (eventData?.id) {
+        targetEventId = eventData.id;
+      } else {
+        return { isBookmarked: false, error: 'Event not found in database' };
+      }
+    }
+
+    // Check if bookmark already exists
+    const { data: existing } = await supabase
+      .from('bookmarks')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('event_id', targetEventId)
+      .maybeSingle();
+
+    if (existing) {
+      // Delete bookmark
+      const { error: deleteError } = await supabase
+        .from('bookmarks')
+        .delete()
+        .eq('id', existing.id);
+
+      if (deleteError) {
+        console.warn('Delete bookmark error:', deleteError.message);
+        return { isBookmarked: true, error: deleteError.message };
+      }
+      return { isBookmarked: false };
+    } else {
+      // Ensure user profile exists in profiles table before inserting bookmark
+      try {
+        await supabase.from('profiles').upsert(
+          { id: userId, updated_at: new Date().toISOString() },
+          { onConflict: 'id', ignoreDuplicates: true }
+        );
+      } catch (e) {
+        console.warn('Profile ensure before bookmark:', e);
+      }
+
+      // Insert bookmark
+      const { error: insertError } = await supabase
+        .from('bookmarks')
+        .insert({
+          user_id: userId,
+          event_id: targetEventId,
+        });
+
+      if (insertError) {
+        console.warn('Insert bookmark error:', insertError.message);
+        return { isBookmarked: false, error: insertError.message };
+      }
+      return { isBookmarked: true };
+    }
+  } catch (err: any) {
+    console.warn('toggleBookmarkInSupabase exception:', err);
+    return { isBookmarked: false, error: err.message || 'Bookmark toggle failed' };
   }
 }
 
