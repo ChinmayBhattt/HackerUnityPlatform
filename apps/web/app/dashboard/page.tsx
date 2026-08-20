@@ -1401,9 +1401,20 @@ function DashboardTeamsTab() {
               const teamName = team.name || 'Unknown Team';
               const eventName = team.events?.title || '';
               const eventSlug = team.events?.slug || '';
-              const isLeader = membership.role === 'LEADER';
+              const isLeader = team.leader_id === userId || team.leader_id === supabaseUser?.id || membership.role === 'LEADER';
               const isExpanded = expandedTeam === teamId;
-              const members = team.team_members || [];
+              
+              // Build clean members list ensuring leader is included
+              const rawMembers = team.team_members || [];
+              const members = [...rawMembers];
+              if (team.profiles && !members.some((m: any) => m.user_id === team.leader_id)) {
+                members.unshift({
+                  id: `leader-${team.leader_id}`,
+                  user_id: team.leader_id,
+                  role: 'LEADER',
+                  profiles: team.profiles,
+                });
+              }
 
               return (
                 <div key={teamId} className="rounded-2xl border border-slate-200 overflow-hidden">
@@ -1431,6 +1442,15 @@ function DashboardTeamsTab() {
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
+                      {eventSlug && (
+                        <Link
+                          href={`/hackathons/${eventSlug}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-[#0099e6] text-[10px] font-bold transition-colors"
+                        >
+                          View Arena →
+                        </Link>
+                      )}
                       <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                         Active
                       </span>
@@ -1450,24 +1470,29 @@ function DashboardTeamsTab() {
                     <div className="border-t border-slate-200 p-4 sm:p-5 space-y-4 bg-slate-50/30">
                       {/* Members List */}
                       <div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Team Members</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Team Members ({members.length})</p>
                         <div className="space-y-2">
-                          {members.map((m: any) => (
-                            <div key={m.id || m.user_id} className="flex items-center gap-3 px-3 py-2 rounded-xl bg-white border border-slate-200">
-                              <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">
-                                {(m.profiles?.name || m.user_id || '?').charAt(0).toUpperCase()}
+                          {members.map((m: any) => {
+                            const isMemberLeader = m.role === 'LEADER' || m.user_id === team.leader_id;
+                            const memberName = m.profiles?.name || (isMemberLeader ? (team.profiles?.name || 'Squad Leader') : 'Team Member');
+                            const memberEmail = m.profiles?.email || (isMemberLeader ? team.profiles?.email : '');
+                            return (
+                              <div key={m.id || m.user_id} className="flex items-center gap-3 px-3 py-2 rounded-xl bg-white border border-slate-200">
+                                <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">
+                                  {memberName.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-xs font-medium text-slate-800 truncate">{memberName}</p>
+                                  {memberEmail && <p className="text-[10px] text-slate-400 truncate">{memberEmail}</p>}
+                                </div>
+                                <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-md ${
+                                  isMemberLeader ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'
+                                }`}>
+                                  {isMemberLeader ? 'Leader' : (m.role || 'Member')}
+                                </span>
                               </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="text-xs font-medium text-slate-800 truncate">{m.profiles?.name || 'Team Member'}</p>
-                                <p className="text-[10px] text-slate-400 truncate">{m.profiles?.email || ''}</p>
-                              </div>
-                              <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-md ${
-                                m.role === 'LEADER' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'
-                              }`}>
-                                {m.role || 'Member'}
-                              </span>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
 

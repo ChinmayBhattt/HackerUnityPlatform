@@ -36,6 +36,8 @@ import {
   sendTeamInvite,
   fetchTeamInvites,
   fetchTeamWithMembers,
+  checkUserRegistration,
+  fetchUserTeamForEvent,
 } from '@/lib/supabase-service';
 import { formatCurrency, formatDate, formatDateTime, getDaysLeft } from '@/lib/utils';
 
@@ -87,6 +89,8 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [registeredRole, setRegisteredRole] = useState('');
 
+  const [isAlreadyRegistered, setIsAlreadyRegistered] = useState(false);
+
   // Update profile defaults when user loads
   useEffect(() => {
     if (user) {
@@ -100,16 +104,54 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
     }
   }, [user]);
 
+  // Check if user is already registered for this event — if so, jump to Step 3 with squad details!
+  useEffect(() => {
+    if (!event) return;
+    const currentEvent = event;
+    const userId = supabaseUser?.id || user?.id;
+    const userEmail = supabaseUser?.email || user?.email;
+    if (!userId && !userEmail) return;
+
+    async function checkExisting() {
+      try {
+        const reg = await checkUserRegistration(currentEvent.id, userId, userEmail);
+        if (reg.isRegistered && reg.registration) {
+          setIsAlreadyRegistered(true);
+          if (reg.registration.user_name) setFullName(reg.registration.user_name);
+          setRegisteredRole(
+            reg.registration.role || (reg.registration.is_team ? `Squad (${reg.registration.team_name || 'Team'})` : 'Individual Hacker')
+          );
+
+          // Fetch squad details
+          const squad = await fetchUserTeamForEvent(currentEvent.id, userId || '');
+          if (squad) {
+            setCreatedTeamId(squad.id);
+            setCreatedTeamData(squad);
+            setTeamName(squad.name);
+            setMode(squad.leader_id === userId ? 'CREATE_TEAM' : 'JOIN_TEAM');
+            fetchTeamInvites(squad.id).then((invs) => setTeamInvitesList(invs));
+          }
+
+          setCurrentStep(3);
+        }
+      } catch (e) {
+        console.warn('Error checking existing registration:', e);
+      }
+    }
+
+    checkExisting();
+  }, [event, user?.id, user?.email, supabaseUser?.id, supabaseUser?.email]);
+
   // Set default mode based on event config
   useEffect(() => {
-    if (event) {
+    if (event && !isAlreadyRegistered) {
       if (event.isTeamEvent && (event.minTeamSize || 1) > 1) {
         setMode('CREATE_TEAM');
       } else {
         setMode('SOLO');
       }
     }
-  }, [event]);
+  }, [event, isAlreadyRegistered]);
 
   if (eventLoading) {
     return (
@@ -936,14 +978,73 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
 
               <div className="space-y-2">
                 <span className="inline-block px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-extrabold uppercase tracking-wider">
-                  Registration Confirmed
+                  {isAlreadyRegistered ? 'Already Registered' : 'Registration Confirmed'}
                 </span>
-                <h2 className="text-2xl sm:text-3xl font-black text-slate-900">You Are Officially In!</h2>
+                <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
+                  {isAlreadyRegistered ? 'Your Registration & Squad' : 'You Are Officially In!'}
+                </h2>
                 <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto">
-                  You are registered for <span className="font-bold text-[#0099e6]">{event.title}</span> as{' '}
-                  <strong className="text-slate-900">{registeredRole || 'Participant'}</strong>.
+                  {isAlreadyRegistered
+                    ? `You are currently registered for ${event.title}. Manage your squad and teammates below.`
+                    : `You are registered for ${event.title} as `}
+                  {!isAlreadyRegistered && <strong className="text-slate-900">{registeredRole || 'Participant'}</strong>}
                 </p>
               </div>
+
+              {/* Squad Details Card (if part of a squad) */}
+              {(createdTeamData || teamName) && (
+                <div className="max-w-md mx-auto p-5 rounded-2xl bg-white border-2 border-sky-200 shadow-sm text-left space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0099e6] to-sky-600 flex items-center justify-center text-white text-base font-black shadow-md shadow-sky-500/20">
+                        {(createdTeamData?.name || teamName || 'S').charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <h4 className="text-sm font-black text-slate-900">{createdTeamData?.name || teamName}</h4>
+                          <span className="px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-700 text-[9px] font-extrabold uppercase">
+                            Squad
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-slate-500 font-medium">
+                          Leader: {createdTeamData?.profiles?.name || (mode === 'CREATE_TEAM' ? fullName : 'Squad Leader')}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Member Roster */}
+                  {createdTeamData?.team_members && createdTeamData.team_members.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        Squad Members ({createdTeamData.team_members.length})
+                      </p>
+                      <div className="space-y-1.5">
+                        {createdTeamData.team_members.map((m: any) => (
+                          <div
+                            key={m.id || m.user_id}
+                            className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 border border-slate-200/80 text-xs"
+                          >
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-full bg-sky-100 text-[#0099e6] font-bold text-[10px] flex items-center justify-center">
+                                {(m.profiles?.name || '?').charAt(0).toUpperCase()}
+                              </div>
+                              <span className="font-bold text-slate-800">{m.profiles?.name || 'Teammate'}</span>
+                            </div>
+                            <span
+                              className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md ${
+                                m.role === 'LEADER' ? 'bg-amber-100 text-amber-800' : 'bg-slate-200 text-slate-700'
+                              }`}
+                            >
+                              {m.role || 'Member'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Ticket Card Summary */}
               <div className="max-w-md mx-auto p-5 rounded-2xl bg-slate-50 border border-slate-200 text-left space-y-3 text-xs">

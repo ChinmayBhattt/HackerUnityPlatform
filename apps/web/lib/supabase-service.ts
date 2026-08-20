@@ -1097,27 +1097,78 @@ export async function fetchUserTeams(userId: string): Promise<any[]> {
   try {
     if (!userId) return [];
 
-    // Get team IDs the user is a member of
-    const { data: memberRows, error: memberErr } = await supabase
+    // 1. Get team IDs where user is in team_members
+    const { data: memberRows } = await supabase
       .from('team_members')
       .select('team_id')
       .eq('user_id', userId);
 
-    if (memberErr || !memberRows || memberRows.length === 0) return [];
+    const memberTeamIds = memberRows ? memberRows.map((r: any) => r.team_id) : [];
 
-    const teamIds = memberRows.map((r: any) => r.team_id);
+    // 2. Also get teams where user is leader
+    const { data: leaderTeams } = await supabase
+      .from('teams')
+      .select('id')
+      .eq('leader_id', userId);
+
+    const leaderTeamIds = leaderTeams ? leaderTeams.map((r: any) => r.id) : [];
+
+    const allTeamIds = Array.from(new Set([...memberTeamIds, ...leaderTeamIds]));
+
+    if (allTeamIds.length === 0) return [];
 
     // Fetch full team details
     const { data: teams, error: teamErr } = await supabase
       .from('teams')
       .select('*, profiles:leader_id(name, email, avatar_url), team_members(*, profiles:user_id(name, email, avatar_url)), events(id, title, slug, start_date, end_date), team_invitations(id, invited_email, status, created_at)')
-      .in('id', teamIds)
+      .in('id', allTeamIds)
       .order('created_at', { ascending: false });
 
     if (teamErr || !teams) return [];
     return teams;
   } catch {
     return [];
+  }
+}
+
+/**
+ * Fetch a specific team for an event where the user is a leader or member
+ */
+export async function fetchUserTeamForEvent(eventId: string, userId: string): Promise<any | null> {
+  try {
+    if (!eventId || !userId) return null;
+
+    // Check if leader
+    const { data: leaderTeam } = await supabase
+      .from('teams')
+      .select('*, profiles:leader_id(name, email, avatar_url), team_members(*, profiles:user_id(name, email, avatar_url)), events(id, title, slug, start_date, end_date), team_invitations(id, invited_email, status, created_at, invite_token)')
+      .eq('event_id', eventId)
+      .eq('leader_id', userId)
+      .maybeSingle();
+
+    if (leaderTeam) return leaderTeam;
+
+    // Check if member
+    const { data: memberRow } = await supabase
+      .from('team_members')
+      .select('team_id')
+      .eq('user_id', userId);
+
+    if (memberRow && memberRow.length > 0) {
+      const teamIds = memberRow.map((m: any) => m.team_id);
+      const { data: memberTeam } = await supabase
+        .from('teams')
+        .select('*, profiles:leader_id(name, email, avatar_url), team_members(*, profiles:user_id(name, email, avatar_url)), events(id, title, slug, start_date, end_date), team_invitations(id, invited_email, status, created_at, invite_token)')
+        .eq('event_id', eventId)
+        .in('id', teamIds)
+        .maybeSingle();
+
+      if (memberTeam) return memberTeam;
+    }
+
+    return null;
+  } catch {
+    return null;
   }
 }
 
