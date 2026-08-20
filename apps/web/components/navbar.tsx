@@ -7,8 +7,6 @@ import {
   Search,
   PlusCircle,
   Trophy,
-  Users,
-  BarChart3,
   Bell,
   Menu,
   X,
@@ -32,8 +30,6 @@ export function Navbar() {
 
   const navLinks = [
     { name: 'Hackathons', href: '/hackathons', icon: Trophy },
-    { name: 'Find Teammates', href: '/teammates', icon: Users },
-    { name: 'Leaderboard', href: '/leaderboard', icon: BarChart3 },
     { name: 'My Dashboard', href: '/dashboard', icon: Compass },
   ];
 
@@ -41,7 +37,7 @@ export function Navbar() {
     <>
       <header className="sticky top-0 z-40 w-full bg-white/95 border-b border-slate-200/80 backdrop-blur-xl shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-22 flex items-center justify-between gap-6">
-          {/* Left: Brand Logo (shifted comfortably right with padding) */}
+          {/* Left: Brand Logo */}
           <div className="flex items-center shrink-0 pl-3 sm:pl-6 lg:pl-8">
             <Link href="/" className="flex items-center group py-1">
               <Logo size={74} showText={false} />

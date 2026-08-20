@@ -22,6 +22,9 @@ import {
   Globe,
   Layers,
   HelpCircle,
+  GraduationCap,
+  Building2,
+  User,
 } from 'lucide-react';
 import { EventCategory, EventStatus, EventType, CustomQuestion } from '@hackers-unity/shared-types';
 import { ExtendedEvent } from '@/lib/mock-data';
@@ -29,6 +32,7 @@ import { saveHostedEvent, saveDraftEvent } from '@/lib/storage';
 import { createEventInSupabase, uploadHackathonAsset } from '@/lib/supabase-service';
 import { HackathonCard } from '@/components/hackathon-card';
 import { RichTextEditor } from '@/components/rich-text-editor';
+import { VenuePicker } from '@/components/venue-picker';
 import { useAuth } from '@/lib/auth-context';
 
 const TOTAL_STEPS = 6;
@@ -66,11 +70,23 @@ export default function HostHackathonPage() {
   const [tagline, setTagline] = useState('');
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
-  const [organizerName, setOrganizerName] = useState(user?.name || 'Innovators Guild');
+  const [hostType, setHostType] = useState<'COLLEGE' | 'ORGANIZATION'>('COLLEGE');
+  const [institutionName, setInstitutionName] = useState('ACEIT');
+  const [organizerLeadName, setOrganizerLeadName] = useState(user?.name || 'Chinmay Bhatt');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<EventCategory>(EventCategory.HACKATHON);
   const [eventType, setEventType] = useState<EventType>(EventType.ONLINE);
   const [location, setLocation] = useState('Online / Discord');
+
+  // Combined organizer string e.g.  or "Hacker's Unity • Chinmay Bhatt"
+  const organizerName = useMemo(() => {
+    const org = institutionName.trim();
+    const lead = organizerLeadName.trim();
+    if (org && lead) {
+      return `${org} • ${lead}`;
+    }
+    return org || lead || 'Innovators Guild';
+  }, [institutionName, organizerLeadName]);
 
   // Step 2: Dates & Schedule
   const [registrationStart, setRegistrationStart] = useState('');
@@ -228,8 +244,8 @@ export default function HostHackathonPage() {
     return {
       id: `evt_custom_${Date.now()}`,
       organizerId: user?.id || 'usr_me',
-      organizerName: organizerName || 'Innovators Guild',
-      organizerAvatar: '⚡',
+      organizerName,
+      organizerAvatar: hostType === 'COLLEGE' ? '🎓' : '⚡',
       title: title || 'Untitled Hackathon',
       slug,
       tagline: tagline || '',
@@ -296,11 +312,13 @@ export default function HostHackathonPage() {
           createdAt: new Date().toISOString(),
         },
       ],
-      sponsors: [{ name: organizerName || 'Host Guild', tier: 'Organizer', logoText: 'HOST' }],
+      sponsors: [{ name: institutionName || organizerName || 'Host Guild', tier: 'Organizer', logoText: hostType === 'COLLEGE' ? 'CAMPUS' : 'HOST' }],
     };
   }, [
     user?.id,
     organizerName,
+    hostType,
+    institutionName,
     title,
     slug,
     tagline,
@@ -530,16 +548,102 @@ export default function HostHackathonPage() {
                     </div>
                   </div>
 
+                  {/* Organizing Entity Type: College vs Organization/Community */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Organizer / Community Name *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Nexus AI Labs"
-                      value={organizerName}
-                      onChange={(e) => setOrganizerName(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
-                    />
+                    <label className="block text-xs font-bold text-slate-700 mb-2">
+                      Who is organizing this hackathon? *
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setHostType('COLLEGE')}
+                        className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-3 ${
+                          hostType === 'COLLEGE'
+                            ? 'bg-sky-50/90 border-[#0099e6] text-[#0099e6] shadow-xs ring-2 ring-[#0099e6]/20'
+                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300'
+                        }`}
+                      >
+                        <div className={`p-2.5 rounded-xl ${hostType === 'COLLEGE' ? 'bg-[#0099e6] text-white shadow-2xs' : 'bg-white text-slate-500 border border-slate-200'}`}>
+                          <GraduationCap className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-slate-900">College / University</div>
+                          <div className="text-[10px] text-slate-500">Student club, campus chapter, department</div>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setHostType('ORGANIZATION')}
+                        className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-3 ${
+                          hostType === 'ORGANIZATION'
+                            ? 'bg-orange-50/90 border-[#f97316] text-[#ea580c] shadow-xs ring-2 ring-[#f97316]/20'
+                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300'
+                        }`}
+                      >
+                        <div className={`p-2.5 rounded-xl ${hostType === 'ORGANIZATION' ? 'bg-[#f97316] text-white shadow-2xs' : 'bg-white text-slate-500 border border-slate-200'}`}>
+                          <Building2 className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-slate-900">Organization / Community</div>
+                          <div className="text-[10px] text-slate-500">Tech community, startup, enterprise, DAO</div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* College / Organization Name & Organizer Lead Name */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        {hostType === 'COLLEGE' ? 'College / University / Club Name *' : 'Organization / Community Name *'}
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          required
+                          placeholder={hostType === 'COLLEGE' ? 'e.g. ACEIT or IIT Delhi' : 'e.g. Hacker\'s Unity, OpenAI'}
+                          value={institutionName}
+                          onChange={(e) => setInstitutionName(e.target.value)}
+                          className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                        />
+                        <div className="absolute left-3 top-3 pointer-events-none">
+                          {hostType === 'COLLEGE' ? (
+                            <GraduationCap className="w-4 h-4 text-[#0099e6]" />
+                          ) : (
+                            <Building2 className="w-4 h-4 text-[#ea580c]" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Organizer / Lead Name *
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. Chinmay Bhatt"
+                          value={organizerLeadName}
+                          onChange={(e) => setOrganizerLeadName(e.target.value)}
+                          className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                        />
+                        <div className="absolute left-3 top-3 pointer-events-none text-slate-400">
+                          <User className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Organizer Preview Pill */}
+                  <div className="p-2.5 px-3 rounded-xl bg-slate-100/80 border border-slate-200 text-xs flex items-center justify-between">
+                    <span className="text-slate-500 font-medium">Display on live cards:</span>
+                    <span className="font-bold text-slate-800 flex items-center gap-1.5">
+                      <span>{hostType === 'COLLEGE' ? '🎓' : '🏢'}</span>
+                      <span>by <strong className="text-[#0099e6]">{organizerName}</strong></span>
+                    </span>
                   </div>
 
                   <div>
@@ -579,25 +683,20 @@ export default function HostHackathonPage() {
                         }}
                         className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 outline-none focus:border-[#0099e6]"
                       >
-                        <option value={EventType.ONLINE}>🌐 Virtual / Online</option>
-                        <option value={EventType.OFFLINE}>📍 In-Person</option>
-                        <option value={EventType.HYBRID}>⚡ Hybrid</option>
+                        <option value={EventType.ONLINE}>Virtual / Online</option>
+                        <option value={EventType.OFFLINE}>In-Person</option>
+                        <option value={EventType.HYBRID}>Hybrid</option>
                       </select>
                     </div>
                   </div>
 
                   {(eventType === EventType.OFFLINE || eventType === EventType.HYBRID) && (
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Location / Venue *</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="e.g. IIT Delhi, New Delhi, India"
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
-                      />
-                    </div>
+                    <VenuePicker
+                      value={location}
+                      onChange={(val) => setLocation(val)}
+                      label="Location / In-Person Venue *"
+                      placeholder="Search college (ACEIT, IIT), landmark, building, or city..."
+                    />
                   )}
 
                   <div className="pt-2 flex justify-end">
@@ -948,7 +1047,7 @@ export default function HostHackathonPage() {
                       </div>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
                         <div><span className="text-slate-500">Name:</span> <span className="font-semibold text-slate-900">{title || '—'}</span></div>
-                        <div><span className="text-slate-500">Organizer:</span> <span className="font-semibold text-slate-900">{organizerName || '—'}</span></div>
+                        <div><span className="text-slate-500">Organizer:</span> <span className="font-semibold text-slate-900">{hostType === 'COLLEGE' ? '🎓 ' : '🏢 '}{organizerName || '—'}</span></div>
                         <div><span className="text-slate-500">Format:</span> <span className="font-semibold text-slate-900">{eventType}</span></div>
                         <div><span className="text-slate-500">Category:</span> <span className="font-semibold text-slate-900">{category}</span></div>
                         {tagline && <div className="col-span-2"><span className="text-slate-500">Tagline:</span> <span className="font-semibold text-slate-900">{tagline}</span></div>}

@@ -65,7 +65,7 @@ export function AvatarUpload({ currentAvatar, onAvatarChange, onAvatarRemove }: 
   const handleCropConfirm = async () => {
     if (!imageSrc || !croppedAreaPixels) return;
     try {
-      const croppedDataUrl = await getCroppedImg(imageSrc, croppedAreaPixels, rotation, 400, 400);
+      const croppedDataUrl = await getCroppedImg(imageSrc, croppedAreaPixels, 300);
       onAvatarChange(croppedDataUrl);
       setShowCropModal(false);
       setImageSrc(null);

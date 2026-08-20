@@ -57,8 +57,8 @@ export default function HomePage() {
 
           {/* Main Title */}
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-slate-900 tracking-tight max-w-5xl leading-[1.1] mb-6">
-            Where Builders Assemble &{' '}
-            <span className="text-gradient-brand">Groundbreaking Software</span> Gets Shipped.
+            Where Student Talent Finds a {' '}
+            <span className="text-gradient-brand">Platform & Ideas</span> Become Impact.
           </h1>
 
           {/* Subtitle */}

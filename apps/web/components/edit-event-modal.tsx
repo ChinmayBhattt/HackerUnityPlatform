@@ -5,6 +5,7 @@ import { X, Save, Trophy, Calendar, MapPin, Tag, Globe, Sparkles } from 'lucide-
 import { ExtendedEvent } from '@/lib/mock-data';
 import { EventStatus, EventType } from '@hackers-unity/shared-types';
 import { RichTextEditor } from '@/components/rich-text-editor';
+import { VenuePicker } from '@/components/venue-picker';
 
 interface EditEventModalProps {
   isOpen: boolean;
@@ -26,11 +27,13 @@ export function EditEventModal({ isOpen, event, onClose, onSave }: EditEventModa
   const [participantsDisplay, setParticipantsDisplay] = useState('');
   const [ctaText, setCtaText] = useState('Learn More');
   const [featured, setFeatured] = useState(true);
+  const [organizerName, setOrganizerName] = useState('');
 
   useEffect(() => {
     if (event) {
       setTitle(event.title || event.name || '');
       setDescription(event.description || '');
+      setOrganizerName(event.organizerName || '');
       setPrizeDisplay(event.prize || (event.totalPrizeValue ? `$${event.totalPrizeValue.toLocaleString()}` : ''));
       setPrizeAmount(event.totalPrizeValue || 0);
       setMode(event.mode || (event.eventType === EventType.ONLINE ? 'Online' : 'In-Person'));
@@ -58,6 +61,7 @@ export function EditEventModal({ isOpen, event, onClose, onSave }: EditEventModa
       ...event,
       title: title.trim() || event.title,
       name: title.trim() || event.title,
+      organizerName: organizerName.trim() || event.organizerName,
       description: description.trim() || event.description,
       prize: prizeDisplay.trim() || event.prize,
       totalPrizeValue: Number(prizeAmount) || event.totalPrizeValue,
@@ -107,6 +111,21 @@ export function EditEventModal({ isOpen, event, onClose, onSave }: EditEventModa
               onChange={(e) => setTitle(e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#0099e6] focus:border-transparent"
               placeholder="e.g. CodeWars Hackathon"
+            />
+          </div>
+
+          {/* Organizer / Host Name */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1.5">
+              Host / Organizer (College or Organization Name & Lead) *
+            </label>
+            <input
+              type="text"
+              required
+              value={organizerName}
+              onChange={(e) => setOrganizerName(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#0099e6] focus:border-transparent"
+              placeholder="e.g. Hacker's Unity"
             />
           </div>
 
@@ -186,34 +205,29 @@ export function EditEventModal({ isOpen, event, onClose, onSave }: EditEventModa
             </div>
           </div>
 
-          {/* Location & Registered Hackers Display */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-[#0099e6]" />
-                <span>Location / Venue</span>
-              </label>
-              <input
-                type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#0099e6]"
-                placeholder="e.g. ACEIT Jaipur or Virtual"
-              />
-            </div>
+          {/* Location / Venue with Autosuggest & Maps */}
+          <div>
+            <VenuePicker
+              value={location}
+              onChange={(val) => setLocation(val)}
+              label="Location / In-Person Venue"
+              placeholder="Search college, landmark, venue or city..."
+              required={false}
+            />
+          </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                Registered Count Display
-              </label>
-              <input
-                type="text"
-                value={participantsDisplay}
-                onChange={(e) => setParticipantsDisplay(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#0099e6]"
-                placeholder="e.g. 500+ or 1,000+"
-              />
-            </div>
+          {/* Registered Hackers Display */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1.5">
+              Registered Count Display
+            </label>
+            <input
+              type="text"
+              value={participantsDisplay}
+              onChange={(e) => setParticipantsDisplay(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#0099e6]"
+              placeholder="e.g. 500+ or 1,000+"
+            />
           </div>
 
           {/* Registration Link & CTA Text */}

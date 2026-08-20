@@ -572,8 +572,16 @@ export async function joinTeamSupabase(
  */
 export function subscribeToPublishedEvents(onEventChange: () => void): () => void {
   try {
+    // Remove any existing channel with the same name first to prevent
+    // "cannot add callbacks after subscribe()" errors on React StrictMode re-mounts
+    const channelName = 'public:events_realtime';
+    const existing = supabase.getChannels().find((ch) => ch.topic === `realtime:${channelName}`);
+    if (existing) {
+      supabase.removeChannel(existing);
+    }
+
     const channel = supabase
-      .channel('public:events_realtime')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -601,8 +609,14 @@ export function subscribeToEventDetails(
   onUpdate: () => void
 ): () => void {
   try {
+    const channelName = `public:event_${eventIdOrSlug}`;
+    const existing = supabase.getChannels().find((ch) => ch.topic === `realtime:${channelName}`);
+    if (existing) {
+      supabase.removeChannel(existing);
+    }
+
     const channel = supabase
-      .channel(`public:event_${eventIdOrSlug}`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
