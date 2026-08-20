@@ -177,9 +177,9 @@ export default function HackathonsDirectoryPage() {
             <span className="text-slate-400 font-bold">Format:</span>
             {[
               { id: 'ALL', label: 'All Formats' },
-              { id: EventType.ONLINE, label: '🌐 Online' },
-              { id: EventType.OFFLINE, label: '📍 In-Person' },
-              { id: EventType.HYBRID, label: '⚡ Hybrid' },
+              { id: EventType.ONLINE, label: 'Online' },
+              { id: EventType.OFFLINE, label: 'In-Person' },
+              { id: EventType.HYBRID, label: 'Hybrid' },
             ].map((fmt) => (
               <button
                 key={fmt.id}

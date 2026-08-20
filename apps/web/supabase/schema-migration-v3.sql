@@ -152,9 +152,9 @@ INSERT INTO public.events (
 (
   'codewars',
   'CodeWars Hackathon',
-  'Get ready to build, innovate, and compete at a National-Level 24-Hour Hackathon powered by Hacker''s Unity × Arya College of Engineering & IT (ACEIT). Whether you are into AI/ML, Web Development, Blockchain, IoT, or Cybersecurity — bring your idea, build it, and ship it!',
-  'HACKATHON', 'OFFLINE', 'Arya College of Engineering & IT (ACEIT), Jaipur',
-  'Hacker''s Unity × ACEIT', '⚔️',
+  'Get ready to build, innovate, and compete at a National-Level 24-Hour Hackathon powered by Hacker''s Unity. Whether you are into AI/ML, Web Development, Blockchain, IoT, or Cybersecurity — bring your idea, build it, and ship it!',
+  'HACKATHON', 'OFFLINE', 'Jaipur, Rajasthan',
+  'Hacker''s Unity', '⚔️',
   '2026-08-22T00:00:00Z', '2026-08-23T23:59:59Z', '2026-08-22T23:59:59Z',
   50000,
   '[{"position":"🥇 Grand Winner","amount":30000,"description":"Cash prize + Trophy + Certifications + Direct Venture Support"},{"position":"🥈 1st Runner Up","amount":15000,"description":"Cash prize + Swag Kits + Fast-track Interviews"},{"position":"🥉 2nd Runner Up","amount":5000,"description":"Cash prize + Goodies & Swag Kit"}]'::jsonb,

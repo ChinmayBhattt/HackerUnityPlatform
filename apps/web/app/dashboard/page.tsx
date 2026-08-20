@@ -166,7 +166,7 @@ export default function DashboardPage() {
       ['Elena Rostova', 'elena@zkproofs.ch', 'Smart Contract Engineer', 'CONFIRMED', '2026-08-12'],
       ['Devansh Patel', 'devansh@pulsefin.in', 'Backend & Cloud Specialist', 'SUBMITTED', '2026-08-14'],
       ['Sophia Chen', 'sophia@stanford.edu', 'ML & Computer Vision', 'CONFIRMED', '2026-08-15'],
-      ['Rahul Verma', 'rahul@aceit.edu.in', 'Fullstack Builder', 'CONFIRMED', '2026-08-16'],
+      ['Rahul Verma', 'rahul@hackersunity.dev', 'Fullstack Builder', 'CONFIRMED', '2026-08-16'],
       ['Priya Nair', 'priya@iitb.ac.in', 'IoT & Embedded Systems', 'CONFIRMED', '2026-08-17'],
     ];
     const csvContent = 'data:text/csv;charset=utf-8,' + csvRows.map((e) => e.join(',')).join('\n');
@@ -1163,7 +1163,7 @@ export default function DashboardPage() {
                       { name: 'Elena Rostova', email: 'elena@zkproofs.ch', role: 'Smart Contracts / Rust', status: 'CONFIRMED', date: '2026-08-12' },
                       { name: 'Devansh Patel', email: 'devansh@pulsefin.in', role: 'Backend Architect', status: 'SUBMITTED', date: '2026-08-14' },
                       { name: 'Sophia Chen', email: 'sophia@stanford.edu', role: 'Computer Vision', status: 'CONFIRMED', date: '2026-08-15' },
-                      { name: 'Rahul Verma', email: 'rahul@aceit.edu.in', role: 'Fullstack Builder', status: 'CONFIRMED', date: '2026-08-16' },
+                      { name: 'Rahul Verma', email: 'rahul@hackersunity.dev', role: 'Fullstack Builder', status: 'CONFIRMED', date: '2026-08-16' },
                       { name: 'Priya Nair', email: 'priya@iitb.ac.in', role: 'IoT & Embedded Systems', status: 'CONFIRMED', date: '2026-08-17' },
                     ].map((hacker, idx) => (
                       <tr key={idx} className="hover:bg-slate-50 transition-colors">

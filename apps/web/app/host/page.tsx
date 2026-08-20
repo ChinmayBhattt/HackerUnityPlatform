@@ -50,10 +50,10 @@ const TIMEZONES = [
 ];
 
 const DIFFICULTY_LEVELS = [
-  { value: 'OPEN', label: '🌐 Open to All' },
-  { value: 'BEGINNER', label: '🌱 Beginner Friendly' },
-  { value: 'INTERMEDIATE', label: '⚡ Intermediate' },
-  { value: 'ADVANCED', label: '🔥 Advanced' },
+  { value: 'OPEN', label: 'Open to All' },
+  { value: 'BEGINNER', label: 'Beginner Friendly' },
+  { value: 'INTERMEDIATE', label: 'Intermediate' },
+  { value: 'ADVANCED', label: 'Advanced' },
 ];
 
 export default function HostHackathonPage() {
@@ -71,21 +71,21 @@ export default function HostHackathonPage() {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const [hostType, setHostType] = useState<'COLLEGE' | 'ORGANIZATION'>('COLLEGE');
-  const [institutionName, setInstitutionName] = useState('ACEIT');
-  const [organizerLeadName, setOrganizerLeadName] = useState(user?.name || 'Chinmay Bhatt');
+  const [institutionName, setInstitutionName] = useState('');
+  const [organizerLeadName, setOrganizerLeadName] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<EventCategory>(EventCategory.HACKATHON);
   const [eventType, setEventType] = useState<EventType>(EventType.ONLINE);
   const [location, setLocation] = useState('Online / Discord');
 
-  // Combined organizer string e.g.  or "Hacker's Unity • Chinmay Bhatt"
+  // Combined organizer string
   const organizerName = useMemo(() => {
     const org = institutionName.trim();
     const lead = organizerLeadName.trim();
     if (org && lead) {
       return `${org} • ${lead}`;
     }
-    return org || lead || 'Innovators Guild';
+    return org || lead || '';
   }, [institutionName, organizerLeadName]);
 
   // Step 2: Dates & Schedule
@@ -602,7 +602,7 @@ export default function HostHackathonPage() {
                         <input
                           type="text"
                           required
-                          placeholder={hostType === 'COLLEGE' ? 'e.g. ACEIT or IIT Delhi' : 'e.g. Hacker\'s Unity, OpenAI'}
+                          placeholder={hostType === 'COLLEGE' ? 'e.g. University / Campus Club' : 'e.g. Organization / Community Name'}
                           value={institutionName}
                           onChange={(e) => setInstitutionName(e.target.value)}
                           className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
@@ -625,7 +625,7 @@ export default function HostHackathonPage() {
                         <input
                           type="text"
                           required
-                          placeholder="e.g. Chinmay Bhatt"
+                          placeholder="e.g. Organizer / Lead Name"
                           value={organizerLeadName}
                           onChange={(e) => setOrganizerLeadName(e.target.value)}
                           className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
@@ -637,14 +637,6 @@ export default function HostHackathonPage() {
                     </div>
                   </div>
 
-                  {/* Organizer Preview Pill */}
-                  <div className="p-2.5 px-3 rounded-xl bg-slate-100/80 border border-slate-200 text-xs flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Display on live cards:</span>
-                    <span className="font-bold text-slate-800 flex items-center gap-1.5">
-                      <span>{hostType === 'COLLEGE' ? '🎓' : '🏢'}</span>
-                      <span>by <strong className="text-[#0099e6]">{organizerName}</strong></span>
-                    </span>
-                  </div>
 
                   <div>
                     <RichTextEditor
@@ -695,7 +687,7 @@ export default function HostHackathonPage() {
                       value={location}
                       onChange={(val) => setLocation(val)}
                       label="Location / In-Person Venue *"
-                      placeholder="Search college (ACEIT, IIT), landmark, building, or city..."
+                      placeholder="Search campus, landmark, building, or city..."
                     />
                   )}
 

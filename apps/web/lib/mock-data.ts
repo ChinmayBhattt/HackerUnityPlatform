@@ -45,15 +45,15 @@ export interface ExtendedHacker extends UserPublic {
 export const MOCK_EVENTS: ExtendedEvent[] = [
   {
     id: 'codewars',
-    organizerId: 'org_hu_aceit',
-    organizerName: "Hacker's Unity × ACEIT",
+    organizerId: 'org_hackers_unity',
+    organizerName: "Hacker's Unity",
     organizerAvatar: '⚔️',
     organizerLogo: '',
     name: 'CodeWars Hackathon',
     title: 'CodeWars Hackathon',
     slug: 'codewars',
     description:
-      "Get ready to build, innovate, and compete at a National-Level 24-Hour Hackathon powered by Hacker's Unity × Arya College of Engineering & IT (ACEIT). Whether you are into AI/ML, Web Development, Blockchain, IoT, or Cybersecurity — bring your idea, build it, and ship it!",
+      "Get ready to build, innovate, and compete at a National-Level 24-Hour Hackathon powered by Hacker's Unity. Whether you are into AI/ML, Web Development, Blockchain, IoT, or Cybersecurity — bring your idea, build it, and ship it!",
     category: EventCategory.HACKATHON,
     eventType: EventType.OFFLINE,
     mode: 'In-Person',
@@ -83,7 +83,7 @@ export const MOCK_EVENTS: ExtendedEvent[] = [
     maxTeamSize: 4,
     teamSize: '2-4',
     isTeamEvent: true,
-    location: 'Arya College of Engineering & IT (ACEIT), Jaipur',
+    location: 'Jaipur, Rajasthan',
     createdAt: '2026-08-01T00:00:00Z',
     participantsCount: 500,
     participantsDisplay: '500+',
@@ -103,11 +103,10 @@ export const MOCK_EVENTS: ExtendedEvent[] = [
     ],
     faqs: [
       { id: 'faq_1', eventId: 'codewars', question: 'What is the team size?', answer: 'Teams can have between 2 to 4 members.', createdAt: '2026-08-01T00:00:00Z' },
-      { id: 'faq_2', eventId: 'codewars', question: 'Is it an offline or online event?', answer: 'CodeWars is an in-person, 24-hour hackathon hosted at ACEIT.', createdAt: '2026-08-01T00:00:00Z' },
+      { id: 'faq_2', eventId: 'codewars', question: 'Is it an offline or online event?', answer: 'CodeWars is an in-person, 24-hour hackathon.', createdAt: '2026-08-01T00:00:00Z' },
     ],
     sponsors: [
       { name: "Hacker's Unity", tier: 'Title Partner', logoText: 'HU' },
-      { name: 'ACEIT', tier: 'Host Partner', logoText: 'ACEIT' },
     ],
   },
   {

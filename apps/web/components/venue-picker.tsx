@@ -32,7 +32,6 @@ interface PlaceSuggestion {
 }
 
 const POPULAR_VENUES = [
-  { name: 'ACEIT, Jaipur, Rajasthan', type: 'College' },
   { name: 'IIT Delhi, Hauz Khas, New Delhi', type: 'Campus' },
   { name: 'IIT Bombay, Powai, Mumbai', type: 'Campus' },
   { name: 'BITS Pilani, Pilani Campus, Rajasthan', type: 'Campus' },

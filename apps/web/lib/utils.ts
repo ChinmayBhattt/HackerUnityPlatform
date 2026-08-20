@@ -112,10 +112,10 @@ export function getStatusBadge(status: EventStatus): { label: string; color: str
 export function getEventTypeBadge(type: EventType): { label: string; icon: string } {
   switch (type) {
     case EventType.ONLINE:
-      return { label: 'Virtual / Online', icon: '🌐' };
+      return { label: 'Virtual / Online', icon: '' };
     case EventType.OFFLINE:
-      return { label: 'In-Person', icon: '📍' };
+      return { label: 'In-Person', icon: '' };
     case EventType.HYBRID:
-      return { label: 'Hybrid', icon: '⚡' };
+      return { label: 'Hybrid', icon: '' };
   }
 }
