@@ -19,7 +19,7 @@ interface AuthContextType {
     phone?: string,
     role?: UserRole
   ) => Promise<{ error?: string; needsEmailConfirmation?: boolean; message?: string }>;
-  signInWithOAuth: (provider: 'github' | 'google') => Promise<{ error?: string }>;
+  signInWithOAuth: (provider?: 'google' | 'github') => Promise<{ error?: string }>;
   signInWithPhone: (phone: string) => Promise<{ error?: string }>;
   verifyPhoneOtp: (phone: string, token: string) => Promise<{ error?: string }>;
   updateUserProfile: (updates: Partial<UserPublic>) => Promise<{ error?: string }>;
@@ -81,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .from('profiles')
         .select('*')
         .eq('id', sbUser.id)
-        .single();
+        .maybeSingle();
 
       const meta = sbUser.user_metadata || {};
       if (profile) {
@@ -149,31 +149,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(initialUser);
         saveStoredUser(initialUser);
 
-        await supabase.from('profiles').upsert({
-          id: initialUser.id,
-          email: initialUser.email,
-          name: initialUser.name,
-          role: initialUser.role,
-        });
+        try {
+          await supabase.from('profiles').upsert({
+            id: initialUser.id,
+            email: initialUser.email,
+            name: initialUser.name,
+            role: initialUser.role,
+          });
+        } catch {
+          // ignore error
+        }
       }
 
       // Sync bookmarks from Supabase for this user
       syncBookmarksWithSupabase(sbUser.id).catch((e) => {
         console.warn('Bookmarks sync warning on signin:', e);
       });
-    } catch {
-      setUser(getStoredUser());
+    } catch (err) {
+      console.warn('Error syncing profile:', err);
+      const stored = getStoredUser();
+      if (stored) setUser(stored);
     }
   };
 
   const signInWithEmail = async (email: string, pass: string) => {
     try {
+      const cleanEmail = email.trim().toLowerCase();
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
+        email: cleanEmail,
         password: pass,
       });
-      if (error) return { error: error.message };
+
+      if (error) {
+        if (error.message.toLowerCase().includes('email not confirmed')) {
+          return {
+            error: 'Email confirmation is pending. To disable confirmation emails, turn off "Confirm email" in Supabase Dashboard -> Authentication -> Providers -> Email.',
+          };
+        }
+        if (error.message.toLowerCase().includes('invalid login credentials')) {
+          return {
+            error: 'Invalid email or password. Please check your credentials or ensure email is confirmed in Supabase.',
+          };
+        }
+        return { error: error.message };
+      }
+
       if (data.user) {
+        setSupabaseUser(data.user);
+        if (data.session) {
+          setSession(data.session);
+        }
         await syncProfileFromSupabaseUser(data.user);
       }
       return {};
@@ -190,7 +215,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     role: UserRole = UserRole.PARTICIPANT
   ) => {
     try {
-      const cleanEmail = email.trim();
+      const cleanEmail = email.trim().toLowerCase();
       const { data, error } = await supabase.auth.signUp({
         email: cleanEmail,
         password: pass,
@@ -207,6 +232,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) return { error: error.message };
 
       if (data.user) {
+        setSupabaseUser(data.user);
         const createdUser: UserPublic = {
           id: data.user.id,
           name: name,
@@ -226,6 +252,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
 
         if (data.session) {
+          setSession(data.session);
           setUser(createdUser);
           saveStoredUser(createdUser);
         }
@@ -245,7 +272,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!data.session) {
           return {
             needsEmailConfirmation: true,
-            message: 'Account created! Please check your email to confirm your account or sign in directly.',
+            message: 'Account created! Please note: To log in without confirming email, disable "Confirm email" in Supabase Dashboard -> Authentication -> Providers -> Email.',
           };
         }
       }
@@ -256,7 +283,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signInWithOAuth = async (provider: 'github' | 'google') => {
+  const signInWithOAuth = async (provider: 'google' | 'github' = 'google') => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
