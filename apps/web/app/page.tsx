@@ -96,22 +96,57 @@ export default function HomePage() {
 
 
           {/* Metrics Ticker */}
-          <div className="w-full max-w-4xl grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-slate-200">
-            <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col items-center justify-center text-center min-h-[104px] hover:shadow-md hover:border-slate-300 transition-all">
-              <div className="text-2xl sm:text-3xl font-black text-slate-900 font-mono whitespace-nowrap">10+</div>
-              <div className="text-[11px] text-slate-500 mt-1 uppercase tracking-wider font-bold whitespace-nowrap">Hackathons Hosted</div>
+          <div className="w-full max-w-5xl grid grid-cols-2 md:grid-cols-4 gap-3.5 sm:gap-5 pt-8 border-t border-slate-200/80">
+            {/* Stat 1: Hackathons */}
+            <div className="group relative p-4 sm:p-5 rounded-2xl bg-white/90 backdrop-blur-sm border border-slate-200/90 shadow-xs hover:shadow-lg hover:border-slate-300 hover:-translate-y-0.5 transition-all duration-300 flex flex-col items-center justify-center text-center">
+              <div className="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-800 mb-2 group-hover:scale-110 transition-transform">
+                <Trophy className="w-4 h-4" />
+              </div>
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight whitespace-nowrap">
+                10+
+              </div>
+              <div className="text-[11px] text-slate-500 mt-1 uppercase tracking-wider font-bold whitespace-nowrap">
+                Hackathons Hosted
+              </div>
             </div>
-            <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col items-center justify-center text-center min-h-[104px] hover:shadow-md hover:border-slate-300 transition-all">
-              <div className="text-2xl sm:text-3xl font-black text-[#ea580c] font-mono whitespace-nowrap">30+</div>
-              <div className="text-[11px] text-slate-500 mt-1 uppercase tracking-wider font-bold whitespace-nowrap">Events Conducted</div>
+
+            {/* Stat 2: Events */}
+            <div className="group relative p-4 sm:p-5 rounded-2xl bg-white/90 backdrop-blur-sm border border-slate-200/90 shadow-xs hover:shadow-lg hover:border-orange-200 hover:-translate-y-0.5 transition-all duration-300 flex flex-col items-center justify-center text-center">
+              <div className="w-8 h-8 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center text-[#ea580c] mb-2 group-hover:scale-110 transition-transform">
+                <Flame className="w-4 h-4" />
+              </div>
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#ea580c] tracking-tight whitespace-nowrap">
+                30+
+              </div>
+              <div className="text-[11px] text-slate-500 mt-1 uppercase tracking-wider font-bold whitespace-nowrap">
+                Events Conducted
+              </div>
             </div>
-            <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col items-center justify-center text-center min-h-[104px] hover:shadow-md hover:border-slate-300 transition-all">
-              <div className="text-xl sm:text-2xl lg:text-3xl font-black text-[#0099e6] font-mono whitespace-nowrap">5M+</div>
-              <div className="text-[11px] text-slate-500 mt-1 uppercase tracking-wider font-bold whitespace-nowrap">Impressions</div>
+
+            {/* Stat 3: Impressions */}
+            <div className="group relative p-4 sm:p-5 rounded-2xl bg-white/90 backdrop-blur-sm border border-slate-200/90 shadow-xs hover:shadow-lg hover:border-sky-200 hover:-translate-y-0.5 transition-all duration-300 flex flex-col items-center justify-center text-center">
+              <div className="w-8 h-8 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center text-[#0099e6] mb-2 group-hover:scale-110 transition-transform">
+                <Zap className="w-4 h-4" />
+              </div>
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#0099e6] tracking-tight whitespace-nowrap">
+                5M+
+              </div>
+              <div className="text-[11px] text-slate-500 mt-1 uppercase tracking-wider font-bold whitespace-nowrap">
+                Impressions
+              </div>
             </div>
-            <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col items-center justify-center text-center min-h-[104px] hover:shadow-md hover:border-slate-300 transition-all">
-              <div className="text-xl sm:text-2xl lg:text-3xl font-black text-emerald-600 font-mono whitespace-nowrap">50,000+</div>
-              <div className="text-[11px] text-slate-500 mt-1 uppercase tracking-wider font-bold whitespace-nowrap">Community Members</div>
+
+            {/* Stat 4: Community Members */}
+            <div className="group relative p-4 sm:p-5 rounded-2xl bg-white/90 backdrop-blur-sm border border-slate-200/90 shadow-xs hover:shadow-lg hover:border-emerald-200 hover:-translate-y-0.5 transition-all duration-300 flex flex-col items-center justify-center text-center">
+              <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 mb-2 group-hover:scale-110 transition-transform">
+                <Users className="w-4 h-4" />
+              </div>
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-emerald-600 tracking-tight whitespace-nowrap">
+                50,000+
+              </div>
+              <div className="text-[11px] text-slate-500 mt-1 uppercase tracking-wider font-bold whitespace-nowrap">
+                Community Members
+              </div>
             </div>
           </div>
         </div>
