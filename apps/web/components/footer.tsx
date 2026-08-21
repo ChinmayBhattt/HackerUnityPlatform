@@ -160,9 +160,9 @@ export function Footer() {
                 </a>
               </li>
               <li>
-                <a href="#" className="text-slate-400 hover:text-white transition-colors">
+                <Link href="/brand-guidelines" className="text-slate-400 hover:text-white transition-colors">
                   Brand Guidelines
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
