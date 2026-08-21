@@ -414,9 +414,9 @@ export default function HomePage() {
             <div className="w-10 h-10 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center text-[#0099e6]">
               <ShieldCheck className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold text-slate-900">100% Escrow Protected Payouts</h3>
+            <h3 className="text-base font-bold text-slate-900">A Platform to Showcase Your Talent</h3>
             <p className="text-xs text-slate-600 leading-relaxed font-medium">
-              Never worry about ghosting sponsors or delayed rewards. All listed hackathon prize pools are verified and deposited in escrow prior to launch.
+              Hacker’s Unity gives students the right platform to showcase their skills, ideas, creativity, and technical talent to a wider community and industry.
             </p>
           </div>
 
@@ -424,9 +424,9 @@ export default function HomePage() {
             <div className="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center text-[#ea580c]">
               <Zap className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold text-slate-900">Smart Matchmaking & Squads</h3>
+            <h3 className="text-base font-bold text-slate-900">Don’t Just Build Projects. Build Products.</h3>
             <p className="text-xs text-slate-600 leading-relaxed font-medium">
-              Our intelligent teammate engine pairs complementary skills (e.g. AI Engineer + Rust Core + UI/UX Pro) to create winning hackathon squads.
+              We believe hackathons should go beyond temporary projects. Build solutions that solve real-world problems and have the potential to become real products and startups.
             </p>
           </div>
 
@@ -434,9 +434,9 @@ export default function HomePage() {
             <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
               <Trophy className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold text-slate-900">Venture Fast-Track & Incubation</h3>
+            <h3 className="text-base font-bold text-slate-900">Turn Your Idea Into a Startup</h3>
             <p className="text-xs text-slate-600 leading-relaxed font-medium">
-              Top finalists receive direct introductions to leading global accelerators, VC angel rounds, and free GPU cluster infrastructure credits.
+             The journey doesn't end when the hackathon does. We aim to help promising builders take their ideas forward, validate them, and grow them into impactful startups.
             </p>
           </div>
         </div>
