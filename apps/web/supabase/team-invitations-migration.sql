@@ -1,9 +1,9 @@
 -- ============================================================================
--- Team Invitations Table Migration
+-- Team Invitations Table Migration (Idempotent / Safe to run multiple times)
 -- Run this in Supabase Dashboard → SQL Editor
 -- ============================================================================
 
--- 1. Create team_invitations table
+-- 1. Create team_invitations table if it doesn't exist
 CREATE TABLE IF NOT EXISTS public.team_invitations (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   team_id UUID NOT NULL REFERENCES public.teams(id) ON DELETE CASCADE,
@@ -28,38 +28,38 @@ CREATE INDEX IF NOT EXISTS idx_team_invitations_status ON public.team_invitation
 -- 3. Enable RLS
 ALTER TABLE public.team_invitations ENABLE ROW LEVEL SECURITY;
 
--- 4. RLS Policies
+-- 4. RLS Policies for team_invitations (Safe re-creation)
 
--- Anyone can read invitations (needed for accept page, dashboard)
+DROP POLICY IF EXISTS "Allow read access to team_invitations" ON public.team_invitations;
 CREATE POLICY "Allow read access to team_invitations"
   ON public.team_invitations FOR SELECT
   USING (true);
 
--- Authenticated users can insert invites (team leader check is done in app)
+DROP POLICY IF EXISTS "Allow authenticated users to insert invitations" ON public.team_invitations;
 CREATE POLICY "Allow authenticated users to insert invitations"
   ON public.team_invitations FOR INSERT
   WITH CHECK (auth.uid() IS NOT NULL);
 
--- Authenticated users can update invitations (accept/decline)
+DROP POLICY IF EXISTS "Allow authenticated users to update invitations" ON public.team_invitations;
 CREATE POLICY "Allow authenticated users to update invitations"
   ON public.team_invitations FOR UPDATE
   USING (auth.uid() IS NOT NULL);
 
--- Team leader can delete invitations
+DROP POLICY IF EXISTS "Allow authenticated users to delete invitations" ON public.team_invitations;
 CREATE POLICY "Allow authenticated users to delete invitations"
   ON public.team_invitations FOR DELETE
   USING (auth.uid() IS NOT NULL);
 
--- 5. Also ensure team_members has a policy for delete (for leave team)
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies 
-    WHERE tablename = 'team_members' 
-    AND policyname = 'Allow authenticated users to delete team_members'
-  ) THEN
-    CREATE POLICY "Allow authenticated users to delete team_members"
-      ON public.team_members FOR DELETE
-      USING (auth.uid() IS NOT NULL);
-  END IF;
-END $$;
+-- 5. Ensure team_members has a DELETE policy (for leaving squad)
+DROP POLICY IF EXISTS "Allow authenticated users to delete team_members" ON public.team_members;
+CREATE POLICY "Allow authenticated users to delete team_members"
+  ON public.team_members FOR DELETE
+  USING (auth.uid() IS NOT NULL);
+
+-- 6. Ensure teams has a DELETE policy (for squad leaders deleting their squad)
+DROP POLICY IF EXISTS "Allow authenticated users to delete teams" ON public.teams;
+CREATE POLICY "Allow authenticated users to delete teams"
+  ON public.teams FOR DELETE
+  USING (auth.uid() IS NOT NULL);
+
+

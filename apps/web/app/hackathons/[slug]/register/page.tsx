@@ -27,6 +27,7 @@ import {
   Share2,
   Clock,
   Loader2,
+  Trash2,
 } from 'lucide-react';
 import { useEvent } from '@/lib/hooks/use-events';
 import { useAuth } from '@/lib/auth-context';
@@ -38,6 +39,7 @@ import {
   fetchTeamWithMembers,
   checkUserRegistration,
   fetchUserTeamForEvent,
+  deleteTeamSupabase,
 } from '@/lib/supabase-service';
 import { formatCurrency, formatDate, formatDateTime, getDaysLeft } from '@/lib/utils';
 
@@ -71,6 +73,8 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
   const [inviteErrorMsg, setInviteErrorMsg] = useState<string | null>(null);
   const [copiedInvite, setCopiedInvite] = useState(false);
   const [teamInvitesList, setTeamInvitesList] = useState<any[]>([]);
+  const [showDeleteSquadModal, setShowDeleteSquadModal] = useState(false);
+  const [deletingSquad, setDeletingSquad] = useState(false);
 
   // Step 2: Participant details (Pre-filled from auth profile)
   const [fullName, setFullName] = useState(user?.name || '');
@@ -110,6 +114,16 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
     const currentEvent = event;
     const userId = supabaseUser?.id || user?.id;
     const userEmail = supabaseUser?.email || user?.email;
+
+    // Reset state for the current event first to prevent previous event state bleed
+    setIsAlreadyRegistered(false);
+    setCreatedTeamId(null);
+    setCreatedTeamData(null);
+    setTeamName('');
+    setTeamInvitesList([]);
+    setRegisteredRole('');
+    setCurrentStep(1);
+
     if (!userId && !userEmail) return;
 
     async function checkExisting() {
@@ -122,7 +136,7 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
             reg.registration.role || (reg.registration.is_team ? `Squad (${reg.registration.team_name || 'Team'})` : 'Individual Hacker')
           );
 
-          // Fetch squad details
+          // Fetch squad details strictly for this event
           const squad = await fetchUserTeamForEvent(currentEvent.id, userId || '');
           if (squad) {
             setCreatedTeamId(squad.id);
@@ -130,9 +144,19 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
             setTeamName(squad.name);
             setMode(squad.leader_id === userId ? 'CREATE_TEAM' : 'JOIN_TEAM');
             fetchTeamInvites(squad.id).then((invs) => setTeamInvitesList(invs));
+          } else {
+            setCreatedTeamId(null);
+            setCreatedTeamData(null);
           }
 
           setCurrentStep(3);
+        } else {
+          setIsAlreadyRegistered(false);
+          setCreatedTeamId(null);
+          setCreatedTeamData(null);
+          setTeamName('');
+          setTeamInvitesList([]);
+          setCurrentStep(1);
         }
       } catch (e) {
         console.warn('Error checking existing registration:', e);
@@ -140,7 +164,7 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
     }
 
     checkExisting();
-  }, [event, user?.id, user?.email, supabaseUser?.id, supabaseUser?.email]);
+  }, [event?.id, event?.slug, user?.id, user?.email, supabaseUser?.id, supabaseUser?.email]);
 
   // Set default mode based on event config
   useEffect(() => {
@@ -401,6 +425,29 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
     navigator.clipboard.writeText(link);
     setCopiedInvite(true);
     setTimeout(() => setCopiedInvite(false), 2500);
+  };
+
+  const handleDeleteSquad = async () => {
+    const userId = supabaseUser?.id || user?.id;
+    if (!createdTeamId || !userId) return;
+    setDeletingSquad(true);
+    try {
+      const res = await deleteTeamSupabase(createdTeamId, userId);
+      if (res.success) {
+        setCreatedTeamId(null);
+        setCreatedTeamData(null);
+        setTeamName('');
+        setShowDeleteSquadModal(false);
+        setIsAlreadyRegistered(false);
+        setCurrentStep(1);
+      } else {
+        setInviteErrorMsg(res.error || 'Failed to delete squad');
+      }
+    } catch (e: any) {
+      setInviteErrorMsg(e.message || 'Failed to delete squad');
+    } finally {
+      setDeletingSquad(false);
+    }
   };
 
   return (
@@ -996,7 +1043,7 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                 <div className="max-w-md mx-auto p-5 rounded-2xl bg-white border-2 border-sky-200 shadow-sm text-left space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0099e6] to-sky-600 flex items-center justify-center text-white text-base font-black shadow-md shadow-sky-500/20">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0099e6] to-sky-600 flex items-center justify-center text-white text-base font-black shadow-md shadow-sky-500/25">
                         {(createdTeamData?.name || teamName || 'S').charAt(0).toUpperCase()}
                       </div>
                       <div>
@@ -1011,6 +1058,18 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                         </p>
                       </div>
                     </div>
+
+                    {/* Delete Squad Button (Leader Only) */}
+                    {(mode === 'CREATE_TEAM' || createdTeamData?.leader_id === (supabaseUser?.id || user?.id)) && (
+                      <button
+                        onClick={() => setShowDeleteSquadModal(true)}
+                        className="px-2.5 py-1.5 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                        title="Delete Squad"
+                      >
+                        <Trash2 className="w-3 h-3 text-red-500" />
+                        <span>Delete</span>
+                      </button>
+                    )}
                   </div>
 
                   {/* Member Roster */}
@@ -1071,7 +1130,7 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
               </div>
 
               {/* ─── Invite Teammates Section (Team Leaders Only) ─── */}
-              {createdTeamId && mode === 'CREATE_TEAM' && (
+              {createdTeamId && (mode === 'CREATE_TEAM' || createdTeamData?.leader_id === (supabaseUser?.id || user?.id)) && (
                 <div className="max-w-md mx-auto w-full space-y-4 text-left">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-xl bg-sky-50 border border-sky-200 text-[#0099e6] flex items-center justify-center">
@@ -1079,7 +1138,7 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                     </div>
                     <div>
                       <h3 className="text-sm font-bold text-slate-900">Invite Your Teammates</h3>
-                      <p className="text-[10px] text-slate-500">Send invite links via email — they'll join your squad instantly.</p>
+                      <p className="text-[10px] text-slate-500">Send invite links via email or direct share — they'll join your squad instantly.</p>
                     </div>
                   </div>
 
@@ -1105,23 +1164,53 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                     </button>
                   </form>
 
-                  {/* Share Link Button */}
-                  <button
-                    onClick={handleCopyLink}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-700 transition-colors cursor-pointer"
-                  >
-                    {copiedInvite ? (
-                      <>
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                        <span className="text-emerald-700">Link Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Share2 className="w-3.5 h-3.5" />
-                        <span>Copy Shareable Invite Link</span>
-                      </>
-                    )}
-                  </button>
+                  {/* Direct Sharing Buttons */}
+                  {(() => {
+                    const currentInviteUrl = getShareableInviteLink();
+                    const mailtoSubject = encodeURIComponent(`Join squad "${createdTeamData?.name || teamName}" for ${event.title}!`);
+                    const mailtoBody = encodeURIComponent(`Hey!\n\nJoin our squad "${createdTeamData?.name || teamName}" for ${event.title} on Hacker's Unity.\n\nClick the link to accept and join:\n${currentInviteUrl}\n\nLet's hack together!`);
+                    const whatsappText = encodeURIComponent(`Hey! Join our squad "${createdTeamData?.name || teamName}" for ${event.title} on Hacker's Unity: ${currentInviteUrl}`);
+
+                    return (
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <button
+                          type="button"
+                          onClick={handleCopyLink}
+                          className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-700 transition-colors cursor-pointer"
+                        >
+                          {copiedInvite ? (
+                            <>
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                              <span className="text-emerald-700">Copied!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3.5 h-3.5" />
+                              <span>Copy Link</span>
+                            </>
+                          )}
+                        </button>
+
+                        <a
+                          href={`mailto:?subject=${mailtoSubject}&body=${mailtoBody}`}
+                          className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-700 transition-colors"
+                        >
+                          <Mail className="w-3.5 h-3.5 text-rose-500" />
+                          <span>Email App</span>
+                        </a>
+
+                        <a
+                          href={`https://api.whatsapp.com/send?text=${whatsappText}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-700 transition-colors"
+                        >
+                          <Share2 className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>WhatsApp</span>
+                        </a>
+                      </div>
+                    );
+                  })()}
 
                   {/* Status Messages */}
                   {inviteSuccessMsg && (
@@ -1187,6 +1276,42 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
           )}
         </div>
       </div>
+
+      {/* ─── MODAL: Delete Squad Confirmation ─── */}
+      {showDeleteSquadModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-black text-slate-900">Delete Squad?</h3>
+              <p className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">
+                Are you sure you want to delete squad <strong className="text-slate-800">&quot;{createdTeamData?.name || teamName}&quot;</strong>? This will remove the squad, delete all member associations, and cancel pending invitations.
+              </p>
+            </div>
+            <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setShowDeleteSquadModal(false)}
+                disabled={deletingSquad}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteSquad}
+                disabled={deletingSquad}
+                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-500/20 transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                {deletingSquad ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                Yes, Delete Squad
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

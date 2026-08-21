@@ -12,7 +12,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { ExtendedEvent } from '@/lib/mock-data';
-import { EVENT_IMAGE_MAP } from '@/lib/event-images';
+import { EVENT_IMAGE_MAP, getEventImageSrc } from '@/lib/event-images';
 import { formatCurrency, getDaysLeft, getStatusBadge, getCategoryBadge } from '@/lib/utils';
 import { toggleBookmarkEvent, getBookmarkedEventIds } from '@/lib/storage';
 import { useAuth } from '@/lib/auth-context';
@@ -35,6 +35,7 @@ export function HackathonCard({ event, isBookmarked, onBookmarkChange }: Hackath
   });
   const [showRegModal, setShowRegModal] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const bannerImageSrc = getEventImageSrc(event);
 
   useEffect(() => {
     if (isBookmarked !== undefined) {
@@ -68,11 +69,11 @@ export function HackathonCard({ event, isBookmarked, onBookmarkChange }: Hackath
       <div className="group relative flex flex-col justify-between overflow-hidden rounded-2xl bg-white border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-[#0099e6]/40 transition-all duration-300">
         {/* Top Image / Banner Header */}
         <div className="h-44 w-full relative overflow-hidden bg-slate-900 border-b border-slate-100">
-          {(event.image || event.bannerUrl) && !imgError ? (
+          {bannerImageSrc && !imgError ? (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={event.image || event.bannerUrl || ''}
+                src={bannerImageSrc}
                 alt={event.title}
                 onError={() => setImgError(true)}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

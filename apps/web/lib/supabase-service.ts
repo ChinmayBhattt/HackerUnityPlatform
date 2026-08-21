@@ -1073,6 +1073,78 @@ export async function leaveTeam(
 }
 
 /**
+ * Delete an entire team (Squad Leader Only)
+ */
+export async function deleteTeamSupabase(
+  teamId: string,
+  userId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!teamId || !userId) {
+      return { success: false, error: 'Team ID and user ID are required' };
+    }
+
+    // 1. Fetch team to verify user is leader and get event_id
+    const { data: team, error: fetchErr } = await supabase
+      .from('teams')
+      .select('id, leader_id, event_id')
+      .eq('id', teamId)
+      .maybeSingle();
+
+    if (fetchErr || !team) {
+      return { success: false, error: 'Team not found' };
+    }
+
+    if (team.leader_id !== userId) {
+      return { success: false, error: 'Only the squad leader can delete this team.' };
+    }
+
+    // 2. Delete team_invitations for this team
+    try {
+      await supabase.from('team_invitations').delete().eq('team_id', teamId);
+    } catch (e) {
+      console.warn('team_invitations delete error:', e);
+    }
+
+    // 3. Delete team_members for this team
+    try {
+      await supabase.from('team_members').delete().eq('team_id', teamId);
+    } catch (e) {
+      console.warn('team_members delete error:', e);
+    }
+
+    // 4. Delete the team itself
+    const { error: deleteErr } = await supabase
+      .from('teams')
+      .delete()
+      .eq('id', teamId);
+
+    if (deleteErr) {
+      return { success: false, error: deleteErr.message };
+    }
+
+    // 5. Update leader's registration record if exists
+    try {
+      await supabase
+        .from('registrations')
+        .update({
+          is_team: false,
+          team_name: null,
+          role: 'Solo Builder',
+        })
+        .eq('event_id', team.event_id)
+        .eq('user_id', userId);
+    } catch (e) {
+      console.warn('registrations update error:', e);
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Failed to delete squad' };
+  }
+}
+
+/**
  * Fetch full team details with all members (for team view)
  */
 export async function fetchTeamWithMembers(teamId: string): Promise<any | null> {

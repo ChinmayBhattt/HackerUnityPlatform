@@ -126,19 +126,23 @@ export async function POST(req: Request) {
         const resend = new Resend(process.env.RESEND_API_KEY);
         const fromEmail = process.env.RESEND_FROM_EMAIL || 'Hacker\'s Unity <onboarding@resend.dev>';
 
-        const data = await resend.emails.send({
+        const { data, error: sendError } = await resend.emails.send({
           from: fromEmail,
           to: toEmail,
           subject,
           html: htmlContent,
         });
 
-        return NextResponse.json({
-          success: true,
-          method: 'resend',
-          data,
-          inviteUrl,
-        });
+        if (sendError) {
+          console.warn('Resend returned error, falling back:', sendError);
+        } else {
+          return NextResponse.json({
+            success: true,
+            method: 'resend',
+            data,
+            inviteUrl,
+          });
+        }
       } catch (resendErr: any) {
         console.warn('Resend send failed, falling back:', resendErr);
       }

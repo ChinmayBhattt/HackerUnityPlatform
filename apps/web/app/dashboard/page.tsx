@@ -1228,7 +1228,7 @@ function DashboardTeamsTab() {
   const userId = supabaseUser?.id || user?.id;
   const userEmail = supabaseUser?.email || user?.email;
 
-  const { userTeams, loading: teamsLoading, leaveTeam, refreshUserTeams } = useUserTeams();
+  const { userTeams, loading: teamsLoading, leaveTeam, deleteTeam, refreshUserTeams } = useUserTeams();
   const { pendingInvites, loading: invitesLoading, acceptInvite, declineInvite, refreshMyInvites } = useMyInvites();
 
   // Per-team invite state
@@ -1240,6 +1240,8 @@ function DashboardTeamsTab() {
   const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
   const [leavingTeam, setLeavingTeam] = useState<string | null>(null);
   const [processingInvite, setProcessingInvite] = useState<string | null>(null);
+  const [deleteConfirmSquad, setDeleteConfirmSquad] = useState<any | null>(null);
+  const [deletingSquad, setDeletingSquad] = useState(false);
 
   // Load invites for expanded team
   const handleExpandTeam = async (teamId: string) => {
@@ -1254,6 +1256,15 @@ function DashboardTeamsTab() {
     } catch {}
   };
 
+  const getTeamInviteUrl = (teamId: string, eventSlug: string) => {
+    const invites = teamInvitesMap[teamId] || [];
+    const pending = invites.find((i: any) => i.status === 'PENDING');
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    return pending?.invite_token
+      ? `${origin}/hackathons/${eventSlug}/invite?token=${pending.invite_token}`
+      : `${origin}/hackathons/${eventSlug}/register`;
+  };
+
   const handleSendInvite = async (teamId: string, eventId: string) => {
     const email = inviteEmailMap[teamId]?.trim();
     if (!email || !email.includes('@') || !userId) return;
@@ -1264,7 +1275,7 @@ function DashboardTeamsTab() {
     try {
       const res = await sendTeamInvite(teamId, eventId, userId, email);
       if (res.success) {
-        setInviteResultMap((prev) => ({ ...prev, [teamId]: { type: 'success', msg: `Invite sent to ${email}!` } }));
+        setInviteResultMap((prev) => ({ ...prev, [teamId]: { type: 'success', msg: `Invite created for ${email}!` } }));
         setInviteEmailMap((prev) => ({ ...prev, [teamId]: '' }));
         const invites = await fetchTeamInvites(teamId);
         setTeamInvitesMap((prev) => ({ ...prev, [teamId]: invites }));
@@ -1279,12 +1290,7 @@ function DashboardTeamsTab() {
   };
 
   const handleCopyLink = (teamId: string, eventSlug: string) => {
-    const invites = teamInvitesMap[teamId] || [];
-    const pending = invites.find((i: any) => i.status === 'PENDING');
-    const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    const link = pending?.invite_token
-      ? `${origin}/hackathons/${eventSlug}/invite?token=${pending.invite_token}`
-      : `${origin}/hackathons/${eventSlug}/register`;
+    const link = getTeamInviteUrl(teamId, eventSlug);
     navigator.clipboard.writeText(link);
     setCopiedMap((prev) => ({ ...prev, [teamId]: true }));
     setTimeout(() => setCopiedMap((prev) => ({ ...prev, [teamId]: false })), 2500);
@@ -1294,6 +1300,20 @@ function DashboardTeamsTab() {
     setLeavingTeam(teamId);
     await leaveTeam(teamId);
     setLeavingTeam(null);
+  };
+
+  const handleDeleteSquad = async () => {
+    if (!deleteConfirmSquad || !userId) return;
+    setDeletingSquad(true);
+    try {
+      await deleteTeam(deleteConfirmSquad.id);
+      setDeleteConfirmSquad(null);
+      refreshUserTeams();
+    } catch (e) {
+      console.warn('Delete squad error:', e);
+    } finally {
+      setDeletingSquad(false);
+    }
   };
 
   const handleAcceptInvite = async (token: string) => {
@@ -1369,7 +1389,7 @@ function DashboardTeamsTab() {
         <div className="flex items-center justify-between border-b border-slate-100 pb-4">
           <div>
             <h3 className="text-xl font-black text-slate-900">My Squads</h3>
-            <p className="text-xs text-slate-500 mt-0.5">Your hackathon teams and members.</p>
+            <p className="text-xs text-slate-500 mt-0.5">Your hackathon teams, rosters, and invitations.</p>
           </div>
           <Link
             href="/teammates"
@@ -1390,7 +1410,7 @@ function DashboardTeamsTab() {
             </div>
             <p className="text-sm font-bold text-slate-900">No Squads Yet</p>
             <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              You haven't joined any teams yet. Register for a hackathon as a team to see your squads here.
+              You haven&apos;t joined any teams yet. Register for a hackathon as a team to see your squads here.
             </p>
           </div>
         ) : (
@@ -1415,6 +1435,11 @@ function DashboardTeamsTab() {
                   profiles: team.profiles,
                 });
               }
+
+              const inviteUrl = getTeamInviteUrl(teamId, eventSlug);
+              const mailtoSubject = encodeURIComponent(`Join squad "${teamName}" for ${eventName || 'the Hackathon'}!`);
+              const mailtoBody = encodeURIComponent(`Hey!\n\nI've created our squad "${teamName}" for ${eventName || 'the hackathon'} on Hacker's Unity.\n\nClick the link below to accept the invite and join our team:\n${inviteUrl}\n\nLet's win this together!`);
+              const whatsappText = encodeURIComponent(`Hey! Join our squad "${teamName}" for ${eventName || 'the hackathon'} on Hacker's Unity: ${inviteUrl}`);
 
               return (
                 <div key={teamId} className="rounded-2xl border border-slate-200 overflow-hidden">
@@ -1521,16 +1546,37 @@ function DashboardTeamsTab() {
                             </button>
                           </div>
 
-                          <button
-                            onClick={() => handleCopyLink(teamId, eventSlug)}
-                            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-600 transition-colors cursor-pointer"
-                          >
-                            {copiedMap[teamId] ? (
-                              <><Check className="w-3 h-3 text-emerald-500" /><span className="text-emerald-700">Copied!</span></>
-                            ) : (
-                              <><Copy className="w-3 h-3" /><span>Copy Invite Link</span></>
-                            )}
-                          </button>
+                          {/* Action Sharing Buttons */}
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <button
+                              onClick={() => handleCopyLink(teamId, eventSlug)}
+                              className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-600 transition-colors cursor-pointer"
+                            >
+                              {copiedMap[teamId] ? (
+                                <><Check className="w-3.5 h-3.5 text-emerald-500" /><span className="text-emerald-700">Copied!</span></>
+                              ) : (
+                                <><Copy className="w-3.5 h-3.5" /><span>Copy Link</span></>
+                              )}
+                            </button>
+
+                            <a
+                              href={`mailto:?subject=${mailtoSubject}&body=${mailtoBody}`}
+                              className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-600 transition-colors"
+                            >
+                              <Mail className="w-3.5 h-3.5 text-rose-500" />
+                              <span>Email App</span>
+                            </a>
+
+                            <a
+                              href={`https://api.whatsapp.com/send?text=${whatsappText}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-600 transition-colors"
+                            >
+                              <Share2 className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>WhatsApp</span>
+                            </a>
+                          </div>
 
                           {inviteResultMap[teamId] && (
                             <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium ${
@@ -1564,7 +1610,20 @@ function DashboardTeamsTab() {
                         </div>
                       )}
 
-                      {/* Leave Team */}
+                      {/* Leader Action: Delete Squad */}
+                      {isLeader && (
+                        <div className="pt-2 border-t border-slate-200 flex justify-end">
+                          <button
+                            onClick={() => setDeleteConfirmSquad(team)}
+                            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 border border-red-200 hover:border-red-300 transition-all cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                            Delete Squad
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Non-Leader Action: Leave Team */}
                       {!isLeader && (
                         <div className="pt-2 border-t border-slate-200">
                           <button
@@ -1585,6 +1644,40 @@ function DashboardTeamsTab() {
           </div>
         )}
       </div>
+
+      {/* ─── MODAL: Delete Squad Confirmation ─── */}
+      {deleteConfirmSquad && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-black text-slate-900">Delete Squad?</h3>
+              <p className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">
+                Are you sure you want to delete squad <strong className="text-slate-800">&quot;{deleteConfirmSquad.name}&quot;</strong>? This will remove all members from the squad and cancel all pending invitations.
+              </p>
+            </div>
+            <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
+              <button
+                onClick={() => setDeleteConfirmSquad(null)}
+                disabled={deletingSquad}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteSquad}
+                disabled={deletingSquad}
+                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-500/20 transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                {deletingSquad ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                Yes, Delete Squad
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

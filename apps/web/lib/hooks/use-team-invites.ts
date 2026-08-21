@@ -10,6 +10,7 @@ import {
   acceptTeamInvite,
   declineTeamInvite,
   leaveTeam,
+  deleteTeamSupabase,
   fetchTeamWithMembers,
   fetchUserTeams,
 } from '@/lib/supabase-service';
@@ -202,5 +203,14 @@ export function useUserTeams() {
     return res;
   };
 
-  return { userTeams, loading, leaveTeam: leave, refreshUserTeams: loadUserTeams };
+  const removeTeam = async (teamId: string) => {
+    if (!userId) return { success: false, error: 'Sign in required' };
+    const res = await deleteTeamSupabase(teamId, userId);
+    if (res.success) {
+      await loadUserTeams();
+    }
+    return res;
+  };
+
+  return { userTeams, loading, leaveTeam: leave, deleteTeam: removeTeam, refreshUserTeams: loadUserTeams };
 }

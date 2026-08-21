@@ -44,14 +44,17 @@ export default function HackathonDetailPage({ params }: PageProps) {
   const [isBookmarked, setIsBookmarked] = useState<boolean>(false);
 
   useEffect(() => {
+    setUserSquad(null);
     if (!event) return;
     const userId = supabaseUser?.id || user?.id;
     if (userId) {
       fetchUserTeamForEvent(event.id, userId).then((squad) => {
         setUserSquad(squad);
       });
+    } else {
+      setUserSquad(null);
     }
-  }, [event, user?.id, supabaseUser?.id, isRegistered]);
+  }, [event?.id, event?.slug, user?.id, supabaseUser?.id, isRegistered]);
 
   useEffect(() => {
     if (!event) return;
