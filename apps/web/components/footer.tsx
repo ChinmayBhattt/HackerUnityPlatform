@@ -1,135 +1,176 @@
 import Link from 'next/link';
-import { Github, Twitter, Disc as Discord, ShieldCheck, Heart } from 'lucide-react';
-import { Logo } from './logo';
+import Image from 'next/image';
+import { Mail, Phone, MapPin } from 'lucide-react';
+import {
+  FaInstagram,
+  FaXTwitter,
+  FaLinkedin,
+  FaYoutube,
+  FaWhatsapp,
+  FaDiscord,
+} from 'react-icons/fa6';
 
 export function Footer() {
+  const socials = [
+    { icon: FaInstagram, label: 'Instagram', handle: '@hackerunity', href: 'https://instagram.com/hackerunity' },
+    { icon: FaXTwitter, label: 'Twitter (X)', handle: '@Hackers_Unity', href: 'https://twitter.com/Hackers_Unity' },
+    { icon: FaLinkedin, label: 'LinkedIn', handle: '@hackerunity', href: 'https://linkedin.com/company/hackerunity' },
+    { icon: FaYoutube, label: 'YouTube', handle: '@hackerunity', href: 'https://youtube.com/@hackerunity' },
+    { icon: FaWhatsapp, label: 'WhatsApp', handle: 'Community Group', href: 'https://chat.whatsapp.com/JqVKrBiZIdND1n40ffErw3?mode=gi_t' },
+    { icon: FaDiscord, label: 'Discord', handle: 'Join Server', href: 'https://discord.com/invite/xcNNqdDhce' },
+  ];
+
   return (
-    <footer className="border-t border-slate-200 bg-white text-slate-600 text-xs mt-20">
+    <footer className="border-t border-slate-800/80 bg-[#0b0e14] text-slate-400 text-xs mt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
-          {/* Brand Col */}
-          <div className="md:col-span-2 space-y-4">
-            <Link href="/" className="inline-block">
-              <Logo size={52} showText={false} />
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12">
+          {/* Brand Col (5 cols) */}
+          <div className="md:col-span-5 space-y-4">
+            <Link href="/" className="inline-flex items-center gap-2.5 group">
+              <div className="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center overflow-hidden p-1 shadow-sm group-hover:border-[#0099e6]/40 transition-colors">
+                <Image
+                  src="/logo-main.png"
+                  alt="Hacker's Unity"
+                  width={32}
+                  height={32}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <span className="text-base font-black text-white tracking-tight">
+                Hacker&apos;s Unity
+              </span>
             </Link>
-            <p className="text-xs text-slate-500 max-w-sm leading-relaxed">
-              The premier global arena for hackers, founders, and community builders. Discover hackathons, find your dream squad, and ship venture-grade software.
+
+            <div className="text-xs font-bold text-[#f97316] tracking-wide">
+              Build. Connect. Innovate.
+            </div>
+
+            <p className="text-xs text-slate-400 max-w-sm leading-relaxed">
+              Empowering the next generation of builders through hackathons, community, and collaboration.
             </p>
-            <div className="flex items-center gap-3 pt-2">
-              <a
-                href="https://github.com"
-                target="_blank"
-                rel="noreferrer"
-                className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-[#0099e6] hover:border-[#0099e6]/40 transition-all"
-              >
-                <Github className="w-4 h-4" />
-              </a>
-              <a
-                href="https://x.com"
-                target="_blank"
-                rel="noreferrer"
-                className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-[#0099e6] hover:border-[#0099e6]/40 transition-all"
-              >
-                <Twitter className="w-4 h-4" />
-              </a>
-              <a
-                href="https://discord.com"
-                target="_blank"
-                rel="noreferrer"
-                className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-[#f97316] hover:border-[#f97316]/40 transition-all"
-              >
-                <Discord className="w-4 h-4" />
-              </a>
+
+            {/* Social Icons Row */}
+            <div className="flex items-center gap-2 pt-2 flex-wrap">
+              {socials.map((social) => {
+                const Icon = social.icon;
+                return (
+                  <a
+                    key={social.label}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={`${social.label} (${social.handle})`}
+                    className="w-9 h-9 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                  >
+                    <Icon className="w-4 h-4" />
+                  </a>
+                );
+              })}
             </div>
           </div>
 
-          {/* Quick Links */}
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-3">Explore</h4>
-            <ul className="space-y-2">
+          {/* Contact Us Col (3 cols) */}
+          <div className="md:col-span-3 space-y-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-white mb-4">
+              Contact Us
+            </h4>
+            <ul className="space-y-3 text-xs">
               <li>
-                <Link href="/hackathons" className="hover:text-[#0099e6] transition-colors">
-                  All Hackathons
-                </Link>
+                <a
+                  href="mailto:hackerunity.community@gmail.com"
+                  className="flex items-center gap-2.5 text-slate-400 hover:text-[#0099e6] transition-colors"
+                >
+                  <Mail className="w-4 h-4 text-slate-400 shrink-0" />
+                  <span className="truncate font-medium">hackerunity.community@gmail.com</span>
+                </a>
               </li>
               <li>
-                <Link href="/teammates" className="hover:text-[#0099e6] transition-colors">
-                  Find Teammates
-                </Link>
+                <a
+                  href="tel:+918852924002"
+                  className="flex items-center gap-2.5 text-slate-400 hover:text-[#0099e6] transition-colors"
+                >
+                  <Phone className="w-4 h-4 text-slate-400 shrink-0" />
+                  <span className="font-medium">+91 8852924002</span>
+                </a>
               </li>
               <li>
-                <Link href="/leaderboard" className="hover:text-[#0099e6] transition-colors">
-                  Global Leaderboard
-                </Link>
+                <a
+                  href="tel:+919324264950"
+                  className="flex items-center gap-2.5 text-slate-400 hover:text-[#0099e6] transition-colors"
+                >
+                  <Phone className="w-4 h-4 text-slate-400 shrink-0" />
+                  <span className="font-medium">+91 9324264950</span>
+                </a>
               </li>
-              <li>
-                <Link href="/host" className="hover:text-[#0099e6] transition-colors">
-                  Host an Event
-                </Link>
+              <li className="flex items-center gap-2.5 text-slate-400">
+                <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
+                <span className="font-medium">Jaipur, Rajasthan, India</span>
               </li>
             </ul>
           </div>
 
-          {/* Categories */}
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-3">Domains</h4>
-            <ul className="space-y-2">
+          {/* Platform Col (2 cols) */}
+          <div className="md:col-span-2 space-y-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-white mb-4">
+              Platform
+            </h4>
+            <ul className="space-y-2.5 text-xs">
               <li>
-                <Link href="/hackathons?category=HACKATHON" className="hover:text-[#0099e6] transition-colors">
-                  GenAI & LLMs
+                <Link href="/hackathons" className="text-slate-400 hover:text-white transition-colors">
+                  Hackathons
                 </Link>
               </li>
               <li>
-                <Link href="/hackathons?category=HACKATHON" className="hover:text-[#0099e6] transition-colors">
-                  Web3 & Zero-Knowledge
+                <Link href="/hackathons" className="text-slate-400 hover:text-white transition-colors">
+                  Projects
                 </Link>
               </li>
               <li>
-                <Link href="/hackathons?category=COMPETITION" className="hover:text-[#0099e6] transition-colors">
-                  Cybersecurity DEFCON
+                <Link href="/host" className="text-slate-400 hover:text-white transition-colors">
+                  Sponsors
                 </Link>
               </li>
               <li>
-                <Link href="/hackathons?category=HACKATHON" className="hover:text-[#0099e6] transition-colors">
-                  Robotics & Edge AI
-                </Link>
+                <a
+                  href="https://discord.com/invite/xcNNqdDhce"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-slate-400 hover:text-white transition-colors"
+                >
+                  Community
+                </a>
               </li>
             </ul>
           </div>
 
-          {/* Newsletter */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900">Hackers Dispatch</h4>
-            <p className="text-[11px] text-slate-500">
-              Get notified of $10k+ hackathons and verified funding grants every Monday.
-            </p>
-            <div className="flex gap-2">
-              <input
-                type="email"
-                placeholder="dev@domain.com"
-                className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 placeholder-slate-400 outline-none focus:border-[#0099e6]"
-              />
-              <button className="px-3 py-1.5 bg-[#0099e6] hover:bg-[#0284c7] text-white font-bold text-xs rounded-lg transition-colors cursor-pointer">
-                Join
-              </button>
-            </div>
+          {/* Legal Col (2 cols) */}
+          <div className="md:col-span-2 space-y-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-white mb-4">
+              Legal
+            </h4>
+            <ul className="space-y-2.5 text-xs">
+              <li>
+                <a href="#" className="text-slate-400 hover:text-white transition-colors">
+                  Privacy Policy
+                </a>
+              </li>
+              <li>
+                <a href="#" className="text-slate-400 hover:text-white transition-colors">
+                  Terms of Service
+                </a>
+              </li>
+              <li>
+                <a href="#" className="text-slate-400 hover:text-white transition-colors">
+                  Brand Guidelines
+                </a>
+              </li>
+            </ul>
           </div>
         </div>
 
-        <div className="border-t border-slate-100 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
-          <p>© 2026 Hacker&apos;s Unity Platform. Built for developers worldwide.</p>
-          <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span>SOC2 & KYC Verified Payouts</span>
-            </span>
-            <span>•</span>
-            <span className="flex items-center gap-1">
-              <span>Made with</span>
-              <Heart className="w-3 h-3 text-[#f97316] fill-[#f97316]" />
-              <span>for Builders</span>
-            </span>
-          </div>
+        {/* Bottom Bar */}
+        <div className="border-t border-slate-800/80 mt-12 pt-8 text-center text-xs text-slate-500 font-medium">
+          <p>© 2026 Hacker&apos;s Unity All rights reserved.</p>
         </div>
       </div>
     </footer>

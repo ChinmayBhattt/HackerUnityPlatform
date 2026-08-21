@@ -51,7 +51,7 @@ export default function HomePage() {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-[#0099e6]" />
             </span>
             <span className="font-mono uppercase tracking-wider text-xs">
-              <strong className="text-[#0099e6]">85+ LIVE HACKATHONS</strong> • <strong className="text-[#ea580c]">$1.85M PRIZE POOLS</strong>
+              <strong className="text-[#0099e6]">15+ LIVE HACKATHONS</strong> • <strong className="text-[#ea580c]">$350K PRIZE POOLS</strong>
             </span>
           </div>
 
