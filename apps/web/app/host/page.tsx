@@ -540,6 +540,10 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
                 <span className="font-mono font-black text-[#ea580c]">₹{totalPrize.toLocaleString('en-IN')}</span>
               </div>
               <div>
+                <span className="text-slate-400 font-bold uppercase text-[10px] block">Capacity</span>
+                <span className="font-bold text-slate-900">{isUnlimitedCapacity || !registrationCapacity ? '♾️ Unlimited' : `${registrationCapacity} Hackers`}</span>
+              </div>
+              <div>
                 <span className="text-slate-400 font-bold uppercase text-[10px] block">Registration Fee Model</span>
                 <span className="font-bold text-orange-600 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
@@ -1276,8 +1280,68 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Registration Capacity</label>
-                      <input type="number" min={10} value={registrationCapacity} onChange={(e) => setRegistrationCapacity(Number(e.target.value))} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 outline-none focus:border-[#0099e6]" />
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-bold text-slate-700">Registration Capacity</label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const next = !isUnlimitedCapacity;
+                            setIsUnlimitedCapacity(next);
+                            if (next) setRegistrationCapacity(null);
+                            else setRegistrationCapacity(500);
+                          }}
+                          className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                            isUnlimitedCapacity
+                              ? 'bg-sky-500 text-white shadow-2xs'
+                              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          }`}
+                        >
+                          <span>♾️ Unlimited</span>
+                        </button>
+                      </div>
+
+                      {isUnlimitedCapacity ? (
+                        <div className="w-full px-3 py-2 bg-sky-50/80 border border-sky-200 rounded-xl text-xs font-bold text-[#0099e6] flex items-center justify-between animate-in fade-in">
+                          <span className="flex items-center gap-1.5">
+                            <span>♾️</span>
+                            <span>Unlimited (No Cap)</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsUnlimitedCapacity(false);
+                              setRegistrationCapacity(500);
+                            }}
+                            className="text-[10px] text-slate-500 hover:text-slate-800 underline font-semibold cursor-pointer"
+                          >
+                            Set limit
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="relative">
+                          <input
+                            type="number"
+                            min={10}
+                            placeholder="e.g. 500"
+                            value={registrationCapacity ?? ''}
+                            onChange={(e) => {
+                              const val = e.target.value === '' ? null : Number(e.target.value);
+                              setRegistrationCapacity(val);
+                            }}
+                            className="w-full pr-16 pl-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 outline-none focus:border-[#0099e6]"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsUnlimitedCapacity(true);
+                              setRegistrationCapacity(null);
+                            }}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[#0099e6] hover:underline cursor-pointer"
+                          >
+                            Unlimited
+                          </button>
+                        </div>
+                      )}
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Approval Mode</label>
@@ -1418,7 +1482,7 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
                       </div>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
                         <div><span className="text-slate-500">Type:</span> <span className={`font-semibold ${registrationType === 'PAID' ? 'text-[#ea580c]' : 'text-slate-900'}`}>{registrationType === 'PAID' ? 'Paid Entry (Verification Required)' : 'Free Entry'}</span></div>
-                        <div><span className="text-slate-500">Capacity:</span> <span className="font-semibold text-slate-900">{registrationCapacity}</span></div>
+                        <div><span className="text-slate-500">Capacity:</span> <span className="font-semibold text-slate-900">{isUnlimitedCapacity || !registrationCapacity ? '♾️ Unlimited' : `${registrationCapacity} Participants`}</span></div>
                         <div><span className="text-slate-500">Approval:</span> <span className="font-semibold text-slate-900">{approvalMode === 'AUTO' ? '✅ Auto' : '🔒 Manual'}</span></div>
                         <div><span className="text-slate-500">Custom Q&apos;s:</span> <span className="font-semibold text-slate-900">{customQuestions.length}</span></div>
                       </div>
