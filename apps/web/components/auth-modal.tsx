@@ -12,6 +12,8 @@ import {
   Loader2,
   KeyRound,
   Info,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 import { useAuth } from '@/lib/auth-context';

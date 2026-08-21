@@ -146,7 +146,7 @@ export default function HackathonDetailPage({ params }: PageProps) {
                 <span className="px-3 py-1 rounded-full text-xs font-bold bg-white text-[#0099e6] border border-[#0099e6]/20 shadow-2xs">
                   {categoryInfo.label}
                 </span>
-                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${statusInfo.color}`}>
                   {statusInfo.label}
                 </span>
                 <span className="px-3 py-1 rounded-full text-xs font-medium bg-white text-slate-700 border border-slate-200">

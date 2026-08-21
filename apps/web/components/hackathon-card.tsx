@@ -118,8 +118,8 @@ export function HackathonCard({ event, isBookmarked, onBookmarkChange }: Hackath
           <div>
             {/* Status & Deadline pill */}
             <div className="flex items-center justify-between gap-2 mb-2 text-xs">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${statusInfo.color}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${statusInfo.dot}`} />
                 <span>{statusInfo.label}</span>
               </div>
               <div className={`flex items-center gap-1 text-[11px] font-medium ${deadlineInfo.urgent ? 'text-[#ea580c] font-bold' : 'text-slate-500'}`}>

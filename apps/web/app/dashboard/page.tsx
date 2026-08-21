@@ -881,12 +881,22 @@ export default function DashboardPage() {
                         </span>
                         <span
                           className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                            eventItem.status === 'COMPLETED'
+                            eventItem.status === 'PENDING_APPROVAL'
+                              ? 'bg-amber-500 text-white shadow-xs'
+                              : eventItem.status === 'DRAFT'
+                              ? 'bg-slate-600 text-white shadow-xs'
+                              : eventItem.status === 'COMPLETED'
                               ? 'bg-slate-800 text-slate-300'
                               : 'bg-emerald-500 text-white shadow-xs'
                           }`}
                         >
-                          {eventItem.status === 'COMPLETED' ? 'Completed' : 'Live / Active'}
+                          {eventItem.status === 'PENDING_APPROVAL'
+                            ? 'Verification Pending'
+                            : eventItem.status === 'DRAFT'
+                            ? 'Draft'
+                            : eventItem.status === 'COMPLETED'
+                            ? 'Completed'
+                            : 'Live / Active'}
                         </span>
                       </div>
                     </div>

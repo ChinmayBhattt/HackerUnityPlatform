@@ -277,7 +277,7 @@ export default function HackathonsDirectoryPage() {
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-[#0099e6] border border-sky-200">
                       {categoryInfo.label}
                     </span>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${statusInfo.color}`}>
                       {statusInfo.label}
                     </span>
                     <span className="text-slate-300">•</span>
