@@ -71,7 +71,7 @@ export default function HomePage() {
             <Search className="w-5 h-5 text-[#0099e6] ml-3" />
             <input
               type="text"
-              placeholder="Search by tech stack (Python, ZK, PyTorch), track or event name..."
+              placeholder="Search for hackathons, tech events, or event name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1 bg-transparent text-sm text-slate-900 placeholder-slate-400 outline-none px-2 py-1.5 font-medium"
