@@ -426,9 +426,6 @@ export default function DashboardPage() {
               <div className="overflow-hidden flex-1">
                 <div className="font-extrabold text-sm text-slate-900 truncate">{user?.name || 'Hacker'}</div>
                 <div className="text-[11px] text-slate-500 font-mono truncate">{user?.email}</div>
-                <span className="inline-block mt-1 px-2 py-0.5 rounded-md bg-[#0099e6]/10 text-[#0099e6] text-[10px] font-extrabold uppercase tracking-wider">
-                  {user?.role || 'Builder'}
-                </span>
               </div>
             </div>
 
