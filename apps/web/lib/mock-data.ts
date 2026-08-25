@@ -77,7 +77,7 @@ export const MOCK_EVENTS: ExtendedEvent[] = [
     image: '/gallery/codewars.png',
     rulesDocUrl: '#',
     registrationLink: '#',
-    status: EventStatus.PUBLISHED,
+    status: EventStatus.COMPLETED,
     maxParticipants: 1000,
     minTeamSize: 2,
     maxTeamSize: 4,
