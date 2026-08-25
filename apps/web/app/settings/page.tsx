@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import {
   User as UserIcon,
@@ -36,6 +36,8 @@ import {
   Trash2,
   Eye,
   Share2,
+  ChevronDown,
+  Search,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { AvatarUpload } from '@/components/avatar-upload';
@@ -122,6 +124,42 @@ const POPULAR_FREELANCE_DOMAINS = [
   'Other',
 ];
 
+const POPULAR_SKILLS = [
+  // Frontend
+  'React', 'Next.js', 'Vue.js', 'Angular', 'Svelte', 'HTML5', 'CSS3', 'Tailwind CSS',
+  'TypeScript', 'JavaScript', 'jQuery', 'Bootstrap', 'Material UI', 'Chakra UI',
+  'Framer Motion', 'Three.js', 'WebGL', 'SASS/SCSS',
+  // Backend
+  'Node.js', 'Express.js', 'Django', 'Flask', 'FastAPI', 'Spring Boot', 'Ruby on Rails',
+  'Laravel', 'ASP.NET', 'NestJS', 'Hono', 'Go', 'Rust', 'PHP',
+  // Databases
+  'PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'Supabase', 'Firebase', 'DynamoDB',
+  'Prisma', 'Drizzle ORM', 'SQLite', 'Cassandra', 'Neo4j',
+  // Cloud & DevOps
+  'AWS', 'Google Cloud', 'Azure', 'Docker', 'Kubernetes', 'Terraform', 'CI/CD',
+  'Vercel', 'Netlify', 'Cloudflare', 'Linux', 'Nginx', 'GitHub Actions',
+  // AI/ML
+  'Python', 'TensorFlow', 'PyTorch', 'OpenAI API', 'LangChain', 'Hugging Face',
+  'RAG', 'LLM Fine-tuning', 'Computer Vision', 'NLP', 'Scikit-learn', 'Pandas',
+  'NumPy', 'Jupyter', 'Stable Diffusion', 'CrewAI',
+  // Mobile
+  'React Native', 'Flutter', 'Swift', 'SwiftUI', 'Kotlin', 'Dart', 'Expo',
+  // Web3 & Blockchain
+  'Solidity', 'Ethereum', 'Web3.js', 'Hardhat', 'Foundry', 'IPFS', 'Rust (Solana)',
+  // Design & Tools
+  'Figma', 'Adobe XD', 'Photoshop', 'Illustrator', 'Blender', 'Canva',
+  // Data & Analytics
+  'Power BI', 'Tableau', 'Apache Spark', 'Kafka', 'Elasticsearch', 'GraphQL',
+  'REST APIs', 'gRPC', 'WebSockets',
+  // Programming Languages
+  'C', 'C++', 'Java', 'C#', 'Scala', 'Elixir', 'Haskell', 'R', 'MATLAB',
+  // Security
+  'Cybersecurity', 'Penetration Testing', 'OWASP', 'Burp Suite', 'Wireshark',
+  // Other
+  'Git', 'Agile/Scrum', 'System Design', 'Data Structures', 'Algorithms',
+  'Open Source', 'Technical Writing', 'Competitive Programming',
+];
+
 export default function SettingsPage() {
   const { user, updateUserProfile, updateUserPassword, signOut, loading } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
@@ -139,6 +177,8 @@ export default function SettingsPage() {
   const [graduationYear, setGraduationYear] = useState('2026');
   const [skills, setSkills] = useState<string[]>([]);
   const [newSkillInput, setNewSkillInput] = useState('');
+  const [skillsDropdownOpen, setSkillsDropdownOpen] = useState(false);
+  const skillsDropdownRef = useRef<HTMLDivElement>(null);
   const [avatar, setAvatar] = useState<string | null>(null);
   const [banner, setBanner] = useState<string | null>(null);
 
@@ -249,6 +289,17 @@ export default function SettingsPage() {
     }
   }, [user]);
 
+  // Close skills dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (skillsDropdownRef.current && !skillsDropdownRef.current.contains(event.target as Node)) {
+        setSkillsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleAddSkill = (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
     const trimmed = newSkillInput.trim();
@@ -256,6 +307,14 @@ export default function SettingsPage() {
       setSkills((prev) => [...prev, trimmed]);
       setNewSkillInput('');
     }
+  };
+
+  const handleSelectSkill = (skill: string) => {
+    if (!skills.includes(skill)) {
+      setSkills((prev) => [...prev, skill]);
+    }
+    setNewSkillInput('');
+    setSkillsDropdownOpen(false);
   };
 
   const handleRemoveSkill = (skillToRemove: string) => {
@@ -1010,46 +1069,120 @@ export default function SettingsPage() {
                 {/* Skills Tag Management */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1.5">Skills & Tech Stacks</label>
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {skills.map((skill) => (
-                      <span
-                        key={skill}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-50 text-[#0099e6] border border-sky-200 text-xs font-bold"
-                      >
-                        <span>{skill}</span>
+                  {skills.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {skills.map((skill) => (
+                        <span
+                          key={skill}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-50 text-[#0099e6] border border-sky-200 text-xs font-bold"
+                        >
+                          <span>{skill}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSkill(skill)}
+                            className="hover:text-rose-600 transition-colors cursor-pointer"
+                          >
+                            <XIcon className="w-3.5 h-3.5" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="relative" ref={skillsDropdownRef}>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <input
+                          type="text"
+                          value={newSkillInput}
+                          onChange={(e) => {
+                            setNewSkillInput(e.target.value);
+                            setSkillsDropdownOpen(true);
+                          }}
+                          onFocus={() => setSkillsDropdownOpen(true)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddSkill();
+                            }
+                            if (e.key === 'Escape') {
+                              setSkillsDropdownOpen(false);
+                            }
+                          }}
+                          placeholder="Search or type a skill (e.g. Next.js, Rust, Docker)"
+                          className="w-full pl-10 pr-9 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0099e6] focus:border-[#0099e6] transition-all"
+                        />
                         <button
                           type="button"
-                          onClick={() => handleRemoveSkill(skill)}
-                          className="hover:text-rose-600 transition-colors cursor-pointer"
+                          onClick={() => setSkillsDropdownOpen(!skillsDropdownOpen)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                         >
-                          <XIcon className="w-3.5 h-3.5" />
+                          <ChevronDown className={`w-4 h-4 transition-transform ${skillsDropdownOpen ? 'rotate-180' : ''}`} />
                         </button>
-                      </span>
-                    ))}
-                  </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleAddSkill}
+                        disabled={!newSkillInput.trim()}
+                        className="px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Add</span>
+                      </button>
+                    </div>
 
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={newSkillInput}
-                      onChange={(e) => setNewSkillInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleAddSkill();
-                        }
-                      }}
-                      placeholder="Add a skill (e.g. Next.js, Rust, Docker) and press Enter"
-                      className="flex-1 px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0099e6]"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAddSkill}
-                      className="px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
-                    >
-                      <Plus className="w-4 h-4" />
-                      <span>Add</span>
-                    </button>
+                    {/* Skills Dropdown */}
+                    {skillsDropdownOpen && (() => {
+                      const query = newSkillInput.toLowerCase().trim();
+                      const filtered = POPULAR_SKILLS.filter(
+                        (s) => !skills.includes(s) && (query === '' || s.toLowerCase().includes(query))
+                      );
+                      const showCustom = query && !POPULAR_SKILLS.some((s) => s.toLowerCase() === query) && !skills.includes(newSkillInput.trim());
+
+                      if (filtered.length === 0 && !showCustom) return null;
+
+                      return (
+                        <div className="absolute z-40 left-0 right-0 mt-1.5 max-h-56 overflow-y-auto rounded-2xl bg-white border border-slate-200 shadow-xl shadow-slate-200/50 animate-in fade-in slide-in-from-top-1 duration-150">
+                          {showCustom && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleAddSkill();
+                                setSkillsDropdownOpen(false);
+                              }}
+                              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left hover:bg-sky-50 transition-colors cursor-pointer border-b border-slate-100"
+                            >
+                              <div className="w-6 h-6 rounded-lg bg-[#0099e6] text-white flex items-center justify-center shrink-0">
+                                <Plus className="w-3.5 h-3.5" />
+                              </div>
+                              <div>
+                                <span className="text-xs font-bold text-slate-900">Add &quot;{newSkillInput.trim()}&quot;</span>
+                                <span className="text-[10px] text-slate-400 ml-1.5">custom skill</span>
+                              </div>
+                            </button>
+                          )}
+                          {filtered.slice(0, 30).map((skill) => (
+                            <button
+                              type="button"
+                              key={skill}
+                              onClick={() => handleSelectSkill(skill)}
+                              className="w-full flex items-center gap-2.5 px-4 py-2 text-left hover:bg-sky-50 transition-colors cursor-pointer group"
+                            >
+                              <div className="w-6 h-6 rounded-lg bg-slate-100 group-hover:bg-sky-100 text-slate-500 group-hover:text-[#0099e6] flex items-center justify-center shrink-0 transition-colors">
+                                <Code2 className="w-3.5 h-3.5" />
+                              </div>
+                              <span className="text-xs font-semibold text-slate-700 group-hover:text-slate-900">{skill}</span>
+                            </button>
+                          ))}
+                          {filtered.length > 30 && (
+                            <div className="px-4 py-2 text-[10px] text-slate-400 font-medium text-center border-t border-slate-100">
+                              Type to filter — {filtered.length - 30} more skills available
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
 

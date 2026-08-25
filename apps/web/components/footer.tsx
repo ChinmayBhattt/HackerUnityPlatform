@@ -104,7 +104,7 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-2.5 text-slate-400">
                 <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
-                <span className="font-medium">Jaipur, Rajasthan, India</span>
+                <span className="font-medium">A-41, Vinmar House, Ground Floor, Road no. 2, MIDC, Andheri East, Mumbai - 400093</span>
               </li>
             </ul>
           </div>

@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useRef } from 'react';
 import Cropper, { Area } from 'react-easy-crop';
-import { getCroppedImg, readFileAsDataURL } from '@/lib/crop-utils';
+import { getCroppedBannerImg, readFileAsDataURL } from '@/lib/crop-utils';
 import {
   Upload,
   ZoomIn,
@@ -68,7 +68,7 @@ export function BannerUpload({
   const handleSaveCrop = async () => {
     if (!imageSrc || !croppedAreaPixels) return;
     try {
-      const cropped = await getCroppedImg(imageSrc, croppedAreaPixels, rotation);
+      const cropped = await getCroppedBannerImg(imageSrc, croppedAreaPixels, rotation);
       if (cropped) {
         onBannerChange(cropped);
         setShowCropModal(false);
