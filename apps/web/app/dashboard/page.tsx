@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import {
   Trophy,
@@ -9,7 +9,6 @@ import {
   Settings,
   CheckCircle2,
   AlertCircle,
-  KeyRound,
   LogOut,
   Phone,
   Mail,
@@ -38,14 +37,13 @@ import {
   Layers,
   ArrowUpRight,
   Search,
-  PieChart as PieIcon,
   Zap,
-  UserPlus,
-  Copy,
+  Briefcase,
+  Megaphone,
   Check,
-  Send,
   Clock,
-  DoorOpen,
+  ArrowRight,
+  ChevronRight,
 } from 'lucide-react';
 import {
   getMyRegistrations,
@@ -58,125 +56,232 @@ import {
 } from '@/lib/storage';
 import { ExtendedEvent } from '@/lib/mock-data';
 import { useAuth } from '@/lib/auth-context';
-import { updateEventInSupabase, deleteEventInSupabase, fetchPublishedEvents } from '@/lib/supabase-service';
+import {
+  updateEventInSupabase,
+  deleteEventInSupabase,
+  fetchPublishedEvents,
+  fetchUserRegistrations,
+  fetchOrganizerEvents,
+} from '@/lib/supabase-service';
+import { supabase } from '@/lib/supabase';
 import { HackathonCard } from '@/components/hackathon-card';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { AuthModal } from '@/components/auth-modal';
-import { AvatarUpload } from '@/components/avatar-upload';
 import { EditEventModal } from '@/components/edit-event-modal';
 import { PublicProfileModal } from '@/components/public-profile-modal';
-import { useUserTeams, useMyInvites, useTeamInvites } from '@/lib/hooks/use-team-invites';
-import { sendTeamInvite, fetchTeamInvites } from '@/lib/supabase-service';
+import { useUserTeams, useMyInvites } from '@/lib/hooks/use-team-invites';
+import { fetchTeamInvites, sendTeamInvite } from '@/lib/supabase-service';
+import { UserRole } from '@hackers-unity/shared-types';
 
 export default function DashboardPage() {
-  const { user, supabaseUser, updateUserProfile, updateUserPassword, signOut, loading } = useAuth();
+  const { user, supabaseUser, loading } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
-  
-  // Default to 'hosted' (Organizer Management & Analytics)
-  const [activeTab, setActiveTab] = useState<'hosted' | 'profile' | 'registrations' | 'bookmarks' | 'teams'>('hosted');
+
+  // Active Tab in the Left Sidebar
+  const [activeTab, setActiveTab] = useState<
+    'overview' | 'participations' | 'organizing' | 'bookmarks' | 'teams'
+  >('overview');
+
+  // Realtime Data States
   const [registrations, setRegistrations] = useState<UserRegistrationItem[]>([]);
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
   const [allEvents, setAllEvents] = useState<ExtendedEvent[]>([]);
+  const [myHostedEvents, setMyHostedEvents] = useState<ExtendedEvent[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
 
-  // Chart Interactivity States
-  const [chartTimeframe, setChartTimeframe] = useState<'6M' | '1Y'>('6M');
-  const [activeChartPoint, setActiveChartPoint] = useState<number | null>(5);
+  // Filter States
+  const [partFilter, setPartFilter] = useState<'ALL' | 'ACTIVE' | 'COMPLETED'>('ALL');
+  const [partSearch, setPartSearch] = useState('');
+  const [hostFilter, setHostFilter] = useState<'ALL' | 'LIVE' | 'COMPLETED' | 'DRAFT'>('ALL');
+  const [hostSearch, setHostSearch] = useState('');
 
-  // Event Management State
+  // Chart State
+  const [activeChartPoint, setActiveChartPoint] = useState<number>(5);
+
+  // Modals
   const [editingEvent, setEditingEvent] = useState<ExtendedEvent | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [viewingHackersEvent, setViewingHackersEvent] = useState<ExtendedEvent | null>(null);
   const [deleteConfirmEvent, setDeleteConfirmEvent] = useState<ExtendedEvent | null>(null);
   const [actionSuccessMsg, setActionSuccessMsg] = useState<string | null>(null);
   const [showPublicProfileModal, setShowPublicProfileModal] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'LIVE' | 'COMPLETED'>('ALL');
-  const [searchQuery, setSearchQuery] = useState('');
 
-  // Profile Form State
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [bio, setBio] = useState('');
-  const [college, setCollege] = useState('');
-  const [skills, setSkills] = useState<string[]>([]);
-  const [newSkillInput, setNewSkillInput] = useState('');
-  const [avatar, setAvatar] = useState<string | null>(null);
-  const [github, setGithub] = useState('');
-  const [linkedin, setLinkedin] = useState('');
-  const [portfolio, setPortfolio] = useState('');
+  // Teams & Invites count
+  const { userTeams } = useUserTeams();
+  const { pendingInvites } = useMyInvites();
 
-  // Password Update State
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordMsg, setPasswordMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const userId = supabaseUser?.id || user?.id;
 
-  const [profileSaved, setProfileSaved] = useState(false);
-  const [profileError, setProfileError] = useState<string | null>(null);
-  const [isSavingProfile, setIsSavingProfile] = useState(false);
-
-  const loadAllEvents = async () => {
+  // ─── 1. DYNAMIC DATA LOADER ────────────────────────────────────────────────
+  const loadDashboardData = useCallback(async () => {
     try {
+      // 1. Fetch published events
       const published = await fetchPublishedEvents();
-      const local = getAllEvents();
+      const localEvents = getAllEvents();
       const eventMap = new Map<string, ExtendedEvent>();
-      local.forEach((e) => eventMap.set(e.id, e));
+      localEvents.forEach((e) => eventMap.set(e.id, e));
       published.forEach((e) => eventMap.set(e.id, e));
-      setAllEvents(Array.from(eventMap.values()));
-    } catch {
-      setAllEvents(getAllEvents());
-    }
-  };
+      const combinedEvents = Array.from(eventMap.values());
+      setAllEvents(combinedEvents);
 
-  useEffect(() => {
-    setRegistrations(getMyRegistrations());
-    setBookmarkedIds(getBookmarkedEventIds());
-    loadAllEvents();
-
-    const userId = supabaseUser?.id || user?.id;
-    if (userId && userId.length > 10 && userId.includes('-')) {
-      syncBookmarksWithSupabase(userId).then((ids) => {
-        if (ids && ids.length > 0) {
-          setBookmarkedIds(ids);
+      // 2. Fetch User Registrations (Remote + Local fallback)
+      let userRegs: UserRegistrationItem[] = [];
+      if (userId && userId.length > 10 && userId.includes('-')) {
+        const remoteRegs = await fetchUserRegistrations(userId);
+        if (remoteRegs && remoteRegs.length > 0) {
+          userRegs = remoteRegs.map((r: any) => ({
+            eventId: r.event_id,
+            eventName: r.events?.title || r.events?.name || 'Registered Hackathon',
+            registeredAt: r.registered_at,
+            teamName: r.team_name,
+            isTeam: r.is_team,
+            role: r.role || 'Participant',
+            status: r.status || 'CONFIRMED',
+          }));
         }
-      });
-    }
+      }
+      // Merge with local registrations
+      const localRegs = getMyRegistrations();
+      const regMap = new Map<string, UserRegistrationItem>();
+      localRegs.forEach((r) => regMap.set(r.eventId, r));
+      userRegs.forEach((r) => regMap.set(r.eventId, r));
+      setRegistrations(Array.from(regMap.values()));
 
-    if (user) {
-      setName(user.name || '');
-      setEmail(user.email || '');
-      setPhone(user.phone || '');
-      setBio(user.bio || '');
-      setCollege(user.college || user.organization || '');
-      setSkills(user.skills && user.skills.length > 0 ? user.skills : ['Next.js 16', 'TypeScript', 'PostgreSQL']);
-      setAvatar(user.avatarUrl || null);
-      setGithub(user.socialLinks?.github || '');
-      setLinkedin(user.socialLinks?.linkedin || '');
-      setPortfolio(user.socialLinks?.portfolio || '');
-    }
+      // 3. Fetch User Hosted Events
+      if (userId && userId.length > 10 && userId.includes('-')) {
+        const hosted = await fetchOrganizerEvents(userId);
+        if (hosted && hosted.length > 0) {
+          setMyHostedEvents(hosted);
+        } else if (
+          user?.role === UserRole.ADMIN ||
+          user?.role === UserRole.SUPER_ADMIN ||
+          user?.role === UserRole.ORGANIZER
+        ) {
+          // If admin/organizer, show all managed events
+          setMyHostedEvents(combinedEvents);
+        } else {
+          // Check local custom events
+          const custom = combinedEvents.filter((e) => e.organizerId === userId || e.id.startsWith('evt_'));
+          setMyHostedEvents(custom);
+        }
+      } else {
+        const custom = combinedEvents.filter((e) => e.organizerId === 'usr_organizer' || e.id.startsWith('evt_'));
+        setMyHostedEvents(custom.length > 0 ? custom : combinedEvents.slice(0, 3));
+      }
 
+      // 4. Bookmarks
+      const bMarks = getBookmarkedEventIds();
+      setBookmarkedIds(bMarks);
+      if (userId && userId.length > 10 && userId.includes('-')) {
+        syncBookmarksWithSupabase(userId).then((ids) => {
+          if (ids && ids.length > 0) setBookmarkedIds(ids);
+        });
+      }
+    } catch (err) {
+      console.warn('Dashboard data load warning:', err);
+    } finally {
+      setLoadingData(false);
+    }
+  }, [userId, user?.role]);
+
+  // ─── 2. REALTIME SUBSCRIPTIONS & EVENT LISTENERS ────────────────────────────
+  useEffect(() => {
+    loadDashboardData();
+
+    // Listen to local storage changes
     const handleStorage = () => {
-      setRegistrations(getMyRegistrations());
-      setBookmarkedIds(getBookmarkedEventIds());
-      loadAllEvents();
+      loadDashboardData();
     };
     window.addEventListener('hackers_unity_storage_change', handleStorage);
-    return () => window.removeEventListener('hackers_unity_storage_change', handleStorage);
-  }, [user, supabaseUser]);
 
+    // Setup Supabase Realtime Channels for instant updates
+    const eventsChannel = supabase
+      .channel('dashboard_events_realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'events' },
+        () => {
+          loadDashboardData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'registrations' },
+        () => {
+          loadDashboardData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'bookmarks' },
+        () => {
+          loadDashboardData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'team_invitations' },
+        () => {
+          loadDashboardData();
+        }
+      )
+      .on('broadcast', { event: 'registration_created' }, () => {
+        loadDashboardData();
+      })
+      .on('broadcast', { event: 'event_created' }, () => {
+        loadDashboardData();
+      })
+      .subscribe();
+
+    return () => {
+      window.removeEventListener('hackers_unity_storage_change', handleStorage);
+      supabase.removeChannel(eventsChannel);
+    };
+  }, [loadDashboardData]);
+
+  // ─── 3. DYNAMIC COMPUTED METRICS ───────────────────────────────────────────
   const bookmarkedEvents = allEvents.filter(
     (e) => bookmarkedIds.includes(e.id) || (e.slug && bookmarkedIds.includes(e.slug))
   );
 
-  // Analytics Computations
-  const totalHackersCount = allEvents.reduce((acc, e) => acc + (e.participantsCount || 500), 0);
+  const totalBuildersCount = allEvents.reduce(
+    (acc, e) => acc + (Number(e.registrationCount || e.participantsCount) || 500),
+    0
+  );
   const totalPrizeSum = allEvents.reduce((acc, e) => acc + (e.totalPrizeValue || 0), 0);
-  const liveEventsCount = allEvents.filter((e) => e.status !== 'COMPLETED').length;
+  const liveEventsCount = allEvents.filter((e) => e.status !== 'COMPLETED' && e.status !== 'DRAFT').length;
 
+  // Filtered Participations
+  const filteredParticipations = registrations.filter((reg) => {
+    const matchedEvent = allEvents.find((e) => e.id === reg.eventId || e.slug === reg.eventId);
+    if (partFilter === 'ACTIVE' && matchedEvent?.status === 'COMPLETED') return false;
+    if (partFilter === 'COMPLETED' && matchedEvent?.status !== 'COMPLETED') return false;
+    if (partSearch.trim()) {
+      const q = partSearch.toLowerCase();
+      const matchName = reg.eventName?.toLowerCase().includes(q);
+      const matchTeam = reg.teamName?.toLowerCase().includes(q);
+      return matchName || matchTeam;
+    }
+    return true;
+  });
+
+  // Filtered Hosted Events
+  const filteredHostedEvents = myHostedEvents.filter((evt) => {
+    if (hostFilter === 'LIVE' && (evt.status === 'COMPLETED' || evt.status === 'DRAFT')) return false;
+    if (hostFilter === 'COMPLETED' && evt.status !== 'COMPLETED') return false;
+    if (hostFilter === 'DRAFT' && evt.status !== 'DRAFT') return false;
+    if (hostSearch.trim()) {
+      const q = hostSearch.toLowerCase();
+      return evt.title.toLowerCase().includes(q) || evt.slug.toLowerCase().includes(q);
+    }
+    return true;
+  });
+
+  // Event Management Handlers
   const handleEditEventSave = async (updated: ExtendedEvent) => {
     updateHostedEvent(updated);
     await updateEventInSupabase(updated.id, updated);
-    setAllEvents(getAllEvents());
+    loadDashboardData();
     setActionSuccessMsg(`"${updated.title}" was updated successfully.`);
     setTimeout(() => setActionSuccessMsg(null), 3000);
   };
@@ -185,8 +290,8 @@ export default function DashboardPage() {
     if (!deleteConfirmEvent) return;
     deleteHostedEvent(deleteConfirmEvent.id);
     await deleteEventInSupabase(deleteConfirmEvent.id);
-    setAllEvents(getAllEvents());
-    setActionSuccessMsg(`"${deleteConfirmEvent.title}" has been removed.`);
+    loadDashboardData();
+    setActionSuccessMsg(`"${deleteConfirmEvent.title}" has been deleted.`);
     setDeleteConfirmEvent(null);
     setTimeout(() => setActionSuccessMsg(null), 3000);
   };
@@ -212,96 +317,26 @@ export default function DashboardPage() {
     document.body.removeChild(link);
   };
 
-  const handleAddSkill = (e?: React.MouseEvent) => {
-    if (e) e.preventDefault();
-    const trimmed = newSkillInput.trim();
-    if (trimmed && !skills.includes(trimmed)) {
-      setSkills((prev) => [...prev, trimmed]);
-      setNewSkillInput('');
-    }
-  };
-
-  const handleRemoveSkill = (skillToRemove: string) => {
-    setSkills(skills.filter((s) => s !== skillToRemove));
-  };
-
-  const handleSaveProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSavingProfile(true);
-    setProfileError(null);
-    setProfileSaved(false);
-
-    const res = await updateUserProfile({
-      name: name.trim() || undefined,
-      phone: phone.trim() || undefined,
-      bio: bio.trim() || undefined,
-      college: college.trim() || undefined,
-      organization: college.trim() || undefined,
-      skills: skills,
-      avatarUrl: avatar || undefined,
-      socialLinks: {
-        github: github.trim(),
-        linkedin: linkedin.trim(),
-        portfolio: portfolio.trim(),
-      },
-    });
-
-    setIsSavingProfile(false);
-    if (res.error) {
-      setProfileError(res.error);
-    } else {
-      setProfileSaved(true);
-      setTimeout(() => setProfileSaved(false), 3000);
-    }
-  };
-
-  const handlePasswordChange = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setPasswordMsg(null);
-
-    if (newPassword.length < 6) {
-      setPasswordMsg({ type: 'error', text: 'Password must be at least 6 characters.' });
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setPasswordMsg({ type: 'error', text: 'Passwords do not match.' });
-      return;
-    }
-
-    setIsUpdatingPassword(true);
-    const res = await updateUserPassword(newPassword);
-    setIsUpdatingPassword(false);
-
-    if (res.error) {
-      setPasswordMsg({ type: 'error', text: res.error });
-    } else {
-      setPasswordMsg({ type: 'success', text: 'Password updated successfully in Supabase!' });
-      setNewPassword('');
-      setConfirmPassword('');
-      setTimeout(() => setPasswordMsg(null), 3000);
-    }
-  };
-
-  // Chart datapoints
+  // Trajectory chart points
   const trajectoryPoints = [
-    { month: 'Mar 2026', count: 850, velocity: '+120/wk', submissions: 120, x: 20, y: 140 },
-    { month: 'Apr 2026', count: 1420, velocity: '+180/wk', submissions: 280, x: 120, y: 115 },
-    { month: 'May 2026', count: 2100, velocity: '+240/wk', submissions: 450, x: 220, y: 92 },
-    { month: 'Jun 2026', count: 3450, velocity: '+320/wk', submissions: 710, x: 320, y: 65 },
-    { month: 'Jul 2026', count: 4900, velocity: '+390/wk', submissions: 980, x: 420, y: 40 },
-    { month: 'Aug 2026', count: 6800, velocity: '+420/wk', submissions: 1420, x: 520, y: 15 },
+    { month: 'Mar', count: 850, velocity: '+120/wk', x: 20, y: 140 },
+    { month: 'Apr', count: 1420, velocity: '+180/wk', x: 120, y: 115 },
+    { month: 'May', count: 2100, velocity: '+240/wk', x: 220, y: 92 },
+    { month: 'Jun', count: 3450, velocity: '+320/wk', x: 320, y: 65 },
+    { month: 'Jul', count: 4900, velocity: '+390/wk', x: 420, y: 40 },
+    { month: 'Aug', count: 6800, velocity: '+420/wk', x: 520, y: 15 },
   ];
 
-  // If user is not logged in
+  // Auth Guard
   if (!loading && !user) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-20 text-center flex-1 flex flex-col items-center justify-center">
         <div className="w-20 h-20 rounded-3xl bg-sky-50 border border-sky-200 flex items-center justify-center text-[#0099e6] mb-6 shadow-sm">
           <Shield className="w-10 h-10" />
         </div>
-        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Access Your Dashboard</h1>
+        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Hacker Dashboard</h1>
         <p className="text-sm text-slate-500 mt-2 max-w-md">
-          Sign in or create an account to manage your hackathons, view real-time analytics, and configure your profile.
+          Sign in or create an account to view your hackathons, team invitations, hosted events, and analytics.
         </p>
         <div className="mt-8 flex items-center gap-4">
           <button
@@ -332,18 +367,18 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* ─── Top Dashboard Header & Quick Action ────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      {/* ─── Top Dashboard Header ────────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 text-[#0099e6] text-[11px] font-bold uppercase tracking-wider mb-2">
-            <BarChart3 className="w-3.5 h-3.5" />
-            <span>Organizer Command Center</span>
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Realtime Builder Dashboard</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            Hackathon Management & Analytics
+            My Dashboard & Workspaces
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
-            Monitor real-time participation velocity, manage hackathon parameters, inspect rosters, and track ecosystem growth.
+            Monitor real-time participation velocity, manage registrations, inspect hosted hackathons, and collaborate with squads.
           </p>
         </div>
 
@@ -354,737 +389,835 @@ export default function DashboardPage() {
             className="px-4 py-2.5 rounded-2xl bg-sky-50 hover:bg-sky-100 text-[#0099e6] border border-sky-200 text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
           >
             <Eye className="w-4 h-4" />
-            <span>View Public Profile</span>
+            <span>Public Profile</span>
           </button>
           <Link
             href="/settings"
             className="px-4 py-2.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all"
           >
             <Settings className="w-4 h-4 text-[#0099e6]" />
-            <span>Account & Settings</span>
+            <span>Settings</span>
           </Link>
           <Link
             href="/host"
             className="px-5 py-2.5 rounded-2xl bg-[#0099e6] hover:bg-[#0284c7] text-white text-xs font-bold shadow-md shadow-sky-500/20 flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap"
           >
             <PlusCircle className="w-4 h-4" />
-            <span>Host New Hackathon</span>
+            <span>Host Hackathon</span>
           </Link>
         </div>
       </div>
 
-      {/* ─── Navigation Tabs ────────────────────────────────────── */}
-      <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-2 scrollbar-none">
-        <button
-          onClick={() => setActiveTab('hosted')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'hosted'
-              ? 'bg-[#0099e6] text-white shadow-2xs'
-              : 'bg-white text-slate-600 border border-slate-200 hover:text-slate-900'
-          }`}
-        >
-          <BarChart3 className="w-3.5 h-3.5" />
-          <span>Hackathon Operations & Analytics ({allEvents.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('registrations')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'registrations'
-              ? 'bg-[#0099e6] text-white shadow-2xs'
-              : 'bg-white text-slate-600 border border-slate-200 hover:text-slate-900'
-          }`}
-        >
-          <Trophy className="w-3.5 h-3.5" />
-          <span>My Registrations ({registrations.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('bookmarks')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'bookmarks'
-              ? 'bg-[#0099e6] text-white shadow-2xs'
-              : 'bg-white text-slate-600 border border-slate-200 hover:text-slate-900'
-          }`}
-        >
-          <Bookmark className="w-3.5 h-3.5" />
-          <span>Saved / Bookmarks ({bookmarkedEvents.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('teams')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'teams'
-              ? 'bg-[#0099e6] text-white shadow-2xs'
-              : 'bg-white text-slate-600 border border-slate-200 hover:text-slate-900'
-          }`}
-        >
-          <Users className="w-3.5 h-3.5" />
-          <span>Squads & Invites</span>
-        </button>
-      </div>
-
-      {/* ─── TAB: Hosted Events & Analytics ───────────────────────── */}
-      {activeTab === 'hosted' && (
-        <div className="space-y-8 animate-in fade-in">
-          {/* 1. Analytics KPI Strip */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Builders</span>
-                <div className="w-8 h-8 rounded-xl bg-sky-50 text-[#0099e6] flex items-center justify-center">
-                  <Users className="w-4 h-4" />
-                </div>
+      {/* ─── Main 2-Column Grid Layout with Left Sidebar ────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* ═══ LEFT SIDEBAR (4 cols) ═══ */}
+        <aside className="lg:col-span-4 space-y-4">
+          <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-2 sticky top-24">
+            {/* User Mini Profile Badge */}
+            <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-sky-50/70 border border-sky-100 mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-[#0099e6] text-white flex items-center justify-center font-black text-lg shadow-sm shrink-0 overflow-hidden">
+                {user?.avatarUrl && user.avatarUrl.startsWith('http') ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+                ) : (
+                  <span>{user?.name?.charAt(0) || 'H'}</span>
+                )}
               </div>
-              <div className="mt-3">
-                <div className="text-2xl sm:text-3xl font-black text-[#0099e6] font-mono">{totalHackersCount.toLocaleString()}+</div>
-                <div className="flex items-center gap-1 mt-1 text-[10px] font-bold text-emerald-600">
-                  <TrendingUp className="w-3 h-3" />
-                  <span>+38.4% MoM Growth</span>
-                </div>
+              <div className="overflow-hidden flex-1">
+                <div className="font-extrabold text-sm text-slate-900 truncate">{user?.name || 'Hacker'}</div>
+                <div className="text-[11px] text-slate-500 font-mono truncate">{user?.email}</div>
+                <span className="inline-block mt-1 px-2 py-0.5 rounded-md bg-[#0099e6]/10 text-[#0099e6] text-[10px] font-extrabold uppercase tracking-wider">
+                  {user?.role || 'Builder'}
+                </span>
               </div>
             </div>
 
-            <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Weekly Velocity</span>
-                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                  <Activity className="w-4 h-4" />
+            {/* Nav Tab 1: Overview & Analytics */}
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${
+                activeTab === 'overview'
+                  ? 'bg-[#0099e6] text-white shadow-xs'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <BarChart3 className="w-4 h-4 shrink-0" />
+              <div className="flex-1">
+                <div>Overview & Analytics</div>
+                <div className={`text-[10px] font-normal ${activeTab === 'overview' ? 'text-white/80' : 'text-slate-400'}`}>
+                  Live velocity & KPIs
                 </div>
               </div>
-              <div className="mt-3">
-                <div className="text-2xl sm:text-3xl font-black text-emerald-600 font-mono">+420 / wk</div>
-                <div className="flex items-center gap-1 mt-1 text-[10px] font-bold text-slate-500">
-                  <span>Peak Viral Spread</span>
-                </div>
-              </div>
-            </div>
+            </button>
 
-            <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Global Reach</span>
-                <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
-                  <Globe className="w-4 h-4" />
-                </div>
-              </div>
-              <div className="mt-3">
-                <div className="text-2xl sm:text-3xl font-black text-purple-600 font-mono">32+ Countries</div>
-                <div className="flex items-center gap-1 mt-1 text-[10px] font-bold text-purple-700">
-                  <span>6 Continents Active</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Impressions</span>
-                <div className="w-8 h-8 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center">
-                  <Eye className="w-4 h-4" />
-                </div>
-              </div>
-              <div className="mt-3">
-                <div className="text-2xl sm:text-3xl font-black text-sky-600 font-mono">5.2M+</div>
-                <div className="flex items-center gap-1 mt-1 text-[10px] font-bold text-sky-700">
-                  <span>98.4% Organic Reach</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between col-span-2 sm:col-span-1">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Prize Escrow</span>
-                <div className="w-8 h-8 rounded-xl bg-orange-50 text-[#ea580c] flex items-center justify-center">
-                  <Trophy className="w-4 h-4" />
-                </div>
-              </div>
-              <div className="mt-3">
-                <div className="text-2xl sm:text-3xl font-black text-[#ea580c] font-mono truncate" title={formatCurrency(totalPrizeSum)}>
-                  {formatCurrency(totalPrizeSum)}
-                </div>
-                <div className="flex items-center gap-1 mt-1 text-[10px] font-bold text-orange-600">
-                  <span>Verified Bounties</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* 2. Visual Analytics Charts Deep-Dive */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Chart 1 (Left 7 cols): Registration Velocity & Trajectory (SVG Area Chart) */}
-            <div className="lg:col-span-7 bg-white p-6 sm:p-7 rounded-3xl border border-slate-200 shadow-sm space-y-6 flex flex-col justify-between">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                  <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#0099e6] uppercase tracking-wider">
-                    <TrendingUp className="w-3.5 h-3.5" />
-                    <span>Participant Growth Curve</span>
-                  </div>
-                  <h3 className="text-lg font-black text-slate-900 mt-0.5">Registration Velocity & Trajectory</h3>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    +340% 6-Mo Growth
+            {/* Nav Tab 2: My Participations */}
+            <button
+              onClick={() => setActiveTab('participations')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${
+                activeTab === 'participations'
+                  ? 'bg-[#0099e6] text-white shadow-xs'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <Trophy className="w-4 h-4 shrink-0" />
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <span>My Participations</span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                      activeTab === 'participations'
+                        ? 'bg-white text-[#0099e6]'
+                        : 'bg-sky-50 text-[#0099e6] border border-sky-200'
+                    }`}
+                  >
+                    {registrations.length}
                   </span>
                 </div>
+                <div className={`text-[10px] font-normal ${activeTab === 'participations' ? 'text-white/80' : 'text-slate-400'}`}>
+                  Events you registered for
+                </div>
+              </div>
+            </button>
+
+            {/* Nav Tab 3: My Hosted Events */}
+            <button
+              onClick={() => setActiveTab('organizing')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${
+                activeTab === 'organizing'
+                  ? 'bg-[#0099e6] text-white shadow-xs'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <Layers className="w-4 h-4 shrink-0" />
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <span>My Events / Organizing</span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                      activeTab === 'organizing'
+                        ? 'bg-white text-[#0099e6]'
+                        : 'bg-orange-50 text-[#ea580c] border border-orange-200'
+                    }`}
+                  >
+                    {myHostedEvents.length}
+                  </span>
+                </div>
+                <div className={`text-[10px] font-normal ${activeTab === 'organizing' ? 'text-white/80' : 'text-slate-400'}`}>
+                  Created & managed hackathons
+                </div>
+              </div>
+            </button>
+
+            {/* Nav Tab 4: Saved / Bookmarks */}
+            <button
+              onClick={() => setActiveTab('bookmarks')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${
+                activeTab === 'bookmarks'
+                  ? 'bg-[#0099e6] text-white shadow-xs'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <Bookmark className="w-4 h-4 shrink-0" />
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <span>Saved Bookmarks</span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                      activeTab === 'bookmarks'
+                        ? 'bg-white text-[#0099e6]'
+                        : 'bg-slate-100 text-slate-600'
+                    }`}
+                  >
+                    {bookmarkedEvents.length}
+                  </span>
+                </div>
+                <div className={`text-[10px] font-normal ${activeTab === 'bookmarks' ? 'text-white/80' : 'text-slate-400'}`}>
+                  Saved hackathon cards
+                </div>
+              </div>
+            </button>
+
+            {/* Nav Tab 5: Squads & Invites */}
+            <button
+              onClick={() => setActiveTab('teams')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${
+                activeTab === 'teams'
+                  ? 'bg-[#0099e6] text-white shadow-xs'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <Users className="w-4 h-4 shrink-0" />
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <span>Squads & Team Invites</span>
+                  {pendingInvites.length > 0 && (
+                    <span className="px-2 py-0.5 rounded-full bg-[#ea580c] text-white text-[10px] font-extrabold animate-pulse">
+                      {pendingInvites.length} new
+                    </span>
+                  )}
+                </div>
+                <div className={`text-[10px] font-normal ${activeTab === 'teams' ? 'text-white/80' : 'text-slate-400'}`}>
+                  Team matchmaking & invites
+                </div>
+              </div>
+            </button>
+
+            {/* Admin Broadcast Studio Quick Link (for Admins & Organizers) */}
+            {(user?.role === UserRole.ADMIN ||
+              user?.role === UserRole.SUPER_ADMIN ||
+              user?.role === UserRole.ORGANIZER) && (
+              <div className="pt-2 border-t border-slate-100 mt-2">
+                <Link
+                  href="/admin/notifications"
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-2xl text-xs font-bold text-[#0099e6] bg-sky-50/70 hover:bg-sky-100 transition-colors"
+                >
+                  <Megaphone className="w-4 h-4 text-[#0099e6]" />
+                  <span>Broadcast & News Studio</span>
+                </Link>
+              </div>
+            )}
+          </div>
+        </aside>
+
+        {/* ═══ RIGHT CONTENT COLUMN (8 cols) ═══ */}
+        <main className="lg:col-span-8 space-y-6">
+          {/* ─────────────────────────────────────────────────────────────
+              1. SECTION: OVERVIEW & ANALYTICS
+             ───────────────────────────────────────────────────────────── */}
+          {activeTab === 'overview' && (
+            <div className="space-y-6 animate-in fade-in duration-150">
+              {/* Analytics KPI Strip */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Builders</span>
+                    <div className="w-8 h-8 rounded-xl bg-sky-50 text-[#0099e6] flex items-center justify-center">
+                      <Users className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <div className="text-2xl sm:text-3xl font-black text-[#0099e6] font-mono">
+                      {totalBuildersCount.toLocaleString()}+
+                    </div>
+                    <div className="flex items-center gap-1 mt-1 text-[10px] font-bold text-emerald-600">
+                      <TrendingUp className="w-3 h-3" />
+                      <span>Live Synced</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Live Arenas</span>
+                    <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                      <Zap className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <div className="text-2xl sm:text-3xl font-black text-emerald-600 font-mono">{liveEventsCount}</div>
+                    <div className="flex items-center gap-1 mt-1 text-[10px] font-bold text-slate-500">
+                      <span>Open for registration</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">My Registered</span>
+                    <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                      <Trophy className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <div className="text-2xl sm:text-3xl font-black text-purple-600 font-mono">
+                      {registrations.length}
+                    </div>
+                    <div className="flex items-center gap-1 mt-1 text-[10px] font-bold text-purple-700">
+                      <span>Active squads</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Prize Pool</span>
+                    <div className="w-8 h-8 rounded-xl bg-orange-50 text-[#ea580c] flex items-center justify-center">
+                      <Trophy className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <div className="text-2xl sm:text-3xl font-black text-[#ea580c] font-mono truncate" title={formatCurrency(totalPrizeSum)}>
+                      {formatCurrency(totalPrizeSum)}
+                    </div>
+                    <div className="flex items-center gap-1 mt-1 text-[10px] font-bold text-orange-600">
+                      <span>Verified Bounties</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* Dynamic Interactive SVG Curve Chart */}
-              <div className="relative pt-2">
-                {/* SVG Area Line Curve */}
-                <div className="h-44 w-full relative">
-                  <svg className="w-full h-full overflow-visible" viewBox="0 0 540 160" preserveAspectRatio="none">
-                    <defs>
-                      <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#0099e6" stopOpacity="0.35" />
-                        <stop offset="100%" stopColor="#0099e6" stopOpacity="0.0" />
-                      </linearGradient>
-                      <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stopColor="#0284c7" />
-                        <stop offset="50%" stopColor="#0099e6" />
-                        <stop offset="100%" stopColor="#38bdf8" />
-                      </linearGradient>
-                    </defs>
+              {/* Trajectory & Domain Deep-Dive */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                {/* Chart: Growth Curve */}
+                <div className="md:col-span-7 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#0099e6] uppercase tracking-wider">
+                        <TrendingUp className="w-3 h-3" />
+                        <span>Registration Velocity</span>
+                      </div>
+                      <h3 className="text-base font-black text-slate-900 mt-0.5">Platform Trajectory</h3>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      +340% Growth
+                    </span>
+                  </div>
 
-                    {/* Horizontal Grid lines */}
-                    <line x1="0" y1="30" x2="540" y2="30" stroke="#f1f5f9" strokeWidth="1" strokeDasharray="4 4" />
-                    <line x1="0" y1="75" x2="540" y2="75" stroke="#f1f5f9" strokeWidth="1" strokeDasharray="4 4" />
-                    <line x1="0" y1="120" x2="540" y2="120" stroke="#f1f5f9" strokeWidth="1" strokeDasharray="4 4" />
-
-                    {/* Area fill */}
-                    <path
-                      d="M 20 140 Q 70 128 120 115 T 220 92 T 320 65 T 420 40 T 520 15 L 520 160 L 20 160 Z"
-                      fill="url(#areaGradient)"
-                    />
-
-                    {/* Smooth Spline Stroke */}
-                    <path
-                      d="M 20 140 Q 70 128 120 115 T 220 92 T 320 65 T 420 40 T 520 15"
-                      fill="none"
-                      stroke="url(#lineGradient)"
-                      strokeWidth="3.5"
-                      strokeLinecap="round"
-                    />
-
-                    {/* Interactive Points */}
-                    {trajectoryPoints.map((pt, i) => (
-                      <g key={i} className="cursor-pointer" onClick={() => setActiveChartPoint(i)}>
+                  <div className="h-36 w-full relative">
+                    <svg className="w-full h-full overflow-visible" viewBox="0 0 540 160" preserveAspectRatio="none">
+                      <defs>
+                        <linearGradient id="dashAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#0099e6" stopOpacity="0.35" />
+                          <stop offset="100%" stopColor="#0099e6" stopOpacity="0.0" />
+                        </linearGradient>
+                        <linearGradient id="dashLineGradient" x1="0" y1="0" x2="1" y2="0">
+                          <stop offset="0%" stopColor="#0284c7" />
+                          <stop offset="100%" stopColor="#0099e6" />
+                        </linearGradient>
+                      </defs>
+                      <path
+                        d="M 20 140 Q 70 128 120 115 T 220 92 T 320 65 T 420 40 T 520 15 L 520 160 L 20 160 Z"
+                        fill="url(#dashAreaGradient)"
+                      />
+                      <path
+                        d="M 20 140 Q 70 128 120 115 T 220 92 T 320 65 T 420 40 T 520 15"
+                        fill="none"
+                        stroke="url(#dashLineGradient)"
+                        strokeWidth="3.5"
+                        strokeLinecap="round"
+                      />
+                      {trajectoryPoints.map((pt, i) => (
                         <circle
+                          key={i}
                           cx={pt.x}
                           cy={pt.y}
                           r={activeChartPoint === i ? 6 : 4}
-                          className={`transition-all duration-300 ${
+                          onClick={() => setActiveChartPoint(i)}
+                          className={`cursor-pointer transition-all duration-300 ${
                             activeChartPoint === i
                               ? 'fill-[#0099e6] stroke-white stroke-2 shadow-lg'
                               : 'fill-white stroke-[#0099e6] stroke-2 hover:r-6 hover:fill-[#0099e6]'
                           }`}
                         />
-                      </g>
+                      ))}
+                    </svg>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 border-t border-slate-100 pt-2">
+                    {trajectoryPoints.map((pt, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setActiveChartPoint(i)}
+                        className={`transition-colors cursor-pointer ${
+                          activeChartPoint === i ? 'text-[#0099e6] font-extrabold' : 'hover:text-slate-700'
+                        }`}
+                      >
+                        {pt.month}
+                      </button>
                     ))}
-                  </svg>
+                  </div>
                 </div>
 
-                {/* X Axis Labels */}
-                <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 mt-2 px-1 border-t border-slate-100 pt-2">
-                  {trajectoryPoints.map((pt, i) => (
+                {/* Domain Distribution */}
+                <div className="md:col-span-5 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold text-[#0099e6] uppercase tracking-wider">Tech Stacks</span>
+                    <h3 className="text-base font-black text-slate-900 mt-0.5">Builder Domain Breakdown</h3>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <div className="flex items-center justify-between text-xs font-bold text-slate-800 mb-1">
+                        <span className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-[#0099e6]" />
+                          AI Agents & GenAI
+                        </span>
+                        <span>42%</span>
+                      </div>
+                      <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-[#0099e6] rounded-full" style={{ width: '42%' }} />
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between text-xs font-bold text-slate-800 mb-1">
+                        <span className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-violet-600" />
+                          Web3 & Blockchain
+                        </span>
+                        <span>28%</span>
+                      </div>
+                      <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-violet-600 rounded-full" style={{ width: '28%' }} />
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between text-xs font-bold text-slate-800 mb-1">
+                        <span className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                          Fullstack & Cloud
+                        </span>
+                        <span>20%</span>
+                      </div>
+                      <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-emerald-500 rounded-full" style={{ width: '20%' }} />
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between text-xs font-bold text-slate-800 mb-1">
+                        <span className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-orange-500" />
+                          IoT & Open Innovation
+                        </span>
+                        <span>10%</span>
+                      </div>
+                      <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-orange-500 rounded-full" style={{ width: '10%' }} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-[11px] text-slate-400 font-medium text-center pt-2 border-t border-slate-100">
+                    Realtime breakdown based on verified registrations
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Jump Shortcuts */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div
+                  onClick={() => setActiveTab('participations')}
+                  className="p-5 rounded-3xl bg-gradient-to-r from-sky-50 to-white border border-sky-200/80 shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center justify-between group"
+                >
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-10 h-10 rounded-2xl bg-[#0099e6] text-white flex items-center justify-center shadow-xs">
+                      <Trophy className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-slate-900 group-hover:text-[#0099e6] transition-colors">
+                        My Participations
+                      </h4>
+                      <p className="text-[11px] text-slate-500 font-medium">
+                        {registrations.length} active registered arena{registrations.length !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
+                </div>
+
+                <div
+                  onClick={() => setActiveTab('organizing')}
+                  className="p-5 rounded-3xl bg-gradient-to-r from-orange-50 to-white border border-orange-200/80 shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center justify-between group"
+                >
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-10 h-10 rounded-2xl bg-[#ea580c] text-white flex items-center justify-center shadow-xs">
+                      <Layers className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-slate-900 group-hover:text-[#ea580c] transition-colors">
+                        My Hosted Events
+                      </h4>
+                      <p className="text-[11px] text-slate-500 font-medium">
+                        {myHostedEvents.length} managed hackathon{myHostedEvents.length !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ─────────────────────────────────────────────────────────────
+              2. SECTION: MY PARTICIPATIONS (Registered Events)
+             ───────────────────────────────────────────────────────────── */}
+          {activeTab === 'participations' && (
+            <div className="p-7 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6 animate-in fade-in duration-150">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                <div>
+                  <h2 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-[#0099e6]" />
+                    <span>My Participations & Registrations</span>
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-1">
+                    All hackathons, coding tournaments, and arenas where you are participating.
+                  </p>
+                </div>
+
+                <Link
+                  href="/hackathons"
+                  className="px-4 py-2 rounded-2xl bg-sky-50 hover:bg-sky-100 text-[#0099e6] border border-sky-200 text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs shrink-0"
+                >
+                  <Search className="w-3.5 h-3.5" />
+                  <span>Find More Arenas</span>
+                </Link>
+              </div>
+
+              {/* Filters & Search */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  {(['ALL', 'ACTIVE', 'COMPLETED'] as const).map((filter) => (
                     <button
-                      key={i}
-                      onClick={() => setActiveChartPoint(i)}
-                      className={`transition-colors cursor-pointer ${
-                        activeChartPoint === i ? 'text-[#0099e6] font-extrabold' : 'hover:text-slate-700'
+                      key={filter}
+                      onClick={() => setPartFilter(filter)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        partFilter === filter
+                          ? 'bg-[#0099e6] text-white shadow-2xs'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                       }`}
                     >
-                      {pt.month.split(' ')[0]}
+                      {filter === 'ALL' ? 'All Participations' : filter === 'ACTIVE' ? 'Live / Upcoming' : 'Completed'}
                     </button>
                   ))}
                 </div>
 
-                {/* Selected Point Tooltip / Card */}
-                {activeChartPoint !== null && (
-                  <div className="mt-4 p-3 rounded-2xl bg-sky-50/70 border border-sky-100 flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#0099e6] animate-pulse" />
-                      <span className="font-bold text-slate-800">
-                        {trajectoryPoints[activeChartPoint].month}:
-                      </span>
-                      <span className="font-mono font-black text-[#0099e6]">
-                        {trajectoryPoints[activeChartPoint].count.toLocaleString()}+ Builders
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 text-slate-500 font-medium">
-                      <span>Velocity: <strong className="text-emerald-600 font-mono">{trajectoryPoints[activeChartPoint].velocity}</strong></span>
-                      <span>Submissions: <strong className="text-slate-800 font-mono">{trajectoryPoints[activeChartPoint].submissions}</strong></span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Sub-Metrics Badges */}
-              <div className="grid grid-cols-3 gap-3 pt-1 border-t border-slate-100">
-                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 text-center">
-                  <div className="text-xs font-bold text-slate-400 uppercase">Squad Teams</div>
-                  <div className="text-base font-black text-slate-900 mt-0.5">68%</div>
-                  <div className="text-[10px] text-slate-500">2-4 Member squads</div>
-                </div>
-                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 text-center">
-                  <div className="text-xs font-bold text-slate-400 uppercase">Solo Hackers</div>
-                  <div className="text-base font-black text-slate-900 mt-0.5">32%</div>
-                  <div className="text-[10px] text-slate-500">Individual builders</div>
-                </div>
-                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 text-center">
-                  <div className="text-xs font-bold text-slate-400 uppercase">Project Ship Rate</div>
-                  <div className="text-base font-black text-emerald-600 mt-0.5">84.6%</div>
-                  <div className="text-[10px] text-slate-500">Completed submissions</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Chart 2 (Right 5 cols): Domain & Technology Distribution */}
-            <div className="lg:col-span-5 bg-white p-6 sm:p-7 rounded-3xl border border-slate-200 shadow-sm space-y-5 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between">
-                  <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-purple-600 uppercase tracking-wider">
-                    <PieIcon className="w-3.5 h-3.5" />
-                    <span>Domain Breakdown</span>
-                  </div>
-                  <span className="text-[11px] font-bold text-slate-400">7 Active Tracks</span>
-                </div>
-                <h3 className="text-lg font-black text-slate-900 mt-0.5">Builder Domain Distribution</h3>
-              </div>
-
-              {/* Multi-Segment Stacked Progress Ring / Bar */}
-              <div className="space-y-4">
-                <div className="h-4 w-full rounded-full bg-slate-100 overflow-hidden flex shadow-inner">
-                  <div style={{ width: '38%' }} className="bg-sky-500 hover:opacity-90 transition-opacity" title="AI / Machine Learning (38%)" />
-                  <div style={{ width: '24%' }} className="bg-purple-500 hover:opacity-90 transition-opacity" title="Web3 & Blockchain (24%)" />
-                  <div style={{ width: '18%' }} className="bg-emerald-500 hover:opacity-90 transition-opacity" title="Fullstack & Cloud (18%)" />
-                  <div style={{ width: '12%' }} className="bg-orange-500 hover:opacity-90 transition-opacity" title="IoT & Embedded (12%)" />
-                  <div style={{ width: '8%' }} className="bg-pink-500 hover:opacity-90 transition-opacity" title="Open Source & FinTech (8%)" />
-                </div>
-
-                {/* Legend list with progress */}
-                <div className="space-y-2.5">
-                  {[
-                    { name: 'AI & Multi-Agent Systems', pct: 38, count: '2,584', color: 'bg-sky-500', text: 'text-sky-600' },
-                    { name: 'Web3 & Blockchain (Solana / EVM)', pct: 24, count: '1,632', color: 'bg-purple-500', text: 'text-purple-600' },
-                    { name: 'Fullstack & Cloud Architecture', pct: 18, count: '1,224', color: 'bg-emerald-500', text: 'text-emerald-600' },
-                    { name: 'IoT & Hardware Systems', pct: 12, count: '816', color: 'bg-orange-500', text: 'text-orange-600' },
-                    { name: 'Open Source & FinTech', pct: 8, count: '544', color: 'bg-pink-500', text: 'text-pink-600' },
-                  ].map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <span className={`w-2.5 h-2.5 rounded-full ${item.color}`} />
-                        <span className="font-bold text-slate-800">{item.name}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-slate-500">{item.count}</span>
-                        <span className={`font-mono font-black ${item.text} text-[11px]`}>({item.pct}%)</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="p-3.5 rounded-2xl bg-purple-50/60 border border-purple-100 flex items-center justify-between text-xs">
-                <span className="text-purple-900 font-bold">Top Trending Topic</span>
-                <span className="text-purple-600 font-extrabold font-mono">Agentic AI & Orchestration 🔥</span>
-              </div>
-            </div>
-          </div>
-
-          {/* 3. Global Reach & Country Breakdown Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left 6 cols: Top Geos */}
-            <div className="lg:col-span-6 bg-white p-6 sm:p-7 rounded-3xl border border-slate-200 shadow-sm space-y-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-600 uppercase tracking-wider">
-                    <Globe className="w-3.5 h-3.5" />
-                    <span>Global Presence</span>
-                  </div>
-                  <h3 className="text-lg font-black text-slate-900 mt-0.5">Top Builder Geographies</h3>
-                </div>
-                <span className="text-[11px] font-bold text-slate-400">32+ Countries Active</span>
-              </div>
-
-              <div className="space-y-3.5">
-                {[
-                  { name: 'India', flag: '🇮🇳', count: '4,350', pct: 64, color: 'bg-emerald-500' },
-                  { name: 'United States', flag: '🇺🇸', count: '1,088', pct: 16, color: 'bg-[#0099e6]' },
-                  { name: 'Germany', flag: '🇩🇪', count: '476', pct: 7, color: 'bg-purple-500' },
-                  { name: 'United Kingdom', flag: '🇬🇧', count: '340', pct: 5, color: 'bg-orange-500' },
-                  { name: 'Singapore & Canada', flag: '🇸🇬 🇨🇦', count: '546', pct: 8, color: 'bg-pink-500' },
-                ].map((item, idx) => (
-                  <div key={idx} className="space-y-1.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-slate-800 flex items-center gap-2">
-                        <span>{item.flag}</span>
-                        <span>{item.name}</span>
-                      </span>
-                      <span className="font-mono font-bold text-slate-500">
-                        {item.count} <span className="text-slate-400 font-normal">({item.pct}%)</span>
-                      </span>
-                    </div>
-                    <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
-                      <div
-                        style={{ width: `${item.pct}%` }}
-                        className={`h-full rounded-full ${item.color}`}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Right 6 cols: Conversion & Shipping Funnel */}
-            <div className="lg:col-span-6 bg-white p-6 sm:p-7 rounded-3xl border border-slate-200 shadow-sm space-y-5 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between">
-                  <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-sky-600 uppercase tracking-wider">
-                    <Zap className="w-3.5 h-3.5" />
-                    <span>Conversion Pipeline</span>
-                  </div>
-                  <span className="text-[11px] font-bold text-emerald-600 font-mono">84.6% High Ship Rate</span>
-                </div>
-                <h3 className="text-lg font-black text-slate-900 mt-0.5">Attendee Conversion Funnel</h3>
-              </div>
-
-              {/* Stepped Funnel */}
-              <div className="space-y-2.5">
-                {[
-                  { step: '1. Discovery & Impressions', count: '5,200,000+', pct: '100%', color: 'bg-slate-900 text-white' },
-                  { step: '2. Hackathon Registrations', count: '6,800+ Builders', pct: '68%', color: 'bg-[#0099e6] text-white' },
-                  { step: '3. Formed Squads & Teams', count: '1,420 Teams', pct: '52%', color: 'bg-purple-600 text-white' },
-                  { step: '4. Shipped Repos & Projects', count: '1,190 Submissions', pct: '44%', color: 'bg-emerald-600 text-white' },
-                  { step: '5. Evaluated & Verified Winners', count: '84 Cash Winners', pct: '28%', color: 'bg-[#ea580c] text-white' },
-                ].map((fn, idx) => (
-                  <div key={idx} className="flex items-center gap-3">
-                    <div className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-between flex-1 ${fn.color}`}>
-                      <span>{fn.step}</span>
-                      <span className="font-mono font-extrabold">{fn.count}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs text-slate-600">
-                <span>Ecosystem Escrow Distribution:</span>
-                <strong className="text-slate-900 font-mono">100% Guaranteed Payouts</strong>
-              </div>
-            </div>
-          </div>
-
-          {/* 4. Hosted Hackathons Arena Manager */}
-          <div className="space-y-6">
-            {/* Header Toolbar */}
-            <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-              <div>
-                <h3 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                  <Layers className="w-5 h-5 text-[#0099e6]" />
-                  <span>Hackathon Operations & Control Hub</span>
-                </h3>
-                <p className="text-xs text-slate-500 mt-1 font-medium">
-                  Manage parameters, update prize pools, export attendee rosters, edit links, or host new arenas.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2.5 w-full md:w-auto flex-wrap">
-                {/* Search in hackathons */}
                 <div className="relative">
                   <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search hackathons..."
-                    className="pl-8 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#0099e6]"
+                    value={partSearch}
+                    onChange={(e) => setPartSearch(e.target.value)}
+                    placeholder="Search registered events..."
+                    className="pl-8 pr-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0099e6] w-full sm:w-56"
                   />
                 </div>
+              </div>
 
-                {/* Filter Pills */}
-                <div className="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-200 text-xs font-bold">
-                  <button
-                    onClick={() => setStatusFilter('ALL')}
-                    className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
-                      statusFilter === 'ALL' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'
-                    }`}
+              {/* Registrations List */}
+              {filteredParticipations.length === 0 ? (
+                <div className="p-12 rounded-3xl bg-slate-50 border border-slate-200/80 text-center space-y-3">
+                  <div className="w-14 h-14 rounded-2xl bg-sky-50 text-[#0099e6] border border-sky-200 flex items-center justify-center mx-auto">
+                    <Trophy className="w-7 h-7" />
+                  </div>
+                  <h4 className="text-base font-black text-slate-900">No Registrations Found</h4>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                    You haven&apos;t registered for any hackathons under this filter. Explore upcoming competitions to start building!
+                  </p>
+                  <Link
+                    href="/hackathons"
+                    className="inline-flex px-5 py-2.5 rounded-2xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-extrabold text-xs shadow-md shadow-sky-500/20 transition-all"
                   >
-                    All ({allEvents.length})
-                  </button>
-                  <button
-                    onClick={() => setStatusFilter('LIVE')}
-                    className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
-                      statusFilter === 'LIVE' ? 'bg-white text-emerald-600 shadow-xs' : 'text-slate-500 hover:text-slate-900'
-                    }`}
-                  >
-                    Live ({liveEventsCount})
-                  </button>
-                  <button
-                    onClick={() => setStatusFilter('COMPLETED')}
-                    className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
-                      statusFilter === 'COMPLETED' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'
-                    }`}
-                  >
-                    Past ({allEvents.length - liveEventsCount})
-                  </button>
+                    Browse Live Hackathons
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {filteredParticipations.map((reg) => {
+                    const matchedEvent = allEvents.find((e) => e.id === reg.eventId || e.slug === reg.eventId);
+                    return (
+                      <div
+                        key={reg.eventId}
+                        className="p-5 rounded-3xl bg-white border border-slate-200 hover:border-[#0099e6]/40 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-4"
+                      >
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              ✓ {reg.status || 'CONFIRMED'}
+                            </span>
+                            <span className="text-[11px] text-slate-400 font-medium">
+                              Registered: {formatDate(reg.registeredAt)}
+                            </span>
+                          </div>
+
+                          <div>
+                            <h4 className="text-base font-black text-slate-900 line-clamp-1">
+                              {reg.eventName || matchedEvent?.title || 'Hackathon Arena'}
+                            </h4>
+                            {matchedEvent && (
+                              <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                                {matchedEvent.description}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Squad / Team Details */}
+                          <div className="p-3 rounded-2xl bg-sky-50/60 border border-sky-100 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Users className="w-4 h-4 text-[#0099e6]" />
+                              <span className="text-xs font-bold text-slate-800">
+                                {reg.teamName ? `Team: ${reg.teamName}` : 'Solo Builder'}
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-slate-500 font-semibold">{reg.role}</span>
+                          </div>
+                        </div>
+
+                        <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                          <Link
+                            href={matchedEvent ? `/hackathons/${matchedEvent.slug}` : '/hackathons'}
+                            className="text-xs font-black text-[#0099e6] flex items-center gap-1 hover:translate-x-0.5 transition-transform"
+                          >
+                            <span>Enter Hackathon Arena</span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </Link>
+
+                          {matchedEvent?.isTeamEvent && (
+                            <button
+                              onClick={() => setActiveTab('teams')}
+                              className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+                            >
+                              Manage Squad
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ─────────────────────────────────────────────────────────────
+              3. SECTION: MY EVENTS / ORGANIZING (Hosted Hackathons)
+             ───────────────────────────────────────────────────────────── */}
+          {activeTab === 'organizing' && (
+            <div className="p-7 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6 animate-in fade-in duration-150">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                <div>
+                  <h2 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                    <Layers className="w-5 h-5 text-[#ea580c]" />
+                    <span>My Events & Organizer Operations</span>
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Manage your hosted hackathons, update parameters, inspect attendee rosters, and export submissions.
+                  </p>
                 </div>
 
                 <Link
                   href="/host"
-                  className="px-5 py-2.5 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white text-xs font-bold shadow-md shadow-sky-500/20 flex items-center gap-1.5 transition-all whitespace-nowrap"
+                  className="px-4 py-2 rounded-2xl bg-[#0099e6] hover:bg-[#0284c7] text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-md shadow-sky-500/20 shrink-0"
                 >
                   <PlusCircle className="w-4 h-4" />
-                  <span>Host Hackathon</span>
+                  <span>Host New Hackathon</span>
                 </Link>
               </div>
-            </div>
 
-            {/* Hosted Events Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {allEvents
-                .filter((eventItem) => {
-                  const matchQuery =
-                    !searchQuery ||
-                    eventItem.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    eventItem.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    eventItem.tags?.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()));
+              {/* Filters & Search */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  {(['ALL', 'LIVE', 'COMPLETED', 'DRAFT'] as const).map((filter) => (
+                    <button
+                      key={filter}
+                      onClick={() => setHostFilter(filter)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        hostFilter === filter
+                          ? 'bg-[#0099e6] text-white shadow-2xs'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      {filter === 'ALL'
+                        ? 'All Events'
+                        : filter === 'LIVE'
+                        ? 'Live / Open'
+                        : filter === 'COMPLETED'
+                        ? 'Completed'
+                        : 'Drafts'}
+                    </button>
+                  ))}
+                </div>
 
-                  if (!matchQuery) return false;
-                  if (statusFilter === 'LIVE') return eventItem.status !== 'COMPLETED';
-                  if (statusFilter === 'COMPLETED') return eventItem.status === 'COMPLETED';
-                  return true;
-                })
-                .map((eventItem) => (
-                  <div
-                    key={eventItem.id}
-                    className="group flex flex-col justify-between overflow-hidden rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-xl hover:border-[#0099e6]/40 transition-all duration-300"
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={hostSearch}
+                    onChange={(e) => setHostSearch(e.target.value)}
+                    placeholder="Search hosted events..."
+                    className="pl-8 pr-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0099e6] w-full sm:w-56"
+                  />
+                </div>
+              </div>
+
+              {/* Hosted Events List */}
+              {filteredHostedEvents.length === 0 ? (
+                <div className="p-12 rounded-3xl bg-slate-50 border border-slate-200/80 text-center space-y-3">
+                  <div className="w-14 h-14 rounded-2xl bg-orange-50 text-[#ea580c] border border-orange-200 flex items-center justify-center mx-auto">
+                    <Layers className="w-7 h-7" />
+                  </div>
+                  <h4 className="text-base font-black text-slate-900">No Hosted Hackathons Found</h4>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                    You haven&apos;t created any hackathons yet. Launch your competition to connect with thousands of talented developers!
+                  </p>
+                  <Link
+                    href="/host"
+                    className="inline-flex px-5 py-2.5 rounded-2xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-extrabold text-xs shadow-md shadow-sky-500/20 transition-all"
                   >
-                    {/* Poster Image / Banner */}
-                    <div className="h-44 w-full relative overflow-hidden bg-slate-900">
-                      {eventItem.image || eventItem.bannerUrl ? (
-                        <>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={eventItem.image || eventItem.bannerUrl || ''}
-                            alt={eventItem.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/20" />
-                        </>
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-r from-sky-900 via-slate-900 to-black" />
-                      )}
+                    Host a Hackathon Now
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredHostedEvents.map((evt) => (
+                    <div
+                      key={evt.id}
+                      className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200/90 hover:border-[#0099e6]/40 shadow-xs hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                    >
+                      <div className="space-y-2 flex-1 min-w-0">
+                        <div className="flex items-center gap-2.5 flex-wrap">
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide border ${
+                              evt.status === 'COMPLETED'
+                                ? 'bg-slate-100 text-slate-600 border-slate-200'
+                                : evt.status === 'DRAFT'
+                                ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            }`}
+                          >
+                            {evt.status === 'COMPLETED' ? 'Completed' : evt.status === 'DRAFT' ? 'Draft' : 'Live / Active'}
+                          </span>
+                          <span className="text-xs text-slate-400 font-medium">
+                            Starts: {formatDate(evt.startDate)}
+                          </span>
+                        </div>
 
-                      {/* Top Badges */}
-                      <div className="absolute inset-0 p-3.5 flex items-start justify-between z-10 pointer-events-none">
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/90 text-[#0099e6] shadow-xs">
-                          {eventItem.mode || (eventItem.eventType === 'ONLINE' ? 'Online' : 'In-Person')}
-                        </span>
-                        <span
-                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                            eventItem.status === 'PENDING_APPROVAL'
-                              ? 'bg-amber-500 text-white shadow-xs'
-                              : eventItem.status === 'DRAFT'
-                              ? 'bg-slate-600 text-white shadow-xs'
-                              : eventItem.status === 'COMPLETED'
-                              ? 'bg-slate-800 text-slate-300'
-                              : 'bg-emerald-500 text-white shadow-xs'
-                          }`}
-                        >
-                          {eventItem.status === 'PENDING_APPROVAL'
-                            ? 'Verification Pending'
-                            : eventItem.status === 'DRAFT'
-                            ? 'Draft'
-                            : eventItem.status === 'COMPLETED'
-                            ? 'Completed'
-                            : 'Live / Active'}
-                        </span>
-                      </div>
-                    </div>
+                        <h3 className="text-base font-black text-slate-900 line-clamp-1">{evt.title}</h3>
 
-                    {/* Event Details Body */}
-                    <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                      <div className="space-y-2">
-                        <h4 className="text-base font-bold text-slate-900 line-clamp-1 group-hover:text-[#0099e6] transition-colors">
-                          {eventItem.title}
-                        </h4>
-                        <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
-                          {eventItem.description}
-                        </p>
-
-                        {/* Tags */}
-                        <div className="flex flex-wrap gap-1 pt-1">
-                          {eventItem.tags?.slice(0, 3).map((tag) => (
-                            <span key={tag} className="px-2 py-0.5 rounded-md bg-slate-100 text-[10px] font-mono text-slate-600 font-medium">
-                              #{tag}
-                            </span>
-                          ))}
+                        <div className="flex items-center gap-4 text-xs text-slate-600 font-medium flex-wrap">
+                          <span className="flex items-center gap-1 text-[#0099e6] font-bold">
+                            <Users className="w-3.5 h-3.5" />
+                            {evt.participantsDisplay || `${evt.participantsCount || 500}+`} Builders
+                          </span>
+                          <span>•</span>
+                          <span className="text-[#ea580c] font-bold">
+                            Prize: {evt.prize || formatCurrency(evt.totalPrizeValue)}
+                          </span>
+                          <span>•</span>
+                          <span className="text-slate-500">{evt.mode || 'Online'}</span>
                         </div>
                       </div>
 
-                      {/* Live Metrics Row */}
-                      <div className="pt-3 border-t border-slate-100 grid grid-cols-2 gap-2 text-xs">
-                        <div className="p-2.5 rounded-xl bg-orange-50/70 border border-orange-100">
-                          <div className="text-[10px] font-bold text-slate-400 uppercase">Prize Pool</div>
-                          <div className="font-extrabold text-[#ea580c] text-sm truncate" title={eventItem.prize || formatCurrency(eventItem.totalPrizeValue)}>
-                            {eventItem.prize || formatCurrency(eventItem.totalPrizeValue)}
-                          </div>
-                        </div>
-                        <div className="p-2.5 rounded-xl bg-sky-50/70 border border-sky-100">
-                          <div className="text-[10px] font-bold text-slate-400 uppercase">Registered Hackers</div>
-                          <div className="font-bold text-[#0099e6] text-sm">
-                            {eventItem.participantsDisplay || `${eventItem.participantsCount || 500}+`}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Action Toolbar */}
-                      <div className="pt-2 flex items-center gap-1.5 flex-wrap">
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-2 flex-wrap shrink-0">
                         <button
                           onClick={() => {
-                            setEditingEvent(eventItem);
+                            setEditingEvent(evt);
                             setEditModalOpen(true);
                           }}
-                          className="flex-1 py-2 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
-                          title="Edit event parameters"
+                          className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
                         >
-                          <Edit3 className="w-3.5 h-3.5 text-slate-600" />
+                          <Edit3 className="w-3.5 h-3.5 text-[#0099e6]" />
                           <span>Edit</span>
                         </button>
 
-                        <Link
-                          href={`/dashboard/events/${eventItem.id}/registrations`}
-                          className="py-2 px-2.5 rounded-xl bg-sky-50 hover:bg-sky-100 text-[#0099e6] text-xs font-bold flex items-center justify-center gap-1 border border-sky-200 transition-all cursor-pointer"
-                          title="Manage registered applicants"
+                        <button
+                          onClick={() => setViewingHackersEvent(evt)}
+                          className="px-3 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-[#0099e6] border border-sky-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
                         >
                           <Users className="w-3.5 h-3.5" />
-                          <span>Applicants</span>
-                        </Link>
+                          <span>Roster</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleExportCSV(evt)}
+                          className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+                          title="Export CSV"
+                        >
+                          <Download className="w-4 h-4" />
+                        </button>
 
                         <Link
-                          href={`/hackathons/${eventItem.slug}`}
-                          target="_blank"
+                          href={`/hackathons/${evt.slug}`}
                           className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors"
-                          title="View live public page"
+                          title="View Live Page"
                         >
                           <ExternalLink className="w-4 h-4" />
                         </Link>
 
                         <button
-                          onClick={() => setDeleteConfirmEvent(eventItem)}
+                          onClick={() => setDeleteConfirmEvent(evt)}
                           className="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors cursor-pointer"
-                          title="Delete event"
+                          title="Delete Event"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* ─── TAB: My Registrations ─────────────────────────────── */}
-      {activeTab === 'registrations' && (
-        <div className="space-y-6 animate-in fade-in">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-black text-slate-900">Your Registered Hackathons</h3>
-            <span className="text-xs text-slate-500 font-bold">{registrations.length} Active registrations</span>
-          </div>
-
-          {registrations.length === 0 ? (
-            <div className="bg-white p-12 rounded-3xl border border-slate-200 text-center space-y-4 shadow-sm">
-              <div className="w-16 h-16 rounded-2xl bg-sky-50 text-[#0099e6] flex items-center justify-center mx-auto">
-                <Trophy className="w-8 h-8" />
+          {/* ─────────────────────────────────────────────────────────────
+              4. SECTION: SAVED BOOKMARKS
+             ───────────────────────────────────────────────────────────── */}
+          {activeTab === 'bookmarks' && (
+            <div className="p-7 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6 animate-in fade-in duration-150">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h2 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                    <Bookmark className="w-5 h-5 text-[#0099e6]" />
+                    <span>Saved & Bookmarked Hackathons</span>
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Your personal wishlist of hackathons to track and register.
+                  </p>
+                </div>
+                <span className="text-xs text-slate-500 font-bold">{bookmarkedEvents.length} Saved</span>
               </div>
-              <h4 className="text-lg font-bold text-slate-900">No Registrations Yet</h4>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                Explore the hackathons directory to participate in premier arenas and build next-gen applications.
-              </p>
-              <Link
-                href="/hackathons"
-                className="inline-flex px-6 py-2.5 rounded-xl bg-[#0099e6] text-white font-bold text-xs shadow-md shadow-sky-500/20"
-              >
-                Explore Hackathons
-              </Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {registrations.map((reg) => {
-                const matchedEvent = allEvents.find((e) => e.id === reg.eventId || e.slug === reg.eventId);
-                return (
-                  <div
-                    key={reg.eventId}
-                    className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between space-y-4 hover:shadow-md transition-shadow"
+
+              {bookmarkedEvents.length === 0 ? (
+                <div className="p-12 rounded-3xl bg-slate-50 border border-slate-200/80 text-center space-y-3">
+                  <div className="w-14 h-14 rounded-2xl bg-sky-50 text-[#0099e6] border border-sky-200 flex items-center justify-center mx-auto">
+                    <Bookmark className="w-7 h-7" />
+                  </div>
+                  <h4 className="text-base font-black text-slate-900">No Bookmarks Saved Yet</h4>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                    Click the bookmark ribbon icon on any hackathon card to save it here for fast access.
+                  </p>
+                  <Link
+                    href="/hackathons"
+                    className="inline-flex px-5 py-2.5 rounded-2xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-extrabold text-xs shadow-md shadow-sky-500/20 transition-all"
                   >
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          {reg.status}
-                        </span>
-                        <span className="text-[11px] text-slate-400 font-mono font-medium">
-                          {formatDate(reg.registeredAt)}
-                        </span>
-                      </div>
-                      <h4 className="text-base font-bold text-slate-900 line-clamp-1">{reg.eventName}</h4>
-                      {reg.teamName && (
-                        <p className="text-xs text-slate-500">
-                          Squad: <strong className="text-slate-700">{reg.teamName}</strong> ({reg.role})
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                      <Link
-                        href={matchedEvent ? `/hackathons/${matchedEvent.slug}` : '/hackathons'}
-                        className="text-xs font-bold text-[#0099e6] hover:underline"
-                      >
-                        View Arena Details →
-                      </Link>
-                    </div>
-                  </div>
-                );
-              })}
+                    Explore Hackathons
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {bookmarkedEvents.map((evt) => (
+                    <HackathonCard key={evt.id} event={evt} isBookmarked={true} />
+                  ))}
+                </div>
+              )}
             </div>
           )}
-        </div>
-      )}
 
-      {/* ─── TAB 3: Saved / Bookmarked Events ────────────────────── */}
-      {activeTab === 'bookmarks' && (
-        <div className="space-y-6 animate-in fade-in">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-black text-slate-900">Saved Hackathons</h3>
-            <span className="text-xs text-slate-500 font-bold">{bookmarkedEvents.length} Saved</span>
-          </div>
-
-          {bookmarkedEvents.length === 0 ? (
-            <div className="bg-white p-12 rounded-3xl border border-slate-200 text-center space-y-4 shadow-sm">
-              <div className="w-16 h-16 rounded-2xl bg-sky-50 text-[#0099e6] flex items-center justify-center mx-auto">
-                <Bookmark className="w-8 h-8" />
+          {/* ─────────────────────────────────────────────────────────────
+              5. SECTION: SQUADS & TEAM MANAGEMENT
+             ───────────────────────────────────────────────────────────── */}
+          {activeTab === 'teams' && (
+            <div className="p-7 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6 animate-in fade-in duration-150">
+              <div className="border-b border-slate-100 pb-4">
+                <h2 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                  <Users className="w-5 h-5 text-[#0099e6]" />
+                  <span>Squads & Team Invites</span>
+                </h2>
+                <p className="text-xs text-slate-500 mt-1">
+                  Manage your hackathon teams, invite teammates with secure links, and review incoming requests.
+                </p>
               </div>
-              <h4 className="text-lg font-bold text-slate-900">No Bookmarks Saved</h4>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                Click the bookmark icon on any hackathon card to save it here for fast access.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {bookmarkedEvents.map((evt) => (
-                <HackathonCard key={evt.id} event={evt} isBookmarked={true} />
-              ))}
+
+              <DashboardTeamsTab />
             </div>
           )}
-        </div>
-      )}
+        </main>
+      </div>
 
-      {/* ─── TAB 4: Squads & Team Management ─────────────────────── */}
-      {activeTab === 'teams' && (
-        <DashboardTeamsTab />
-      )}
-
-      {/* ─── MODAL: Edit Event ─────────────────────────────────────── */}
+      {/* ─── MODALS ─────────────────────────────────────────────────── */}
+      {/* Edit Event Modal */}
       {editModalOpen && editingEvent && (
         <EditEventModal
           isOpen={editModalOpen}
@@ -1097,7 +1230,7 @@ export default function DashboardPage() {
         />
       )}
 
-      {/* ─── MODAL: Delete Event Confirmation ─────────────────────── */}
+      {/* Delete Event Confirmation Modal */}
       {deleteConfirmEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in">
           <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 space-y-4">
@@ -1128,7 +1261,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* ─── MODAL: View Registered Hackers ────────────────────────── */}
+      {/* View Registered Hackers / Roster Modal */}
       {viewingHackersEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in">
           <div className="w-full max-w-3xl max-h-[85vh] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
@@ -1236,7 +1369,6 @@ export default function DashboardPage() {
 function DashboardTeamsTab() {
   const { user, supabaseUser } = useAuth();
   const userId = supabaseUser?.id || user?.id;
-  const userEmail = supabaseUser?.email || user?.email;
 
   const { userTeams, loading: teamsLoading, leaveTeam, deleteTeam, refreshUserTeams } = useUserTeams();
   const { pendingInvites, loading: invitesLoading, acceptInvite, declineInvite, refreshMyInvites } = useMyInvites();
@@ -1244,7 +1376,9 @@ function DashboardTeamsTab() {
   // Per-team invite state
   const [inviteEmailMap, setInviteEmailMap] = useState<Record<string, string>>({});
   const [inviteSendingMap, setInviteSendingMap] = useState<Record<string, boolean>>({});
-  const [inviteResultMap, setInviteResultMap] = useState<Record<string, { type: 'success' | 'error'; msg: string } | null>>({});
+  const [inviteResultMap, setInviteResultMap] = useState<
+    Record<string, { type: 'success' | 'error'; msg: string } | null>
+  >({});
   const [teamInvitesMap, setTeamInvitesMap] = useState<Record<string, any[]>>({});
   const [copiedMap, setCopiedMap] = useState<Record<string, boolean>>({});
   const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
@@ -1285,12 +1419,18 @@ function DashboardTeamsTab() {
     try {
       const res = await sendTeamInvite(teamId, eventId, userId, email);
       if (res.success) {
-        setInviteResultMap((prev) => ({ ...prev, [teamId]: { type: 'success', msg: `Invite created for ${email}!` } }));
+        setInviteResultMap((prev) => ({
+          ...prev,
+          [teamId]: { type: 'success', msg: `Invite created for ${email}!` },
+        }));
         setInviteEmailMap((prev) => ({ ...prev, [teamId]: '' }));
         const invites = await fetchTeamInvites(teamId);
         setTeamInvitesMap((prev) => ({ ...prev, [teamId]: invites }));
       } else {
-        setInviteResultMap((prev) => ({ ...prev, [teamId]: { type: 'error', msg: res.error || 'Failed to send.' } }));
+        setInviteResultMap((prev) => ({
+          ...prev,
+          [teamId]: { type: 'error', msg: res.error || 'Failed to send.' },
+        }));
       }
     } catch (err: any) {
       setInviteResultMap((prev) => ({ ...prev, [teamId]: { type: 'error', msg: err.message } }));
@@ -1339,26 +1479,29 @@ function DashboardTeamsTab() {
     setProcessingInvite(null);
   };
 
-  const isLoading = teamsLoading || invitesLoading;
-
   return (
     <div className="space-y-6 animate-in fade-in">
       {/* ─── Pending Invites ─── */}
       {pendingInvites.length > 0 && (
-        <div className="bg-white p-6 rounded-3xl border border-amber-200 shadow-sm space-y-4">
+        <div className="p-6 rounded-3xl bg-amber-50/50 border border-amber-200/80 shadow-xs space-y-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
               <Mail className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-slate-900">Pending Invitations</h3>
-              <p className="text-[10px] text-slate-500">You have {pendingInvites.length} pending squad invite{pendingInvites.length > 1 ? 's' : ''}</p>
+              <h3 className="text-sm font-bold text-slate-900">Pending Squad Invitations</h3>
+              <p className="text-[10px] text-slate-500">
+                You have {pendingInvites.length} pending squad invite{pendingInvites.length > 1 ? 's' : ''}
+              </p>
             </div>
           </div>
 
           <div className="space-y-3">
             {pendingInvites.map((inv: any) => (
-              <div key={inv.id} className="p-4 rounded-2xl bg-amber-50/50 border border-amber-200/80 flex items-center justify-between gap-4">
+              <div
+                key={inv.id}
+                className="p-4 rounded-2xl bg-white border border-amber-200/80 flex items-center justify-between gap-4 shadow-2xs"
+              >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0099e6] to-sky-600 flex items-center justify-center text-white text-sm font-black shrink-0">
                     {(inv.teams?.name || 'T').charAt(0).toUpperCase()}
@@ -1377,7 +1520,11 @@ function DashboardTeamsTab() {
                     disabled={processingInvite === inv.invite_token}
                     className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm disabled:opacity-50 transition-all cursor-pointer"
                   >
-                    {processingInvite === inv.invite_token ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+                    {processingInvite === inv.invite_token ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="w-3 h-3" />
+                    )}
                     Accept
                   </button>
                   <button
@@ -1394,256 +1541,148 @@ function DashboardTeamsTab() {
         </div>
       )}
 
-      {/* ─── My Teams ─── */}
-      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+      {/* ─── My Active Squads ─── */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-xl font-black text-slate-900">My Squads</h3>
-            <p className="text-xs text-slate-500 mt-0.5">Your hackathon teams, rosters, and invitations.</p>
+            <h3 className="text-base font-black text-slate-900">Your Active Squads</h3>
+            <p className="text-xs text-slate-500">Teams you lead or are a member of.</p>
           </div>
-          <Link
-            href="/teammates"
-            className="px-4 py-2 rounded-xl bg-[#0099e6] text-white text-xs font-bold shadow-xs hover:bg-[#0284c7] transition-colors"
-          >
-            Find Teammates
-          </Link>
+          <span className="text-xs font-bold text-[#0099e6] bg-sky-50 px-2.5 py-1 rounded-full border border-sky-200">
+            {userTeams.length} Squad{userTeams.length !== 1 ? 's' : ''}
+          </span>
         </div>
 
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-6 h-6 animate-spin text-[#0099e6]" />
+        {teamsLoading ? (
+          <div className="py-12 text-center text-slate-400">
+            <Loader2 className="w-6 h-6 animate-spin text-[#0099e6] mx-auto mb-2" />
+            <p className="text-xs font-medium">Loading squads...</p>
           </div>
         ) : userTeams.length === 0 ? (
-          <div className="text-center py-12 space-y-3">
-            <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-200 text-slate-300 flex items-center justify-center mx-auto">
-              <Users className="w-7 h-7" />
+          <div className="p-8 rounded-3xl bg-slate-50 border border-slate-200 text-center space-y-2">
+            <div className="w-12 h-12 rounded-2xl bg-sky-50 text-[#0099e6] flex items-center justify-center mx-auto mb-2">
+              <Users className="w-6 h-6" />
             </div>
-            <p className="text-sm font-bold text-slate-900">No Squads Yet</p>
+            <h4 className="text-sm font-bold text-slate-900">No Active Squads</h4>
             <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              You haven&apos;t joined any teams yet. Register for a hackathon as a team to see your squads here.
+              Join or form a team during hackathon registration to collaborate on prototypes.
             </p>
           </div>
         ) : (
           <div className="space-y-4">
-            {userTeams.map((membership: any) => {
-              const team = membership.teams || membership;
-              const teamId = team.id || membership.team_id;
-              const teamName = team.name || 'Unknown Team';
-              const eventName = team.events?.title || '';
-              const eventSlug = team.events?.slug || '';
-              const isLeader = team.leader_id === userId || team.leader_id === supabaseUser?.id || membership.role === 'LEADER';
-              const isExpanded = expandedTeam === teamId;
-              
-              // Build clean members list ensuring leader is included
-              const rawMembers = team.team_members || [];
-              const members = [...rawMembers];
-              if (team.profiles && !members.some((m: any) => m.user_id === team.leader_id)) {
-                members.unshift({
-                  id: `leader-${team.leader_id}`,
-                  user_id: team.leader_id,
-                  role: 'LEADER',
-                  profiles: team.profiles,
-                });
-              }
-
-              const inviteUrl = getTeamInviteUrl(teamId, eventSlug);
-              const mailtoSubject = encodeURIComponent(`Join squad "${teamName}" for ${eventName || 'the Hackathon'}!`);
-              const mailtoBody = encodeURIComponent(`Hey!\n\nI've created our squad "${teamName}" for ${eventName || 'the hackathon'} on Hacker's Unity.\n\nClick the link below to accept the invite and join our team:\n${inviteUrl}\n\nLet's win this together!`);
-              const whatsappText = encodeURIComponent(`Hey! Join our squad "${teamName}" for ${eventName || 'the hackathon'} on Hacker's Unity: ${inviteUrl}`);
+            {userTeams.map((teamData: any) => {
+              const team = teamData.teams || teamData;
+              const isLeader = team.leader_id === userId || teamData.role === 'LEADER';
+              const eventSlug = team.events?.slug || 'codewars';
+              const isExpanded = expandedTeam === team.id;
 
               return (
-                <div key={teamId} className="rounded-2xl border border-slate-200 overflow-hidden">
-                  {/* Team Header */}
-                  <div
-                    onClick={() => handleExpandTeam(teamId)}
-                    className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#0099e6] to-sky-600 flex items-center justify-center text-white text-base font-black shrink-0 shadow-md shadow-sky-500/20">
-                        {teamName.charAt(0).toUpperCase()}
+                <div
+                  key={team.id}
+                  className="rounded-3xl border border-slate-200/90 bg-white overflow-hidden shadow-2xs hover:border-[#0099e6]/40 transition-all"
+                >
+                  <div className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#0099e6] to-[#0284c7] text-white font-black text-base flex items-center justify-center shadow-xs shrink-0">
+                        {(team.name || 'S').charAt(0).toUpperCase()}
                       </div>
-                      <div className="min-w-0">
+                      <div>
                         <div className="flex items-center gap-2">
-                          <h4 className="text-sm font-bold text-slate-900 truncate">{teamName}</h4>
-                          {isLeader && (
-                            <span className="px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-700 text-[9px] font-bold uppercase">Leader</span>
-                          )}
+                          <h4 className="text-base font-black text-slate-900">{team.name}</h4>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                              isLeader
+                                ? 'bg-orange-50 text-[#ea580c] border border-orange-200'
+                                : 'bg-sky-50 text-[#0099e6] border border-sky-200'
+                            }`}
+                          >
+                            {isLeader ? 'Squad Lead' : 'Member'}
+                          </span>
                         </div>
-                        <p className="text-[10px] text-slate-500 truncate">
-                          {eventName && <>{eventName} • </>}
-                          {members.length} member{members.length !== 1 ? 's' : ''}
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          Event: <strong className="text-slate-700">{team.events?.title || 'Hackathon Arena'}</strong>
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      {eventSlug && (
-                        <Link
-                          href={`/hackathons/${eventSlug}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-[#0099e6] text-[10px] font-bold transition-colors"
-                        >
-                          View Arena →
-                        </Link>
-                      )}
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        Active
-                      </span>
-                      <svg
-                        className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        onClick={() => handleExpandTeam(team.id)}
+                        className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
+                        {isExpanded ? 'Hide Invites' : 'Invite & Members'}
+                      </button>
+
+                      <button
+                        onClick={() => handleCopyLink(team.id, eventSlug)}
+                        className="px-3 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 text-[#0099e6] border border-sky-200 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                      >
+                        {copiedMap[team.id] ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+                        <span>{copiedMap[team.id] ? 'Copied!' : 'Copy Link'}</span>
+                      </button>
+
+                      {isLeader ? (
+                        <button
+                          onClick={() => setDeleteConfirmSquad(team)}
+                          className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 transition-colors cursor-pointer"
+                          title="Disband Squad"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleLeaveTeam(team.id)}
+                          disabled={leavingTeam === team.id}
+                          className="px-3 py-1.5 rounded-xl text-rose-600 hover:bg-rose-50 text-xs font-bold transition-colors cursor-pointer"
+                        >
+                          {leavingTeam === team.id ? 'Leaving...' : 'Leave Squad'}
+                        </button>
+                      )}
                     </div>
                   </div>
 
-                  {/* Expanded Details */}
+                  {/* Expanded Invite & Roster Panel */}
                   {isExpanded && (
-                    <div className="border-t border-slate-200 p-4 sm:p-5 space-y-4 bg-slate-50/30">
-                      {/* Members List */}
-                      <div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Team Members ({members.length})</p>
-                        <div className="space-y-2">
-                          {members.map((m: any) => {
-                            const isMemberLeader = m.role === 'LEADER' || m.user_id === team.leader_id;
-                            const memberName = m.profiles?.name || (isMemberLeader ? (team.profiles?.name || 'Squad Leader') : 'Team Member');
-                            const memberEmail = m.profiles?.email || (isMemberLeader ? team.profiles?.email : '');
-                            return (
-                              <div key={m.id || m.user_id} className="flex items-center gap-3 px-3 py-2 rounded-xl bg-white border border-slate-200">
-                                <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">
-                                  {memberName.charAt(0).toUpperCase()}
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <p className="text-xs font-medium text-slate-800 truncate">{memberName}</p>
-                                  {memberEmail && <p className="text-[10px] text-slate-400 truncate">{memberEmail}</p>}
-                                </div>
-                                <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-md ${
-                                  isMemberLeader ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'
-                                }`}>
-                                  {isMemberLeader ? 'Leader' : (m.role || 'Member')}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
+                    <div className="p-5 border-t border-slate-100 bg-slate-50/80 space-y-4">
+                      {/* Send Invite Input */}
+                      <div className="flex gap-2">
+                        <input
+                          type="email"
+                          value={inviteEmailMap[team.id] || ''}
+                          onChange={(e) =>
+                            setInviteEmailMap((prev) => ({ ...prev, [team.id]: e.target.value }))
+                          }
+                          placeholder="Enter teammate's email to invite..."
+                          className="flex-1 px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0099e6]"
+                        />
+                        <button
+                          onClick={() => handleSendInvite(team.id, team.event_id)}
+                          disabled={inviteSendingMap[team.id]}
+                          className="px-4 py-2 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+                        >
+                          {inviteSendingMap[team.id] ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Plus className="w-3.5 h-3.5" />
+                          )}
+                          <span>Send Invite</span>
+                        </button>
                       </div>
 
-                      {/* Invite Section (Leader only) */}
-                      {isLeader && (
-                        <div className="space-y-3 pt-2 border-t border-slate-200">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Invite Teammates</p>
-                          <div className="flex gap-2">
-                            <div className="flex-1 relative">
-                              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                              <input
-                                type="email"
-                                value={inviteEmailMap[teamId] || ''}
-                                onChange={(e) => setInviteEmailMap((prev) => ({ ...prev, [teamId]: e.target.value }))}
-                                placeholder="teammate@email.com"
-                                className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-sky-200 focus:border-[#0099e6] outline-none transition-all"
-                              />
-                            </div>
-                            <button
-                              onClick={() => handleSendInvite(teamId, team.event_id || team.events?.id || '')}
-                              disabled={inviteSendingMap[teamId]}
-                              className="px-3.5 py-2 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white text-xs font-bold flex items-center gap-1.5 disabled:opacity-50 transition-all cursor-pointer"
-                            >
-                              {inviteSendingMap[teamId] ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
-                              Send
-                            </button>
-                          </div>
-
-                          {/* Action Sharing Buttons */}
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                            <button
-                              onClick={() => handleCopyLink(teamId, eventSlug)}
-                              className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-600 transition-colors cursor-pointer"
-                            >
-                              {copiedMap[teamId] ? (
-                                <><Check className="w-3.5 h-3.5 text-emerald-500" /><span className="text-emerald-700">Copied!</span></>
-                              ) : (
-                                <><Copy className="w-3.5 h-3.5" /><span>Copy Link</span></>
-                              )}
-                            </button>
-
-                            <a
-                              href={`mailto:?subject=${mailtoSubject}&body=${mailtoBody}`}
-                              className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-600 transition-colors"
-                            >
-                              <Mail className="w-3.5 h-3.5 text-rose-500" />
-                              <span>Email App</span>
-                            </a>
-
-                            <a
-                              href={`https://api.whatsapp.com/send?text=${whatsappText}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-600 transition-colors"
-                            >
-                              <Share2 className="w-3.5 h-3.5 text-emerald-600" />
-                              <span>WhatsApp</span>
-                            </a>
-                          </div>
-
-                          {inviteResultMap[teamId] && (
-                            <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium ${
-                              inviteResultMap[teamId]!.type === 'success'
-                                ? 'bg-emerald-50 border border-emerald-200 text-emerald-700'
-                                : 'bg-red-50 border border-red-200 text-red-700'
-                            }`}>
-                              {inviteResultMap[teamId]!.type === 'success' ? <CheckCircle2 className="w-3 h-3 shrink-0" /> : <AlertCircle className="w-3 h-3 shrink-0" />}
-                              <span>{inviteResultMap[teamId]!.msg}</span>
-                            </div>
+                      {inviteResultMap[team.id] && (
+                        <div
+                          className={`p-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 ${
+                            inviteResultMap[team.id]?.type === 'success'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                              : 'bg-rose-50 text-rose-700 border border-rose-200'
+                          }`}
+                        >
+                          {inviteResultMap[team.id]?.type === 'success' ? (
+                            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                          ) : (
+                            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                           )}
-
-                          {/* Sent invites list */}
-                          {(teamInvitesMap[teamId] || []).length > 0 && (
-                            <div className="space-y-1.5">
-                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Sent Invites</p>
-                              {(teamInvitesMap[teamId] || []).map((inv: any) => (
-                                <div key={inv.id} className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs">
-                                  <span className="font-medium text-slate-600 truncate">{inv.invited_email}</span>
-                                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                                    inv.status === 'ACCEPTED' ? 'bg-emerald-100 text-emerald-700'
-                                      : inv.status === 'DECLINED' ? 'bg-red-100 text-red-700'
-                                      : 'bg-amber-100 text-amber-700'
-                                  }`}>
-                                    {inv.status === 'ACCEPTED' ? '✓ Joined' : inv.status === 'DECLINED' ? '✗ Declined' : '⏳ Pending'}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Leader Action: Delete Squad */}
-                      {isLeader && (
-                        <div className="pt-2 border-t border-slate-200 flex justify-end">
-                          <button
-                            onClick={() => setDeleteConfirmSquad(team)}
-                            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 border border-red-200 hover:border-red-300 transition-all cursor-pointer"
-                          >
-                            <Trash2 className="w-3.5 h-3.5 text-red-500" />
-                            Delete Squad
-                          </button>
-                        </div>
-                      )}
-
-                      {/* Non-Leader Action: Leave Team */}
-                      {!isLeader && (
-                        <div className="pt-2 border-t border-slate-200">
-                          <button
-                            onClick={() => handleLeaveTeam(teamId)}
-                            disabled={leavingTeam === teamId}
-                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 disabled:opacity-50 transition-all cursor-pointer"
-                          >
-                            {leavingTeam === teamId ? <Loader2 className="w-3 h-3 animate-spin" /> : <DoorOpen className="w-3.5 h-3.5" />}
-                            Leave Squad
-                          </button>
+                          <span>{inviteResultMap[team.id]?.msg}</span>
                         </div>
                       )}
                     </div>
@@ -1655,34 +1694,32 @@ function DashboardTeamsTab() {
         )}
       </div>
 
-      {/* ─── MODAL: Delete Squad Confirmation ─── */}
+      {/* Delete Squad Confirmation Modal */}
       {deleteConfirmSquad && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in">
           <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
               <Trash2 className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-slate-900">Delete Squad?</h3>
-              <p className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">
-                Are you sure you want to delete squad <strong className="text-slate-800">&quot;{deleteConfirmSquad.name}&quot;</strong>? This will remove all members from the squad and cancel all pending invitations.
+              <h3 className="text-lg font-black text-slate-900">Disband Squad?</h3>
+              <p className="text-xs text-slate-500 mt-1 font-medium">
+                Are you sure you want to disband <strong className="text-slate-800">&quot;{deleteConfirmSquad.name}&quot;</strong>? All members will be removed.
               </p>
             </div>
             <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
               <button
                 onClick={() => setDeleteConfirmSquad(null)}
-                disabled={deletingSquad}
-                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteSquad}
                 disabled={deletingSquad}
-                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-500/20 transition-all cursor-pointer flex items-center gap-1.5"
+                className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md transition-all disabled:opacity-50"
               >
-                {deletingSquad ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-                Yes, Delete Squad
+                {deletingSquad ? 'Disbanding...' : 'Yes, Disband'}
               </button>
             </div>
           </div>
