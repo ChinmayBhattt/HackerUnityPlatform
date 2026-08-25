@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  Search,
   PlusCircle,
   Trophy,
   Bell,
@@ -17,7 +16,6 @@ import {
   Megaphone,
 } from 'lucide-react';
 import { Logo } from './logo';
-import { SearchDialog } from './search-dialog';
 import { AuthModal } from './auth-modal';
 import { NotificationPanel } from './notification-panel';
 import { useAuth } from '@/lib/auth-context';
@@ -28,7 +26,6 @@ export function Navbar() {
   const pathname = usePathname();
   const { user: currentUser, signOut } = useAuth();
   const { unreadCount } = useNotifications();
-  const [searchOpen, setSearchOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -75,18 +72,6 @@ export function Navbar() {
 
           {/* Right: Action Bar */}
           <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
-            {/* Quick Search Button */}
-            <button
-              onClick={() => setSearchOpen(true)}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 border border-slate-200 text-xs text-slate-500 hover:text-slate-900 transition-all cursor-pointer whitespace-nowrap"
-            >
-              <Search className="w-3.5 h-3.5 text-[#0099e6]" />
-              <span className="hidden sm:inline">Search...</span>
-              <kbd className="hidden sm:inline-block text-[10px] font-mono px-1.5 py-0.5 rounded bg-white border border-slate-200 text-slate-500 shadow-2xs">
-                ⌘K
-              </kbd>
-            </button>
-
             {/* Host Hackathon Button */}
             <Link
               href="/host"
@@ -248,7 +233,6 @@ export function Navbar() {
       </header>
 
       {/* Global Modals */}
-      <SearchDialog isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
       <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
     </>
   );
