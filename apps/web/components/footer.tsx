@@ -121,13 +121,18 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/hackathons" className="text-slate-400 hover:text-white transition-colors">
-                  Projects
+                <Link href="/news" className="text-slate-400 hover:text-white transition-colors">
+                  News & Updates
+                </Link>
+              </li>
+              <li>
+                <Link href="/dashboard" className="text-slate-400 hover:text-white transition-colors">
+                  Dashboard
                 </Link>
               </li>
               <li>
                 <Link href="/host" className="text-slate-400 hover:text-white transition-colors">
-                  Sponsors
+                  Host Hackathon
                 </Link>
               </li>
               <li>

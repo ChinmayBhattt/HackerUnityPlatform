@@ -7,6 +7,9 @@ import {
   EventFaq,
   UserPublic,
   UserRole,
+  NewsCategory,
+  NewsStatus,
+  NewsArticle,
 } from '@hackers-unity/shared-types';
 
 export interface ExtendedEvent extends EventPublic {
@@ -566,3 +569,136 @@ export const MOCK_COLLEGES = [
   { rank: 4, name: 'Stanford University', country: 'United States', builders: 890, wins: 19, points: 79200 },
   { rank: 5, name: 'MIT', country: 'United States', builders: 940, wins: 18, points: 76500 },
 ];
+
+export const MOCK_NEWS: NewsArticle[] = [
+  {
+    id: 'news_1',
+    title: "Hacker's Unity Launches Realtime Squads & Verification Architecture",
+    slug: 'hackers-unity-launches-realtime-squads',
+    description:
+      'We are thrilled to unveil the next evolution of hackathon teamwork: Realtime collaborative team formation, instant builder verification, and broadcast alerts.',
+    content: `## The Next Frontier in Builder Collaboration
+
+At **Hacker's Unity**, our mission has always been simple: empower ambitious developers to connect with visionary peers, build production-grade prototypes, and compete on a global stage.
+
+Today, we are thrilled to announce a major platform upgrade featuring:
+- **Instant Squad Matchmaking**: Form teams with complementary skills across AI, Web3, and Fullstack.
+- **Supabase Realtime Sync**: Never miss an invite or event milestone with zero-latency updates.
+- **Enhanced Builder Profiles**: Highlight verified hackathon wins, GitHub proof of work, and dynamic occupation credentials.
+
+### What's Coming Next
+Stay tuned for automated judging pipelines, direct investor pitch rooms, and global college leaderboard seasons!`,
+    coverImage: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=1200&auto=format&fit=crop',
+    category: NewsCategory.PLATFORM_UPDATES,
+    authorId: 'usr_admin',
+    authorName: "Hacker's Unity Editorial",
+    authorAvatar: '⚡',
+    status: NewsStatus.PUBLISHED,
+    publishedAt: '2026-08-24T12:00:00Z',
+    createdAt: '2026-08-24T12:00:00Z',
+    updatedAt: '2026-08-24T12:00:00Z',
+  },
+  {
+    id: 'news_2',
+    title: 'AI Agent Hackathons Surge in 2026: Why Autonomous Workflows Dominate',
+    slug: 'ai-agent-hackathons-surge-2026',
+    description:
+      'Explore how autonomous AI agents, multi-agent frameworks, and reasoning models are setting the benchmark for competition winning projects this season.',
+    content: `## The Rise of Multi-Agent Systems in Hackathons
+
+Over the past six months, hackathon submissions featuring **autonomous AI agent loops** have increased by over 300%. From automated smart contract audits to self-healing backend systems, developers are leveraging frameworks like LangGraph, CrewAI, and native LLM function calling.
+
+### Key Factors Driving Winning AI Projects:
+1. **Deterministic Guardrails**: Combining generative reasoning with structured database validations.
+2. **Real-world Automation**: Moving beyond basic chatbots to end-to-end task execution agents.
+3. **Multi-Agent Orchestration**: Specialized agents collaborating in real time to solve multi-step problems.
+
+Explore our upcoming AI hackathons on Hacker's Unity to put your agent architectures to the test!`,
+    coverImage: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1200&auto=format&fit=crop',
+    category: NewsCategory.AI,
+    authorId: 'usr_admin',
+    authorName: 'AI Innovation Lab',
+    authorAvatar: '🤖',
+    status: NewsStatus.PUBLISHED,
+    publishedAt: '2026-08-20T10:00:00Z',
+    createdAt: '2026-08-20T10:00:00Z',
+    updatedAt: '2026-08-20T10:00:00Z',
+  },
+  {
+    id: 'news_3',
+    title: 'Top 5 Strategies to Win Collegiate & Global Web3 Hackathons',
+    slug: 'top-5-strategies-win-web3-hackathons',
+    description:
+      'Winning mentors and veteran hackathon champions share their blueprints for ideation, rapid prototyping, and winning pitch decks.',
+    content: `## How Top Hackers Stand Out to Judges
+
+Competing in high-stakes hackathons with thousands of dollars on the line requires more than just clean code. It requires product clarity, seamless user onboarding, and compelling presentation.
+
+### The 5 Pillar Formula:
+1. **Solve a Hyper-Specific Problem**: Narrow your scope and solve one pain point exceptionally well.
+2. **Ship a Live Working Demo**: Always have a deployed URL with sample data ready for instant testing.
+3. **Flawless UI/UX**: First impressions matter — polished typography and smooth state transitions captivate judges.
+4. **Clear Economic / Impact Model**: Explain who uses it and why it creates tangible value.
+5. **A 2-Minute High-Energy Pitch**: Lead with the problem, demo the live solution, and finish with future roadmap.`,
+    coverImage: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1200&auto=format&fit=crop',
+    category: NewsCategory.HACKATHONS,
+    authorId: 'usr_admin',
+    authorName: 'Hackathon Veterans Network',
+    authorAvatar: '🏆',
+    status: NewsStatus.PUBLISHED,
+    publishedAt: '2026-08-15T09:00:00Z',
+    createdAt: '2026-08-15T09:00:00Z',
+    updatedAt: '2026-08-15T09:00:00Z',
+  },
+  {
+    id: 'news_4',
+    title: 'Summer 2026 Developer Fellowships & Paid Internship Grants Opened',
+    slug: 'summer-2026-developer-fellowships-grants',
+    description:
+      'Explore newly announced summer fellowship programs, open-source stipends, and fast-track hiring pipelines for student builders.',
+    content: `## Accelerate Your Tech Career Through Verified Proof-of-Work
+
+Top startups and technology incubators are partnering with Hacker's Unity to recruit top builders directly from our hackathon leaderboards.
+
+### Highlighted Opportunities:
+- **Ecosystem Builder Grants**: Up to $5,000 equity-free grants for open-source prototypes built during hackathons.
+- **Fast-Track Software Engineering Internships**: Direct interviews for students with top 5% elo ratings.
+- **Venture Mentorship Programs**: 8-week intensive incubator for winning hackathon projects seeking seed funding.
+
+Check the Opportunities hub regularly to apply with your Hacker's Unity public profile!`,
+    coverImage: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=1200&auto=format&fit=crop',
+    category: NewsCategory.INTERNSHIPS,
+    authorId: 'usr_admin',
+    authorName: 'Talent & Grants Desk',
+    authorAvatar: '💼',
+    status: NewsStatus.PUBLISHED,
+    publishedAt: '2026-08-10T14:30:00Z',
+    createdAt: '2026-08-10T14:30:00Z',
+    updatedAt: '2026-08-10T14:30:00Z',
+  },
+  {
+    id: 'news_5',
+    title: 'Next-Gen Web Architecture: Why Next.js 16 & Server Actions Are the Standard',
+    slug: 'next-gen-web-architecture-nextjs-16',
+    description:
+      'Deep dive into state-of-the-art web performance, streaming SSR, and edge compute for high-speed hackathon prototyping.',
+    content: `## Rapid Prototyping Without Sacrificing Performance
+
+In modern competitive programming and hackathons, speed of iteration is everything. Next.js App Router combined with Supabase provides the ultimate full-stack developer experience.
+
+### Why Builders Love This Stack:
+- **Zero-Boilerplate Auth & Realtime**: Plug and play authentication and instant websocket listeners.
+- **Server Actions**: Type-safe mutation without managing boilerplate REST endpoints.
+- **Edge Performance**: Lightning fast TTFB and dynamic SEO optimization out of the box.`,
+    coverImage: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=1200&auto=format&fit=crop',
+    category: NewsCategory.TECHNOLOGY,
+    authorId: 'usr_admin',
+    authorName: 'Engineering Insights',
+    authorAvatar: '⚡',
+    status: NewsStatus.PUBLISHED,
+    publishedAt: '2026-08-05T16:00:00Z',
+    createdAt: '2026-08-05T16:00:00Z',
+    updatedAt: '2026-08-05T16:00:00Z',
+  },
+];
+

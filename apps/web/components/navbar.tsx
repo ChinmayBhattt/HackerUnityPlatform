@@ -13,15 +13,21 @@ import {
   Compass,
   LogOut,
   User,
+  Newspaper,
+  Megaphone,
 } from 'lucide-react';
 import { Logo } from './logo';
 import { SearchDialog } from './search-dialog';
 import { AuthModal } from './auth-modal';
+import { NotificationPanel } from './notification-panel';
 import { useAuth } from '@/lib/auth-context';
+import { useNotifications } from '@/lib/notification-context';
+import { UserRole } from '@hackers-unity/shared-types';
 
 export function Navbar() {
   const pathname = usePathname();
   const { user: currentUser, signOut } = useAuth();
+  const { unreadCount } = useNotifications();
   const [searchOpen, setSearchOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -30,6 +36,7 @@ export function Navbar() {
 
   const navLinks = [
     { name: 'Hackathons', href: '/hackathons', icon: Trophy },
+    { name: 'News & Updates', href: '/news', icon: Newspaper },
     { name: 'My Dashboard', href: '/dashboard', icon: Compass },
   ];
 
@@ -47,7 +54,7 @@ export function Navbar() {
           {/* Center-Right: Desktop Nav Links */}
           <nav className="hidden md:flex items-center justify-center gap-2 lg:gap-4 flex-1 ml-4 lg:ml-8">
             {navLinks.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive = pathname === item.href || (item.href === '/news' && pathname.startsWith('/news'));
               const Icon = item.icon;
               return (
                 <Link
@@ -94,29 +101,20 @@ export function Navbar() {
               <button
                 onClick={() => setNotificationsOpen(!notificationsOpen)}
                 className="relative p-2.5 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+                aria-label="Open notifications"
               >
                 <Bell className="w-4 h-4" />
-                <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#f97316]" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[#f97316] text-white text-[9px] font-extrabold flex items-center justify-center ring-2 ring-white">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
               </button>
 
-              {notificationsOpen && (
-                <div className="absolute right-0 mt-2 w-80 p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xl z-50 animate-in fade-in zoom-in-95">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-100 mb-2">
-                    <span className="text-xs font-bold text-slate-900">Notifications</span>
-                    <span className="text-[10px] text-[#0099e6] font-semibold cursor-pointer">Mark all read</span>
-                  </div>
-                  <div className="space-y-2 text-xs">
-                    <div className="p-2.5 rounded-lg bg-sky-50/80 border border-sky-100 text-slate-700">
-                      <div className="font-bold text-slate-900">AI Nexus Hackathon Reminder</div>
-                      <div className="text-[11px] text-slate-500 mt-0.5">Registration closes in 14 days. Ensure your team is set!</div>
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-orange-50/80 border border-orange-100 text-slate-700">
-                      <div className="font-bold text-slate-900">Team Invite from Vikramaditya</div>
-                      <div className="text-[11px] text-slate-500 mt-0.5">Invited you to join &quot;ZK-Shield Primitives&quot;.</div>
-                    </div>
-                  </div>
-                </div>
-              )}
+              <NotificationPanel
+                isOpen={notificationsOpen}
+                onClose={() => setNotificationsOpen(false)}
+              />
             </div>
 
             {/* User Profile / Supabase Login */}
@@ -158,6 +156,14 @@ export function Navbar() {
                         <span>My Dashboard & Analytics</span>
                       </Link>
                       <Link
+                        href="/news"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 hover:text-slate-950 transition-colors"
+                      >
+                        <Newspaper className="w-3.5 h-3.5 text-[#0099e6]" />
+                        <span>News & Tech Hub</span>
+                      </Link>
+                      <Link
                         href="/host"
                         onClick={() => setUserDropdownOpen(false)}
                         className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 hover:text-slate-950 transition-colors"
@@ -165,6 +171,19 @@ export function Navbar() {
                         <PlusCircle className="w-3.5 h-3.5 text-[#ea580c]" />
                         <span>Organizer Studio</span>
                       </Link>
+                      {/* Admin Announcement Studio Link */}
+                      {(currentUser.role === UserRole.ADMIN ||
+                        currentUser.role === UserRole.SUPER_ADMIN ||
+                        currentUser.role === UserRole.ORGANIZER) && (
+                        <Link
+                          href="/admin/notifications"
+                          onClick={() => setUserDropdownOpen(false)}
+                          className="flex items-center gap-2 px-3 py-2 rounded-xl text-[#0099e6] bg-sky-50/70 hover:bg-sky-100/80 font-bold transition-colors"
+                        >
+                          <Megaphone className="w-3.5 h-3.5 text-[#0099e6]" />
+                          <span>Announcements & News</span>
+                        </Link>
+                      )}
                     </div>
                     <div className="pt-1 border-t border-slate-100">
                       <button

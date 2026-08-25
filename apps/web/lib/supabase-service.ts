@@ -5,7 +5,10 @@ import {
   EventStatus,
   EventCategory,
   EventType,
+  NotificationDbType,
+  NotificationTargetType,
 } from '@hackers-unity/shared-types';
+import { createNotification, sendNotificationToUser } from './notification-service';
 
 /**
  * ─── HELPER: MAP DATABASE EVENT ROW TO EXTENDED EVENT ─────────────────────────
@@ -326,6 +329,20 @@ export async function createEventInSupabase(
       console.warn('Broadcast send error:', e);
     }
 
+    // Automatically broadcast notification for new hackathon
+    createNotification(
+      {
+        title: `🚀 New Hackathon Live: ${createdEvent.title}`,
+        message: `${createdEvent.title} is now open for registration! Check rules and form your squad.`,
+        type: NotificationDbType.EVENT,
+        icon: '🚀',
+        eventId: createdEvent.id,
+        targetType: NotificationTargetType.ALL,
+        actionUrl: `/hackathons/${createdEvent.slug}`,
+      },
+      event.organizerId || 'usr_organizer'
+    ).catch((e) => console.warn('Auto notification error on event create:', e));
+
     return { success: true, data: createdEvent };
   } catch (err: any) {
     return { success: false, error: err.message || 'Creation failed' };
@@ -517,6 +534,21 @@ export async function registerForEventSupabase(
       });
     } catch (e) {
       console.warn('Broadcast registration error:', e);
+    }
+
+    // Automatically send confirmation notification to registered user
+    if (input.userId) {
+      sendNotificationToUser(
+        input.userId,
+        '🎉 Registration Confirmed!',
+        `You have successfully registered for the hackathon. Check your team status and event schedule on your dashboard!`,
+        NotificationDbType.REGISTRATION,
+        {
+          icon: '🎉',
+          eventId: input.eventId,
+          actionUrl: `/dashboard`,
+        }
+      ).catch((e) => console.warn('Auto notification error on register:', e));
     }
 
     return { success: true };

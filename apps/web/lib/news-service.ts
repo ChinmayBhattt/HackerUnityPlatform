@@ -31,6 +31,8 @@ function mapDbToNewsArticle(row: any): NewsArticle {
   };
 }
 
+import { MOCK_NEWS } from './mock-data';
+
 // ─── FETCH PUBLISHED NEWS ────────────────────────────────
 
 export async function fetchPublishedNews(
@@ -55,13 +57,27 @@ export async function fetchPublishedNews(
 
     const { data, count, error } = await query;
 
-    if (error) return { data: [], total: 0, error: error.message };
+    if (error || !data || data.length === 0) {
+      // Fallback to MOCK_NEWS if DB table is empty or pending migration
+      let filtered = MOCK_NEWS.filter((n) => n.status === NewsStatus.PUBLISHED);
+      if (category) {
+        filtered = filtered.filter((n) => n.category === category);
+      }
+      return {
+        data: filtered.slice(offset, offset + limit),
+        total: filtered.length,
+      };
+    }
     return {
       data: (data || []).map(mapDbToNewsArticle),
-      total: count || 0,
+      total: count || data.length,
     };
   } catch (err: any) {
-    return { data: [], total: 0, error: err.message };
+    let filtered = MOCK_NEWS.filter((n) => n.status === NewsStatus.PUBLISHED);
+    if (category) {
+      filtered = filtered.filter((n) => n.category === category);
+    }
+    return { data: filtered.slice(offset, offset + limit), total: filtered.length, error: err.message };
   }
 }
 
@@ -78,12 +94,16 @@ export async function fetchNewsBySlug(
         profiles:author_id (name, avatar_url)
       `)
       .eq('slug', slug)
-      .single();
+      .maybeSingle();
 
-    if (error) return { data: null, error: error.message };
-    return { data: data ? mapDbToNewsArticle(data) : null };
+    if (error || !data) {
+      const found = MOCK_NEWS.find((n) => n.slug === slug);
+      return { data: found || null };
+    }
+    return { data: mapDbToNewsArticle(data) };
   } catch (err: any) {
-    return { data: null, error: err.message };
+    const found = MOCK_NEWS.find((n) => n.slug === slug);
+    return { data: found || null, error: err.message };
   }
 }
 
