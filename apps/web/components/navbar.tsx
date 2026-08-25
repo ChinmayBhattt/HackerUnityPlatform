@@ -72,15 +72,6 @@ export function Navbar() {
 
           {/* Right: Action Bar */}
           <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
-            {/* Host Hackathon Button */}
-            <Link
-              href="/host"
-              className="hidden lg:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#f97316]/10 to-[#ea580c]/10 hover:from-[#f97316]/20 hover:to-[#ea580c]/20 text-[#ea580c] border border-[#f97316]/30 text-xs font-bold transition-all whitespace-nowrap shadow-2xs"
-            >
-              <PlusCircle className="w-3.5 h-3.5" />
-              <span>Host Event</span>
-            </Link>
-
             {/* Notifications Menu Trigger */}
             <div className="relative">
               <button
@@ -220,14 +211,6 @@ export function Navbar() {
                 <span>{item.name}</span>
               </Link>
             ))}
-            <Link
-              href="/host"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold text-[#ea580c] bg-orange-50 border border-orange-200"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>Host a Hackathon</span>
-            </Link>
           </div>
         )}
       </header>
