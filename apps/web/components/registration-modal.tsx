@@ -62,6 +62,14 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
   const [customAnswers, setCustomAnswers] = useState<Record<string, string>>({});
   const [agreeRules, setAgreeRules] = useState(true);
 
+  const isFieldEnabled = (fieldId: string) => {
+    if (!event) return true;
+    if (!event.registrationFields || !Array.isArray(event.registrationFields) || event.registrationFields.length === 0) {
+      return ['name', 'email', 'phone', 'college', 'city', 'github', 'linkedin', 'skills'].includes(fieldId);
+    }
+    return event.registrationFields.map((f: string) => f.toLowerCase()).includes(fieldId.toLowerCase());
+  };
+
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -99,12 +107,16 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
       setErrorMsg('Email address is required.');
       return;
     }
-    if (!githubUrl.trim()) {
-      setErrorMsg('GitHub Profile URL is required.');
+    if (!phone.trim()) {
+      setErrorMsg('Phone number is required.');
       return;
     }
-    if (!linkedinUrl.trim()) {
-      setErrorMsg('LinkedIn Profile URL is required.');
+    if (!college.trim()) {
+      setErrorMsg('College / Organization is required.');
+      return;
+    }
+    if (!city.trim()) {
+      setErrorMsg('City / Location is required.');
       return;
     }
     if (!agreeRules) {
@@ -485,6 +497,7 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
           {/* STEP 2: BUILDER DETAILS & SOCIALS */}
           {step === 'details' && (
             <form onSubmit={handleFinalSubmit} className="space-y-4">
+              {/* Mandatory Fields */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">Full Name *</label>
@@ -508,43 +521,12 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
                 </div>
               </div>
 
-              {/* Required Social Links */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
-                    <Github className="w-3.5 h-3.5" />
-                    <span>GitHub URL *</span>
-                  </label>
-                  <input
-                    type="url"
-                    required
-                    placeholder="https://github.com/..."
-                    value={githubUrl}
-                    onChange={(e) => setGithubUrl(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
-                    <Linkedin className="w-3.5 h-3.5 text-[#0077b5]" />
-                    <span>LinkedIn URL *</span>
-                  </label>
-                  <input
-                    type="url"
-                    required
-                    placeholder="https://linkedin.com/in/..."
-                    value={linkedinUrl}
-                    onChange={(e) => setLinkedinUrl(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Phone</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Phone Number *</label>
                   <input
                     type="tel"
+                    required
                     placeholder="+91 99887 76655"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
@@ -552,10 +534,11 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">City</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">City / Country *</label>
                   <input
                     type="text"
-                    placeholder="e.g. Jaipur"
+                    required
+                    placeholder="e.g. Bangalore, India"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 outline-none"
@@ -564,9 +547,10 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">College / Organization</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">College / Organization *</label>
                 <input
                   type="text"
+                  required
                   placeholder="e.g. IIT Delhi"
                   value={college}
                   onChange={(e) => setCollege(e.target.value)}
@@ -574,16 +558,54 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Skills (comma separated)</label>
-                <input
-                  type="text"
-                  placeholder="Next.js, Python, TypeScript"
-                  value={skillsInput}
-                  onChange={(e) => setSkillsInput(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 outline-none"
-                />
-              </div>
+              {/* Optional Fields */}
+              {(isFieldEnabled('github') || isFieldEnabled('linkedin')) && (
+                <div className="grid grid-cols-2 gap-3">
+                  {isFieldEnabled('github') && (
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
+                        <Github className="w-3.5 h-3.5" />
+                        <span>GitHub URL</span>
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://github.com/..."
+                        value={githubUrl}
+                        onChange={(e) => setGithubUrl(e.target.value)}
+                        className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 outline-none"
+                      />
+                    </div>
+                  )}
+                  {isFieldEnabled('linkedin') && (
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
+                        <Linkedin className="w-3.5 h-3.5 text-[#0077b5]" />
+                        <span>LinkedIn URL</span>
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://linkedin.com/in/..."
+                        value={linkedinUrl}
+                        onChange={(e) => setLinkedinUrl(e.target.value)}
+                        className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 outline-none"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {isFieldEnabled('skills') && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Skills (comma separated)</label>
+                  <input
+                    type="text"
+                    placeholder="Next.js, Python, TypeScript"
+                    value={skillsInput}
+                    onChange={(e) => setSkillsInput(e.target.value)}
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 outline-none"
+                  />
+                </div>
+              )}
 
               <div className="flex items-center gap-2 pt-1">
                 <input

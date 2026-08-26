@@ -139,69 +139,69 @@ export default function HackathonDetailPage({ params }: PageProps) {
             <span className="text-slate-800 truncate max-w-xs">{event.title}</span>
           </div>
 
+          {/* Badges */}
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            <span className="px-3 py-1 rounded-full text-xs font-bold bg-white text-[#0099e6] border border-[#0099e6]/20 shadow-2xs">
+              {categoryInfo.label}
+            </span>
+            <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${statusInfo.color}`}>
+              {statusInfo.label}
+            </span>
+            <span className="px-3 py-1 rounded-full text-xs font-medium bg-white text-slate-700 border border-slate-200">
+              {eventTypeInfo.icon} {eventTypeInfo.label}
+            </span>
+            {event.featured && (
+              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-orange-100 text-[#ea580c] border border-orange-200 flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5" /> Featured Flagship
+              </span>
+            )}
+            {isRegistered && (
+              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5" /> Registered
+              </span>
+            )}
+          </div>
+
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="flex items-start gap-4 sm:gap-6 max-w-3xl">
+            <div className="flex items-center gap-4 sm:gap-6 max-w-3xl">
               {/* Event / Hackathon Logo */}
               {(event.logoUrl || event.organizerLogo) ? (
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl border border-slate-200/90 bg-white p-1.5 shadow-md shrink-0 overflow-hidden flex items-center justify-center">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-3xl border border-slate-200/90 bg-white p-2 shadow-sm shrink-0 overflow-hidden flex items-center justify-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={event.logoUrl || event.organizerLogo}
                     alt={event.title}
-                    className="w-full h-full object-cover rounded-xl sm:rounded-2xl"
+                    className="w-full h-full object-cover rounded-2xl"
                   />
                 </div>
               ) : (
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl border border-sky-200/90 bg-gradient-to-br from-sky-50 to-sky-100 shadow-md shrink-0 flex items-center justify-center text-2xl sm:text-3xl font-black text-[#0099e6]">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-3xl border border-sky-200/90 bg-gradient-to-br from-sky-50 to-sky-100 shadow-sm shrink-0 flex items-center justify-center text-3xl sm:text-4xl md:text-5xl font-black text-[#0099e6]">
                   {event.organizerAvatar || '⚡'}
                 </div>
               )}
 
-              <div className="space-y-3 sm:space-y-4 flex-1 min-w-0">
-                {/* Badges */}
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-white text-[#0099e6] border border-[#0099e6]/20 shadow-2xs">
-                    {categoryInfo.label}
-                  </span>
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${statusInfo.color}`}>
-                    {statusInfo.label}
-                  </span>
-                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-white text-slate-700 border border-slate-200">
-                    {eventTypeInfo.icon} {eventTypeInfo.label}
-                  </span>
-                  {event.featured && (
-                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-orange-100 text-[#ea580c] border border-orange-200 flex items-center gap-1">
-                      <Sparkles className="w-3.5 h-3.5" /> Featured Flagship
-                    </span>
-                  )}
-                  {isRegistered && (
-                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Registered
-                    </span>
-                  )}
-                </div>
-
+              <div className="space-y-1 sm:space-y-1.5 flex-1 min-w-0">
                 {/* Title */}
-                <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight">
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
                   {event.title}
                 </h1>
 
                 {/* Tagline if available */}
                 {event.tagline && (
-                  <p className="text-base sm:text-lg font-medium text-slate-700">
+                  <p className="text-sm sm:text-base font-medium text-slate-600">
                     {event.tagline}
                   </p>
                 )}
 
                 {/* Organizer & Location */}
-                <div className="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-slate-600 font-medium">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{event.organizerAvatar}</span>
+                <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-slate-600 font-medium pt-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-base">{event.organizerAvatar}</span>
                     <span>Organized by <strong className="text-slate-900">{event.organizerName}</strong></span>
                   </div>
                   <span>•</span>
-                  <div className="flex items-center gap-1.5 text-slate-500">
-                    <MapPin className="w-4 h-4 text-[#0099e6]" />
+                  <div className="flex items-center gap-1 text-slate-500">
+                    <MapPin className="w-3.5 h-3.5 text-[#0099e6]" />
                     <span>{event.location || 'Virtual / Online'}</span>
                   </div>
                 </div>
@@ -298,18 +298,14 @@ export default function HackathonDetailPage({ params }: PageProps) {
                         <div className="flex flex-wrap gap-2">
                           {userSquad.team_members.map((m: any) => (
                             <div
-                              key={m.id || m.user_id}
-                              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-slate-200/90 text-xs shadow-2xs"
+                              key={m.id}
+                              className="px-3 py-1.5 rounded-xl bg-white border border-sky-100 shadow-2xs flex items-center gap-2 text-xs font-medium text-slate-800"
                             >
-                              <div className="w-5 h-5 rounded-full bg-sky-100 text-[#0099e6] font-bold text-[9px] flex items-center justify-center">
-                                {(m.profiles?.name || '?').charAt(0).toUpperCase()}
+                              <div className="w-6 h-6 rounded-lg bg-sky-100 text-[#0099e6] flex items-center justify-center font-black text-[10px]">
+                                {m.profiles?.name?.charAt(0) || 'B'}
                               </div>
-                              <span className="font-bold text-slate-800">{m.profiles?.name || 'Teammate'}</span>
-                              <span className={`text-[9px] font-bold uppercase px-1.5 py-0.2 rounded ${
-                                m.role === 'LEADER' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'
-                              }`}>
-                                {m.role === 'LEADER' ? 'Lead' : 'Member'}
-                              </span>
+                              <span>{m.profiles?.name || 'Member'}</span>
+                              <span className="text-[10px] text-slate-400 font-mono">({m.role})</span>
                             </div>
                           ))}
                         </div>
@@ -318,27 +314,15 @@ export default function HackathonDetailPage({ params }: PageProps) {
                   </div>
                 )}
 
-                {/* Event Photo / Poster with Logo Overlay */}
+                {/* Event Photo / Poster */}
                 {(event.image || event.bannerUrl) && (
-                  <div className="relative mb-6">
-                    <div className="w-full h-64 sm:h-80 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-sm relative">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={event.image || event.bannerUrl || ''}
-                        alt={event.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    {(event.logoUrl || event.organizerLogo) && (
-                      <div className="absolute -bottom-5 left-6 w-18 h-18 sm:w-22 sm:h-22 rounded-2xl bg-white border-4 border-white shadow-xl overflow-hidden p-1 flex items-center justify-center z-10">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={event.logoUrl || event.organizerLogo}
-                          alt={`${event.title} logo`}
-                          className="w-full h-full object-cover rounded-xl"
-                        />
-                      </div>
-                    )}
+                  <div className="w-full h-64 sm:h-80 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-sm relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={event.image || event.bannerUrl || ''}
+                      alt={event.title}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 )}
 

@@ -86,8 +86,23 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
   const [college, setCollege] = useState(user?.college || user?.organization || '');
   const [city, setCity] = useState('');
   const [skills, setSkills] = useState(user?.skills?.join(', ') || '');
+  const [portfolioUrl, setPortfolioUrl] = useState(user?.socialLinks?.portfolio || '');
+  const [resumeUrl, setResumeUrl] = useState('');
+  const [discordHandle, setDiscordHandle] = useState('');
+  const [twitterUrl, setTwitterUrl] = useState('');
+  const [tshirtSize, setTshirtSize] = useState('L');
+  const [dietaryPreference, setDietaryPreference] = useState('Veg');
+  const [experienceLevel, setExperienceLevel] = useState('Intermediate');
   const [customAnswers, setCustomAnswers] = useState<Record<string, string>>({});
   const [agreeRules, setAgreeRules] = useState(true);
+
+  const isFieldEnabled = (fieldId: string) => {
+    if (!event) return true;
+    if (!event.registrationFields || !Array.isArray(event.registrationFields) || event.registrationFields.length === 0) {
+      return ['name', 'email', 'phone', 'college', 'city', 'github', 'linkedin', 'skills'].includes(fieldId);
+    }
+    return event.registrationFields.map((f: string) => f.toLowerCase()).includes(fieldId.toLowerCase());
+  };
 
   // Submission state
   const [submitting, setSubmitting] = useState(false);
@@ -476,16 +491,16 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-start gap-4">
               {(event.logoUrl || event.organizerLogo) ? (
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl border border-slate-200/90 bg-white p-1 shadow-xs shrink-0 overflow-hidden flex items-center justify-center">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl border border-slate-200/90 bg-white p-1.5 shadow-xs shrink-0 overflow-hidden flex items-center justify-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={event.logoUrl || event.organizerLogo}
                     alt={event.title}
-                    className="w-full h-full object-cover rounded-xl"
+                    className="w-full h-full object-cover rounded-xl sm:rounded-2xl"
                   />
                 </div>
               ) : (
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl border border-sky-200/90 bg-gradient-to-br from-sky-50 to-sky-100 shadow-xs shrink-0 flex items-center justify-center text-xl sm:text-2xl font-black text-[#0099e6]">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl border border-sky-200/90 bg-gradient-to-br from-sky-50 to-sky-100 shadow-xs shrink-0 flex items-center justify-center text-2xl sm:text-3xl font-black text-[#0099e6]">
                   {event.organizerAvatar || '⚡'}
                 </div>
               )}
@@ -880,115 +895,264 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                 </p>
               </div>
 
-              {/* Basic Info */}
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Mandatory Fields Group */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
+                    <Lock className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Mandatory Required Fields</span>
+                  </div>
+
+                  {/* Name & Email */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Full Name *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Chinmay Bhatt"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none font-medium transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Email Address *</label>
+                      <input
+                        type="email"
+                        required
+                        placeholder="you@domain.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none font-medium transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Phone & City */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Phone Number (WhatsApp) *</label>
+                      <input
+                        type="tel"
+                        required
+                        placeholder="+91 99887 76655"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">City / Country *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Bangalore, India"
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* College / Organization */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Full Name *</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">College / University / Organization *</label>
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Chinmay Bhatt"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none font-medium transition-colors"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Email Address *</label>
-                    <input
-                      type="email"
-                      required
-                      placeholder="you@domain.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none font-medium transition-colors"
-                    />
-                  </div>
-                </div>
-
-                {/* Required Profile Links: GitHub & LinkedIn */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
-                      <Github className="w-3.5 h-3.5 text-slate-900" />
-                      <span>GitHub Profile URL *</span>
-                    </label>
-                    <input
-                      type="url"
-                      required
-                      placeholder="https://github.com/your-username"
-                      value={githubUrl}
-                      onChange={(e) => setGithubUrl(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none font-medium transition-colors"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
-                      <Linkedin className="w-3.5 h-3.5 text-[#0077b5]" />
-                      <span>LinkedIn Profile URL *</span>
-                    </label>
-                    <input
-                      type="url"
-                      required
-                      placeholder="https://linkedin.com/in/your-profile"
-                      value={linkedinUrl}
-                      onChange={(e) => setLinkedinUrl(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none font-medium transition-colors"
-                    />
-                  </div>
-                </div>
-
-                {/* Phone & City */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Phone Number (Optional)</label>
-                    <input
-                      type="tel"
-                      placeholder="+91 99887 76655"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">City / Country</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Bangalore, India"
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="e.g. IIT Bombay / Freelance Developer"
+                      value={college}
+                      onChange={(e) => setCollege(e.target.value)}
                       className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
                     />
                   </div>
                 </div>
 
-                {/* College / Organization */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">College / University / Organization</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. IIT Bombay / Freelance Developer"
-                    value={college}
-                    onChange={(e) => setCollege(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
-                  />
-                </div>
+                {/* Optional Organizer-Selected Fields */}
+                {(isFieldEnabled('github') ||
+                  isFieldEnabled('linkedin') ||
+                  isFieldEnabled('skills') ||
+                  isFieldEnabled('portfolio') ||
+                  isFieldEnabled('resume') ||
+                  isFieldEnabled('discord') ||
+                  isFieldEnabled('twitter') ||
+                  isFieldEnabled('tshirt') ||
+                  isFieldEnabled('dietary') ||
+                  isFieldEnabled('experience')) && (
+                  <div className="space-y-4 pt-3 border-t border-slate-100">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-sky-800 bg-sky-50 px-3 py-1.5 rounded-xl border border-sky-200">
+                      <Sparkles className="w-3.5 h-3.5 text-[#0099e6]" />
+                      <span>Additional Event Requirements</span>
+                    </div>
 
-                {/* Skills */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Skills & Tech Stack (comma separated)</label>
-                  <input
-                    type="text"
-                    placeholder="Next.js 16, TypeScript, PyTorch, Supabase, Solidity"
-                    value={skills}
-                    onChange={(e) => setSkills(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
-                  />
-                </div>
+                    {/* GitHub & LinkedIn */}
+                    {(isFieldEnabled('github') || isFieldEnabled('linkedin')) && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {isFieldEnabled('github') && (
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                              <Github className="w-3.5 h-3.5 text-slate-900" />
+                              <span>GitHub Profile URL</span>
+                            </label>
+                            <input
+                              type="url"
+                              placeholder="https://github.com/your-username"
+                              value={githubUrl}
+                              onChange={(e) => setGithubUrl(e.target.value)}
+                              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none font-medium transition-colors"
+                            />
+                          </div>
+                        )}
+
+                        {isFieldEnabled('linkedin') && (
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                              <Linkedin className="w-3.5 h-3.5 text-[#0077b5]" />
+                              <span>LinkedIn Profile URL</span>
+                            </label>
+                            <input
+                              type="url"
+                              placeholder="https://linkedin.com/in/your-profile"
+                              value={linkedinUrl}
+                              onChange={(e) => setLinkedinUrl(e.target.value)}
+                              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none font-medium transition-colors"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Portfolio & Resume */}
+                    {(isFieldEnabled('portfolio') || isFieldEnabled('resume')) && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {isFieldEnabled('portfolio') && (
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1">Portfolio / Website URL</label>
+                            <input
+                              type="url"
+                              placeholder="https://yourportfolio.dev"
+                              value={portfolioUrl}
+                              onChange={(e) => setPortfolioUrl(e.target.value)}
+                              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                            />
+                          </div>
+                        )}
+                        {isFieldEnabled('resume') && (
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1">Resume / CV Link (PDF/Drive)</label>
+                            <input
+                              type="url"
+                              placeholder="https://drive.google.com/..."
+                              value={resumeUrl}
+                              onChange={(e) => setResumeUrl(e.target.value)}
+                              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Discord & Twitter */}
+                    {(isFieldEnabled('discord') || isFieldEnabled('twitter')) && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {isFieldEnabled('discord') && (
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1">Discord Username</label>
+                            <input
+                              type="text"
+                              placeholder="e.g. hacker#1234 or hacker_name"
+                              value={discordHandle}
+                              onChange={(e) => setDiscordHandle(e.target.value)}
+                              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                            />
+                          </div>
+                        )}
+                        {isFieldEnabled('twitter') && (
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1">Twitter / X Profile</label>
+                            <input
+                              type="text"
+                              placeholder="https://x.com/username or @username"
+                              value={twitterUrl}
+                              onChange={(e) => setTwitterUrl(e.target.value)}
+                              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* T-Shirt, Dietary, Experience */}
+                    {(isFieldEnabled('tshirt') || isFieldEnabled('dietary') || isFieldEnabled('experience')) && (
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        {isFieldEnabled('tshirt') && (
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1">T-Shirt Size</label>
+                            <select
+                              value={tshirtSize}
+                              onChange={(e) => setTshirtSize(e.target.value)}
+                              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 outline-none"
+                            >
+                              <option value="S">S (Small)</option>
+                              <option value="M">M (Medium)</option>
+                              <option value="L">L (Large)</option>
+                              <option value="XL">XL (Extra Large)</option>
+                              <option value="XXL">XXL</option>
+                            </select>
+                          </div>
+                        )}
+
+                        {isFieldEnabled('dietary') && (
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1">Dietary Preference</label>
+                            <select
+                              value={dietaryPreference}
+                              onChange={(e) => setDietaryPreference(e.target.value)}
+                              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 outline-none"
+                            >
+                              <option value="Veg">Vegetarian</option>
+                              <option value="Non-Veg">Non-Vegetarian</option>
+                              <option value="Vegan">Vegan</option>
+                              <option value="Jain">Jain</option>
+                              <option value="Other">Other / None</option>
+                            </select>
+                          </div>
+                        )}
+
+                        {isFieldEnabled('experience') && (
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1">Experience Level</label>
+                            <select
+                              value={experienceLevel}
+                              onChange={(e) => setExperienceLevel(e.target.value)}
+                              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 outline-none"
+                            >
+                              <option value="Beginner">Beginner / Student</option>
+                              <option value="Intermediate">Intermediate Builder</option>
+                              <option value="Advanced">Advanced / Professional</option>
+                            </select>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Skills */}
+                    {isFieldEnabled('skills') && (
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Skills & Tech Stack (comma separated)</label>
+                        <input
+                          type="text"
+                          placeholder="Next.js 16, TypeScript, PyTorch, Supabase, Solidity"
+                          value={skills}
+                          onChange={(e) => setSkills(e.target.value)}
+                          className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Additional Event Custom Questions */}
                 {event.customQuestions && event.customQuestions.length > 0 && (
@@ -1035,10 +1199,9 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                     I agree to the <span className="text-slate-900 font-bold underline">Code of Conduct</span>, fair play guidelines, and event terms.
                   </label>
                 </div>
-              </div>
 
-              {/* Action Buttons */}
-              <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-4">
+                {/* Action Buttons */}
+                <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-4">
                 <button
                   type="button"
                   onClick={() => setCurrentStep(1)}

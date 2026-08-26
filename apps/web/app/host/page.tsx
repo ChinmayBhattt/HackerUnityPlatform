@@ -33,6 +33,17 @@ import {
   ShieldCheck,
   Loader2,
   Lock,
+  Phone,
+  MapPin,
+  Github,
+  Linkedin,
+  Code2,
+  MessageSquare,
+  Twitter,
+  Shirt,
+  Utensils,
+  TrendingUp,
+  Infinity as InfinityIcon,
 } from 'lucide-react';
 import { EventCategory, EventStatus, EventType, CustomQuestion } from '@hackers-unity/shared-types';
 import { ExtendedEvent, MOCK_EVENTS } from '@/lib/mock-data';
@@ -65,24 +76,24 @@ const DIFFICULTY_LEVELS = [
 ];
 
 const MANDATORY_REGISTRATION_FIELDS = [
-  { id: 'name', label: 'Full Name', icon: '👤', description: 'Participant real name' },
-  { id: 'email', label: 'Email Address', icon: '✉️', description: 'Communication & verification email' },
-  { id: 'phone', label: 'Phone Number', icon: '📞', description: 'Contact & WhatsApp number' },
-  { id: 'college', label: 'College / Institute', icon: '🎓', description: 'University / Institute name' },
-  { id: 'city', label: 'City / Location', icon: '📍', description: 'Current city location' },
+  { id: 'name', label: 'Full Name', icon: User, description: 'Builder full name' },
+  { id: 'email', label: 'Email Address', icon: Mail, description: 'Communication & alerts' },
+  { id: 'phone', label: 'Phone Number', icon: Phone, description: 'Contact & WhatsApp' },
+  { id: 'college', label: 'College / Institute', icon: GraduationCap, description: 'University or organization' },
+  { id: 'city', label: 'City / Location', icon: MapPin, description: 'Current city & region' },
 ];
 
 const AVAILABLE_OPTIONAL_FIELDS = [
-  { id: 'github', label: 'GitHub Profile', icon: '🐙', hint: 'GitHub profile URL' },
-  { id: 'linkedin', label: 'LinkedIn Profile', icon: '💼', hint: 'LinkedIn profile link' },
-  { id: 'skills', label: 'Skills & Tech Stack', icon: '⚡', hint: 'Builder tech stack tags' },
-  { id: 'portfolio', label: 'Portfolio Website', icon: '🌐', hint: 'Personal portfolio / blog' },
-  { id: 'resume', label: 'Resume / CV Link', icon: '📄', hint: 'Drive or PDF resume link' },
-  { id: 'discord', label: 'Discord Handle', icon: '💬', hint: 'Discord username (user#1234)' },
-  { id: 'twitter', label: 'Twitter / X Profile', icon: '🐦', hint: 'Twitter profile handle' },
-  { id: 'tshirt', label: 'T-Shirt Size (Swag)', icon: '👕', hint: 'S, M, L, XL, XXL' },
-  { id: 'dietary', label: 'Dietary Preference', icon: '🥗', hint: 'Veg, Non-Veg, Vegan' },
-  { id: 'experience', label: 'Experience Level', icon: '🚀', hint: 'Beginner, Intermediate, Pro' },
+  { id: 'github', label: 'GitHub Profile', icon: Github, hint: 'GitHub repository URL' },
+  { id: 'linkedin', label: 'LinkedIn Profile', icon: Linkedin, hint: 'Professional profile URL' },
+  { id: 'skills', label: 'Skills & Tech Stack', icon: Code2, hint: 'Technologies & frameworks' },
+  { id: 'portfolio', label: 'Portfolio Website', icon: Globe, hint: 'Personal portfolio / website' },
+  { id: 'resume', label: 'Resume / CV Link', icon: FileText, hint: 'Drive or PDF resume URL' },
+  { id: 'discord', label: 'Discord Handle', icon: MessageSquare, hint: 'Discord username & handle' },
+  { id: 'twitter', label: 'Twitter / X Profile', icon: Twitter, hint: 'Twitter profile handle' },
+  { id: 'tshirt', label: 'T-Shirt Size', icon: Shirt, hint: 'Swag & merch sizing' },
+  { id: 'dietary', label: 'Dietary Preference', icon: Utensils, hint: 'Catering requirements' },
+  { id: 'experience', label: 'Experience Level', icon: TrendingUp, hint: 'Builder seniority level' },
 ];
 
 function HostHackathonContent() {
@@ -1578,14 +1589,14 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
                               : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                           }`}
                         >
-                          {isUnlimitedCapacity ? '♾️ Unlimited' : 'Set to Unlimited'}
+                          {isUnlimitedCapacity ? 'Unlimited Capacity' : 'Set to Unlimited'}
                         </button>
                       </div>
 
                       {isUnlimitedCapacity ? (
                         <div className="w-full px-3.5 py-2.5 bg-sky-50/80 border border-sky-200 rounded-xl text-xs font-bold text-[#0099e6] flex items-center justify-between animate-in fade-in">
-                          <span className="flex items-center gap-1.5">
-                            <span>♾️</span>
+                          <span className="flex items-center gap-2">
+                            <InfinityIcon className="w-4 h-4 text-[#0099e6]" />
                             <span>Unlimited Registrations (Default)</span>
                           </span>
                           <button
@@ -1658,38 +1669,47 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
                       </div>
 
                       {/* 1. Mandatory Fields (Locked) */}
-                      <div className="space-y-1.5 mb-4">
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 flex items-center gap-1">
-                          <Lock className="w-3 h-3 text-emerald-600" />
+                      <div className="space-y-2 mb-5">
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-800 uppercase tracking-wider">
+                          <Lock className="w-3.5 h-3.5 text-emerald-600" />
                           <span>Mandatory Core Fields (Always Required)</span>
-                        </span>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-                          {MANDATORY_REGISTRATION_FIELDS.map((field) => (
-                            <div
-                              key={field.id}
-                              className="px-3 py-2 rounded-xl bg-white border-2 border-emerald-200/80 shadow-2xs flex items-center justify-between gap-1.5 select-none"
-                            >
-                              <div className="flex items-center gap-1.5 min-w-0">
-                                <span className="text-sm">{field.icon}</span>
-                                <span className="text-xs font-bold text-slate-800 truncate">{field.label}</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2.5">
+                          {MANDATORY_REGISTRATION_FIELDS.map((field) => {
+                            const IconComponent = field.icon;
+                            return (
+                              <div
+                                key={field.id}
+                                className="p-3 rounded-2xl bg-white border border-emerald-200/90 shadow-2xs flex items-center justify-between gap-2.5 select-none"
+                              >
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-100">
+                                    <IconComponent className="w-4 h-4" />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <span className="text-xs font-bold text-slate-800 block truncate">{field.label}</span>
+                                    <span className="text-[10px] text-slate-400 font-medium block truncate">{field.description}</span>
+                                  </div>
+                                </div>
+                                <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 uppercase shrink-0">
+                                  Req *
+                                </span>
                               </div>
-                              <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 uppercase shrink-0">
-                                Req *
-                              </span>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
 
                       {/* 2. Optional Fields (Toggleable) */}
-                      <div className="space-y-1.5">
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-1">
-                          <Sparkles className="w-3 h-3 text-[#0099e6]" />
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                          <Sparkles className="w-3.5 h-3.5 text-[#0099e6]" />
                           <span>Optional Additional Fields (Click to Enable / Disable)</span>
-                        </span>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                           {AVAILABLE_OPTIONAL_FIELDS.map((field) => {
                             const isSelected = selectedOptionalFields.includes(field.id);
+                            const IconComponent = field.icon;
                             return (
                               <button
                                 key={field.id}
@@ -1701,29 +1721,37 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
                                       : [...prev, field.id]
                                   );
                                 }}
-                                className={`p-2.5 rounded-xl border text-left transition-all flex items-center justify-between gap-2 cursor-pointer ${
+                                className={`p-3 rounded-2xl border text-left transition-all flex items-center justify-between gap-3 cursor-pointer ${
                                   isSelected
-                                    ? 'bg-sky-50/80 border-[#0099e6] shadow-xs ring-1 ring-[#0099e6]/20'
-                                    : 'bg-white border-slate-200 hover:border-slate-300 opacity-80'
+                                    ? 'bg-sky-50/70 border-[#0099e6] shadow-2xs ring-1 ring-[#0099e6]/20'
+                                    : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
                                 }`}
                               >
-                                <div className="flex items-center gap-2 min-w-0">
-                                  <span className="text-base">{field.icon}</span>
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div
+                                    className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border transition-colors ${
+                                      isSelected
+                                        ? 'bg-sky-100 text-[#0099e6] border-sky-200'
+                                        : 'bg-slate-100 text-slate-500 border-slate-200'
+                                    }`}
+                                  >
+                                    <IconComponent className="w-4 h-4" />
+                                  </div>
                                   <div className="min-w-0">
-                                    <div className="text-xs font-bold text-slate-900 truncate flex items-center gap-1">
-                                      <span>{field.label}</span>
+                                    <div className="text-xs font-bold text-slate-900 truncate">
+                                      {field.label}
                                     </div>
                                     <div className="text-[10px] text-slate-400 truncate">{field.hint}</div>
                                   </div>
                                 </div>
                                 <div
-                                  className={`w-4 h-4 rounded-md flex items-center justify-center shrink-0 border transition-all ${
+                                  className={`w-5 h-5 rounded-lg flex items-center justify-center shrink-0 border transition-all ${
                                     isSelected
-                                      ? 'bg-[#0099e6] border-[#0099e6] text-white'
+                                      ? 'bg-[#0099e6] border-[#0099e6] text-white shadow-2xs'
                                       : 'border-slate-300 bg-slate-50'
                                   }`}
                                 >
-                                  {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                                  {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                                 </div>
                               </button>
                             );
