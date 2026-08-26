@@ -14,6 +14,7 @@ import {
   ExternalLink,
   Github,
   Linkedin,
+  Lock,
 } from 'lucide-react';
 import { ExtendedEvent } from '@/lib/mock-data';
 import { formatCurrency } from '@/lib/utils';
@@ -35,9 +36,13 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
   const { user, supabaseUser } = useAuth();
   const { teams, loading: teamsLoading, createTeam, joinTeam, refresh: refreshTeams } = useEventTeams(event.id);
 
+  const minTeam = event.minTeamSize || 1;
+  const maxTeam = event.maxTeamSize || 4;
+  const isSoloAllowed = minTeam <= 1 && (!event.isTeamEvent || minTeam === 1);
+
   const [step, setStep] = useState<ModalStep>('mode');
   const [mode, setMode] = useState<RegistrationMode>(
-    event.isTeamEvent && (event.minTeamSize || 1) > 1 ? 'CREATE_TEAM' : 'SOLO'
+    !isSoloAllowed ? 'CREATE_TEAM' : 'SOLO'
   );
 
   // Team state
@@ -62,13 +67,14 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
 
   if (!isOpen) return null;
 
-  const minTeam = event.minTeamSize || 1;
-  const maxTeam = event.maxTeamSize || 4;
-
   const handleStep1Next = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
 
+    if (mode === 'SOLO' && !isSoloAllowed) {
+      setErrorMsg(`Solo participation is not allowed. Minimum squad size is ${minTeam} members.`);
+      return;
+    }
     if (mode === 'CREATE_TEAM' && !teamName.trim()) {
       setErrorMsg('Please provide a squad name.');
       return;
@@ -383,24 +389,60 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
                 )}
 
                 <div
-                  onClick={() => setMode('SOLO')}
-                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer ${
-                    mode === 'SOLO'
-                      ? 'border-[#0099e6] bg-sky-50/60 shadow-xs'
-                      : 'border-slate-200 hover:border-slate-300'
+                  onClick={() => {
+                    if (!isSoloAllowed) {
+                      setErrorMsg(`Solo participation is locked. Minimum team size is ${minTeam} builders.`);
+                      return;
+                    }
+                    setMode('SOLO');
+                    setErrorMsg(null);
+                  }}
+                  className={`p-4 rounded-2xl border-2 transition-all relative ${
+                    !isSoloAllowed
+                      ? 'border-slate-200 bg-slate-50/80 opacity-60 cursor-not-allowed select-none'
+                      : mode === 'SOLO'
+                      ? 'border-[#0099e6] bg-sky-50/60 shadow-xs cursor-pointer'
+                      : 'border-slate-200 hover:border-slate-300 cursor-pointer'
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
-                        <User className="w-5 h-5" />
+                      <div
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                          !isSoloAllowed ? 'bg-slate-200 text-slate-400' : 'bg-emerald-100 text-emerald-600'
+                        }`}
+                      >
+                        {!isSoloAllowed ? <Lock className="w-5 h-5" /> : <User className="w-5 h-5" />}
                       </div>
                       <div>
-                        <h4 className="text-sm font-bold text-slate-900">Solo Participant</h4>
-                        <p className="text-[11px] text-slate-500">Participate individually without a squad</p>
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-sm font-bold text-slate-900">Solo Participant</h4>
+                          {!isSoloAllowed ? (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-700 flex items-center gap-0.5 border border-rose-200">
+                              <Lock className="w-2.5 h-2.5" />
+                              <span>Locked (Min {minTeam})</span>
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
+                              Solo
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-slate-500">
+                          {!isSoloAllowed
+                            ? `Squad required (minimum ${minTeam} members)`
+                            : 'Participate individually without a squad'}
+                        </p>
                       </div>
                     </div>
-                    <input type="radio" name="modal_mode" checked={mode === 'SOLO'} onChange={() => setMode('SOLO')} className="text-[#0099e6]" />
+                    <input
+                      type="radio"
+                      name="modal_mode"
+                      checked={mode === 'SOLO'}
+                      disabled={!isSoloAllowed}
+                      onChange={() => isSoloAllowed && setMode('SOLO')}
+                      className="text-[#0099e6] disabled:opacity-40"
+                    />
                   </div>
                 </div>
               </div>

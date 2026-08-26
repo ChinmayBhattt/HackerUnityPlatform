@@ -28,6 +28,7 @@ import {
   Clock,
   Loader2,
   Trash2,
+  Lock,
 } from 'lucide-react';
 import { useEvent } from '@/lib/hooks/use-events';
 import { useAuth } from '@/lib/auth-context';
@@ -169,7 +170,9 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
   // Set default mode based on event config
   useEffect(() => {
     if (event && !isAlreadyRegistered) {
-      if (event.isTeamEvent && (event.minTeamSize || 1) > 1) {
+      const minTeamSize = event.minTeamSize || 1;
+      const isSoloAllowed = minTeamSize <= 1 && (!event.isTeamEvent || minTeamSize === 1);
+      if (!isSoloAllowed) {
         setMode('CREATE_TEAM');
       } else {
         setMode('SOLO');
@@ -203,11 +206,16 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
   const deadlineInfo = getDaysLeft(event.registrationDeadline);
   const minTeam = event.minTeamSize || 1;
   const maxTeam = event.maxTeamSize || 4;
+  const isSoloAllowed = minTeam <= 1 && (!event.isTeamEvent || minTeam === 1);
 
   const handleStep1Next = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
 
+    if (mode === 'SOLO' && !isSoloAllowed) {
+      setErrorMsg(`Solo participation is not allowed for this hackathon. Minimum squad size is ${minTeam} members.`);
+      return;
+    }
     if (mode === 'CREATE_TEAM' && !teamName.trim()) {
       setErrorMsg('Please enter a team name to create your squad.');
       return;
@@ -755,29 +763,52 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                 {/* Option 3: Solo Participant */}
                 <div
                   onClick={() => {
+                    if (!isSoloAllowed) {
+                      setErrorMsg(
+                        `Solo participation is locked. This hackathon requires squads with a minimum of ${minTeam} builders.`
+                      );
+                      return;
+                    }
                     setMode('SOLO');
                     setErrorMsg(null);
                   }}
-                  className={`p-5 rounded-2xl border-2 transition-all cursor-pointer relative ${
-                    mode === 'SOLO'
-                      ? 'border-[#0099e6] bg-sky-50/50 shadow-md ring-2 ring-[#0099e6]/20'
-                      : 'border-slate-200 hover:border-slate-300 bg-white'
+                  className={`p-5 rounded-2xl border-2 transition-all relative ${
+                    !isSoloAllowed
+                      ? 'border-slate-200 bg-slate-50/80 opacity-60 cursor-not-allowed select-none'
+                      : mode === 'SOLO'
+                      ? 'border-[#0099e6] bg-sky-50/50 shadow-md ring-2 ring-[#0099e6]/20 cursor-pointer'
+                      : 'border-slate-200 hover:border-slate-300 bg-white cursor-pointer'
                   }`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-emerald-100 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0">
-                        <User className="w-6 h-6" />
+                      <div
+                        className={`w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 ${
+                          !isSoloAllowed
+                            ? 'bg-slate-200/80 border-slate-300 text-slate-400'
+                            : 'bg-emerald-100 border border-emerald-200 text-emerald-600'
+                        }`}
+                      >
+                        {!isSoloAllowed ? <Lock className="w-6 h-6" /> : <User className="w-6 h-6" />}
                       </div>
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="text-base font-bold text-slate-900">Solo Participant / Individual Hacker</h3>
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
-                            Solo
-                          </span>
+                          {!isSoloAllowed ? (
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-700 flex items-center gap-1 border border-rose-200">
+                              <Lock className="w-3 h-3" />
+                              <span>Locked (Min {minTeam} Builders)</span>
+                            </span>
+                          ) : (
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
+                              Solo
+                            </span>
+                          )}
                         </div>
                         <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                          Participate on your own. You can build, ship, and submit your project independently.
+                          {!isSoloAllowed
+                            ? `This hackathon requires team participation (minimum ${minTeam} members). Solo submissions are not permitted by the organizer.`
+                            : 'Participate on your own. You can build, ship, and submit your project independently.'}
                         </p>
                       </div>
                     </div>
@@ -786,8 +817,9 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                       type="radio"
                       name="mode"
                       checked={mode === 'SOLO'}
-                      onChange={() => setMode('SOLO')}
-                      className="w-4 h-4 text-[#0099e6] mt-1"
+                      disabled={!isSoloAllowed}
+                      onChange={() => isSoloAllowed && setMode('SOLO')}
+                      className="w-4 h-4 text-[#0099e6] mt-1 disabled:opacity-40"
                     />
                   </div>
                 </div>
