@@ -70,12 +70,12 @@ export function PublicProfileModal({
   );
 
   const professionType = livePreviewData?.professionType || user?.professionType || (user?.college ? 'STUDENT' : 'STUDENT');
-  
+
   const college = livePreviewData?.college || user?.college || 'Developer Guild';
   const graduationYear = livePreviewData?.graduationYear || user?.graduationYear || '2026';
   const degree = livePreviewData?.degree || user?.degree || 'B.Tech / B.E (Engineering)';
   const branch = livePreviewData?.branch || user?.branch || 'Computer Science & Engineering (CSE)';
-  
+
   const company = livePreviewData?.company || user?.company || user?.organization || 'Developer Community';
   const jobTitle = livePreviewData?.jobTitle || user?.jobTitle || 'Software Engineer';
   const experienceYears = livePreviewData?.experienceYears || user?.experienceYears || '1-3 years';
@@ -86,7 +86,7 @@ export function PublicProfileModal({
   const freelanceDomain = livePreviewData?.freelanceDomain || 'Fullstack Web & AI';
 
   const skills = livePreviewData?.skills || user?.skills || ['Next.js 16', 'TypeScript', 'PostgreSQL', 'Python'];
-  
+
   const rawGithub = livePreviewData?.socialLinks?.github !== undefined ? livePreviewData.socialLinks.github : user?.socialLinks?.github;
   const rawLinkedin = livePreviewData?.socialLinks?.linkedin !== undefined ? livePreviewData.socialLinks.linkedin : user?.socialLinks?.linkedin;
   const rawPortfolio = livePreviewData?.socialLinks?.portfolio !== undefined ? livePreviewData.socialLinks.portfolio : user?.socialLinks?.portfolio;

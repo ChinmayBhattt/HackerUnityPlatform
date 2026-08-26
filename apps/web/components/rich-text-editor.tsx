@@ -26,6 +26,98 @@ interface RichTextEditorProps {
   helperText?: string;
 }
 
+// Convert text with markdown or bullets into clean semantic HTML
+function convertTextOrMarkdownToHtml(rawText: string): string {
+  if (!rawText || !rawText.trim()) return '';
+
+  // If HTML is already provided
+  if (
+    rawText.includes('<p>') ||
+    rawText.includes('<ul>') ||
+    rawText.includes('<ol>') ||
+    rawText.includes('<li>') ||
+    rawText.includes('<b>') ||
+    rawText.includes('<strong>') ||
+    rawText.includes('<div>')
+  ) {
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(rawText, 'text/html');
+      doc.body.querySelectorAll('*').forEach((el) => {
+        el.removeAttribute('style');
+        el.removeAttribute('face');
+        el.removeAttribute('color');
+        el.removeAttribute('size');
+        if (el.tagName === 'SPAN' && el.attributes.length === 0) {
+          el.replaceWith(...Array.from(el.childNodes));
+        }
+      });
+      return doc.body.innerHTML;
+    } catch {
+      // fallback to plain text parsing
+    }
+  }
+
+  const formatInline = (str: string) => {
+    return str
+      .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+      .replace(/__(.*?)__/g, '<b>$1</b>')
+      .replace(/\*(.*?)\*/g, '<i>$1</i>')
+      .replace(/_(.*?)_/g, '<i>$1</i>')
+      .replace(/~~(.*?)~~/g, '<strike>$1</strike>')
+      .replace(/\[(.*?)\]\((https?:\/\/[^\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  };
+
+  const lines = rawText.split(/\r?\n/);
+  let html = '';
+  let inUl = false;
+  let inOl = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) {
+      if (inUl) { html += '</ul>'; inUl = false; }
+      if (inOl) { html += '</ol>'; inOl = false; }
+      continue;
+    }
+
+    // Bullet detection (•, -, *, ◦, ⁃)
+    const bulletMatch = line.match(/^([•\-\*◦⁃]|\u2022)\s*(.*)$/);
+    // Numbered list detection
+    const olMatch = line.match(/^(\d+)[\.\)]\s*(.*)$/);
+    // Headings
+    const h1Match = line.match(/^#\s+(.*)$/);
+    const h2Match = line.match(/^##\s+(.*)$/);
+
+    if (h1Match) {
+      if (inUl) { html += '</ul>'; inUl = false; }
+      if (inOl) { html += '</ol>'; inOl = false; }
+      html += `<h2>${formatInline(h1Match[1])}</h2>`;
+    } else if (h2Match) {
+      if (inUl) { html += '</ul>'; inUl = false; }
+      if (inOl) { html += '</ol>'; inOl = false; }
+      html += `<h3>${formatInline(h2Match[1])}</h3>`;
+    } else if (bulletMatch) {
+      if (inOl) { html += '</ol>'; inOl = false; }
+      if (!inUl) { html += '<ul>'; inUl = true; }
+      html += `<li>${formatInline(bulletMatch[2] || '')}</li>`;
+    } else if (olMatch) {
+      if (inUl) { html += '</ul>'; inUl = false; }
+      if (!inOl) { html += '<ol>'; inOl = true; }
+      html += `<li>${formatInline(olMatch[2] || '')}</li>`;
+    } else {
+      if (inUl) { html += '</ul>'; inUl = false; }
+      if (inOl) { html += '</ol>'; inOl = false; }
+      html += `<p>${formatInline(line)}</p>`;
+    }
+  }
+
+  if (inUl) html += '</ul>';
+  if (inOl) html += '</ol>';
+
+  return html || `<p>${formatInline(rawText)}</p>`;
+}
+
 export function RichTextEditor({
   value,
   onChange,
@@ -38,6 +130,8 @@ export function RichTextEditor({
   const editorRef = useRef<HTMLDivElement>(null);
   const [isEmpty, setIsEmpty] = useState(true);
   const savedSelectionRef = useRef<Range | null>(null);
+  const lastEmittedValueRef = useRef<string | null>(null);
+  const isInitialMountRef = useRef(true);
 
   // Link Dialog Modal State
   const [showLinkDialog, setShowLinkDialog] = useState(false);
@@ -49,6 +143,7 @@ export function RichTextEditor({
     bold: false,
     italic: false,
     underline: false,
+    strikethrough: false,
     h1: false,
     h2: false,
     ul: false,
@@ -56,11 +151,11 @@ export function RichTextEditor({
     quote: false,
   });
 
-  // Save current selection range
+  // Save current selection range inside editor
   const saveSelection = () => {
     if (typeof window === 'undefined') return;
     const sel = window.getSelection();
-    if (sel && sel.rangeCount > 0 && editorRef.current?.contains(sel.anchorNode)) {
+    if (sel && sel.rangeCount > 0 && editorRef.current && sel.anchorNode && editorRef.current.contains(sel.anchorNode)) {
       savedSelectionRef.current = sel.getRangeAt(0).cloneRange();
     }
   };
@@ -77,73 +172,114 @@ export function RichTextEditor({
 
   // Check which formatting states are currently active
   const checkActiveFormats = useCallback(() => {
-    if (typeof document === 'undefined') return;
+    if (typeof document === 'undefined' || !editorRef.current) return;
     try {
-      const bold = document.queryCommandState('bold');
-      const italic = document.queryCommandState('italic');
-      const underline = document.queryCommandState('underline');
-      const ul = document.queryCommandState('insertUnorderedList');
-      const ol = document.queryCommandState('insertOrderedList');
-
-      // Check block tags
       const sel = window.getSelection();
+
+      // If selection is not inside this editor, turn off all highlights
+      if (!sel || !sel.anchorNode || !editorRef.current.contains(sel.anchorNode)) {
+        setActiveFormats({
+          bold: false,
+          italic: false,
+          underline: false,
+          strikethrough: false,
+          h1: false,
+          h2: false,
+          ul: false,
+          ol: false,
+          quote: false,
+        });
+        return;
+      }
+
+      let bold = document.queryCommandState('bold');
+      let italic = document.queryCommandState('italic');
+      let underline = document.queryCommandState('underline');
+      let strikethrough = document.queryCommandState('strikeThrough');
+      let ul = document.queryCommandState('insertUnorderedList');
+      let ol = document.queryCommandState('insertOrderedList');
       let h1 = false;
       let h2 = false;
       let quote = false;
 
-      if (sel && sel.anchorNode) {
-        let el: Node | null = sel.anchorNode;
-        while (el && el !== editorRef.current) {
-          if (el.nodeName === 'H1' || el.nodeName === 'H2') {
-            h1 = true;
-          }
-          if (el.nodeName === 'H3') {
-            h2 = true;
-          }
-          if (el.nodeName === 'BLOCKQUOTE') {
-            quote = true;
-          }
-          el = el.parentNode;
+      // Strictly bounded DOM ancestor traversal within editorRef.current
+      let el: Node | null = sel.anchorNode;
+      while (el && el !== editorRef.current) {
+        if (el.nodeType === Node.ELEMENT_NODE) {
+          const tag = (el as HTMLElement).tagName.toUpperCase();
+          if (tag === 'H1' || tag === 'H2') h1 = true;
+          if (tag === 'H3' || tag === 'H4') h2 = true;
+          if (tag === 'BLOCKQUOTE') quote = true;
+          if (tag === 'UL') ul = true;
+          if (tag === 'OL') ol = true;
+          if (tag === 'B' || tag === 'STRONG') bold = true;
+          if (tag === 'I' || tag === 'EM') italic = true;
+          if (tag === 'U') underline = true;
+          if (tag === 'STRIKE' || tag === 'S' || tag === 'DEL') strikethrough = true;
         }
+        el = el.parentNode;
       }
 
-      setActiveFormats({ bold, italic, underline, h1, h2, ul, ol, quote });
+      setActiveFormats({ bold, italic, underline, strikethrough, h1, h2, ul, ol, quote });
     } catch {
       // ignore
     }
   }, []);
 
-  // Sync initial and external changes
+  // Sync initial and external changes safely
   useEffect(() => {
     if (editorRef.current) {
-      const currentHTML = editorRef.current.innerHTML;
-      if (value !== currentHTML) {
-        let htmlValue = value || '';
-        if (htmlValue && !htmlValue.startsWith('<') && !htmlValue.includes('</')) {
-          htmlValue = htmlValue
-            .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
-            .replace(/\*(.*?)\*/g, '<i>$1</i>')
-            .replace(/\n/g, '<br>');
+      const isFocused = typeof document !== 'undefined' && document.activeElement === editorRef.current;
+
+      // If internal change by typing or focused, do not overwrite DOM
+      if (!isInitialMountRef.current) {
+        if (value === lastEmittedValueRef.current || (value === '' && (lastEmittedValueRef.current === '' || lastEmittedValueRef.current === null))) {
+          return;
         }
-        editorRef.current.innerHTML = htmlValue;
-        const text = editorRef.current.innerText.trim();
-        setIsEmpty(!text && !htmlValue.includes('<img'));
+        if (isFocused) {
+          return;
+        }
       }
+
+      isInitialMountRef.current = false;
+      const htmlValue = convertTextOrMarkdownToHtml(value || '');
+      editorRef.current.innerHTML = htmlValue;
+      lastEmittedValueRef.current = value || '';
+      const text = editorRef.current.innerText.trim();
+      setIsEmpty(!text && !htmlValue.includes('<img') && !htmlValue.includes('<li>'));
     }
   }, [value]);
+
+  // Listen to document selectionchange to update toolbar state continuously
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      if (typeof window !== 'undefined' && editorRef.current) {
+        const sel = window.getSelection();
+        if (sel && sel.anchorNode && editorRef.current.contains(sel.anchorNode)) {
+          saveSelection();
+          checkActiveFormats();
+        }
+      }
+    };
+
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => document.removeEventListener('selectionchange', handleSelectionChange);
+  }, [checkActiveFormats]);
 
   const handleInput = useCallback(() => {
     if (editorRef.current) {
       const html = editorRef.current.innerHTML;
       const text = editorRef.current.innerText.trim();
-      const empty = !text && !html.includes('<img') && html !== '<p><br></p>';
+      const empty = !text && !html.includes('<img') && !html.includes('<li>') && html !== '<p><br></p>' && html !== '<div><br></div>' && html !== '<br>';
       setIsEmpty(empty);
-      onChange(empty ? '' : html);
+      const emittedValue = empty ? '' : html;
+      lastEmittedValueRef.current = emittedValue;
+      onChange(emittedValue);
       checkActiveFormats();
     }
   }, [onChange, checkActiveFormats]);
 
-  // Execute standard formatting commands
+  // Execute standard formatting commands (Bold, Italic, Underline, Strikethrough)
   const executeCommand = (command: string, arg?: string) => {
     if (typeof document !== 'undefined' && editorRef.current) {
       editorRef.current.focus();
@@ -152,65 +288,109 @@ export function RichTextEditor({
       try {
         document.execCommand(command, false, arg);
       } catch (e) {
-        console.warn('execCommand:', e);
+        console.warn('execCommand error:', e);
       }
 
       saveSelection();
+      checkActiveFormats();
       handleInput();
     }
   };
 
-  // Robust heading toggle
+  // Toggle heading on and off
   const toggleHeading = (level: 'H1' | 'H2' | 'P') => {
     if (typeof document === 'undefined' || !editorRef.current) return;
     editorRef.current.focus();
     restoreSelection();
 
-    const tag = level === 'H1' ? 'h2' : level === 'H2' ? 'h3' : 'p';
+    let targetTag = 'p';
+    if (level === 'H1') {
+      targetTag = activeFormats.h1 ? 'p' : 'h2';
+    } else if (level === 'H2') {
+      targetTag = activeFormats.h2 ? 'p' : 'h3';
+    } else {
+      targetTag = 'p';
+    }
 
     try {
-      const success = document.execCommand('formatBlock', false, tag);
+      const success = document.execCommand('formatBlock', false, targetTag);
       if (!success) {
-        document.execCommand('formatBlock', false, `<${tag}>`);
+        document.execCommand('formatBlock', false, `<${targetTag}>`);
       }
     } catch {
       try {
-        document.execCommand('formatBlock', false, `<${tag}>`);
-      } catch {
-        const sel = window.getSelection();
-        if (sel && sel.rangeCount > 0) {
-          const range = sel.getRangeAt(0);
-          const headingNode = document.createElement(tag);
-          headingNode.appendChild(range.extractContents());
-          range.insertNode(headingNode);
-        }
+        document.execCommand('formatBlock', false, `<${targetTag}>`);
+      } catch (err) {
+        console.warn('formatBlock error:', err);
       }
     }
 
     saveSelection();
+    checkActiveFormats();
     handleInput();
   };
 
-  // Robust quote toggle
+  // Toggle quote block on and off
   const toggleQuote = () => {
     if (typeof document === 'undefined' || !editorRef.current) return;
     editorRef.current.focus();
     restoreSelection();
 
+    const targetTag = activeFormats.quote ? 'p' : 'blockquote';
+
     try {
-      document.execCommand('formatBlock', false, 'blockquote');
+      const success = document.execCommand('formatBlock', false, targetTag);
+      if (!success) {
+        document.execCommand('formatBlock', false, `<${targetTag}>`);
+      }
     } catch {
-      const sel = window.getSelection();
-      if (sel && sel.rangeCount > 0) {
-        const range = sel.getRangeAt(0);
-        const bq = document.createElement('blockquote');
-        bq.appendChild(range.extractContents());
-        range.insertNode(bq);
+      try {
+        document.execCommand('formatBlock', false, `<${targetTag}>`);
+      } catch (err) {
+        console.warn('toggleQuote error:', err);
       }
     }
 
     saveSelection();
+    checkActiveFormats();
     handleInput();
+  };
+
+  // Toggle List (Bullet or Numbered)
+  const toggleList = (type: 'ul' | 'ol') => {
+    if (typeof document === 'undefined' || !editorRef.current) return;
+    editorRef.current.focus();
+    restoreSelection();
+
+    const command = type === 'ul' ? 'insertUnorderedList' : 'insertOrderedList';
+    try {
+      document.execCommand(command, false);
+    } catch (err) {
+      console.warn('toggleList error:', err);
+    }
+
+    saveSelection();
+    checkActiveFormats();
+    handleInput();
+  };
+
+  // Handle Smart Paste
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const htmlData = e.clipboardData.getData('text/html');
+    const plainText = e.clipboardData.getData('text/plain');
+
+    const cleanHtml = convertTextOrMarkdownToHtml(plainText || htmlData);
+
+    if (cleanHtml) {
+      try {
+        document.execCommand('insertHTML', false, cleanHtml);
+      } catch {
+        document.execCommand('insertText', false, plainText);
+      }
+      handleInput();
+      checkActiveFormats();
+    }
   };
 
   // Open Link Dialog
@@ -256,12 +436,13 @@ export function RichTextEditor({
       }
 
       handleInput();
+      checkActiveFormats();
     }
   };
 
   return (
     <div className={`space-y-1.5 ${className}`}>
-      {/* Explicit scoped CSS for visual WYSIWYG tags */}
+      {/* Scoped CSS for visual WYSIWYG tags */}
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -338,7 +519,7 @@ export function RichTextEditor({
 
       <div className="rounded-2xl bg-white border border-slate-200 shadow-2xs overflow-hidden focus-within:ring-2 focus-within:ring-[#0099e6] focus-within:border-transparent transition-all">
         {/* WYSIWYG Formatting Toolbar */}
-        <div className="flex flex-wrap items-center gap-1 p-2 bg-slate-50 border-b border-slate-200/90 text-slate-700">
+        <div className="flex flex-wrap items-center gap-1 p-2 bg-slate-50 border-b border-slate-200/90 text-slate-700 select-none">
           {/* Bold */}
           <button
             type="button"
@@ -398,7 +579,11 @@ export function RichTextEditor({
               e.preventDefault();
               executeCommand('strikeThrough');
             }}
-            className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
+            className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center ${
+              activeFormats.strikethrough
+                ? 'bg-[#0099e6] text-white shadow-2xs'
+                : 'hover:bg-slate-200 text-slate-700'
+            }`}
           >
             <Strikethrough className="w-4 h-4" />
           </button>
@@ -447,7 +632,11 @@ export function RichTextEditor({
               e.preventDefault();
               toggleHeading('P');
             }}
-            className="px-2.5 py-1 rounded-lg hover:bg-slate-200 text-xs font-semibold text-slate-600 transition-colors cursor-pointer"
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              !activeFormats.h1 && !activeFormats.h2 && !activeFormats.quote
+                ? 'bg-slate-200/80 text-slate-900 font-bold'
+                : 'hover:bg-slate-200 text-slate-600'
+            }`}
           >
             Normal
           </button>
@@ -460,7 +649,7 @@ export function RichTextEditor({
             title="Bullet Points List"
             onMouseDown={(e) => {
               e.preventDefault();
-              executeCommand('insertUnorderedList');
+              toggleList('ul');
             }}
             className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               activeFormats.ul
@@ -477,7 +666,7 @@ export function RichTextEditor({
             title="Numbered List"
             onMouseDown={(e) => {
               e.preventDefault();
-              executeCommand('insertOrderedList');
+              toggleList('ol');
             }}
             className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               activeFormats.ol
@@ -525,6 +714,7 @@ export function RichTextEditor({
             onMouseDown={(e) => {
               e.preventDefault();
               executeCommand('removeFormat');
+              toggleHeading('P');
             }}
             className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer ml-auto"
           >
@@ -583,6 +773,7 @@ export function RichTextEditor({
             contentEditable
             onInput={handleInput}
             onBlur={handleInput}
+            onPaste={handlePaste}
             onKeyUp={() => {
               saveSelection();
               checkActiveFormats();

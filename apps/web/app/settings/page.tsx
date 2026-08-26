@@ -184,7 +184,7 @@ export default function SettingsPage() {
 
   // Dynamic Profession & Background States
   const [professionType, setProfessionType] = useState<'STUDENT' | 'PROFESSIONAL' | 'FREELANCER'>('STUDENT');
-  
+
   // Student-specific fields
   const [degree, setDegree] = useState('B.Tech / B.E (Engineering)');
   const [customDegree, setCustomDegree] = useState('');
@@ -192,7 +192,7 @@ export default function SettingsPage() {
   const [customBranch, setCustomBranch] = useState('');
   const [customGradYear, setCustomGradYear] = useState('');
   const [studentId, setStudentId] = useState('');
-  
+
   // Working Professional-specific fields
   const [company, setCompany] = useState('');
   const [jobTitle, setJobTitle] = useState('');
@@ -234,7 +234,7 @@ export default function SettingsPage() {
       setPhone(user.phone || '');
       setBio(user.bio || '');
       setCollege(user.college || '');
-      
+
       const userGradYear = user.graduationYear ? String(user.graduationYear) : '2026';
       if (ALL_GRADUATION_YEARS.includes(userGradYear)) {
         setGraduationYear(userGradYear);
@@ -249,7 +249,7 @@ export default function SettingsPage() {
       setGithub(user.socialLinks?.github || '');
       setLinkedin(user.socialLinks?.linkedin || '');
       setPortfolio(user.socialLinks?.portfolio || '');
-      
+
       // Load dynamic profession fields
       if (user.professionType === 'PROFESSIONAL' || user.professionType === 'FREELANCER' || user.professionType === 'STUDENT') {
         setProfessionType(user.professionType);
@@ -524,11 +524,10 @@ export default function SettingsPage() {
             {/* Nav Tabs */}
             <button
               onClick={() => setActiveTab('profile')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${
-                activeTab === 'profile'
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${activeTab === 'profile'
                   ? 'bg-[#0099e6] text-white shadow-xs'
                   : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`}
+                }`}
             >
               <UserIcon className="w-4 h-4 shrink-0" />
               <div className="flex-1">
@@ -541,11 +540,10 @@ export default function SettingsPage() {
 
             <button
               onClick={() => setActiveTab('socials')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${
-                activeTab === 'socials'
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${activeTab === 'socials'
                   ? 'bg-[#0099e6] text-white shadow-xs'
                   : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`}
+                }`}
             >
               <Globe className="w-4 h-4 shrink-0" />
               <div className="flex-1">
@@ -558,11 +556,10 @@ export default function SettingsPage() {
 
             <button
               onClick={() => setActiveTab('security')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${
-                activeTab === 'security'
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${activeTab === 'security'
                   ? 'bg-[#0099e6] text-white shadow-xs'
                   : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`}
+                }`}
             >
               <Lock className="w-4 h-4 shrink-0" />
               <div className="flex-1">
@@ -575,11 +572,10 @@ export default function SettingsPage() {
 
             <button
               onClick={() => setActiveTab('notifications')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${
-                activeTab === 'notifications'
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${activeTab === 'notifications'
                   ? 'bg-[#0099e6] text-white shadow-xs'
                   : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`}
+                }`}
             >
               <Bell className="w-4 h-4 shrink-0" />
               <div className="flex-1">
@@ -592,11 +588,10 @@ export default function SettingsPage() {
 
             <button
               onClick={() => setActiveTab('danger')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${
-                activeTab === 'danger'
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${activeTab === 'danger'
                   ? 'bg-rose-600 text-white shadow-xs'
                   : 'text-rose-600 hover:bg-rose-50'
-              }`}
+                }`}
             >
               <Trash2 className="w-4 h-4 shrink-0" />
               <div className="flex-1">
@@ -730,11 +725,10 @@ export default function SettingsPage() {
                     <button
                       type="button"
                       onClick={() => setProfessionType('STUDENT')}
-                      className={`p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer flex flex-col justify-between gap-2 ${
-                        professionType === 'STUDENT'
+                      className={`p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer flex flex-col justify-between gap-2 ${professionType === 'STUDENT'
                           ? 'border-[#0099e6] bg-sky-50/60 shadow-xs ring-2 ring-[#0099e6]/20'
                           : 'border-slate-200 bg-white hover:border-slate-300'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center justify-between">
                         <div className={`p-2 rounded-xl ${professionType === 'STUDENT' ? 'bg-[#0099e6] text-white' : 'bg-slate-100 text-slate-600'}`}>
@@ -758,11 +752,10 @@ export default function SettingsPage() {
                     <button
                       type="button"
                       onClick={() => setProfessionType('PROFESSIONAL')}
-                      className={`p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer flex flex-col justify-between gap-2 ${
-                        professionType === 'PROFESSIONAL'
+                      className={`p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer flex flex-col justify-between gap-2 ${professionType === 'PROFESSIONAL'
                           ? 'border-[#0099e6] bg-sky-50/60 shadow-xs ring-2 ring-[#0099e6]/20'
                           : 'border-slate-200 bg-white hover:border-slate-300'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center justify-between">
                         <div className={`p-2 rounded-xl ${professionType === 'PROFESSIONAL' ? 'bg-[#0099e6] text-white' : 'bg-slate-100 text-slate-600'}`}>
@@ -786,11 +779,10 @@ export default function SettingsPage() {
                     <button
                       type="button"
                       onClick={() => setProfessionType('FREELANCER')}
-                      className={`p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer flex flex-col justify-between gap-2 ${
-                        professionType === 'FREELANCER'
+                      className={`p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer flex flex-col justify-between gap-2 ${professionType === 'FREELANCER'
                           ? 'border-[#0099e6] bg-sky-50/60 shadow-xs ring-2 ring-[#0099e6]/20'
                           : 'border-slate-200 bg-white hover:border-slate-300'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center justify-between">
                         <div className={`p-2 rounded-xl ${professionType === 'FREELANCER' ? 'bg-[#0099e6] text-white' : 'bg-slate-100 text-slate-600'}`}>
@@ -1289,11 +1281,10 @@ export default function SettingsPage() {
 
               {passwordMsg && (
                 <div
-                  className={`p-3.5 rounded-2xl text-xs font-semibold flex items-center gap-2 ${
-                    passwordMsg.type === 'success'
+                  className={`p-3.5 rounded-2xl text-xs font-semibold flex items-center gap-2 ${passwordMsg.type === 'success'
                       ? 'bg-emerald-50 border border-emerald-200 text-emerald-700'
                       : 'bg-rose-50 border border-rose-200 text-rose-700'
-                  }`}
+                    }`}
                 >
                   {passwordMsg.type === 'success' ? (
                     <CheckCircle2 className="w-4 h-4 shrink-0" />

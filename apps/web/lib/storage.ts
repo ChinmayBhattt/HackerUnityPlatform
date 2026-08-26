@@ -138,34 +138,80 @@ export function getCustomEvents(): ExtendedEvent[] {
   }
 }
 
+function sanitizeEventForStorage(event: ExtendedEvent): ExtendedEvent {
+  // If bannerUrl or logoUrl is a raw data URL larger than 100KB, create a lightweight version for local storage
+  const sanitized = { ...event };
+  if (sanitized.bannerUrl && sanitized.bannerUrl.startsWith('data:') && sanitized.bannerUrl.length > 100000) {
+    // Keep a fallback representation
+    sanitized.image = undefined;
+  }
+  return sanitized;
+}
+
+function safeLocalStorageSet(key: string, value: string): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (e: any) {
+    console.warn(`LocalStorage quota warning on key "${key}":`, e?.message);
+    try {
+      // Try to free up space by cleaning old heavy items if any
+      const rawHosted = localStorage.getItem(STORAGE_KEYS.HOSTED_EVENTS);
+      if (rawHosted) {
+        const parsed: ExtendedEvent[] = JSON.parse(rawHosted);
+        const slimmed = parsed.slice(0, 10).map((evt) => {
+          const c = { ...evt };
+          if (c.bannerUrl && c.bannerUrl.startsWith('data:') && c.bannerUrl.length > 50000) {
+            c.bannerUrl = null;
+            c.image = undefined;
+          }
+          if (c.logoUrl && c.logoUrl.startsWith('data:') && c.logoUrl.length > 50000) {
+            c.logoUrl = null;
+          }
+          return c;
+        });
+        localStorage.setItem(STORAGE_KEYS.HOSTED_EVENTS, JSON.stringify(slimmed));
+      }
+      localStorage.setItem(key, value);
+      return true;
+    } catch {
+      console.warn('LocalStorage save failed even after cleanup, continuing in-memory.');
+      return false;
+    }
+  }
+}
+
 export function saveHostedEvent(event: ExtendedEvent): void {
   if (typeof window === 'undefined') return;
   const current = getCustomEvents();
-  const updated = [event, ...current];
+  const sanitized = sanitizeEventForStorage(event);
+  const updated = [sanitized, ...current.filter((e) => e.id !== sanitized.id)];
   try {
-    localStorage.setItem(STORAGE_KEYS.HOSTED_EVENTS, JSON.stringify(updated));
+    safeLocalStorageSet(STORAGE_KEYS.HOSTED_EVENTS, JSON.stringify(updated));
     window.dispatchEvent(new Event('hackers_unity_storage_change'));
   } catch (e) {
-    console.error(e);
+    console.error('saveHostedEvent error:', e);
   }
 }
 
 export function updateHostedEvent(event: ExtendedEvent): void {
   if (typeof window === 'undefined') return;
   try {
+    const sanitized = sanitizeEventForStorage(event);
     const rawOverrides = localStorage.getItem(STORAGE_KEYS_EVENTS_OVERRIDE);
     const overrides: Record<string, ExtendedEvent> = rawOverrides ? JSON.parse(rawOverrides) : {};
-    overrides[event.id] = event;
-    localStorage.setItem(STORAGE_KEYS_EVENTS_OVERRIDE, JSON.stringify(overrides));
+    overrides[sanitized.id] = sanitized;
+    safeLocalStorageSet(STORAGE_KEYS_EVENTS_OVERRIDE, JSON.stringify(overrides));
 
     // Also update in hosted events if present
     const custom = getCustomEvents();
-    const updatedCustom = custom.map((e) => (e.id === event.id ? event : e));
-    localStorage.setItem(STORAGE_KEYS.HOSTED_EVENTS, JSON.stringify(updatedCustom));
+    const updatedCustom = custom.map((e) => (e.id === sanitized.id ? sanitized : e));
+    safeLocalStorageSet(STORAGE_KEYS.HOSTED_EVENTS, JSON.stringify(updatedCustom));
 
     window.dispatchEvent(new Event('hackers_unity_storage_change'));
   } catch (e) {
-    console.error(e);
+    console.error('updateHostedEvent error:', e);
   }
 }
 

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useRef, useMemo, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   PlusCircle,
   Trophy,
@@ -31,11 +31,12 @@ import {
   Check,
   ExternalLink,
   ShieldCheck,
+  Loader2,
 } from 'lucide-react';
 import { EventCategory, EventStatus, EventType, CustomQuestion } from '@hackers-unity/shared-types';
-import { ExtendedEvent } from '@/lib/mock-data';
-import { saveHostedEvent, saveDraftEvent } from '@/lib/storage';
-import { createEventInSupabase, uploadHackathonAsset } from '@/lib/supabase-service';
+import { ExtendedEvent, MOCK_EVENTS } from '@/lib/mock-data';
+import { saveHostedEvent, saveDraftEvent, updateHostedEvent, getCustomEvents } from '@/lib/storage';
+import { createEventInSupabase, updateEventInSupabase, fetchEventBySlug, uploadHackathonAsset } from '@/lib/supabase-service';
 import { HackathonCard } from '@/components/hackathon-card';
 import { RichTextEditor } from '@/components/rich-text-editor';
 import { VenuePicker } from '@/components/venue-picker';
@@ -62,13 +63,21 @@ const DIFFICULTY_LEVELS = [
   { value: 'ADVANCED', label: 'Advanced' },
 ];
 
-export default function HostHackathonPage() {
+function HostHackathonContent() {
   const router = useRouter();
-  const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const editParam = searchParams?.get('edit') || searchParams?.get('id') || searchParams?.get('slug');
+
+  const { user, supabaseUser } = useAuth();
   const [step, setStep] = useState<number>(1);
   const [isSuccess, setIsSuccess] = useState(false);
   const [submittedEvent, setSubmittedEvent] = useState<ExtendedEvent | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
+  const [originalEventSlug, setOriginalEventSlug] = useState<string | null>(null);
+  const [isLoadingEditData, setIsLoadingEditData] = useState(false);
+
   const logoInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
@@ -183,6 +192,150 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
     return `https://mail.google.com/mail/?view=cm&fs=1&to=hackersunity.events@gmail.com&su=${encodeURIComponent(paidEmailSubject)}&body=${encodeURIComponent(paidEmailBodyText)}`;
   }, [paidEmailSubject, paidEmailBodyText]);
 
+  // ─── LOAD EVENT FOR EDIT MODE ────────────────────────────
+  useEffect(() => {
+    if (!editParam) return;
+
+    let isMounted = true;
+    setIsLoadingEditData(true);
+
+    async function loadEventToEdit() {
+      try {
+        let found: ExtendedEvent | null = null;
+
+        // 0. Try sessionStorage first (set by Dashboard Edit button — most reliable)
+        try {
+          const cached = sessionStorage.getItem('hackers_unity_edit_event');
+          if (cached) {
+            const parsed = JSON.parse(cached) as ExtendedEvent;
+            if (parsed && (parsed.id === editParam || parsed.slug === editParam)) {
+              found = parsed;
+              sessionStorage.removeItem('hackers_unity_edit_event');
+            }
+          }
+        } catch {
+          // ignore parse errors
+        }
+
+        // 1. Try remote fetch from Supabase
+        if (!found) {
+          found = await fetchEventBySlug(editParam!);
+        }
+
+        // 2. Try local storage
+        if (!found) {
+          const custom = getCustomEvents();
+          found = custom.find((e) => e.id === editParam || e.slug === editParam) || null;
+        }
+
+        // 3. Try mock data
+        if (!found) {
+          found = MOCK_EVENTS.find((e) => e.id === editParam || e.slug === editParam) || null;
+        }
+
+        if (found && isMounted) {
+          setIsEditMode(true);
+          setEditingEventId(found.id);
+          setOriginalEventSlug(found.slug);
+
+          setTitle(found.title || found.name || '');
+          setTagline(found.tagline || '');
+          setLogoPreview(found.logoUrl || found.organizerLogo || null);
+          setBannerPreview(found.bannerUrl || found.image || null);
+          setDescription(found.description || '');
+          setCategory(found.category || EventCategory.HACKATHON);
+          setEventType(found.eventType || (found.mode === 'Online' ? EventType.ONLINE : EventType.OFFLINE));
+          setLocation(found.location || 'Online');
+
+          if (found.organizerName) {
+            if (found.organizerName.includes('•')) {
+              const parts = found.organizerName.split('•').map((s) => s.trim());
+              setInstitutionName(parts[0] || '');
+              setOrganizerLeadName(parts[1] || '');
+            } else {
+              setInstitutionName(found.organizerName);
+            }
+          }
+
+          if (found.startDate) {
+            setStartDate(found.startDate.split('T')[0] || '');
+          }
+          if (found.endDate) {
+            setEndDate(found.endDate.split('T')[0] || '');
+          }
+          if (found.registrationDeadline) {
+            setRegistrationDeadline(found.registrationDeadline.split('T')[0] || '');
+          }
+          if (found.registrationStart) {
+            setRegistrationStart(found.registrationStart.split('T')[0] || '');
+          }
+          if (found.timezone) {
+            setTimezone(found.timezone);
+          }
+          if (found.minTeamSize) {
+            setMinTeamSize(found.minTeamSize);
+          }
+          if (found.maxTeamSize) {
+            setMaxTeamSize(found.maxTeamSize);
+          }
+          if (found.eligibility) {
+            setEligibility(found.eligibility);
+          }
+          if (found.difficulty) {
+            setDifficulty(found.difficulty);
+          }
+          if (found.tags && found.tags.length > 0) {
+            setTagsInput(found.tags.join(', '));
+          }
+          if (found.rulesText) {
+            setRulesText(found.rulesText);
+          }
+          if (found.prizes && found.prizes.length > 0) {
+            setPrizes(
+              found.prizes.map((p) => ({
+                position: p.position,
+                amount: Number(p.amount || 0),
+                description: p.description || '',
+              }))
+            );
+          }
+          if (found.tracks && found.tracks.length > 0) {
+            setTracks(found.tracks);
+          }
+          if (found.registrationType) {
+            setRegistrationType(found.registrationType as 'FREE' | 'PAID');
+          }
+          if (found.registrationCapacity) {
+            setRegistrationCapacity(found.registrationCapacity);
+            setIsUnlimitedCapacity(false);
+          } else if (found.maxParticipants) {
+            setRegistrationCapacity(found.maxParticipants);
+            setIsUnlimitedCapacity(false);
+          } else {
+            setIsUnlimitedCapacity(true);
+            setRegistrationCapacity(null);
+          }
+          if (found.approvalMode) {
+            setApprovalMode(found.approvalMode as 'AUTO' | 'MANUAL');
+          }
+          if (found.customQuestions && found.customQuestions.length > 0) {
+            setCustomQuestions(found.customQuestions);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load event to edit:', err);
+      } finally {
+        if (isMounted) setIsLoadingEditData(false);
+      }
+    }
+
+    loadEventToEdit();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [editParam]);
+
   // ─── Pure Date Validation Calculation ────────────────────
   const dateErrors = useMemo(() => {
     const errors: Record<string, string> = {};
@@ -205,13 +358,45 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
 
   const isDatesValid = Object.keys(dateErrors).length === 0;
 
-  // ─── File Handlers ──────────────────────────────────────
+  // ─── File Handlers with Client Compression ──────────────
+  const compressImage = (file: File, maxWidth = 1200, quality = 0.8): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (e) => {
+        const img = new Image();
+        img.src = e.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(e.target?.result as string);
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => resolve(e.target?.result as string);
+      };
+      reader.onerror = () => resolve('');
+    });
+  };
+
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setLogoPreview(reader.result as string);
-      reader.readAsDataURL(file);
+      const compressed = await compressImage(file, 400, 0.85);
+      if (compressed) {
+        setLogoPreview(compressed);
+      }
 
       // Async upload to Supabase storage
       try {
@@ -228,9 +413,10 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setBannerPreview(reader.result as string);
-      reader.readAsDataURL(file);
+      const compressed = await compressImage(file, 1200, 0.78);
+      if (compressed) {
+        setBannerPreview(compressed);
+      }
 
       // Async upload to Supabase storage
       try {
@@ -294,12 +480,12 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
   // ─── Build Preview Event ────────────────────────────────
   const previewEvent = useMemo<ExtendedEvent>(() => {
     return {
-      id: `evt_custom_${Date.now()}`,
+      id: isEditMode && editingEventId ? editingEventId : `evt_custom_${Date.now()}`,
       organizerId: user?.id || 'usr_me',
       organizerName,
       organizerAvatar: hostType === 'COLLEGE' ? '🎓' : '⚡',
       title: title || 'Untitled Hackathon',
-      slug,
+      slug: isEditMode && originalEventSlug ? originalEventSlug : slug,
       tagline: tagline || '',
       description: description || 'Join this hackathon to innovate, build real-world solutions, and compete for prizes.',
       category,
@@ -319,7 +505,7 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
       logoUrl: logoPreview,
       image: bannerPreview || undefined,
       rulesDocUrl: null,
-      status: registrationType === 'PAID' ? EventStatus.PENDING_APPROVAL : EventStatus.PUBLISHED,
+      status: EventStatus.PUBLISHED,
       maxParticipants: isUnlimitedCapacity || !registrationCapacity ? null : registrationCapacity,
       minTeamSize: Number(minTeamSize),
       maxTeamSize: Number(maxTeamSize),
@@ -367,6 +553,9 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
       sponsors: [{ name: institutionName || organizerName || 'Host Guild', tier: 'Organizer', logoText: hostType === 'COLLEGE' ? 'CAMPUS' : 'HOST' }],
     };
   }, [
+    isEditMode,
+    editingEventId,
+    originalEventSlug,
     user?.id,
     organizerName,
     hostType,
@@ -404,34 +593,55 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
   // ─── Publish & Draft Handlers ───────────────────────────
   const handlePublish = async () => {
     setIsSaving(true);
-    const targetStatus = registrationType === 'PAID' ? EventStatus.PENDING_APPROVAL : EventStatus.PUBLISHED;
-    const event: ExtendedEvent = { ...previewEvent, status: targetStatus };
+    const event: ExtendedEvent = { ...previewEvent, status: EventStatus.PUBLISHED };
+    const organizerId = supabaseUser?.id || user?.id;
 
-    // Persist to local storage
+    if (isEditMode && editingEventId) {
+      // 1. Update in local storage
+      updateHostedEvent(event);
+
+      // 2. Update in Supabase / Server API
+      await updateEventInSupabase(editingEventId, event);
+      setIsSaving(false);
+      setSubmittedEvent(event);
+      setIsSuccess(true);
+
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 1500);
+      return;
+    }
+
+    // 1. Persist to local storage immediately
     saveHostedEvent(event);
 
-    // Persist to Supabase
-    const res = await createEventInSupabase(event, user?.id);
+    // 2. Persist to Supabase / Server API
+    const res = await createEventInSupabase(event, organizerId);
     setIsSaving(false);
     
     const finalEvent = (res.success && res.data) ? res.data : event;
     setSubmittedEvent(finalEvent);
     setIsSuccess(true);
 
-    // For Free Hackathons: instant redirect to live event
-    if (registrationType === 'FREE') {
-      setTimeout(() => {
-        router.push(`/hackathons/${finalEvent.slug}`);
-      }, 1500);
-    }
+    // Redirect to live event page
+    setTimeout(() => {
+      router.push(`/hackathons/${finalEvent.slug}`);
+    }, 1500);
   };
 
   const handleSaveDraft = async () => {
     setIsSaving(true);
     const event = { ...previewEvent, status: EventStatus.DRAFT };
-    await createEventInSupabase(event, user?.id);
+    const organizerId = supabaseUser?.id || user?.id;
+    if (isEditMode && editingEventId) {
+      updateHostedEvent(event);
+      await updateEventInSupabase(editingEventId, event);
+    } else {
+      saveDraftEvent(event);
+      await createEventInSupabase(event, organizerId);
+    }
     setIsSaving(false);
-    alert('Draft saved to Supabase successfully! Only you can see it in your Organizer Dashboard.');
+    alert('Draft saved successfully! You can find it anytime in your Organizer Dashboard.');
   };
 
   const handlePreview = () => {
@@ -470,27 +680,57 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full flex-1">
       {/* ─── Page Header ────────────────────────────────────────── */}
-      <div className="mb-8">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 border border-orange-200 text-[#ea580c] text-xs font-bold uppercase tracking-wider mb-2">
-          <PlusCircle className="w-3.5 h-3.5" />
-          <span>Organizer Studio</span>
+      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <div
+            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 ${
+              isEditMode
+                ? 'bg-amber-50 border border-amber-200 text-amber-700'
+                : 'bg-orange-50 border border-orange-200 text-[#ea580c]'
+            }`}
+          >
+            {isEditMode ? <Sparkles className="w-3.5 h-3.5 text-amber-600" /> : <PlusCircle className="w-3.5 h-3.5" />}
+            <span>{isEditMode ? 'Editing Hackathon Studio' : 'Organizer Studio'}</span>
+          </div>
+          <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight">
+            {isEditMode ? `Edit Hackathon: ${title || 'Hackathon'}` : "Host a Hackathon on Hacker's Unity"}
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-2 max-w-2xl font-medium">
+            {isEditMode
+              ? 'Update dates, prize pools, parameters, registration rules, and custom questions for your hackathon.'
+              : 'Launch your hackathon in minutes. Tap into our 50,000+ developer ecosystem, automated submission portals, and instant registration workflows.'}
+          </p>
         </div>
-        <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight">
-          Host a Hackathon on Hacker&apos;s Unity
-        </h1>
-        <p className="text-xs sm:text-sm text-slate-500 mt-2 max-w-2xl font-medium">
-          Launch your hackathon in minutes. Tap into our 50,000+ developer ecosystem, automated submission portals, and instant registration workflows.
-        </p>
+
+        {isEditMode && (
+          <button
+            type="button"
+            onClick={() => router.push('/dashboard')}
+            className="px-4 py-2 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-bold text-xs flex items-center gap-2 shadow-2xs self-start md:self-auto cursor-pointer transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4 text-slate-500" />
+            <span>Back to Dashboard</span>
+          </button>
+        )}
       </div>
 
-      {isSuccess && registrationType === 'FREE' ? (
+      {isLoadingEditData ? (
+        <div className="py-24 bg-white rounded-3xl border border-slate-200 shadow-sm text-center flex flex-col items-center justify-center space-y-4">
+          <Loader2 className="w-8 h-8 text-[#0099e6] animate-spin" />
+          <p className="text-xs font-bold text-slate-600">Loading hackathon parameters for editing...</p>
+        </div>
+      ) : isSuccess && registrationType === 'FREE' ? (
         <div className="py-20 bg-white rounded-3xl border border-emerald-200 shadow-xl text-center flex flex-col items-center justify-center space-y-4 animate-in zoom-in-95">
           <div className="w-20 h-20 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
             <CheckCircle2 className="w-10 h-10" />
           </div>
-          <h2 className="text-2xl font-black text-slate-900">Hackathon Published Successfully!</h2>
+          <h2 className="text-2xl font-black text-slate-900">
+            {isEditMode ? 'Hackathon Updated Successfully!' : 'Hackathon Published Successfully!'}
+          </h2>
           <p className="text-sm text-slate-600 max-w-md">
-            Your event <span className="text-[#0099e6] font-bold">{submittedEvent?.title || previewEvent.title}</span> is now live in the global directory. Redirecting you to the live event page...
+            {isEditMode
+              ? <>Changes for <span className="text-[#0099e6] font-bold">{submittedEvent?.title || previewEvent.title}</span> have been saved. Returning to dashboard...</>
+              : <>Your event <span className="text-[#0099e6] font-bold">{submittedEvent?.title || previewEvent.title}</span> is now live in the global directory. Redirecting you to the live event page...</>}
           </p>
         </div>
       ) : isSuccess && registrationType === 'PAID' ? (
@@ -1526,12 +1766,12 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
                       {registrationType === 'PAID' ? (
                         <>
                           <ShieldCheck className="w-4 h-4" />
-                          <span>{isSaving ? 'Submitting Request...' : 'Submit Verification Request'}</span>
+                          <span>{isSaving ? 'Submitting Request...' : isEditMode ? 'Save & Request Verification' : 'Submit Verification Request'}</span>
                         </>
                       ) : (
                         <>
-                          <Rocket className="w-4 h-4" />
-                          <span>{isSaving ? 'Publishing...' : 'Publish Hackathon Live'}</span>
+                          {isEditMode ? <Save className="w-4 h-4" /> : <Rocket className="w-4 h-4" />}
+                          <span>{isSaving ? 'Saving Changes...' : isEditMode ? 'Save & Update Hackathon' : 'Publish Hackathon Live'}</span>
                         </>
                       )}
                     </button>
@@ -1558,3 +1798,19 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
     </div>
   );
 }
+
+export default function HostHackathonPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-[70vh] flex flex-col items-center justify-center gap-3">
+          <Loader2 className="w-9 h-9 text-[#0099e6] animate-spin" />
+          <p className="text-xs font-bold text-slate-500">Loading Organizer Studio...</p>
+        </div>
+      }
+    >
+      <HostHackathonContent />
+    </Suspense>
+  );
+}
+
