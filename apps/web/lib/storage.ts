@@ -215,18 +215,23 @@ export function updateHostedEvent(event: ExtendedEvent): void {
   }
 }
 
-export function deleteHostedEvent(eventId: string): void {
+export function deleteHostedEvent(eventId: string, slug?: string): void {
   if (typeof window === 'undefined') return;
   try {
     const rawDeleted = localStorage.getItem(STORAGE_KEYS_DELETED_EVENTS);
     const deleted: string[] = rawDeleted ? JSON.parse(rawDeleted) : [];
-    if (!deleted.includes(eventId)) {
+    if (eventId && !deleted.includes(eventId)) {
       deleted.push(eventId);
-      localStorage.setItem(STORAGE_KEYS_DELETED_EVENTS, JSON.stringify(deleted));
     }
+    if (slug && !deleted.includes(slug)) {
+      deleted.push(slug);
+    }
+    localStorage.setItem(STORAGE_KEYS_DELETED_EVENTS, JSON.stringify(deleted));
 
     const custom = getCustomEvents();
-    const updatedCustom = custom.filter((e) => e.id !== eventId);
+    const updatedCustom = custom.filter(
+      (e) => e.id !== eventId && e.slug !== eventId && (!slug || (e.id !== slug && e.slug !== slug))
+    );
     localStorage.setItem(STORAGE_KEYS.HOSTED_EVENTS, JSON.stringify(updatedCustom));
 
     window.dispatchEvent(new Event('hackers_unity_storage_change'));
@@ -250,7 +255,7 @@ export function getAllEvents(): ExtendedEvent[] {
     const baseMerged = [...custom, ...MOCK_EVENTS];
 
     return baseMerged
-      .filter((e) => !deletedIds.includes(e.id))
+      .filter((e) => !deletedIds.includes(e.id) && !deletedIds.includes(e.slug))
       .map((e) => (overrides[e.id] ? { ...e, ...overrides[e.id] } : e));
   } catch {
     return MOCK_EVENTS;

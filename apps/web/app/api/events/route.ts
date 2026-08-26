@@ -196,3 +196,88 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const url = new URL(req.url);
+    const eventIdParam = url.searchParams.get('eventId') || url.searchParams.get('id');
+    const slugParam = url.searchParams.get('slug');
+
+    let eventId = eventIdParam;
+    let slug = slugParam;
+
+    if (!eventId && !slug) {
+      try {
+        const body = await req.json();
+        eventId = body.eventId || body.id;
+        slug = body.slug;
+      } catch {}
+    }
+
+    const queryKey = eventId || slug;
+    if (!queryKey) {
+      return NextResponse.json({ error: 'Missing eventId or slug' }, { status: 400 });
+    }
+
+    // 1. Locate the event to find both ID and slug
+    const isUuid = Boolean(eventId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId));
+    let existing: { id: string; slug: string } | null = null;
+
+    if (isUuid && eventId) {
+      const { data } = await serverSupabase
+        .from('events')
+        .select('id, slug')
+        .eq('id', eventId)
+        .maybeSingle();
+      if (data) existing = data;
+    }
+
+    if (!existing && (slug || eventId)) {
+      const targetSlug = slug || eventId;
+      const { data } = await serverSupabase
+        .from('events')
+        .select('id, slug')
+        .eq('slug', targetSlug)
+        .maybeSingle();
+      if (data) existing = data;
+    }
+
+    const finalId = existing?.id || (isUuid ? eventId : null);
+    const finalSlug = existing?.slug || slug || (isUuid ? null : eventId);
+
+    // 2. Cascade delete dependent child records first to prevent FK constraint failures
+    if (finalId) {
+      await Promise.allSettled([
+        serverSupabase.from('registrations').delete().eq('event_id', finalId),
+        serverSupabase.from('bookmarks').delete().eq('event_id', finalId),
+        serverSupabase.from('team_invitations').delete().eq('event_id', finalId),
+        serverSupabase.from('submissions').delete().eq('event_id', finalId),
+        serverSupabase.from('teams').delete().eq('event_id', finalId),
+        serverSupabase.from('notifications').delete().eq('event_id', finalId),
+      ]);
+    }
+
+    // 3. Delete from events table
+    let deleteResult;
+    if (finalId) {
+      deleteResult = await serverSupabase.from('events').delete().eq('id', finalId);
+    } else if (finalSlug) {
+      deleteResult = await serverSupabase.from('events').delete().eq('slug', finalSlug);
+    }
+
+    if (deleteResult?.error) {
+      console.error('Server Supabase event delete error:', deleteResult.error.message);
+      return NextResponse.json({ error: deleteResult.error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      deletedId: finalId,
+      deletedSlug: finalSlug,
+    });
+  } catch (err: any) {
+    console.error('Server error deleting event:', err);
+    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+  }
+}
+

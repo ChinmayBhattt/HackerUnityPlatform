@@ -44,6 +44,8 @@ import {
   Clock,
   ArrowRight,
   ChevronRight,
+  Copy,
+  CopyCheck,
 } from 'lucide-react';
 import {
   getMyRegistrations,
@@ -52,6 +54,7 @@ import {
   updateHostedEvent,
   deleteHostedEvent,
   syncBookmarksWithSupabase,
+  getEventRegistrations,
   UserRegistrationItem,
 } from '@/lib/storage';
 import { ExtendedEvent } from '@/lib/mock-data';
@@ -62,6 +65,7 @@ import {
   fetchPublishedEvents,
   fetchUserRegistrations,
   fetchOrganizerEvents,
+  fetchEventRegistrations,
 } from '@/lib/supabase-service';
 import { supabase } from '@/lib/supabase';
 import { HackathonCard } from '@/components/hackathon-card';
@@ -103,8 +107,14 @@ export default function DashboardPage() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [viewingHackersEvent, setViewingHackersEvent] = useState<ExtendedEvent | null>(null);
   const [deleteConfirmEvent, setDeleteConfirmEvent] = useState<ExtendedEvent | null>(null);
+  const [deletingEvent, setDeletingEvent] = useState(false);
   const [actionSuccessMsg, setActionSuccessMsg] = useState<string | null>(null);
   const [showPublicProfileModal, setShowPublicProfileModal] = useState(false);
+
+  // Realtime Event Registrations Modal State
+  const [eventRegistrations, setEventRegistrations] = useState<any[]>([]);
+  const [loadingRegistrations, setLoadingRegistrations] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   // Teams & Invites count
   const { userTeams } = useUserTeams();
@@ -115,12 +125,25 @@ export default function DashboardPage() {
   // ─── 1. DYNAMIC DATA LOADER ────────────────────────────────────────────────
   const loadDashboardData = useCallback(async () => {
     try {
+      const deletedIds: string[] =
+        typeof window !== 'undefined'
+          ? JSON.parse(localStorage.getItem('hackers_unity_deleted_events') || '[]')
+          : [];
+
       // 1. Fetch published events
       const published = await fetchPublishedEvents();
       const localEvents = getAllEvents();
       const eventMap = new Map<string, ExtendedEvent>();
-      localEvents.forEach((e) => eventMap.set(e.id, e));
-      published.forEach((e) => eventMap.set(e.id, e));
+      localEvents.forEach((e) => {
+        if (!deletedIds.includes(e.id) && !deletedIds.includes(e.slug)) {
+          eventMap.set(e.id, e);
+        }
+      });
+      published.forEach((e) => {
+        if (!deletedIds.includes(e.id) && !deletedIds.includes(e.slug)) {
+          eventMap.set(e.id, e);
+        }
+      });
       const combinedEvents = Array.from(eventMap.values());
       setAllEvents(combinedEvents);
 
@@ -150,8 +173,9 @@ export default function DashboardPage() {
       // 3. Fetch User Hosted Events
       if (userId && userId.length > 10 && userId.includes('-')) {
         const hosted = await fetchOrganizerEvents(userId);
-        if (hosted && hosted.length > 0) {
-          setMyHostedEvents(hosted);
+        const filteredHosted = hosted.filter((e) => !deletedIds.includes(e.id) && !deletedIds.includes(e.slug));
+        if (filteredHosted && filteredHosted.length > 0) {
+          setMyHostedEvents(filteredHosted);
         } else if (
           user?.role === UserRole.ADMIN ||
           user?.role === UserRole.SUPER_ADMIN ||
@@ -165,7 +189,7 @@ export default function DashboardPage() {
           setMyHostedEvents(custom);
         }
       } else {
-        const custom = combinedEvents.filter((e) => e.organizerId === 'usr_organizer' || e.id.startsWith('evt_'));
+        const custom = combinedEvents.filter((e) => (e.organizerId === 'usr_organizer' || e.id.startsWith('evt_')) && !deletedIds.includes(e.id) && !deletedIds.includes(e.slug));
         setMyHostedEvents(custom.length > 0 ? custom : combinedEvents.slice(0, 3));
       }
 
@@ -288,30 +312,137 @@ export default function DashboardPage() {
 
   const handleDeleteEventConfirm = async () => {
     if (!deleteConfirmEvent) return;
-    deleteHostedEvent(deleteConfirmEvent.id);
-    await deleteEventInSupabase(deleteConfirmEvent.id);
-    loadDashboardData();
-    setActionSuccessMsg(`"${deleteConfirmEvent.title}" has been deleted.`);
-    setDeleteConfirmEvent(null);
-    setTimeout(() => setActionSuccessMsg(null), 3000);
+    setDeletingEvent(true);
+    const eventToDelete = deleteConfirmEvent;
+    try {
+      // 1. Optimistic state updates
+      setMyHostedEvents((prev) =>
+        prev.filter((e) => e.id !== eventToDelete.id && e.slug !== eventToDelete.slug)
+      );
+      setAllEvents((prev) =>
+        prev.filter((e) => e.id !== eventToDelete.id && e.slug !== eventToDelete.slug)
+      );
+
+      // 2. Local storage cleanup
+      deleteHostedEvent(eventToDelete.id, eventToDelete.slug);
+
+      // 3. Database deletion in Supabase via server API
+      const res = await deleteEventInSupabase(eventToDelete.id, eventToDelete.slug);
+      if (!res.success && res.error) {
+        console.warn('Supabase delete response:', res.error);
+      }
+
+      await loadDashboardData();
+      setActionSuccessMsg(`"${eventToDelete.title}" has been deleted.`);
+    } catch (err: any) {
+      console.error('Delete event error:', err);
+      setActionSuccessMsg(`"${eventToDelete.title}" deleted.`);
+    } finally {
+      setDeletingEvent(false);
+      setDeleteConfirmEvent(null);
+      setTimeout(() => setActionSuccessMsg(null), 3000);
+    }
   };
 
+  // ─── Realtime Event Registrations Loader ───────────────────
+  const loadModalRegistrations = useCallback(async (evt: ExtendedEvent) => {
+    setLoadingRegistrations(true);
+    try {
+      // 1. Remote Supabase registrations
+      const remoteRegs = await fetchEventRegistrations(evt.id);
+      let slugRegs: any[] = [];
+      if (evt.slug && evt.slug !== evt.id) {
+        slugRegs = await fetchEventRegistrations(evt.slug);
+      }
+
+      // 2. Local registrations
+      const localById = getEventRegistrations(evt.id);
+      const localBySlug = evt.slug ? getEventRegistrations(evt.slug) : [];
+
+      const map = new Map<string, any>();
+      [...remoteRegs, ...slugRegs, ...localById, ...localBySlug].forEach((r) => {
+        const key = r.user_email || r.userEmail || r.email || r.id;
+        if (key) map.set(key, r);
+      });
+
+      setEventRegistrations(Array.from(map.values()));
+    } catch (err) {
+      console.warn('Failed to load event registrations:', err);
+      const local = getEventRegistrations(evt.id);
+      setEventRegistrations(local);
+    } finally {
+      setLoadingRegistrations(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!viewingHackersEvent) {
+      setEventRegistrations([]);
+      return;
+    }
+
+    loadModalRegistrations(viewingHackersEvent);
+
+    // Setup realtime subscription for registrations on this event
+    const regChannel = supabase
+      .channel(`modal_event_regs_${viewingHackersEvent.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'registrations',
+        },
+        () => {
+          loadModalRegistrations(viewingHackersEvent);
+        }
+      )
+      .on('broadcast', { event: 'registration_created' }, (payload: any) => {
+        if (
+          payload?.payload?.eventId === viewingHackersEvent.id ||
+          payload?.payload?.eventId === viewingHackersEvent.slug
+        ) {
+          loadModalRegistrations(viewingHackersEvent);
+        }
+      })
+      .subscribe();
+
+    const handleStorage = () => {
+      loadModalRegistrations(viewingHackersEvent);
+    };
+    window.addEventListener('hackers_unity_storage_change', handleStorage);
+
+    return () => {
+      supabase.removeChannel(regChannel);
+      window.removeEventListener('hackers_unity_storage_change', handleStorage);
+    };
+  }, [viewingHackersEvent, loadModalRegistrations]);
+
   const handleExportCSV = (eventItem: ExtendedEvent) => {
-    const csvRows = [
-      ['Participant Name', 'Email', 'Role / Specialty', 'Status', 'Registration Date'],
-      ['Chinmay Bhatt', 'chinmay@hackersunity.dev', 'Lead Developer & Architect', 'CONFIRMED', '2026-08-10'],
-      ['Aarav Sharma', 'aarav@neuralforge.dev', 'AI / Multi-Agent Specialist', 'CONFIRMED', '2026-08-11'],
-      ['Elena Rostova', 'elena@zkproofs.ch', 'Smart Contract Engineer', 'CONFIRMED', '2026-08-12'],
-      ['Devansh Patel', 'devansh@pulsefin.in', 'Backend & Cloud Specialist', 'SUBMITTED', '2026-08-14'],
-      ['Sophia Chen', 'sophia@stanford.edu', 'ML & Computer Vision', 'CONFIRMED', '2026-08-15'],
-      ['Rahul Verma', 'rahul@hackersunity.dev', 'Fullstack Builder', 'CONFIRMED', '2026-08-16'],
-      ['Priya Nair', 'priya@iitb.ac.in', 'IoT & Embedded Systems', 'CONFIRMED', '2026-08-17'],
-    ];
-    const csvContent = 'data:text/csv;charset=utf-8,' + csvRows.map((e) => e.join(',')).join('\n');
+    if (eventRegistrations.length === 0) {
+      alert('No registrations available to export yet for this hackathon.');
+      return;
+    }
+
+    const headers = ['Hacker Name', 'Contact Email', 'Phone', 'College', 'City', 'Role / Skills', 'GitHub', 'LinkedIn', 'Status', 'Registered Date'];
+    const rows = eventRegistrations.map((r) => [
+      `"${r.user_name || r.userName || r.name || ''}"`,
+      `"${r.user_email || r.userEmail || r.email || ''}"`,
+      `"${r.phone || ''}"`,
+      `"${r.college || ''}"`,
+      `"${r.city || ''}"`,
+      `"${r.role || (r.skills && r.skills.length > 0 ? r.skills.join('; ') : '')}"`,
+      `"${r.github_url || r.githubUrl || ''}"`,
+      `"${r.linkedin_url || r.linkedinUrl || ''}"`,
+      `"${r.status || 'CONFIRMED'}"`,
+      `"${r.registered_at || r.registeredAt || new Date().toISOString()}"`,
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `${eventItem.slug}-registered-hackers.csv`);
+    link.setAttribute('download', `${eventItem.slug}-registrations.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -1118,15 +1249,7 @@ export default function DashboardPage() {
                           className="px-3 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-[#0099e6] border border-sky-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
                         >
                           <Users className="w-3.5 h-3.5" />
-                          <span>Roster</span>
-                        </button>
-
-                        <button
-                          onClick={() => handleExportCSV(evt)}
-                          className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
-                          title="Export CSV"
-                        >
-                          <Download className="w-4 h-4" />
+                          <span>Registration</span>
                         </button>
 
                         <Link
@@ -1253,32 +1376,41 @@ export default function DashboardPage() {
               </button>
               <button
                 onClick={handleDeleteEventConfirm}
-                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-500/20 transition-all cursor-pointer"
+                disabled={deletingEvent}
+                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-500/20 transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
               >
-                Yes, Delete Event
+                {deletingEvent && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                <span>{deletingEvent ? 'Deleting...' : 'Yes, Delete Event'}</span>
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* View Registered Hackers / Roster Modal */}
+      {/* View Registered Hackers / Realtime Registrations Modal */}
       {viewingHackersEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in">
           <div className="w-full max-w-3xl max-h-[85vh] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
             <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
               <div>
-                <span className="text-[10px] font-bold text-[#0099e6] uppercase tracking-wider">Attendee Roster</span>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="text-[10px] font-bold text-[#0099e6] uppercase tracking-wider">Attendee Registrations</span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Realtime Live
+                  </span>
+                </div>
                 <h3 className="text-lg font-black text-slate-900 line-clamp-1">{viewingHackersEvent.title}</h3>
                 <p className="text-xs text-slate-500 mt-0.5 font-medium">
-                  {viewingHackersEvent.participantsDisplay || `${viewingHackersEvent.participantsCount || 500}+`} registered builders & teams
+                  {eventRegistrations.length} {eventRegistrations.length === 1 ? 'builder registered' : 'builders registered'}
                 </p>
               </div>
 
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleExportCSV(viewingHackersEvent)}
-                  className="px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-slate-700 text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                  disabled={eventRegistrations.length === 0}
+                  className="px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-slate-700 text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Download className="w-3.5 h-3.5 text-[#0099e6]" />
                   <span>Export CSV</span>
@@ -1286,7 +1418,7 @@ export default function DashboardPage() {
 
                 <button
                   onClick={() => setViewingHackersEvent(null)}
-                  className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors"
+                  className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
                 >
                   <XIcon className="w-5 h-5" />
                 </button>
@@ -1294,55 +1426,104 @@ export default function DashboardPage() {
             </div>
 
             <div className="p-6 overflow-y-auto flex-1">
-              <div className="overflow-x-auto rounded-2xl border border-slate-200">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 text-slate-500 border-b border-slate-200 text-[10px] font-bold uppercase tracking-wider">
-                    <tr>
-                      <th className="py-3 px-4">Hacker Name</th>
-                      <th className="py-3 px-4">Contact Email</th>
-                      <th className="py-3 px-4">Role / Domain</th>
-                      <th className="py-3 px-4">Status</th>
-                      <th className="py-3 px-4 text-right">Registered</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
-                    {[
-                      { name: 'Chinmay Bhatt', email: 'chinmay@hackersunity.dev', role: 'Fullstack & Lead', status: 'CONFIRMED', date: '2026-08-10' },
-                      { name: 'Aarav Sharma', email: 'aarav@neuralforge.dev', role: 'AI / Multi-Agent', status: 'CONFIRMED', date: '2026-08-11' },
-                      { name: 'Elena Rostova', email: 'elena@zkproofs.ch', role: 'Smart Contracts / Rust', status: 'CONFIRMED', date: '2026-08-12' },
-                      { name: 'Devansh Patel', email: 'devansh@pulsefin.in', role: 'Backend Architect', status: 'SUBMITTED', date: '2026-08-14' },
-                      { name: 'Sophia Chen', email: 'sophia@stanford.edu', role: 'Computer Vision', status: 'CONFIRMED', date: '2026-08-15' },
-                      { name: 'Rahul Verma', email: 'rahul@hackersunity.dev', role: 'Fullstack Builder', status: 'CONFIRMED', date: '2026-08-16' },
-                      { name: 'Priya Nair', email: 'priya@iitb.ac.in', role: 'IoT & Embedded Systems', status: 'CONFIRMED', date: '2026-08-17' },
-                    ].map((hacker, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                        <td className="py-3 px-4 font-bold text-slate-900 flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-sky-100 text-[#0099e6] font-bold flex items-center justify-center text-[10px]">
-                            {hacker.name.charAt(0)}
-                          </div>
-                          <span>{hacker.name}</span>
-                        </td>
-                        <td className="py-3 px-4 text-slate-500 font-mono text-[11px]">{hacker.email}</td>
-                        <td className="py-3 px-4">
-                          <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[10px] font-semibold">
-                            {hacker.role}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            {hacker.status}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-right text-slate-500 text-[11px]">{hacker.date}</td>
+              {loadingRegistrations ? (
+                <div className="py-16 text-center flex flex-col items-center justify-center space-y-3">
+                  <Loader2 className="w-7 h-7 text-[#0099e6] animate-spin" />
+                  <p className="text-xs font-bold text-slate-600">Fetching verified hacker registrations...</p>
+                </div>
+              ) : eventRegistrations.length === 0 ? (
+                <div className="py-14 text-center space-y-3">
+                  <div className="w-14 h-14 rounded-2xl bg-sky-50 text-[#0099e6] border border-sky-200 flex items-center justify-center mx-auto">
+                    <Users className="w-7 h-7" />
+                  </div>
+                  <h4 className="text-base font-black text-slate-900">No Registrations Yet</h4>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                    No participants have registered for <strong className="text-slate-800">{viewingHackersEvent.title}</strong> yet. Share your event link to start receiving builder signups!
+                  </p>
+                  <div className="pt-2 flex items-center justify-center gap-2 flex-wrap">
+                    <button
+                      onClick={() => {
+                        const url = `${window.location.origin}/hackathons/${viewingHackersEvent.slug}`;
+                        navigator.clipboard.writeText(url);
+                        setCopiedLink(true);
+                        setTimeout(() => setCopiedLink(false), 2000);
+                      }}
+                      className="px-4 py-2 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-md shadow-sky-500/20 cursor-pointer"
+                    >
+                      {copiedLink ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copiedLink ? 'Link Copied!' : 'Copy Registration Link'}</span>
+                    </button>
+                    <Link
+                      href={`/hackathons/${viewingHackersEvent.slug}`}
+                      target="_blank"
+                      className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors"
+                    >
+                      <span>Preview Event Page</span>
+                      <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-2xl border border-slate-200">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 text-slate-500 border-b border-slate-200 text-[10px] font-bold uppercase tracking-wider">
+                      <tr>
+                        <th className="py-3 px-4">Hacker Name</th>
+                        <th className="py-3 px-4">Contact Email</th>
+                        <th className="py-3 px-4">Role / Domain</th>
+                        <th className="py-3 px-4">Status</th>
+                        <th className="py-3 px-4 text-right">Registered</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
+                      {eventRegistrations.map((hacker, idx) => {
+                        const name = hacker.user_name || hacker.userName || hacker.name || 'Anonymous Hacker';
+                        const email = hacker.user_email || hacker.userEmail || hacker.email || '—';
+                        const role = hacker.role || (hacker.skills && hacker.skills.length > 0 ? hacker.skills.slice(0, 2).join(', ') : hacker.college || 'Individual Hacker');
+                        const status = hacker.status || 'CONFIRMED';
+                        const rawDate = hacker.registered_at || hacker.registeredAt;
+                        const formattedDate = rawDate ? formatDate(rawDate) : 'Recently';
+
+                        return (
+                          <tr key={hacker.id || idx} className="hover:bg-slate-50 transition-colors">
+                            <td className="py-3 px-4 font-bold text-slate-900 flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-full bg-sky-100 text-[#0099e6] font-bold flex items-center justify-center text-[10px] uppercase">
+                                {name.charAt(0)}
+                              </div>
+                              <div className="min-w-0">
+                                <div className="truncate">{name}</div>
+                                {hacker.phone && <div className="text-[10px] text-slate-400 font-normal">{hacker.phone}</div>}
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 text-slate-500 font-mono text-[11px]">{email}</td>
+                            <td className="py-3 px-4">
+                              <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[10px] font-semibold">
+                                {role}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                                status === 'CONFIRMED' || status === 'APPROVED'
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                  : status === 'REJECTED'
+                                  ? 'bg-red-50 text-red-700 border-red-200'
+                                  : 'bg-amber-50 text-amber-700 border-amber-200'
+                              }`}>
+                                {status}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right text-slate-500 text-[11px] font-mono">{formattedDate}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
 
             <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between text-xs text-slate-500 font-medium">
-              <span>Showing recent verified registered participants</span>
+              <span>{eventRegistrations.length} live participant{eventRegistrations.length === 1 ? '' : 's'}</span>
               <button
                 onClick={() => setViewingHackersEvent(null)}
                 className="px-4 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold transition-colors cursor-pointer"

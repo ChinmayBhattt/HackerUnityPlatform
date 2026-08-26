@@ -161,6 +161,11 @@ export async function uploadHackathonAsset(
  */
 export async function fetchPublishedEvents(): Promise<ExtendedEvent[]> {
   try {
+    const deletedIds: string[] =
+      typeof window !== 'undefined'
+        ? JSON.parse(localStorage.getItem('hackers_unity_deleted_events') || '[]')
+        : [];
+
     const custom = typeof window !== 'undefined' ? getCustomEvents() : [];
     const { data, error } = await supabase
       .from('events')
@@ -177,19 +182,37 @@ export async function fetchPublishedEvents(): Promise<ExtendedEvent[]> {
 
     // Merge custom events with remote list (avoiding duplicate slugs/ids)
     const map = new Map<string, ExtendedEvent>();
-    list.forEach((e) => map.set(e.id, e));
+    list.forEach((e) => {
+      if (!deletedIds.includes(e.id) && !deletedIds.includes(e.slug)) {
+        map.set(e.id, e);
+      }
+    });
     custom.forEach((e) => {
       // Local custom events will take priority or complement
-      map.set(e.id, e);
+      if (!deletedIds.includes(e.id) && !deletedIds.includes(e.slug)) {
+        map.set(e.id, e);
+      }
     });
 
     return Array.from(map.values());
   } catch (err) {
     console.warn('Supabase fetchPublishedEvents exception:', err);
+    const deletedIds: string[] =
+      typeof window !== 'undefined'
+        ? JSON.parse(localStorage.getItem('hackers_unity_deleted_events') || '[]')
+        : [];
     const custom = typeof window !== 'undefined' ? getCustomEvents() : [];
     const map = new Map<string, ExtendedEvent>();
-    MOCK_EVENTS.forEach((e) => map.set(e.id, e));
-    custom.forEach((e) => map.set(e.id, e));
+    MOCK_EVENTS.forEach((e) => {
+      if (!deletedIds.includes(e.id) && !deletedIds.includes(e.slug)) {
+        map.set(e.id, e);
+      }
+    });
+    custom.forEach((e) => {
+      if (!deletedIds.includes(e.id) && !deletedIds.includes(e.slug)) {
+        map.set(e.id, e);
+      }
+    });
     return Array.from(map.values());
   }
 }
@@ -266,6 +289,11 @@ export async function fetchEventBySlug(slugOrId: string): Promise<ExtendedEvent 
 
 export async function fetchOrganizerEvents(organizerId: string): Promise<ExtendedEvent[]> {
   try {
+    const deletedIds: string[] =
+      typeof window !== 'undefined'
+        ? JSON.parse(localStorage.getItem('hackers_unity_deleted_events') || '[]')
+        : [];
+
     const { data, error } = await supabase
       .from('events')
       .select('*')
@@ -280,13 +308,27 @@ export async function fetchOrganizerEvents(organizerId: string): Promise<Extende
     );
 
     const map = new Map<string, ExtendedEvent>();
-    remoteEvents.forEach((e) => map.set(e.id, e));
-    customOrganizerEvents.forEach((e) => map.set(e.id, e));
+    remoteEvents.forEach((e) => {
+      if (!deletedIds.includes(e.id) && !deletedIds.includes(e.slug)) {
+        map.set(e.id, e);
+      }
+    });
+    customOrganizerEvents.forEach((e) => {
+      if (!deletedIds.includes(e.id) && !deletedIds.includes(e.slug)) {
+        map.set(e.id, e);
+      }
+    });
 
     return Array.from(map.values());
   } catch {
+    const deletedIds: string[] =
+      typeof window !== 'undefined'
+        ? JSON.parse(localStorage.getItem('hackers_unity_deleted_events') || '[]')
+        : [];
     const custom = typeof window !== 'undefined' ? getCustomEvents() : [];
-    return custom.filter((e) => e.organizerId === organizerId || !e.organizerId || e.organizerId === 'usr_me');
+    return custom
+      .filter((e) => e.organizerId === organizerId || !e.organizerId || e.organizerId === 'usr_me')
+      .filter((e) => !deletedIds.includes(e.id) && !deletedIds.includes(e.slug));
   }
 }
 
@@ -524,17 +566,67 @@ export async function updateEventInSupabase(
   }
 }
 
-export async function deleteEventInSupabase(eventId: string): Promise<{ success: boolean; error?: string }> {
+export async function deleteEventInSupabase(
+  eventId: string,
+  slug?: string
+): Promise<{ success: boolean; error?: string }> {
   try {
-    const { error } = await supabase.from('events').delete().eq('id', eventId);
-    if (error) return { success: false, error: error.message };
+    // 1. First try server-side API route (bypasses RLS, handles FK cascades safely)
+    if (typeof window !== 'undefined') {
+      try {
+        const query = new URLSearchParams();
+        if (eventId) query.set('eventId', eventId);
+        if (slug) query.set('slug', slug);
+
+        const response = await fetch(`/api/events?${query.toString()}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          const resData = await response.json();
+          if (resData.success) {
+            // Realtime Broadcast
+            try {
+              const channel = supabase.channel('public:events_realtime');
+              channel.send({
+                type: 'broadcast',
+                event: 'event_deleted',
+                payload: { eventId, slug },
+              });
+            } catch (e) {
+              console.warn('Broadcast send error:', e);
+            }
+            return { success: true };
+          }
+        }
+      } catch (apiErr) {
+        console.warn('API /api/events DELETE error, falling back to direct client:', apiErr);
+      }
+    }
+
+    // 2. Direct client deletion fallback
+    const isUuid = Boolean(eventId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId));
+    let delError = null;
+
+    if (isUuid) {
+      const { error } = await supabase.from('events').delete().eq('id', eventId);
+      delError = error;
+    }
+
+    if (delError || !isUuid) {
+      const targetSlug = slug || eventId;
+      const { error: slugError } = await supabase.from('events').delete().eq('slug', targetSlug);
+      if (slugError && delError) {
+        return { success: false, error: slugError.message || delError.message };
+      }
+    }
 
     try {
       const channel = supabase.channel('public:events_realtime');
       channel.send({
         type: 'broadcast',
         event: 'event_deleted',
-        payload: { eventId },
+        payload: { eventId, slug },
       });
     } catch (e) {
       console.warn('Broadcast send error:', e);
