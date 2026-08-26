@@ -110,8 +110,9 @@ export async function POST(req: Request) {
       rules_text: event.rulesText || null,
       registration_type: event.registrationType || 'FREE',
       registration_capacity: event.registrationCapacity || null,
-      approval_mode: event.approvalMode || 'AUTO',
+      approval_mode: event.approvalMode || 'MANUAL',
       custom_questions: event.customQuestions || [],
+      registration_fields: event.registrationFields || ['name', 'email', 'phone', 'college', 'city', 'github', 'linkedin', 'skills'],
       registration_count: 0,
     };
 
@@ -174,6 +175,7 @@ export async function PATCH(req: Request) {
     if (updates.registrationCapacity !== undefined) updatePayload.registration_capacity = updates.registrationCapacity;
     if (updates.approvalMode !== undefined) updatePayload.approval_mode = updates.approvalMode;
     if (updates.customQuestions !== undefined) updatePayload.custom_questions = updates.customQuestions;
+    if (updates.registrationFields !== undefined) updatePayload.registration_fields = updates.registrationFields;
 
     const VALID_STATUSES = ['DRAFT', 'PUBLISHED', 'REGISTRATION_OPEN', 'LIVE', 'JUDGING', 'COMPLETED', 'ARCHIVED'];
     if (updates.status && VALID_STATUSES.includes(updates.status)) {

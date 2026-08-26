@@ -235,22 +235,38 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
       >
         {/* Header */}
         <div className="sticky top-0 z-10 bg-white border-b border-slate-100 p-4 flex items-center justify-between rounded-t-3xl">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-sky-50 text-[#0099e6] border border-sky-200">
-                {step === 'mode' ? 'Step 1: Choose Squad Mode' : step === 'details' ? 'Step 2: Builder Details' : 'Confirmed'}
-              </span>
-              <Link
-                href={`/hackathons/${event.slug}/register`}
-                onClick={onClose}
-                className="text-[11px] font-bold text-slate-500 hover:text-[#0099e6] flex items-center gap-1"
-                title="Open full dedicated page"
-              >
-                <span>Full Page</span>
-                <ExternalLink className="w-3 h-3" />
-              </Link>
+          <div className="flex items-center gap-3">
+            {(event.logoUrl || event.organizerLogo) ? (
+              <div className="w-10 h-10 rounded-xl border border-slate-200/90 bg-white p-0.5 shadow-2xs shrink-0 overflow-hidden flex items-center justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={event.logoUrl || event.organizerLogo}
+                  alt={event.title}
+                  className="w-full h-full object-cover rounded-lg"
+                />
+              </div>
+            ) : (
+              <div className="w-10 h-10 rounded-xl border border-sky-200/90 bg-gradient-to-br from-sky-50 to-sky-100 shadow-2xs shrink-0 flex items-center justify-center text-base font-black text-[#0099e6]">
+                {event.organizerAvatar || '⚡'}
+              </div>
+            )}
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-sky-50 text-[#0099e6] border border-sky-200">
+                  {step === 'mode' ? 'Step 1: Choose Squad Mode' : step === 'details' ? 'Step 2: Builder Details' : 'Confirmed'}
+                </span>
+                <Link
+                  href={`/hackathons/${event.slug}/register`}
+                  onClick={onClose}
+                  className="text-[11px] font-bold text-slate-500 hover:text-[#0099e6] flex items-center gap-1"
+                  title="Open full dedicated page"
+                >
+                  <span>Full Page</span>
+                  <ExternalLink className="w-3 h-3" />
+                </Link>
+              </div>
+              <h2 className="text-lg font-black text-slate-900 pr-6 leading-tight mt-0.5">{event.title}</h2>
             </div>
-            <h2 className="text-lg font-black text-slate-900 pr-6 leading-tight mt-1">{event.title}</h2>
           </div>
           <button
             onClick={onClose}

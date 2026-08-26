@@ -70,6 +70,7 @@ export interface EventPublic {
   registrationCapacity?: number | null;
   approvalMode?: 'AUTO' | 'MANUAL';
   customQuestions?: CustomQuestion[];
+  registrationFields?: string[];
 }
 
 export interface Prize {

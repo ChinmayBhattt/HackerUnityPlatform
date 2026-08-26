@@ -474,17 +474,34 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white text-[#0099e6] border border-sky-200 text-xs font-bold mb-2 shadow-2xs">
-                <Sparkles className="w-3.5 h-3.5 text-[#0099e6]" />
-                <span>Registration Portal</span>
+            <div className="flex items-start gap-4">
+              {(event.logoUrl || event.organizerLogo) ? (
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl border border-slate-200/90 bg-white p-1 shadow-xs shrink-0 overflow-hidden flex items-center justify-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={event.logoUrl || event.organizerLogo}
+                    alt={event.title}
+                    className="w-full h-full object-cover rounded-xl"
+                  />
+                </div>
+              ) : (
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl border border-sky-200/90 bg-gradient-to-br from-sky-50 to-sky-100 shadow-xs shrink-0 flex items-center justify-center text-xl sm:text-2xl font-black text-[#0099e6]">
+                  {event.organizerAvatar || '⚡'}
+                </div>
+              )}
+
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white text-[#0099e6] border border-sky-200 text-xs font-bold mb-2 shadow-2xs">
+                  <Sparkles className="w-3.5 h-3.5 text-[#0099e6]" />
+                  <span>Registration Portal</span>
+                </div>
+                <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+                  Register for {event.title}
+                </h1>
+                <p className="text-xs sm:text-sm text-slate-600 mt-1 font-medium">
+                  Organized by <strong className="text-slate-900">{event.organizerName}</strong> • {event.location || 'Online Arena'}
+                </p>
               </div>
-              <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                Register for {event.title}
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-600 mt-1 font-medium">
-                Organized by <strong className="text-slate-900">{event.organizerName}</strong> • {event.location || 'Online Arena'}
-              </p>
             </div>
 
             <div className="flex items-center gap-3">

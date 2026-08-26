@@ -128,16 +128,30 @@ export function HackathonCard({ event, isBookmarked, onBookmarkChange }: Hackath
               </div>
             </div>
 
-            {/* Title & Organizer */}
-            <Link href={`/hackathons/${event.slug}`} className="block group-hover:text-[#0099e6] transition-colors">
-              <h3 className="text-base font-bold text-slate-900 leading-snug line-clamp-2">
-                {event.title}
-              </h3>
-            </Link>
-            <p className="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
-              <span>by</span>
-              <span className="font-semibold text-slate-700">{event.organizerName}</span>
-            </p>
+            {/* Title & Organizer with Logo */}
+            <div className="flex items-start gap-2.5">
+              {(event.logoUrl || event.organizerLogo) && (
+                <div className="w-8 h-8 rounded-lg border border-slate-200/90 bg-white p-0.5 shadow-2xs shrink-0 overflow-hidden mt-0.5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={event.logoUrl || event.organizerLogo}
+                    alt={event.title}
+                    className="w-full h-full object-cover rounded-md"
+                  />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <Link href={`/hackathons/${event.slug}`} className="block group-hover:text-[#0099e6] transition-colors">
+                  <h3 className="text-base font-bold text-slate-900 leading-snug line-clamp-2">
+                    {event.title}
+                  </h3>
+                </Link>
+                <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1.5 truncate">
+                  <span>by</span>
+                  <span className="font-semibold text-slate-700 truncate">{event.organizerName}</span>
+                </p>
+              </div>
+            </div>
 
             {/* Description */}
             <p className="text-xs text-slate-600 mt-2.5 line-clamp-2 leading-relaxed">

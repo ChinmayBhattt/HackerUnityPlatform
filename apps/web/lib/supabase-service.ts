@@ -76,8 +76,9 @@ export function mapDbEventToExtended(item: any): ExtendedEvent {
     rulesText: item.rules_text || '',
     registrationType: item.registration_type || 'FREE',
     registrationCapacity: item.registration_capacity || null,
-    approvalMode: item.approval_mode || 'AUTO',
+    approvalMode: item.approval_mode || 'MANUAL',
     customQuestions: item.custom_questions || [],
+    registrationFields: item.registration_fields || ['name', 'email', 'phone', 'college', 'city', 'github', 'linkedin', 'skills'],
   };
 }
 
@@ -429,8 +430,9 @@ export async function createEventInSupabase(
       rules_text: event.rulesText || null,
       registration_type: event.registrationType || 'FREE',
       registration_capacity: event.registrationCapacity || null,
-      approval_mode: event.approvalMode || 'AUTO',
+      approval_mode: event.approvalMode || 'MANUAL',
       custom_questions: event.customQuestions || [],
+      registration_fields: event.registrationFields || ['name', 'email', 'phone', 'college', 'city', 'github', 'linkedin', 'skills'],
       registration_count: 0,
     };
 
@@ -537,6 +539,7 @@ export async function updateEventInSupabase(
     if (updates.difficulty !== undefined) updatePayload.difficulty = updates.difficulty;
     if (updates.rulesText !== undefined) updatePayload.rules_text = updates.rulesText;
     if (updates.customQuestions !== undefined) updatePayload.custom_questions = updates.customQuestions;
+    if (updates.registrationFields !== undefined) updatePayload.registration_fields = updates.registrationFields;
     updatePayload.updated_at = new Date().toISOString();
 
     const { error } = await supabase
@@ -698,6 +701,61 @@ export async function registerForEventSupabase(
   input: RegistrationInput
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    // 1. Try server API route first (handles RLS bypass and profile ensuring)
+    if (typeof window !== 'undefined') {
+      try {
+        const response = await fetch('/api/registrations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ input }),
+        });
+
+        if (response.ok) {
+          const resData = await response.json();
+          if (resData.success) {
+            // Realtime Broadcast registration to update counters everywhere
+            try {
+              const channel = supabase.channel('public:events_realtime');
+              channel.send({
+                type: 'broadcast',
+                event: 'registration_created',
+                payload: { eventId: input.eventId, userEmail: input.userEmail },
+              });
+            } catch (e) {
+              console.warn('Broadcast registration error:', e);
+            }
+
+            // Notification
+            if (input.userId) {
+              sendNotificationToUser(
+                input.userId,
+                '🎉 Registration Confirmed!',
+                `You have successfully registered for the hackathon. Check your team status and event schedule on your dashboard!`,
+                NotificationDbType.REGISTRATION,
+                {
+                  icon: '🎉',
+                  eventId: input.eventId,
+                  actionUrl: `/dashboard`,
+                }
+              ).catch((e) => console.warn('Registration notification error:', e));
+            }
+
+            return { success: true };
+          } else if (resData.error) {
+            return { success: false, error: resData.error };
+          }
+        } else {
+          const errData = await response.json().catch(() => ({}));
+          if (errData?.error) {
+            return { success: false, error: errData.error };
+          }
+        }
+      } catch (apiErr) {
+        console.warn('API /api/registrations error, falling back to direct client:', apiErr);
+      }
+    }
+
+    // 2. Direct client fallback
     // Check if already registered
     const { isRegistered } = await checkUserRegistration(input.eventId, input.userId, input.userEmail);
     if (isRegistered) {
@@ -914,7 +972,41 @@ export async function createTeamSupabase(
   description?: string
 ): Promise<{ success: boolean; team?: any; error?: string }> {
   try {
-    // 1. Create team record
+    // 1. Try server API route first (handles RLS bypass and profile ensuring)
+    if (typeof window !== 'undefined') {
+      try {
+        const response = await fetch('/api/teams', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'create',
+            eventId,
+            leaderId,
+            teamName,
+            maxMembers,
+            description,
+          }),
+        });
+
+        if (response.ok) {
+          const resData = await response.json();
+          if (resData.success && resData.team) {
+            return { success: true, team: resData.team };
+          } else if (resData.error) {
+            return { success: false, error: resData.error };
+          }
+        } else {
+          const errData = await response.json().catch(() => ({}));
+          if (errData?.error) {
+            return { success: false, error: errData.error };
+          }
+        }
+      } catch (apiErr) {
+        console.warn('API /api/teams create error, falling back to direct client:', apiErr);
+      }
+    }
+
+    // 2. Direct client fallback
     const { data: team, error: teamError } = await supabase
       .from('teams')
       .insert({
@@ -931,7 +1023,6 @@ export async function createTeamSupabase(
       return { success: false, error: teamError?.message || 'Failed to create team' };
     }
 
-    // 2. Add leader to team_members
     try {
       await supabase.from('team_members').insert({
         team_id: team.id,
@@ -970,7 +1061,34 @@ export async function joinTeamSupabase(
   maxMembers: number = 4
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // Check team member count
+    // 1. Try server API route first
+    if (typeof window !== 'undefined') {
+      try {
+        const response = await fetch('/api/teams', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'join',
+            teamId,
+            userId,
+            maxMembers,
+          }),
+        });
+
+        if (response.ok) {
+          const resData = await response.json();
+          if (resData.success) {
+            return { success: true };
+          } else if (resData.error) {
+            return { success: false, error: resData.error };
+          }
+        }
+      } catch (apiErr) {
+        console.warn('API /api/teams join error, falling back:', apiErr);
+      }
+    }
+
+    // 2. Direct client fallback
     const { data: members } = await supabase
       .from('team_members')
       .select('id')
@@ -1322,7 +1440,26 @@ export async function deleteTeamSupabase(
       return { success: false, error: 'Team ID and user ID are required' };
     }
 
-    // 1. Fetch team to verify user is leader and get event_id
+    // 1. Try server API route first
+    if (typeof window !== 'undefined') {
+      try {
+        const response = await fetch(`/api/teams?teamId=${encodeURIComponent(teamId)}&userId=${encodeURIComponent(userId)}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          const resData = await response.json();
+          if (resData.success) {
+            return { success: true };
+          }
+        }
+      } catch (apiErr) {
+        console.warn('API /api/teams DELETE error, falling back:', apiErr);
+      }
+    }
+
+    // 2. Direct client fallback
+    // Fetch team to verify user is leader and get event_id
     const { data: team, error: fetchErr } = await supabase
       .from('teams')
       .select('id, leader_id, event_id')

@@ -140,52 +140,70 @@ export default function HackathonDetailPage({ params }: PageProps) {
           </div>
 
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="space-y-4 max-w-3xl">
-              {/* Badges */}
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-white text-[#0099e6] border border-[#0099e6]/20 shadow-2xs">
-                  {categoryInfo.label}
-                </span>
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${statusInfo.color}`}>
-                  {statusInfo.label}
-                </span>
-                <span className="px-3 py-1 rounded-full text-xs font-medium bg-white text-slate-700 border border-slate-200">
-                  {eventTypeInfo.icon} {eventTypeInfo.label}
-                </span>
-                {event.featured && (
-                  <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-orange-100 text-[#ea580c] border border-orange-200 flex items-center gap-1">
-                    <Sparkles className="w-3.5 h-3.5" /> Featured Flagship
-                  </span>
-                )}
-                {isRegistered && (
-                  <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Registered
-                  </span>
-                )}
-              </div>
-
-              {/* Title */}
-              <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight">
-                {event.title}
-              </h1>
-
-              {/* Tagline if available */}
-              {event.tagline && (
-                <p className="text-base sm:text-lg font-medium text-slate-700">
-                  {event.tagline}
-                </p>
+            <div className="flex items-start gap-4 sm:gap-6 max-w-3xl">
+              {/* Event / Hackathon Logo */}
+              {(event.logoUrl || event.organizerLogo) ? (
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl border border-slate-200/90 bg-white p-1.5 shadow-md shrink-0 overflow-hidden flex items-center justify-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={event.logoUrl || event.organizerLogo}
+                    alt={event.title}
+                    className="w-full h-full object-cover rounded-xl sm:rounded-2xl"
+                  />
+                </div>
+              ) : (
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl border border-sky-200/90 bg-gradient-to-br from-sky-50 to-sky-100 shadow-md shrink-0 flex items-center justify-center text-2xl sm:text-3xl font-black text-[#0099e6]">
+                  {event.organizerAvatar || '⚡'}
+                </div>
               )}
 
-              {/* Organizer & Location */}
-              <div className="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-slate-600 font-medium">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">{event.organizerAvatar}</span>
-                  <span>Organized by <strong className="text-slate-900">{event.organizerName}</strong></span>
+              <div className="space-y-3 sm:space-y-4 flex-1 min-w-0">
+                {/* Badges */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-white text-[#0099e6] border border-[#0099e6]/20 shadow-2xs">
+                    {categoryInfo.label}
+                  </span>
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${statusInfo.color}`}>
+                    {statusInfo.label}
+                  </span>
+                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-white text-slate-700 border border-slate-200">
+                    {eventTypeInfo.icon} {eventTypeInfo.label}
+                  </span>
+                  {event.featured && (
+                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-orange-100 text-[#ea580c] border border-orange-200 flex items-center gap-1">
+                      <Sparkles className="w-3.5 h-3.5" /> Featured Flagship
+                    </span>
+                  )}
+                  {isRegistered && (
+                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Registered
+                    </span>
+                  )}
                 </div>
-                <span>•</span>
-                <div className="flex items-center gap-1.5 text-slate-500">
-                  <MapPin className="w-4 h-4 text-[#0099e6]" />
-                  <span>{event.location || 'Virtual / Online'}</span>
+
+                {/* Title */}
+                <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight">
+                  {event.title}
+                </h1>
+
+                {/* Tagline if available */}
+                {event.tagline && (
+                  <p className="text-base sm:text-lg font-medium text-slate-700">
+                    {event.tagline}
+                  </p>
+                )}
+
+                {/* Organizer & Location */}
+                <div className="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-slate-600 font-medium">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{event.organizerAvatar}</span>
+                    <span>Organized by <strong className="text-slate-900">{event.organizerName}</strong></span>
+                  </div>
+                  <span>•</span>
+                  <div className="flex items-center gap-1.5 text-slate-500">
+                    <MapPin className="w-4 h-4 text-[#0099e6]" />
+                    <span>{event.location || 'Virtual / Online'}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -300,15 +318,27 @@ export default function HackathonDetailPage({ params }: PageProps) {
                   </div>
                 )}
 
-                {/* Event Photo / Poster */}
+                {/* Event Photo / Poster with Logo Overlay */}
                 {(event.image || event.bannerUrl) && (
-                  <div className="w-full h-64 sm:h-80 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-sm relative">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={event.image || event.bannerUrl || ''}
-                      alt={event.title}
-                      className="w-full h-full object-cover"
-                    />
+                  <div className="relative mb-6">
+                    <div className="w-full h-64 sm:h-80 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-sm relative">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={event.image || event.bannerUrl || ''}
+                        alt={event.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    {(event.logoUrl || event.organizerLogo) && (
+                      <div className="absolute -bottom-5 left-6 w-18 h-18 sm:w-22 sm:h-22 rounded-2xl bg-white border-4 border-white shadow-xl overflow-hidden p-1 flex items-center justify-center z-10">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={event.logoUrl || event.organizerLogo}
+                          alt={`${event.title} logo`}
+                          className="w-full h-full object-cover rounded-xl"
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
 

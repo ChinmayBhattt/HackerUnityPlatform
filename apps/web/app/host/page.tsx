@@ -32,6 +32,7 @@ import {
   ExternalLink,
   ShieldCheck,
   Loader2,
+  Lock,
 } from 'lucide-react';
 import { EventCategory, EventStatus, EventType, CustomQuestion } from '@hackers-unity/shared-types';
 import { ExtendedEvent, MOCK_EVENTS } from '@/lib/mock-data';
@@ -61,6 +62,27 @@ const DIFFICULTY_LEVELS = [
   { value: 'BEGINNER', label: 'Beginner Friendly' },
   { value: 'INTERMEDIATE', label: 'Intermediate' },
   { value: 'ADVANCED', label: 'Advanced' },
+];
+
+const MANDATORY_REGISTRATION_FIELDS = [
+  { id: 'name', label: 'Full Name', icon: '👤', description: 'Participant real name' },
+  { id: 'email', label: 'Email Address', icon: '✉️', description: 'Communication & verification email' },
+  { id: 'phone', label: 'Phone Number', icon: '📞', description: 'Contact & WhatsApp number' },
+  { id: 'college', label: 'College / Institute', icon: '🎓', description: 'University / Institute name' },
+  { id: 'city', label: 'City / Location', icon: '📍', description: 'Current city location' },
+];
+
+const AVAILABLE_OPTIONAL_FIELDS = [
+  { id: 'github', label: 'GitHub Profile', icon: '🐙', hint: 'GitHub profile URL' },
+  { id: 'linkedin', label: 'LinkedIn Profile', icon: '💼', hint: 'LinkedIn profile link' },
+  { id: 'skills', label: 'Skills & Tech Stack', icon: '⚡', hint: 'Builder tech stack tags' },
+  { id: 'portfolio', label: 'Portfolio Website', icon: '🌐', hint: 'Personal portfolio / blog' },
+  { id: 'resume', label: 'Resume / CV Link', icon: '📄', hint: 'Drive or PDF resume link' },
+  { id: 'discord', label: 'Discord Handle', icon: '💬', hint: 'Discord username (user#1234)' },
+  { id: 'twitter', label: 'Twitter / X Profile', icon: '🐦', hint: 'Twitter profile handle' },
+  { id: 'tshirt', label: 'T-Shirt Size (Swag)', icon: '👕', hint: 'S, M, L, XL, XXL' },
+  { id: 'dietary', label: 'Dietary Preference', icon: '🥗', hint: 'Veg, Non-Veg, Vegan' },
+  { id: 'experience', label: 'Experience Level', icon: '🚀', hint: 'Beginner, Intermediate, Pro' },
 ];
 
 function HostHackathonContent() {
@@ -131,9 +153,14 @@ function HostHackathonContent() {
 
   // Step 5: Registration Settings
   const [registrationType, setRegistrationType] = useState<'FREE' | 'PAID'>('FREE');
-  const [registrationCapacity, setRegistrationCapacity] = useState<number | null>(500);
-  const [isUnlimitedCapacity, setIsUnlimitedCapacity] = useState(false);
-  const [approvalMode, setApprovalMode] = useState<'AUTO' | 'MANUAL'>('AUTO');
+  const [registrationCapacity, setRegistrationCapacity] = useState<number | null>(null);
+  const [isUnlimitedCapacity, setIsUnlimitedCapacity] = useState(true);
+  const [approvalMode, setApprovalMode] = useState<'AUTO' | 'MANUAL'>('MANUAL');
+  const [selectedOptionalFields, setSelectedOptionalFields] = useState<string[]>([
+    'github',
+    'linkedin',
+    'skills',
+  ]);
   const [customQuestions, setCustomQuestions] = useState<CustomQuestion[]>([]);
   const [newQuestionLabel, setNewQuestionLabel] = useState('');
   const [newQuestionType, setNewQuestionType] = useState<'text' | 'select' | 'textarea'>('text');
@@ -308,15 +335,20 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
           if (found.registrationCapacity) {
             setRegistrationCapacity(found.registrationCapacity);
             setIsUnlimitedCapacity(false);
-          } else if (found.maxParticipants) {
-            setRegistrationCapacity(found.maxParticipants);
-            setIsUnlimitedCapacity(false);
           } else {
-            setIsUnlimitedCapacity(true);
             setRegistrationCapacity(null);
+            setIsUnlimitedCapacity(true);
           }
           if (found.approvalMode) {
             setApprovalMode(found.approvalMode as 'AUTO' | 'MANUAL');
+          } else {
+            setApprovalMode('MANUAL');
+          }
+          if (found.registrationFields && Array.isArray(found.registrationFields)) {
+            const optionalInEvent = found.registrationFields.filter(
+              (f: string) => !['name', 'email', 'phone', 'college', 'city'].includes(f.toLowerCase())
+            );
+            setSelectedOptionalFields(optionalInEvent);
           }
           if (found.customQuestions && found.customQuestions.length > 0) {
             setCustomQuestions(found.customQuestions);
@@ -520,6 +552,14 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
       registrationType,
       registrationCapacity: isUnlimitedCapacity ? null : registrationCapacity,
       approvalMode,
+      registrationFields: [
+        'name',
+        'email',
+        'phone',
+        'college',
+        'city',
+        ...selectedOptionalFields,
+      ],
       customQuestions,
       stages: [
         {
@@ -1518,33 +1558,35 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
                     </div>
                   )}
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4">
                     <div>
                       <div className="flex items-center justify-between mb-1">
                         <label className="block text-xs font-bold text-slate-700">Registration Capacity</label>
                         <button
                           type="button"
                           onClick={() => {
-                            const next = !isUnlimitedCapacity;
-                            setIsUnlimitedCapacity(next);
-                            if (next) setRegistrationCapacity(null);
-                            else setRegistrationCapacity(500);
+                            setIsUnlimitedCapacity(!isUnlimitedCapacity);
+                            if (!isUnlimitedCapacity) {
+                              setRegistrationCapacity(null);
+                            } else {
+                              setRegistrationCapacity(500);
+                            }
                           }}
-                          className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-md cursor-pointer transition-colors ${
                             isUnlimitedCapacity
-                              ? 'bg-sky-500 text-white shadow-2xs'
+                              ? 'bg-sky-100 text-[#0099e6]'
                               : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                           }`}
                         >
-                          <span>♾️ Unlimited</span>
+                          {isUnlimitedCapacity ? '♾️ Unlimited' : 'Set to Unlimited'}
                         </button>
                       </div>
 
                       {isUnlimitedCapacity ? (
-                        <div className="w-full px-3 py-2 bg-sky-50/80 border border-sky-200 rounded-xl text-xs font-bold text-[#0099e6] flex items-center justify-between animate-in fade-in">
+                        <div className="w-full px-3.5 py-2.5 bg-sky-50/80 border border-sky-200 rounded-xl text-xs font-bold text-[#0099e6] flex items-center justify-between animate-in fade-in">
                           <span className="flex items-center gap-1.5">
                             <span>♾️</span>
-                            <span>Unlimited (No Cap)</span>
+                            <span>Unlimited Registrations (Default)</span>
                           </span>
                           <button
                             type="button"
@@ -1554,7 +1596,7 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
                             }}
                             className="text-[10px] text-slate-500 hover:text-slate-800 underline font-semibold cursor-pointer"
                           >
-                            Set limit
+                            Set capacity limit
                           </button>
                         </div>
                       ) : (
@@ -1568,7 +1610,7 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
                               const val = e.target.value === '' ? null : Number(e.target.value);
                               setRegistrationCapacity(val);
                             }}
-                            className="w-full pr-16 pl-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 outline-none focus:border-[#0099e6]"
+                            className="w-full pr-16 pl-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 outline-none focus:border-[#0099e6]"
                           />
                           <button
                             type="button"
@@ -1583,25 +1625,111 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
                         </div>
                       )}
                     </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Approval Mode</label>
-                      <select value={approvalMode} onChange={(e) => setApprovalMode(e.target.value as 'AUTO' | 'MANUAL')} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 outline-none focus:border-[#0099e6]">
-                        <option value="AUTO">✅ Auto Approve</option>
-                        <option value="MANUAL">🔒 Manual Approval</option>
-                      </select>
-                    </div>
                   </div>
 
-                  {/* Default Fields */}
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                    <label className="text-xs font-bold text-slate-700 mb-2 block">Default Registration Fields</label>
-                    <div className="flex flex-wrap gap-2">
-                      {['Name', 'Email', 'Phone', 'College', 'City', 'GitHub', 'LinkedIn', 'Skills'].map((field) => (
-                        <span key={field} className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-700 flex items-center gap-1.5">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                          {field}
+                  {/* Registration Fields Selection */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
+                    <div>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                        <div>
+                          <label className="text-xs font-bold text-slate-800 block">
+                            Registration Form Fields Setup
+                          </label>
+                          <p className="text-[11px] text-slate-500 font-medium">
+                            Mandatory fields are locked by default. Choose which optional fields hackers must provide.
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1.5 self-start sm:self-auto">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedOptionalFields(AVAILABLE_OPTIONAL_FIELDS.map((f) => f.id))}
+                            className="text-[10px] font-bold px-2 py-1 rounded-lg bg-sky-50 text-[#0099e6] hover:bg-sky-100 border border-sky-200 cursor-pointer transition-colors"
+                          >
+                            Select All
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedOptionalFields([])}
+                            className="text-[10px] font-bold px-2 py-1 rounded-lg bg-white text-slate-500 hover:text-slate-800 border border-slate-200 cursor-pointer transition-colors"
+                          >
+                            Clear Optional
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* 1. Mandatory Fields (Locked) */}
+                      <div className="space-y-1.5 mb-4">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 flex items-center gap-1">
+                          <Lock className="w-3 h-3 text-emerald-600" />
+                          <span>Mandatory Core Fields (Always Required)</span>
                         </span>
-                      ))}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                          {MANDATORY_REGISTRATION_FIELDS.map((field) => (
+                            <div
+                              key={field.id}
+                              className="px-3 py-2 rounded-xl bg-white border-2 border-emerald-200/80 shadow-2xs flex items-center justify-between gap-1.5 select-none"
+                            >
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <span className="text-sm">{field.icon}</span>
+                                <span className="text-xs font-bold text-slate-800 truncate">{field.label}</span>
+                              </div>
+                              <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 uppercase shrink-0">
+                                Req *
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* 2. Optional Fields (Toggleable) */}
+                      <div className="space-y-1.5">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+                          <Sparkles className="w-3 h-3 text-[#0099e6]" />
+                          <span>Optional Additional Fields (Click to Enable / Disable)</span>
+                        </span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                          {AVAILABLE_OPTIONAL_FIELDS.map((field) => {
+                            const isSelected = selectedOptionalFields.includes(field.id);
+                            return (
+                              <button
+                                key={field.id}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedOptionalFields((prev) =>
+                                    prev.includes(field.id)
+                                      ? prev.filter((id) => id !== field.id)
+                                      : [...prev, field.id]
+                                  );
+                                }}
+                                className={`p-2.5 rounded-xl border text-left transition-all flex items-center justify-between gap-2 cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-sky-50/80 border-[#0099e6] shadow-xs ring-1 ring-[#0099e6]/20'
+                                    : 'bg-white border-slate-200 hover:border-slate-300 opacity-80'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span className="text-base">{field.icon}</span>
+                                  <div className="min-w-0">
+                                    <div className="text-xs font-bold text-slate-900 truncate flex items-center gap-1">
+                                      <span>{field.label}</span>
+                                    </div>
+                                    <div className="text-[10px] text-slate-400 truncate">{field.hint}</div>
+                                  </div>
+                                </div>
+                                <div
+                                  className={`w-4 h-4 rounded-md flex items-center justify-center shrink-0 border transition-all ${
+                                    isSelected
+                                      ? 'bg-[#0099e6] border-[#0099e6] text-white'
+                                      : 'border-slate-300 bg-slate-50'
+                                  }`}
+                                >
+                                  {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -1723,7 +1851,7 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
                       <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
                         <div><span className="text-slate-500">Type:</span> <span className={`font-semibold ${registrationType === 'PAID' ? 'text-[#ea580c]' : 'text-slate-900'}`}>{registrationType === 'PAID' ? 'Paid Entry (Verification Required)' : 'Free Entry'}</span></div>
                         <div><span className="text-slate-500">Capacity:</span> <span className="font-semibold text-slate-900">{isUnlimitedCapacity || !registrationCapacity ? '♾️ Unlimited' : `${registrationCapacity} Participants`}</span></div>
-                        <div><span className="text-slate-500">Approval:</span> <span className="font-semibold text-slate-900">{approvalMode === 'AUTO' ? '✅ Auto' : '🔒 Manual'}</span></div>
+                        <div><span className="text-slate-500">Approval:</span> <span className="font-semibold text-slate-900">🔒 Manual (Default)</span></div>
                         <div><span className="text-slate-500">Custom Q&apos;s:</span> <span className="font-semibold text-slate-900">{customQuestions.length}</span></div>
                       </div>
                     </div>
