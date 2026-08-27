@@ -292,6 +292,9 @@ export function clearStoredUser(): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.removeItem(STORAGE_KEYS.USER_PROFILE);
+    localStorage.removeItem(STORAGE_KEYS.REGISTRATIONS);
+    localStorage.removeItem(STORAGE_KEYS.BOOKMARKS);
+    localStorage.removeItem(STORAGE_KEYS.HOSTED_EVENTS);
     window.dispatchEvent(new Event('hackers_unity_storage_change'));
   } catch (e) {
     console.error(e);

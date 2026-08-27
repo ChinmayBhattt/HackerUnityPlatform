@@ -290,6 +290,8 @@ export async function fetchEventBySlug(slugOrId: string): Promise<ExtendedEvent 
 
 export async function fetchOrganizerEvents(organizerId: string): Promise<ExtendedEvent[]> {
   try {
+    if (!organizerId) return [];
+
     const deletedIds: string[] =
       typeof window !== 'undefined'
         ? JSON.parse(localStorage.getItem('hackers_unity_deleted_events') || '[]')
@@ -304,8 +306,9 @@ export async function fetchOrganizerEvents(organizerId: string): Promise<Extende
     const remoteEvents = (!error && data) ? data.map(mapDbEventToExtended) : [];
 
     const custom = typeof window !== 'undefined' ? getCustomEvents() : [];
+    // Strictly match only events belonging to THIS organizer
     const customOrganizerEvents = custom.filter(
-      (e) => e.organizerId === organizerId || !e.organizerId || e.organizerId === 'usr_organizer' || e.organizerId === 'usr_me'
+      (e) => e.organizerId === organizerId
     );
 
     const map = new Map<string, ExtendedEvent>();
@@ -322,14 +325,7 @@ export async function fetchOrganizerEvents(organizerId: string): Promise<Extende
 
     return Array.from(map.values());
   } catch {
-    const deletedIds: string[] =
-      typeof window !== 'undefined'
-        ? JSON.parse(localStorage.getItem('hackers_unity_deleted_events') || '[]')
-        : [];
-    const custom = typeof window !== 'undefined' ? getCustomEvents() : [];
-    return custom
-      .filter((e) => e.organizerId === organizerId || !e.organizerId || e.organizerId === 'usr_me')
-      .filter((e) => !deletedIds.includes(e.id) && !deletedIds.includes(e.slug));
+    return [];
   }
 }
 

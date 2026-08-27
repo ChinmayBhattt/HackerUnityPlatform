@@ -21,7 +21,7 @@ export function Footer() {
   ];
 
   return (
-    <footer className="border-t border-slate-800/80 bg-[#0b0e14] text-slate-400 text-xs mt-20">
+    <footer className="border-t border-slate-800/80 bg-[#0b0e14] text-slate-400 text-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12">
           {/* Brand Col (5 cols) */}
@@ -102,10 +102,23 @@ export function Footer() {
                   <span className="font-medium">+91 9324264950</span>
                 </a>
               </li>
-              <li className="flex items-center gap-2.5 text-slate-400">
+              {/* <li className="flex items-center gap-2.5 text-slate-400">
                 <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
                 <span className="font-medium">A-41, Vinmar House, Ground Floor, Road no. 2, MIDC, Andheri East, Mumbai - 400093</span>
-              </li>
+                
+              </li> */}
+                              <li className="flex items-center gap-2.5 text-slate-400">
+                  <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
+
+                  <a
+                    href="https://www.google.com/maps/search/?api=1&query=Trainzex+AI"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium hover:text-white transition-colors cursor-pointer"
+                  >
+                    A-41, Vinmar House, Ground Floor, Road no. 2, MIDC, Andheri East, Mumbai - 400093
+                  </a>
+                </li>
             </ul>
           </div>
 
@@ -155,14 +168,14 @@ export function Footer() {
             </h4>
             <ul className="space-y-2.5 text-xs">
               <li>
-                <a href="#" className="text-slate-400 hover:text-white transition-colors">
+                <Link href="/privacy" className="text-slate-400 hover:text-white transition-colors">
                   Privacy Policy
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-slate-400 hover:text-white transition-colors">
+                <Link href="/terms" className="text-slate-400 hover:text-white transition-colors">
                   Terms of Service
-                </a>
+                </Link>
               </li>
               <li>
                 <Link href="/brand-guidelines" className="text-slate-400 hover:text-white transition-colors">

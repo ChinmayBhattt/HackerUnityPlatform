@@ -73,8 +73,7 @@ import { formatDate, formatCurrency } from '@/lib/utils';
 import { AuthModal } from '@/components/auth-modal';
 import { EditEventModal } from '@/components/edit-event-modal';
 import { PublicProfileModal } from '@/components/public-profile-modal';
-import { useUserTeams, useMyInvites } from '@/lib/hooks/use-team-invites';
-import { fetchTeamInvites, sendTeamInvite } from '@/lib/supabase-service';
+
 import { UserRole } from '@hackers-unity/shared-types';
 
 export default function DashboardPage() {
@@ -83,7 +82,7 @@ export default function DashboardPage() {
 
   // Active Tab in the Left Sidebar
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'participations' | 'organizing' | 'bookmarks' | 'teams'
+    'overview' | 'participations' | 'organizing' | 'bookmarks'
   >('overview');
 
   // Realtime Data States
@@ -116,9 +115,7 @@ export default function DashboardPage() {
   const [loadingRegistrations, setLoadingRegistrations] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
-  // Teams & Invites count
-  const { userTeams } = useUserTeams();
-  const { pendingInvites } = useMyInvites();
+
 
   const userId = supabaseUser?.id || user?.id;
 
@@ -147,7 +144,7 @@ export default function DashboardPage() {
       const combinedEvents = Array.from(eventMap.values());
       setAllEvents(combinedEvents);
 
-      // 2. Fetch User Registrations (Remote + Local fallback)
+      // 2. Fetch User Registrations (Authenticated user gets only their DB registrations)
       let userRegs: UserRegistrationItem[] = [];
       if (userId && userId.length > 10 && userId.includes('-')) {
         const remoteRegs = await fetchUserRegistrations(userId);
@@ -162,35 +159,19 @@ export default function DashboardPage() {
             status: r.status || 'CONFIRMED',
           }));
         }
+        setRegistrations(userRegs);
+      } else {
+        const localRegs = getMyRegistrations();
+        setRegistrations(localRegs);
       }
-      // Merge with local registrations
-      const localRegs = getMyRegistrations();
-      const regMap = new Map<string, UserRegistrationItem>();
-      localRegs.forEach((r) => regMap.set(r.eventId, r));
-      userRegs.forEach((r) => regMap.set(r.eventId, r));
-      setRegistrations(Array.from(regMap.values()));
 
-      // 3. Fetch User Hosted Events
+      // 3. Fetch User Hosted Events (Strictly only events created by this organizer)
       if (userId && userId.length > 10 && userId.includes('-')) {
         const hosted = await fetchOrganizerEvents(userId);
         const filteredHosted = hosted.filter((e) => !deletedIds.includes(e.id) && !deletedIds.includes(e.slug));
-        if (filteredHosted && filteredHosted.length > 0) {
-          setMyHostedEvents(filteredHosted);
-        } else if (
-          user?.role === UserRole.ADMIN ||
-          user?.role === UserRole.SUPER_ADMIN ||
-          user?.role === UserRole.ORGANIZER
-        ) {
-          // If admin/organizer, show all managed events
-          setMyHostedEvents(combinedEvents);
-        } else {
-          // Check local custom events
-          const custom = combinedEvents.filter((e) => e.organizerId === userId || e.id.startsWith('evt_'));
-          setMyHostedEvents(custom);
-        }
+        setMyHostedEvents(filteredHosted);
       } else {
-        const custom = combinedEvents.filter((e) => (e.organizerId === 'usr_organizer' || e.id.startsWith('evt_')) && !deletedIds.includes(e.id) && !deletedIds.includes(e.slug));
-        setMyHostedEvents(custom.length > 0 ? custom : combinedEvents.slice(0, 3));
+        setMyHostedEvents([]);
       }
 
       // 4. Bookmarks
@@ -242,13 +223,7 @@ export default function DashboardPage() {
           loadDashboardData();
         }
       )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'team_invitations' },
-        () => {
-          loadDashboardData();
-        }
-      )
+
       .on('broadcast', { event: 'registration_created' }, () => {
         loadDashboardData();
       })
@@ -467,7 +442,7 @@ export default function DashboardPage() {
         </div>
         <h1 className="text-3xl font-black text-slate-900 tracking-tight">Hacker Dashboard</h1>
         <p className="text-sm text-slate-500 mt-2 max-w-md">
-          Sign in or create an account to view your hackathons, team invitations, hosted events, and analytics.
+          Sign in or create an account to view your hackathons, hosted events, and analytics.
         </p>
         <div className="mt-8 flex items-center gap-4">
           <button
@@ -509,7 +484,7 @@ export default function DashboardPage() {
             My Dashboard & Workspaces
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
-            Monitor real-time participation velocity, manage registrations, inspect hosted hackathons, and collaborate with squads.
+            Monitor real-time participation velocity, manage registrations, and inspect hosted hackathons.
           </p>
         </div>
 
@@ -665,30 +640,7 @@ export default function DashboardPage() {
               </div>
             </button>
 
-            {/* Nav Tab 5: Squads & Invites */}
-            <button
-              onClick={() => setActiveTab('teams')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${
-                activeTab === 'teams'
-                  ? 'bg-[#0099e6] text-white shadow-xs'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`}
-            >
-              <Users className="w-4 h-4 shrink-0" />
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <span>Squads & Team Invites</span>
-                  {pendingInvites.length > 0 && (
-                    <span className="px-2 py-0.5 rounded-full bg-[#ea580c] text-white text-[10px] font-extrabold animate-pulse">
-                      {pendingInvites.length} new
-                    </span>
-                  )}
-                </div>
-                <div className={`text-[10px] font-normal ${activeTab === 'teams' ? 'text-white/80' : 'text-slate-400'}`}>
-                  Team matchmaking & invites
-                </div>
-              </div>
-            </button>
+
 
             {/* Admin Broadcast Studio Quick Link (for Admins & Organizers) */}
             {(user?.role === UserRole.ADMIN ||
@@ -761,7 +713,7 @@ export default function DashboardPage() {
                       {registrations.length}
                     </div>
                     <div className="flex items-center gap-1 mt-1 text-[10px] font-bold text-purple-700">
-                      <span>Active squads</span>
+                      <span>Active events</span>
                     </div>
                   </div>
                 </div>
@@ -1091,14 +1043,7 @@ export default function DashboardPage() {
                             <ArrowRight className="w-3.5 h-3.5" />
                           </Link>
 
-                          {matchedEvent?.isTeamEvent && (
-                            <button
-                              onClick={() => setActiveTab('teams')}
-                              className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
-                            >
-                              Manage Squad
-                            </button>
-                          )}
+
                         </div>
                       </div>
                     );
@@ -1319,24 +1264,7 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* ─────────────────────────────────────────────────────────────
-              5. SECTION: SQUADS & TEAM MANAGEMENT
-             ───────────────────────────────────────────────────────────── */}
-          {activeTab === 'teams' && (
-            <div className="p-7 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6 animate-in fade-in duration-150">
-              <div className="border-b border-slate-100 pb-4">
-                <h2 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                  <Users className="w-5 h-5 text-[#0099e6]" />
-                  <span>Squads & Team Invites</span>
-                </h2>
-                <p className="text-xs text-slate-500 mt-1">
-                  Manage your hackathon teams, invite teammates with secure links, and review incoming requests.
-                </p>
-              </div>
 
-              <DashboardTeamsTab />
-            </div>
-          )}
         </main>
       </div>
 
@@ -1545,368 +1473,3 @@ export default function DashboardPage() {
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   DashboardTeamsTab — Real data-driven squads & invitations tab
-   ═══════════════════════════════════════════════════════════════════════════ */
-function DashboardTeamsTab() {
-  const { user, supabaseUser } = useAuth();
-  const userId = supabaseUser?.id || user?.id;
-
-  const { userTeams, loading: teamsLoading, leaveTeam, deleteTeam, refreshUserTeams } = useUserTeams();
-  const { pendingInvites, loading: invitesLoading, acceptInvite, declineInvite, refreshMyInvites } = useMyInvites();
-
-  // Per-team invite state
-  const [inviteEmailMap, setInviteEmailMap] = useState<Record<string, string>>({});
-  const [inviteSendingMap, setInviteSendingMap] = useState<Record<string, boolean>>({});
-  const [inviteResultMap, setInviteResultMap] = useState<
-    Record<string, { type: 'success' | 'error'; msg: string } | null>
-  >({});
-  const [teamInvitesMap, setTeamInvitesMap] = useState<Record<string, any[]>>({});
-  const [copiedMap, setCopiedMap] = useState<Record<string, boolean>>({});
-  const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
-  const [leavingTeam, setLeavingTeam] = useState<string | null>(null);
-  const [processingInvite, setProcessingInvite] = useState<string | null>(null);
-  const [deleteConfirmSquad, setDeleteConfirmSquad] = useState<any | null>(null);
-  const [deletingSquad, setDeletingSquad] = useState(false);
-
-  // Load invites for expanded team
-  const handleExpandTeam = async (teamId: string) => {
-    if (expandedTeam === teamId) {
-      setExpandedTeam(null);
-      return;
-    }
-    setExpandedTeam(teamId);
-    try {
-      const invites = await fetchTeamInvites(teamId);
-      setTeamInvitesMap((prev) => ({ ...prev, [teamId]: invites }));
-    } catch {}
-  };
-
-  const getTeamInviteUrl = (teamId: string, eventSlug: string) => {
-    const invites = teamInvitesMap[teamId] || [];
-    const pending = invites.find((i: any) => i.status === 'PENDING');
-    const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    return pending?.invite_token
-      ? `${origin}/hackathons/${eventSlug}/invite?token=${pending.invite_token}`
-      : `${origin}/hackathons/${eventSlug}/register`;
-  };
-
-  const handleSendInvite = async (teamId: string, eventId: string) => {
-    const email = inviteEmailMap[teamId]?.trim();
-    if (!email || !email.includes('@') || !userId) return;
-
-    setInviteSendingMap((prev) => ({ ...prev, [teamId]: true }));
-    setInviteResultMap((prev) => ({ ...prev, [teamId]: null }));
-
-    try {
-      const res = await sendTeamInvite(teamId, eventId, userId, email);
-      if (res.success) {
-        setInviteResultMap((prev) => ({
-          ...prev,
-          [teamId]: { type: 'success', msg: `Invite created for ${email}!` },
-        }));
-        setInviteEmailMap((prev) => ({ ...prev, [teamId]: '' }));
-        const invites = await fetchTeamInvites(teamId);
-        setTeamInvitesMap((prev) => ({ ...prev, [teamId]: invites }));
-      } else {
-        setInviteResultMap((prev) => ({
-          ...prev,
-          [teamId]: { type: 'error', msg: res.error || 'Failed to send.' },
-        }));
-      }
-    } catch (err: any) {
-      setInviteResultMap((prev) => ({ ...prev, [teamId]: { type: 'error', msg: err.message } }));
-    } finally {
-      setInviteSendingMap((prev) => ({ ...prev, [teamId]: false }));
-    }
-  };
-
-  const handleCopyLink = (teamId: string, eventSlug: string) => {
-    const link = getTeamInviteUrl(teamId, eventSlug);
-    navigator.clipboard.writeText(link);
-    setCopiedMap((prev) => ({ ...prev, [teamId]: true }));
-    setTimeout(() => setCopiedMap((prev) => ({ ...prev, [teamId]: false })), 2500);
-  };
-
-  const handleLeaveTeam = async (teamId: string) => {
-    setLeavingTeam(teamId);
-    await leaveTeam(teamId);
-    setLeavingTeam(null);
-  };
-
-  const handleDeleteSquad = async () => {
-    if (!deleteConfirmSquad || !userId) return;
-    setDeletingSquad(true);
-    try {
-      await deleteTeam(deleteConfirmSquad.id);
-      setDeleteConfirmSquad(null);
-      refreshUserTeams();
-    } catch (e) {
-      console.warn('Delete squad error:', e);
-    } finally {
-      setDeletingSquad(false);
-    }
-  };
-
-  const handleAcceptInvite = async (token: string) => {
-    setProcessingInvite(token);
-    await acceptInvite(token);
-    refreshUserTeams();
-    setProcessingInvite(null);
-  };
-
-  const handleDeclineInvite = async (token: string) => {
-    setProcessingInvite(token);
-    await declineInvite(token);
-    setProcessingInvite(null);
-  };
-
-  return (
-    <div className="space-y-6 animate-in fade-in">
-      {/* ─── Pending Invites ─── */}
-      {pendingInvites.length > 0 && (
-        <div className="p-6 rounded-3xl bg-amber-50/50 border border-amber-200/80 shadow-xs space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
-              <Mail className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-slate-900">Pending Squad Invitations</h3>
-              <p className="text-[10px] text-slate-500">
-                You have {pendingInvites.length} pending squad invite{pendingInvites.length > 1 ? 's' : ''}
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            {pendingInvites.map((inv: any) => (
-              <div
-                key={inv.id}
-                className="p-4 rounded-2xl bg-white border border-amber-200/80 flex items-center justify-between gap-4 shadow-2xs"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0099e6] to-sky-600 flex items-center justify-center text-white text-sm font-black shrink-0">
-                    {(inv.teams?.name || 'T').charAt(0).toUpperCase()}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-slate-900 truncate">{inv.teams?.name || 'Unknown Team'}</p>
-                    <p className="text-[10px] text-slate-500 truncate">
-                      Invited by {inv.profiles?.name || 'A teammate'} • {inv.events?.title || 'Hackathon'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={() => handleAcceptInvite(inv.invite_token)}
-                    disabled={processingInvite === inv.invite_token}
-                    className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm disabled:opacity-50 transition-all cursor-pointer"
-                  >
-                    {processingInvite === inv.invite_token ? (
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                    ) : (
-                      <CheckCircle2 className="w-3 h-3" />
-                    )}
-                    Accept
-                  </button>
-                  <button
-                    onClick={() => handleDeclineInvite(inv.invite_token)}
-                    disabled={processingInvite === inv.invite_token}
-                    className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold flex items-center gap-1.5 disabled:opacity-50 transition-colors cursor-pointer"
-                  >
-                    Decline
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ─── My Active Squads ─── */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-base font-black text-slate-900">Your Active Squads</h3>
-            <p className="text-xs text-slate-500">Teams you lead or are a member of.</p>
-          </div>
-          <span className="text-xs font-bold text-[#0099e6] bg-sky-50 px-2.5 py-1 rounded-full border border-sky-200">
-            {userTeams.length} Squad{userTeams.length !== 1 ? 's' : ''}
-          </span>
-        </div>
-
-        {teamsLoading ? (
-          <div className="py-12 text-center text-slate-400">
-            <Loader2 className="w-6 h-6 animate-spin text-[#0099e6] mx-auto mb-2" />
-            <p className="text-xs font-medium">Loading squads...</p>
-          </div>
-        ) : userTeams.length === 0 ? (
-          <div className="p-8 rounded-3xl bg-slate-50 border border-slate-200 text-center space-y-2">
-            <div className="w-12 h-12 rounded-2xl bg-sky-50 text-[#0099e6] flex items-center justify-center mx-auto mb-2">
-              <Users className="w-6 h-6" />
-            </div>
-            <h4 className="text-sm font-bold text-slate-900">No Active Squads</h4>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              Join or form a team during hackathon registration to collaborate on prototypes.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {userTeams.map((teamData: any) => {
-              const team = teamData.teams || teamData;
-              const isLeader = team.leader_id === userId || teamData.role === 'LEADER';
-              const eventSlug = team.events?.slug || 'codewars';
-              const isExpanded = expandedTeam === team.id;
-
-              return (
-                <div
-                  key={team.id}
-                  className="rounded-3xl border border-slate-200/90 bg-white overflow-hidden shadow-2xs hover:border-[#0099e6]/40 transition-all"
-                >
-                  <div className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3.5">
-                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#0099e6] to-[#0284c7] text-white font-black text-base flex items-center justify-center shadow-xs shrink-0">
-                        {(team.name || 'S').charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-base font-black text-slate-900">{team.name}</h4>
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                              isLeader
-                                ? 'bg-orange-50 text-[#ea580c] border border-orange-200'
-                                : 'bg-sky-50 text-[#0099e6] border border-sky-200'
-                            }`}
-                          >
-                            {isLeader ? 'Squad Lead' : 'Member'}
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          Event: <strong className="text-slate-700">{team.events?.title || 'Hackathon Arena'}</strong>
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <button
-                        onClick={() => handleExpandTeam(team.id)}
-                        className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
-                      >
-                        {isExpanded ? 'Hide Invites' : 'Invite & Members'}
-                      </button>
-
-                      <button
-                        onClick={() => handleCopyLink(team.id, eventSlug)}
-                        className="px-3 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 text-[#0099e6] border border-sky-200 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
-                      >
-                        {copiedMap[team.id] ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
-                        <span>{copiedMap[team.id] ? 'Copied!' : 'Copy Link'}</span>
-                      </button>
-
-                      {isLeader ? (
-                        <button
-                          onClick={() => setDeleteConfirmSquad(team)}
-                          className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 transition-colors cursor-pointer"
-                          title="Disband Squad"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => handleLeaveTeam(team.id)}
-                          disabled={leavingTeam === team.id}
-                          className="px-3 py-1.5 rounded-xl text-rose-600 hover:bg-rose-50 text-xs font-bold transition-colors cursor-pointer"
-                        >
-                          {leavingTeam === team.id ? 'Leaving...' : 'Leave Squad'}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Expanded Invite & Roster Panel */}
-                  {isExpanded && (
-                    <div className="p-5 border-t border-slate-100 bg-slate-50/80 space-y-4">
-                      {/* Send Invite Input */}
-                      <div className="flex gap-2">
-                        <input
-                          type="email"
-                          value={inviteEmailMap[team.id] || ''}
-                          onChange={(e) =>
-                            setInviteEmailMap((prev) => ({ ...prev, [team.id]: e.target.value }))
-                          }
-                          placeholder="Enter teammate's email to invite..."
-                          className="flex-1 px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0099e6]"
-                        />
-                        <button
-                          onClick={() => handleSendInvite(team.id, team.event_id)}
-                          disabled={inviteSendingMap[team.id]}
-                          className="px-4 py-2 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer disabled:opacity-50"
-                        >
-                          {inviteSendingMap[team.id] ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : (
-                            <Plus className="w-3.5 h-3.5" />
-                          )}
-                          <span>Send Invite</span>
-                        </button>
-                      </div>
-
-                      {inviteResultMap[team.id] && (
-                        <div
-                          className={`p-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 ${
-                            inviteResultMap[team.id]?.type === 'success'
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                              : 'bg-rose-50 text-rose-700 border border-rose-200'
-                          }`}
-                        >
-                          {inviteResultMap[team.id]?.type === 'success' ? (
-                            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                          ) : (
-                            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                          )}
-                          <span>{inviteResultMap[team.id]?.msg}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Delete Squad Confirmation Modal */}
-      {deleteConfirmSquad && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
-              <Trash2 className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="text-lg font-black text-slate-900">Disband Squad?</h3>
-              <p className="text-xs text-slate-500 mt-1 font-medium">
-                Are you sure you want to disband <strong className="text-slate-800">&quot;{deleteConfirmSquad.name}&quot;</strong>? All members will be removed.
-              </p>
-            </div>
-            <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
-              <button
-                onClick={() => setDeleteConfirmSquad(null)}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteSquad}
-                disabled={deletingSquad}
-                className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md transition-all disabled:opacity-50"
-              >
-                {deletingSquad ? 'Disbanding...' : 'Yes, Disband'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}

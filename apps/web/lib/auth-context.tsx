@@ -36,25 +36,97 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Helper to build user from metadata
+  const buildUserFromMeta = (sbUser: SupabaseUser): UserPublic => {
+    const meta = sbUser.user_metadata || {};
+    return {
+      id: sbUser.id,
+      name: meta.name || meta.full_name || sbUser.email?.split('@')[0] || 'Hacker',
+      email: sbUser.email || '',
+      phone: meta.phone || sbUser.phone || null,
+      role: (meta.role as UserRole) || UserRole.PARTICIPANT,
+      college: meta.college || 'Developer Guild',
+      organization: meta.organization || meta.company || 'Developer Community',
+      graduationYear: meta.graduation_year || 2026,
+      bio: meta.bio || 'Passionate builder & hackathon enthusiast.',
+      avatarUrl: meta.avatar_url || '⚡',
+      bannerUrl: meta.banner_url || null,
+      skills: meta.skills || ['Next.js', 'TypeScript', 'PostgreSQL'],
+      resumeUrl: null,
+      socialLinks: {
+        github: meta.github_url || '',
+        linkedin: meta.linkedin_url || '',
+        portfolio: meta.portfolio_url || '',
+      },
+      professionType: meta.profession_type || 'STUDENT',
+      degree: meta.degree || 'B.Tech / B.E (Engineering)',
+      branch: meta.branch || 'Computer Science & Engineering (CSE)',
+      company: meta.company || meta.organization || '',
+      jobTitle: meta.job_title || 'Software Engineer',
+      experienceYears: meta.experience_years || '1-3 years',
+      industry: meta.industry || 'AI/ML, GenAI & Autonomous Systems',
+      emailVerified: !!sbUser.email_confirmed_at,
+      createdAt: sbUser.created_at,
+    };
+  };
+
   // Load initial session
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    async function initAuth() {
+      // If returning from OAuth with a ?code= parameter directly
+      if (typeof window !== 'undefined' && window.location.search.includes('code=')) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        if (code) {
+          try {
+            console.log('[AuthProvider] 🔄 Exchanging OAuth code on page init...');
+            const { data } = await supabase.auth.exchangeCodeForSession(code);
+            if (data.session) {
+              setSession(data.session);
+              if (data.session.user) {
+                setSupabaseUser(data.session.user);
+                const tempUser = buildUserFromMeta(data.session.user);
+                setUser(tempUser);
+                saveStoredUser(tempUser);
+                await syncProfileFromSupabaseUser(data.session.user);
+                setLoading(false);
+                return;
+              }
+            }
+          } catch (e) {
+            console.warn('[AuthProvider] Code exchange warning on init:', e);
+          }
+        }
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
       if (session?.user) {
         setSupabaseUser(session.user);
-        syncProfileFromSupabaseUser(session.user);
+        const tempUser = buildUserFromMeta(session.user);
+        setUser(tempUser);
+        saveStoredUser(tempUser);
+        await syncProfileFromSupabaseUser(session.user);
       } else {
-        setUser(getStoredUser());
+        const stored = getStoredUser();
+        if (stored) {
+          setUser(stored);
+        }
       }
       setLoading(false);
-    });
+    }
+
+    initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
       if (session?.user) {
         setSupabaseUser(session.user);
+        const tempUser = buildUserFromMeta(session.user);
+        setUser(tempUser);
+        saveStoredUser(tempUser);
         await syncProfileFromSupabaseUser(session.user);
-      } else if (event === 'SIGNED_OUT' || !session) {
+      } else if (event === 'SIGNED_OUT') {
         setSupabaseUser(null);
         setUser(null);
         clearStoredUser();
@@ -64,7 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const handleStorageChange = () => {
       const stored = getStoredUser();
-      if (!supabaseUser) {
+      if (!supabaseUser && stored) {
         setUser(stored);
       }
     };
@@ -286,10 +358,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithOAuth = async (provider: 'google' | 'github' = 'google') => {
     try {
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/dashboard` : undefined,
+          redirectTo: origin ? `${origin}/auth/callback?next=/dashboard` : undefined,
         },
       });
       if (error) return { error: error.message };
