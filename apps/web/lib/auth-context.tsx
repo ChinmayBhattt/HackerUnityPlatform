@@ -5,6 +5,7 @@ import { supabase } from './supabase';
 import { UserPublic, UserRole } from '@hackers-unity/shared-types';
 import { getStoredUser, saveStoredUser, clearStoredUser, syncBookmarksWithSupabase } from './storage';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { formatAndValidateIndianPhone } from './phone-utils';
 
 interface AuthContextType {
   user: UserPublic | null;
@@ -300,29 +301,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithPhone = async (phone: string) => {
     try {
+      const validation = formatAndValidateIndianPhone(phone);
+      if (!validation.isValid || !validation.formattedPhone) {
+        return { error: validation.error || 'Please enter a valid 10-digit Indian mobile number.' };
+      }
+
+      const e164Phone = validation.formattedPhone;
+      console.log('[Supabase Phone Auth] 📲 Sending SMS OTP to E.164 phone number:', e164Phone);
+
       const { error } = await supabase.auth.signInWithOtp({
-        phone: phone.trim(),
+        phone: e164Phone,
       });
-      if (error) return { error: error.message };
+
+      if (error) {
+        console.error('[Supabase Phone Auth] ❌ signInWithOtp error:', error.message, error);
+        return { error: error.message };
+      }
+
+      console.log('[Supabase Phone Auth] ✅ SMS OTP successfully requested for:', e164Phone);
       return {};
     } catch (err: any) {
+      console.error('[Supabase Phone Auth] ❌ signInWithPhone exception:', err);
       return { error: err.message || 'Phone sign in error' };
     }
   };
 
   const verifyPhoneOtp = async (phone: string, token: string) => {
     try {
+      const validation = formatAndValidateIndianPhone(phone);
+      if (!validation.isValid || !validation.formattedPhone) {
+        return { error: validation.error || 'Please enter a valid 10-digit Indian mobile number.' };
+      }
+
+      const e164Phone = validation.formattedPhone;
+      const cleanToken = token.trim();
+
+      if (!cleanToken || cleanToken.length < 6) {
+        return { error: 'Please enter a valid 6-digit OTP code.' };
+      }
+
+      console.log('[Supabase Phone Auth] 🔐 Verifying OTP for E.164 phone number:', e164Phone, 'Code:', cleanToken);
+
       const { data, error } = await supabase.auth.verifyOtp({
-        phone: phone.trim(),
-        token: token.trim(),
+        phone: e164Phone,
+        token: cleanToken,
         type: 'sms',
       });
-      if (error) return { error: error.message };
+
+      if (error) {
+        console.error('[Supabase Phone Auth] ❌ verifyOtp error:', error.message, error);
+        return { error: error.message };
+      }
+
+      console.log('[Supabase Phone Auth] ✅ OTP verification successful for:', e164Phone, 'User:', data.user?.id);
       if (data.user) {
         await syncProfileFromSupabaseUser(data.user);
       }
       return {};
     } catch (err: any) {
+      console.error('[Supabase Phone Auth] ❌ verifyPhoneOtp exception:', err);
       return { error: err.message || 'OTP verification failed' };
     }
   };

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 
 import { useAuth } from '@/lib/auth-context';
+import { formatAndValidateIndianPhone } from '@/lib/phone-utils';
 import { Logo } from './logo';
 
 interface AuthModalProps {
@@ -61,19 +62,37 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
 
     // 1. Phone OTP Verification
     if (method === 'phone') {
+      const phoneValidation = formatAndValidateIndianPhone(phoneNumber);
+      if (!phoneValidation.isValid || !phoneValidation.formattedPhone) {
+        setErrorMessage(phoneValidation.error || 'Please enter a valid 10-digit Indian mobile number.');
+        setIsLoading(false);
+        return;
+      }
+
+      const e164Phone = phoneValidation.formattedPhone;
+      console.log('[AuthModal] Submitting Phone OTP request for (E.164):', e164Phone);
+
       if (!otpSent) {
-        const res = await signInWithPhone(phoneNumber);
+        const res = await signInWithPhone(e164Phone);
         if (res.error) {
           setErrorMessage(res.error);
           setIsLoading(false);
           return;
         }
         setOtpSent(true);
-        setInfoMessage('SMS code sent! Please enter the 6-digit OTP code below.');
+        setInfoMessage(`SMS OTP sent to ${e164Phone}! Please enter the 6-digit code below.`);
         setIsLoading(false);
         return;
       } else {
-        const res = await verifyPhoneOtp(phoneNumber, otpCode);
+        const cleanOtp = otpCode.trim();
+        if (!cleanOtp || cleanOtp.length < 6) {
+          setErrorMessage('Please enter the complete 6-digit OTP code.');
+          setIsLoading(false);
+          return;
+        }
+
+        console.log('[AuthModal] Submitting OTP verification for:', e164Phone, 'with OTP:', cleanOtp);
+        const res = await verifyPhoneOtp(e164Phone, cleanOtp);
         if (res.error) {
           setErrorMessage(res.error);
           setIsLoading(false);
