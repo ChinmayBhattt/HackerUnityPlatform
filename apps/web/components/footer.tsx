@@ -102,23 +102,17 @@ export function Footer() {
                   <span className="font-medium">+91 9324264950</span>
                 </a>
               </li>
-              {/* <li className="flex items-center gap-2.5 text-slate-400">
+              <li className="flex items-center gap-2.5 text-slate-400">
                 <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
-                <span className="font-medium">A-41, Vinmar House, Ground Floor, Road no. 2, MIDC, Andheri East, Mumbai - 400093</span>
-                
-              </li> */}
-                              <li className="flex items-center gap-2.5 text-slate-400">
-                  <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
-
-                  <a
-                    href="https://www.google.com/maps/search/?api=1&query=Trainzex+AI"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-medium hover:text-white transition-colors cursor-pointer"
-                  >
-                    A-41, Vinmar House, Ground Floor, Road no. 2, MIDC, Andheri East, Mumbai - 400093
-                  </a>
-                </li>
+                <a
+                  href="https://www.google.com/maps/search/?api=1&query=Trainzex+AI"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium hover:text-white transition-colors cursor-pointer"
+                >
+                  A-41, Vinmar House, Ground Floor, Road no. 2, MIDC, Andheri East, Mumbai - 400093
+                </a>
+              </li>
             </ul>
           </div>
 

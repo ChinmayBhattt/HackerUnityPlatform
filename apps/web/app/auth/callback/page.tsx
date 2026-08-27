@@ -34,6 +34,14 @@ function CallbackHandler() {
           const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
           
           if (exchangeError) {
+            // Check if session is already established by cookies
+            const { data: checkData } = await supabase.auth.getSession();
+            if (checkData.session && isMounted) {
+              console.log('[OAuth Callback] ✅ Session active! Redirecting to:', next);
+              router.replace(next);
+              return;
+            }
+
             console.error('[OAuth Callback] ❌ Exchange error:', exchangeError);
             if (isMounted) {
               setStatus('error');

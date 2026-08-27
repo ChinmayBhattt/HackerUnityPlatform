@@ -73,32 +73,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Load initial session
   useEffect(() => {
     async function initAuth() {
-      // If returning from OAuth with a ?code= parameter directly
-      if (typeof window !== 'undefined' && window.location.search.includes('code=')) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        if (code) {
-          try {
-            console.log('[AuthProvider] 🔄 Exchanging OAuth code on page init...');
-            const { data } = await supabase.auth.exchangeCodeForSession(code);
-            if (data.session) {
-              setSession(data.session);
-              if (data.session.user) {
-                setSupabaseUser(data.session.user);
-                const tempUser = buildUserFromMeta(data.session.user);
-                setUser(tempUser);
-                saveStoredUser(tempUser);
-                await syncProfileFromSupabaseUser(data.session.user);
-                setLoading(false);
-                return;
-              }
-            }
-          } catch (e) {
-            console.warn('[AuthProvider] Code exchange warning on init:', e);
-          }
-        }
-      }
-
       const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
       if (session?.user) {
