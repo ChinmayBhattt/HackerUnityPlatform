@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   X,
   User,
@@ -14,10 +14,12 @@ import {
   Info,
   Eye,
   EyeOff,
+  ChevronDown,
+  RotateCcw,
 } from 'lucide-react';
 
 import { useAuth } from '@/lib/auth-context';
-import { formatAndValidateIndianPhone } from '@/lib/phone-utils';
+import { formatAndValidatePhone, COUNTRY_CODES } from '@/lib/phone-utils';
 import { Logo } from './logo';
 
 interface AuthModalProps {
@@ -42,9 +44,12 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [countryCode, setCountryCode] = useState('+91');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [otpSent, setOtpSent] = useState(false);
+  const [resendCountdown, setResendCountdown] = useState(0);
+  const [isResending, setIsResending] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -52,7 +57,41 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   const [isSuccess, setIsSuccess] = useState(false);
   const [successText, setSuccessText] = useState("Welcome to Hacker's Unity!");
 
+  // Countdown timer for Resend OTP
+  useEffect(() => {
+    if (resendCountdown > 0) {
+      const timer = setTimeout(() => setResendCountdown((prev) => prev - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendCountdown]);
+
   if (!isOpen) return null;
+
+  const handleResendOtp = async () => {
+    if (resendCountdown > 0 || isResending) return;
+    setIsResending(true);
+    setErrorMessage(null);
+    setInfoMessage(null);
+
+    const phoneValidation = formatAndValidatePhone(phoneNumber, countryCode);
+    if (!phoneValidation.isValid || !phoneValidation.formattedPhone) {
+      setErrorMessage(phoneValidation.error || 'Please enter a valid mobile number.');
+      setIsResending(false);
+      return;
+    }
+
+    console.log('[AuthModal] Resending Phone OTP to (E.164):', phoneValidation.formattedPhone);
+    const res = await signInWithPhone(phoneValidation.formattedPhone);
+    if (res.error) {
+      setErrorMessage(res.error);
+      setIsResending(false);
+      return;
+    }
+
+    setResendCountdown(30);
+    setInfoMessage(`New SMS OTP sent to ${phoneValidation.formattedPhone}! Please enter the 6-digit code.`);
+    setIsResending(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,9 +101,9 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
 
     // 1. Phone OTP Verification
     if (method === 'phone') {
-      const phoneValidation = formatAndValidateIndianPhone(phoneNumber);
+      const phoneValidation = formatAndValidatePhone(phoneNumber, countryCode);
       if (!phoneValidation.isValid || !phoneValidation.formattedPhone) {
-        setErrorMessage(phoneValidation.error || 'Please enter a valid 10-digit Indian mobile number.');
+        setErrorMessage(phoneValidation.error || 'Please enter a valid mobile number.');
         setIsLoading(false);
         return;
       }
@@ -80,6 +119,7 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
           return;
         }
         setOtpSent(true);
+        setResendCountdown(30);
         setInfoMessage(`SMS OTP sent to ${e164Phone}! Please enter the 6-digit code below.`);
         setIsLoading(false);
         return;
@@ -380,33 +420,94 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                 <>
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">Mobile Phone Number *</label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
-                      <input
-                        type="tel"
-                        required
-                        placeholder="+919876543210 (with country code)"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                        disabled={otpSent}
-                        className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 placeholder-slate-400 outline-none transition-colors disabled:bg-slate-100"
-                      />
+                    <div className="relative flex items-stretch bg-slate-50 border border-slate-200 focus-within:border-[#0099e6] rounded-xl transition-all overflow-hidden">
+                      {/* Compact Attached Country Code Dropdown */}
+                      <div className="relative shrink-0 flex items-center border-r border-slate-200/90 bg-slate-100/60 hover:bg-slate-100 transition-colors">
+                        <select
+                          value={countryCode}
+                          onChange={(e) => setCountryCode(e.target.value)}
+                          disabled={otpSent}
+                          aria-label="Select Country Code"
+                          className="h-full pl-2.5 pr-6 py-2 bg-transparent text-xs font-bold text-slate-800 outline-none appearance-none cursor-pointer disabled:bg-slate-100 disabled:opacity-75"
+                        >
+                          {COUNTRY_CODES.map((c) => (
+                            <option key={`${c.iso}-${c.code}-${c.name}`} value={c.code}>
+                              {c.flag} {c.code} ({c.name})
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="w-3 h-3 text-slate-400 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      </div>
+
+                      {/* Phone Number Input */}
+                      <div className="relative flex-1 flex items-center">
+                        <Phone className="absolute left-2.5 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                        <input
+                          type="tel"
+                          required
+                          placeholder={COUNTRY_CODES.find((c) => c.code === countryCode)?.placeholder || '88529 24002'}
+                          value={phoneNumber}
+                          onChange={(e) => setPhoneNumber(e.target.value)}
+                          disabled={otpSent}
+                          className="w-full pl-8 pr-3 py-2 bg-transparent text-xs text-slate-900 placeholder-slate-400 outline-none disabled:bg-slate-100"
+                        />
+                      </div>
                     </div>
                   </div>
 
                   {otpSent && (
-                    <div className="animate-in fade-in">
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Enter 6-Digit SMS Code *</label>
-                      <div className="relative">
-                        <KeyRound className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
-                        <input
-                          type="text"
-                          required
-                          placeholder="123456"
-                          value={otpCode}
-                          onChange={(e) => setOtpCode(e.target.value)}
-                          className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 placeholder-slate-400 outline-none tracking-widest font-mono text-center font-bold"
-                        />
+                    <div className="animate-in fade-in space-y-2">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Enter 6-Digit SMS Code *</label>
+                        <div className="relative">
+                          <KeyRound className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+                          <input
+                            type="text"
+                            required
+                            placeholder="123456"
+                            maxLength={6}
+                            value={otpCode}
+                            onChange={(e) => setOtpCode(e.target.value)}
+                            className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 placeholder-slate-400 outline-none tracking-widest font-mono text-center font-bold"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Resend Code & Edit Number Actions */}
+                      <div className="flex items-center justify-between text-xs pt-1 px-0.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setOtpSent(false);
+                            setOtpCode('');
+                            setErrorMessage(null);
+                            setInfoMessage(null);
+                          }}
+                          className="text-slate-500 hover:text-slate-800 text-[11px] underline font-medium cursor-pointer"
+                        >
+                          Change Number
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={resendCountdown > 0 || isResending}
+                          onClick={handleResendOtp}
+                          className="text-[#0099e6] hover:text-[#0284c7] text-[11px] font-bold disabled:text-slate-400 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 transition-colors"
+                        >
+                          {isResending ? (
+                            <>
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                              <span>Resending...</span>
+                            </>
+                          ) : resendCountdown > 0 ? (
+                            <span>Resend in {resendCountdown}s</span>
+                          ) : (
+                            <span className="flex items-center gap-1 underline">
+                              <RotateCcw className="w-3 h-3" />
+                              Resend Code
+                            </span>
+                          )}
+                        </button>
                       </div>
                     </div>
                   )}

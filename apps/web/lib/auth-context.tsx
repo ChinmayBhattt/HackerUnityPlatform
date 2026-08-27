@@ -5,7 +5,7 @@ import { supabase } from './supabase';
 import { UserPublic, UserRole } from '@hackers-unity/shared-types';
 import { getStoredUser, saveStoredUser, clearStoredUser, syncBookmarksWithSupabase } from './storage';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
-import { formatAndValidateIndianPhone } from './phone-utils';
+import { formatAndValidatePhone, isValidE164Phone } from './phone-utils';
 
 interface AuthContextType {
   user: UserPublic | null;
@@ -301,12 +301,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithPhone = async (phone: string) => {
     try {
-      const validation = formatAndValidateIndianPhone(phone);
-      if (!validation.isValid || !validation.formattedPhone) {
-        return { error: validation.error || 'Please enter a valid 10-digit Indian mobile number.' };
+      let e164Phone = phone.trim();
+
+      // If not already in valid E.164 format (+XXXXXXXXX), validate and format it
+      if (!isValidE164Phone(e164Phone)) {
+        const validation = formatAndValidatePhone(e164Phone);
+        if (!validation.isValid || !validation.formattedPhone) {
+          return { error: validation.error || 'Please enter a valid mobile phone number.' };
+        }
+        e164Phone = validation.formattedPhone;
       }
 
-      const e164Phone = validation.formattedPhone;
       console.log('[Supabase Phone Auth] 📲 Sending SMS OTP to E.164 phone number:', e164Phone);
 
       const { error } = await supabase.auth.signInWithOtp({
@@ -328,14 +333,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const verifyPhoneOtp = async (phone: string, token: string) => {
     try {
-      const validation = formatAndValidateIndianPhone(phone);
-      if (!validation.isValid || !validation.formattedPhone) {
-        return { error: validation.error || 'Please enter a valid 10-digit Indian mobile number.' };
+      let e164Phone = phone.trim();
+
+      if (!isValidE164Phone(e164Phone)) {
+        const validation = formatAndValidatePhone(e164Phone);
+        if (!validation.isValid || !validation.formattedPhone) {
+          return { error: validation.error || 'Please enter a valid mobile phone number.' };
+        }
+        e164Phone = validation.formattedPhone;
       }
 
-      const e164Phone = validation.formattedPhone;
       const cleanToken = token.trim();
-
       if (!cleanToken || cleanToken.length < 6) {
         return { error: 'Please enter a valid 6-digit OTP code.' };
       }
