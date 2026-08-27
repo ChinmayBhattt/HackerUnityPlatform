@@ -12,7 +12,7 @@ export interface CountryCodeOption {
 
 export const ALL_COUNTRY_CODES: CountryCodeOption[] = [
   // Frequently used on top
-  { iso: 'IN', name: 'India', code: '+91', flag: '🇮🇳', placeholder: '88529 24002' },
+  { iso: 'IN', name: 'India', code: '+91', flag: '🇮🇳', placeholder: '95561 47082' },
   { iso: 'US', name: 'United States', code: '+1', flag: '🇺🇸', placeholder: '202 555 0123' },
   { iso: 'GB', name: 'United Kingdom', code: '+44', flag: '🇬🇧', placeholder: '7911 123456' },
   { iso: 'CA', name: 'Canada', code: '+1', flag: '🇨🇦', placeholder: '416 555 0199' },

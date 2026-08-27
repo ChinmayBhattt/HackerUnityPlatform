@@ -346,14 +346,14 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
             </div>
 
 
-            <form onSubmit={handleSubmit} className="space-y-3">
+            <form onSubmit={handleSubmit} className="space-y-3 text-left">
               {/* Method 1: Email Mode */}
               {method === 'email' && (
                 <>
                   {mode === 'register' && (
                     <>
                       <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">Full Name *</label>
+                        <label className="block text-left text-xs font-bold text-slate-700 mb-1">Full Name *</label>
                         <div className="relative">
                           <User className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
                           <input
@@ -368,7 +368,7 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                       </div>
 
                       <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">Phone Number (Optional)</label>
+                        <label className="block text-left text-xs font-bold text-slate-700 mb-1">Phone Number (Optional)</label>
                         <div className="relative">
                           <Phone className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
                           <input
@@ -384,7 +384,7 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                   )}
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Email Address *</label>
+                    <label className="block text-left text-xs font-bold text-slate-700 mb-1">Email Address *</label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
                       <input
@@ -399,7 +399,7 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Password *</label>
+                    <label className="block text-left text-xs font-bold text-slate-700 mb-1">Password *</label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
                       <input
@@ -419,37 +419,44 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
               {method === 'phone' && (
                 <>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Mobile Phone Number *</label>
-                    <div className="relative flex items-stretch bg-slate-50 border border-slate-200 focus-within:border-[#0099e6] rounded-xl transition-all overflow-hidden">
-                      {/* Compact Attached Country Code Dropdown */}
-                      <div className="relative shrink-0 flex items-center border-r border-slate-200/90 bg-slate-100/60 hover:bg-slate-100 transition-colors">
+                    <label className="block text-left text-xs font-bold text-slate-700 mb-1">Mobile Phone Number *</label>
+                    <div className="relative flex items-center bg-slate-50 border border-slate-200 focus-within:border-[#0099e6] rounded-xl transition-all overflow-hidden h-10">
+                      {/* Compact Fixed-Width Attached Country Badge */}
+                      <div className="relative shrink-0 flex items-center justify-center h-full px-2.5 bg-slate-100/70 hover:bg-slate-100 border-r border-slate-200 transition-colors">
+                        <div className="flex items-center gap-1.5 pointer-events-none select-none">
+                          <span className="text-sm leading-none">
+                            {COUNTRY_CODES.find((c) => c.code === countryCode)?.flag || '🌐'}
+                          </span>
+                          <span className="text-xs font-bold text-slate-800 tracking-tight">
+                            {countryCode}
+                          </span>
+                          <ChevronDown className="w-3 h-3 text-slate-400 shrink-0" />
+                        </div>
                         <select
                           value={countryCode}
                           onChange={(e) => setCountryCode(e.target.value)}
                           disabled={otpSent}
                           aria-label="Select Country Code"
-                          className="h-full pl-2.5 pr-6 py-2 bg-transparent text-xs font-bold text-slate-800 outline-none appearance-none cursor-pointer disabled:bg-slate-100 disabled:opacity-75"
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
                         >
                           {COUNTRY_CODES.map((c) => (
                             <option key={`${c.iso}-${c.code}-${c.name}`} value={c.code}>
-                              {c.flag} {c.code} ({c.name})
+                              {c.flag} {c.name} ({c.code})
                             </option>
                           ))}
                         </select>
-                        <ChevronDown className="w-3 h-3 text-slate-400 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                       </div>
 
                       {/* Phone Number Input */}
-                      <div className="relative flex-1 flex items-center">
-                        <Phone className="absolute left-2.5 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                      <div className="relative flex-1 flex items-center h-full">
                         <input
                           type="tel"
                           required
-                          placeholder={COUNTRY_CODES.find((c) => c.code === countryCode)?.placeholder || '88529 24002'}
+                          placeholder={COUNTRY_CODES.find((c) => c.code === countryCode)?.placeholder || '95561 47082'}
                           value={phoneNumber}
                           onChange={(e) => setPhoneNumber(e.target.value)}
                           disabled={otpSent}
-                          className="w-full pl-8 pr-3 py-2 bg-transparent text-xs text-slate-900 placeholder-slate-400 outline-none disabled:bg-slate-100"
+                          className="w-full h-full px-3 bg-transparent text-xs font-medium text-slate-900 placeholder-slate-400 outline-none disabled:bg-slate-100"
                         />
                       </div>
                     </div>
@@ -458,7 +465,7 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                   {otpSent && (
                     <div className="animate-in fade-in space-y-2">
                       <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">Enter 6-Digit SMS Code *</label>
+                        <label className="block text-left text-xs font-bold text-slate-700 mb-1">Enter 6-Digit SMS Code *</label>
                         <div className="relative">
                           <KeyRound className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
                           <input
