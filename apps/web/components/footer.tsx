@@ -128,8 +128,18 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/news" className="text-slate-400 hover:text-white transition-colors">
-                  News & Updates
+                <Link href="/events" className="text-slate-400 hover:text-white transition-colors">
+                  Tech Events
+                </Link>
+              </li>
+              <li>
+                <Link href="/about" className="text-slate-400 hover:text-white transition-colors">
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="text-slate-400 hover:text-white transition-colors">
+                  Contact Us
                 </Link>
               </li>
               <li>

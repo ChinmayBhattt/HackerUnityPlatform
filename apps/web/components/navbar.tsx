@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -14,6 +14,10 @@ import {
   User,
   Newspaper,
   Megaphone,
+  ChevronDown,
+  Sparkles,
+  Mail,
+  Info,
 } from 'lucide-react';
 import { Logo } from './logo';
 import { AuthModal } from './auth-modal';
@@ -28,14 +32,31 @@ export function Navbar() {
   const { unreadCount } = useNotifications();
   const [authOpen, setAuthOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileOppsOpen, setMobileOppsOpen] = useState(true);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [opportunitiesOpen, setOpportunitiesOpen] = useState(false);
 
-  const navLinks = [
-    { name: 'Hackathons', href: '/hackathons', icon: Trophy },
-    { name: 'News & Updates', href: '/news', icon: Newspaper },
-    { name: 'My Dashboard', href: '/dashboard', icon: Compass },
-  ];
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleOppsMouseEnter = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    setOpportunitiesOpen(true);
+  };
+
+  const handleOppsMouseLeave = () => {
+    hoverTimeoutRef.current = setTimeout(() => {
+      setOpportunitiesOpen(false);
+    }, 150);
+  };
+
+  const isAboutActive = pathname === '/about';
+  const isContactActive = pathname === '/contact';
+  const isOppsActive = pathname.startsWith('/hackathons') || pathname.startsWith('/events');
+  const isDashboardActive = pathname.startsWith('/dashboard');
 
   return (
     <>
@@ -48,26 +69,116 @@ export function Navbar() {
             </Link>
           </div>
 
-          {/* Center-Right: Desktop Nav Links */}
-          <nav className="hidden md:flex items-center justify-center gap-2 lg:gap-4 flex-1 ml-4 lg:ml-8">
-            {navLinks.map((item) => {
-              const isActive = pathname === item.href || (item.href === '/news' && pathname.startsWith('/news'));
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-[13px] sm:text-sm font-bold whitespace-nowrap transition-all ${
-                    isActive
-                      ? 'bg-[#0099e6]/10 text-[#0099e6] border border-[#0099e6]/25 shadow-2xs'
-                      : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100/90'
+          {/* Center: Shekunj-style Floating Glass Panel Navigation */}
+          <nav className="hidden md:flex items-center justify-center flex-1">
+            <div className="flex items-center gap-1 sm:gap-1.5 lg:gap-2 px-3 py-1.5 rounded-full bg-slate-100/80 border border-slate-200/80 backdrop-blur-xl shadow-xs">
+              {/* About Us */}
+              <Link
+                href="/about"
+                className={`px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200 ${
+                  isAboutActive
+                    ? 'bg-white text-[#0099e6] shadow-xs font-bold'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                }`}
+              >
+                About Us
+              </Link>
+
+              {/* Opportunities with Hover Dropdown */}
+              <div
+                className="relative"
+                onMouseEnter={handleOppsMouseEnter}
+                onMouseLeave={handleOppsMouseLeave}
+              >
+                <button
+                  type="button"
+                  onClick={() => setOpportunitiesOpen((prev) => !prev)}
+                  className={`px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
+                    isOppsActive
+                      ? 'bg-white text-[#0099e6] shadow-xs font-bold'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                   }`}
                 >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
+                  <span>Opportunities</span>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                      opportunitiesOpen ? 'rotate-180 text-[#0099e6]' : 'text-slate-400'
+                    }`}
+                  />
+                </button>
+
+                {/* Dropdown Menu */}
+                {opportunitiesOpen && (
+                  <div
+                    className="absolute top-full left-1/2 -translate-x-1/2 pt-2.5 w-64 z-50 animate-in fade-in zoom-in-95 duration-150"
+                    onMouseEnter={handleOppsMouseEnter}
+                    onMouseLeave={handleOppsMouseLeave}
+                  >
+                    <div className="p-2 rounded-2xl bg-white/95 backdrop-blur-xl border border-slate-200/90 shadow-xl shadow-slate-900/10 space-y-1">
+                      <Link
+                        href="/hackathons"
+                        onClick={() => setOpportunitiesOpen(false)}
+                        className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors group cursor-pointer"
+                      >
+                        <div className="w-9 h-9 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center text-[#0099e6] group-hover:scale-105 transition-transform shrink-0">
+                          <Trophy className="w-4 h-4" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xs font-bold text-slate-800 group-hover:text-[#0099e6] transition-colors">
+                            Hackathons
+                          </span>
+                          <span className="text-[11px] text-slate-400 font-medium">
+                            Coding sprints & prize pools
+                          </span>
+                        </div>
+                      </Link>
+
+                      <Link
+                        href="/events"
+                        onClick={() => setOpportunitiesOpen(false)}
+                        className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors group cursor-pointer"
+                      >
+                        <div className="w-9 h-9 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center text-[#ea580c] group-hover:scale-105 transition-transform shrink-0">
+                          <Sparkles className="w-4 h-4" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xs font-bold text-slate-800 group-hover:text-[#ea580c] transition-colors">
+                            Tech Events
+                          </span>
+                          <span className="text-[11px] text-slate-400 font-medium">
+                            Workshops, meetups & summits
+                          </span>
+                        </div>
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Contact Us */}
+              <Link
+                href="/contact"
+                className={`px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200 ${
+                  isContactActive
+                    ? 'bg-white text-[#0099e6] shadow-xs font-bold'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                }`}
+              >
+                Contact Us
+              </Link>
+
+              {/* My Dashboard */}
+              <Link
+                href="/dashboard"
+                className={`px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200 ${
+                  isDashboardActive
+                    ? 'bg-white text-[#0099e6] shadow-xs font-bold'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                }`}
+              >
+                My Dashboard
+              </Link>
+            </div>
           </nav>
 
           {/* Right: Action Bar */}
@@ -189,6 +300,7 @@ export function Navbar() {
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden p-2 text-slate-600 hover:text-slate-900 rounded-lg cursor-pointer"
+              aria-label="Toggle mobile menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -197,20 +309,88 @@ export function Navbar() {
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-slate-200 bg-white px-4 py-4 space-y-2">
-            {navLinks.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold ${
-                  pathname === item.href ? 'bg-sky-50 text-[#0099e6]' : 'text-slate-600'
+          <div className="md:hidden border-t border-slate-200 bg-white px-4 py-4 space-y-2 animate-in fade-in slide-in-from-top-2">
+            <Link
+              href="/about"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-bold transition-colors ${
+                isAboutActive ? 'bg-sky-50 text-[#0099e6]' : 'text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              <Info className="w-4 h-4 text-slate-500" />
+              <span>About Us</span>
+            </Link>
+
+            {/* Mobile Opportunities Accordion */}
+            <div className="space-y-1">
+              <button
+                onClick={() => setMobileOppsOpen(!mobileOppsOpen)}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm font-bold cursor-pointer transition-colors ${
+                  isOppsActive ? 'bg-sky-50 text-[#0099e6]' : 'text-slate-700 hover:bg-slate-50'
                 }`}
               >
-                <item.icon className="w-4 h-4" />
-                <span>{item.name}</span>
-              </Link>
-            ))}
+                <div className="flex items-center gap-2.5">
+                  <Trophy className="w-4 h-4 text-slate-500" />
+                  <span>Opportunities</span>
+                </div>
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform duration-200 ${
+                    mobileOppsOpen ? 'rotate-180' : ''
+                  }`}
+                />
+              </button>
+
+              {mobileOppsOpen && (
+                <div className="pl-6 space-y-1 py-1">
+                  <Link
+                    href="/hackathons"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
+                      pathname.startsWith('/hackathons')
+                        ? 'text-[#0099e6] font-bold bg-sky-50/70'
+                        : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Trophy className="w-3.5 h-3.5 text-[#0099e6]" />
+                    <span>Hackathons</span>
+                  </Link>
+                  <Link
+                    href="/events"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
+                      pathname.startsWith('/events')
+                        ? 'text-[#ea580c] font-bold bg-orange-50/70'
+                        : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-[#ea580c]" />
+                    <span>Tech Events</span>
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            <Link
+              href="/contact"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-bold transition-colors ${
+                isContactActive ? 'bg-sky-50 text-[#0099e6]' : 'text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              <Mail className="w-4 h-4 text-slate-500" />
+              <span>Contact Us</span>
+            </Link>
+
+            <Link
+              href="/dashboard"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-bold transition-colors ${
+                isDashboardActive ? 'bg-sky-50 text-[#0099e6]' : 'text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              <Compass className="w-4 h-4 text-slate-500" />
+              <span>My Dashboard</span>
+            </Link>
           </div>
         )}
       </header>
