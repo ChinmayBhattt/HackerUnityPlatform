@@ -97,7 +97,7 @@ body {
     linear-gradient(to bottom, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
 }
 
-/* Infinite marquee scroll animation */
+/* Infinite marquee scroll animation (Right to Left) */
 @keyframes marquee {
   0% {
     transform: translateX(0);
@@ -107,10 +107,39 @@ body {
   }
 }
 
+/* Infinite marquee scroll animation (Left to Right) */
+@keyframes marquee-reverse {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
 .animate-marquee {
   animation: marquee 18s linear infinite;
 }
 
 .animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+.animate-marquee-reverse {
+  animation: marquee-reverse 24s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-reverse:hover {
+  animation-play-state: paused;
+}
+
+/* Continuous events horizontal marquee (Right to Left) */
+.animate-events-marquee {
+  animation: marquee 50s linear infinite;
+  will-change: transform;
+}
+
+.animate-events-marquee:hover {
   animation-play-state: paused;
 }

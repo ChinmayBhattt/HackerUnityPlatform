@@ -31,6 +31,7 @@ export function Navbar() {
   const { user: currentUser, signOut } = useAuth();
   const { unreadCount } = useNotifications();
   const [authOpen, setAuthOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileOppsOpen, setMobileOppsOpen] = useState(true);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -61,7 +62,7 @@ export function Navbar() {
   return (
     <>
       <header className="sticky top-0 z-40 w-full bg-white/95 border-b border-slate-200/80 backdrop-blur-xl shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-22 flex items-center justify-between gap-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-22 flex items-center justify-between gap-6 relative">
           {/* Left: Brand Logo */}
           <div className="flex items-center shrink-0 pl-3 sm:pl-6 lg:pl-8">
             <Link href="/" className="flex items-center group py-1">
@@ -69,8 +70,8 @@ export function Navbar() {
             </Link>
           </div>
 
-          {/* Center: Shekunj-style Floating Glass Panel Navigation */}
-          <nav className="hidden md:flex items-center justify-center flex-1">
+          {/* Center: Shekunj-style Floating Glass Panel Navigation (Centered) */}
+          <nav className="hidden md:flex items-center justify-center absolute left-1/2 -translate-x-1/2 z-10 pointer-events-auto">
             <div className="flex items-center gap-1 sm:gap-1.5 lg:gap-2 px-3 py-1.5 rounded-full bg-slate-100/80 border border-slate-200/80 backdrop-blur-xl shadow-xs">
               {/* About Us */}
               <Link
@@ -289,10 +290,13 @@ export function Navbar() {
               </div>
             ) : (
               <button
-                onClick={() => setAuthOpen(true)}
-                className="px-4 py-2 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-bold text-xs transition-all shadow-sm shadow-sky-500/20 cursor-pointer whitespace-nowrap"
+                onClick={() => {
+                  setAuthMode('login');
+                  setAuthOpen(true);
+                }}
+                className="px-5 py-2 rounded-full bg-slate-950 hover:bg-slate-800 text-white font-bold text-xs transition-all shadow-sm shadow-slate-900/10 cursor-pointer whitespace-nowrap"
               >
-                Sign In
+                Get Started
               </button>
             )}
 
@@ -391,12 +395,31 @@ export function Navbar() {
               <Compass className="w-4 h-4 text-slate-500" />
               <span>My Dashboard</span>
             </Link>
+
+            {!currentUser && (
+              <div className="pt-3 mt-2 border-t border-slate-100">
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setAuthMode('login');
+                    setAuthOpen(true);
+                  }}
+                  className="w-full py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-colors text-center shadow-xs cursor-pointer"
+                >
+                  Get Started
+                </button>
+              </div>
+            )}
           </div>
         )}
       </header>
 
       {/* Global Modals */}
-      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
+      <AuthModal
+        isOpen={authOpen}
+        onClose={() => setAuthOpen(false)}
+        initialMode={authMode}
+      />
     </>
   );
 }

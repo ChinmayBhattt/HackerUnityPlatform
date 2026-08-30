@@ -21,9 +21,6 @@ import { HeroSearch } from '@/components/hero-search';
 export default function HomePage() {
   const { events, loading } = usePublishedEvents();
   const [authOpen, setAuthOpen] = useState(false);
-  const [showAll, setShowAll] = useState(false);
-
-  const displayedEvents = showAll ? events : events.slice(0, 6);
 
   return (
     <div className="flex flex-col flex-1">
@@ -132,7 +129,7 @@ export default function HomePage() {
           <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
           <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
 
-          <div className="flex animate-marquee whitespace-nowrap gap-16 items-center">
+          <div className="flex animate-marquee-reverse whitespace-nowrap gap-16 items-center">
             {/* First set */}
             {[
               { name: 'OpenAI', style: 'font-extrabold text-2xl tracking-tighter' },
@@ -206,67 +203,63 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── Featured & Trending Hackathons ──────────────────────── */}
-      <section className="py-16 md:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 border border-orange-200 text-[#ea580c] text-xs font-bold uppercase tracking-wider mb-2">
-              <Flame className="w-3.5 h-3.5 text-[#f97316]" />
-              <span>Flagship Arenas</span>
+      {/* ─── Featured & Trending Hackathons (Single-Row Continuous Marquee) ─── */}
+      <section className="py-16 md:py-24 w-full overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 border border-orange-200 text-[#ea580c] text-xs font-bold uppercase tracking-wider mb-2">
+                <Flame className="w-3.5 h-3.5 text-[#f97316]" />
+                <span>Flagship Arenas</span>
+              </div>
+              <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+                Featured & Trending Hackathons
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
+                Top prize pools, venture-backed sponsors, and global recognition.
+              </p>
             </div>
-            <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
-              Featured & Trending Hackathons
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
-              Top prize pools, venture-backed sponsors, and global recognition.
-            </p>
-          </div>
-
-          <Link
-            href="/hackathons"
-            className="inline-flex items-center gap-2 text-xs font-bold text-[#0099e6] hover:text-[#0284c7] hover:underline"
-          >
-            <span>View All Events</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-
-        {/* Hackathon Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {displayedEvents.map((event) => (
-            <HackathonCard
-              key={event.id}
-              event={event}
-            />
-          ))}
-        </div>
-
-        {/* Show More / Show Less Toggle Button */}
-        {events.length > 6 && (
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <button
-              onClick={() => setShowAll(!showAll)}
-              className="px-6 py-3 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 font-extrabold text-xs border border-slate-200 shadow-xs hover:border-[#0099e6]/40 transition-all flex items-center gap-2 cursor-pointer"
-            >
-              <span>{showAll ? 'Show Less' : `Show More (${events.length - 6} more)`}</span>
-              <ChevronDown className={`w-4 h-4 text-[#0099e6] transition-transform ${showAll ? 'rotate-180' : ''}`} />
-            </button>
 
             <Link
               href="/hackathons"
-              className="px-6 py-3 rounded-2xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-extrabold text-xs shadow-md shadow-sky-500/20 transition-all flex items-center gap-2"
+              className="inline-flex items-center gap-2 text-xs font-bold text-[#0099e6] hover:text-[#0284c7] hover:underline"
             >
-              <span>Explore All {events.length}+ Events</span>
+              <span>View All Events</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
-        )}
+        </div>
 
-        {events.length === 0 && (
-          <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
-            <Trophy className="w-10 h-10 text-slate-400 mx-auto mb-3" />
-            <h3 className="text-base font-bold text-slate-900">No hackathons currently available</h3>
-            <p className="text-xs text-slate-500 mt-1">Check back soon for new competitions.</p>
+        {/* Continuous Horizontal Moving Track */}
+        {events.length > 0 ? (
+          <div className="relative w-full overflow-hidden py-4">
+            {/* Soft Edge Gradient Fades */}
+            <div className="absolute inset-y-0 left-0 w-8 sm:w-24 bg-gradient-to-r from-[#f8fafc] to-transparent z-10 pointer-events-none" />
+            <div className="absolute inset-y-0 right-0 w-8 sm:w-24 bg-gradient-to-l from-[#f8fafc] to-transparent z-10 pointer-events-none" />
+
+            <div className="flex animate-events-marquee gap-6 items-stretch w-max hover:[animation-play-state:paused]">
+              {/* Set 1 */}
+              {events.map((event) => (
+                <div key={event.id} className="w-[340px] sm:w-[380px] shrink-0">
+                  <HackathonCard event={event} />
+                </div>
+              ))}
+
+              {/* Set 2 (Duplicate for seamless infinite right-to-left loop) */}
+              {events.map((event) => (
+                <div key={`${event.id}-dup`} className="w-[340px] sm:w-[380px] shrink-0">
+                  <HackathonCard event={event} />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
+              <Trophy className="w-10 h-10 text-slate-400 mx-auto mb-3" />
+              <h3 className="text-base font-bold text-slate-900">No hackathons currently available</h3>
+              <p className="text-xs text-slate-500 mt-1">Check back soon for new competitions.</p>
+            </div>
           </div>
         )}
       </section>

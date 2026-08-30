@@ -26,9 +26,10 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  initialMode?: 'login' | 'register';
 }
 
-export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
+export function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'login' }: AuthModalProps) {
   const {
     signInWithEmail,
     signUpWithEmail,
@@ -37,8 +38,14 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     verifyPhoneOtp,
   } = useAuth();
 
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [mode, setMode] = useState<'login' | 'register'>(initialMode);
   const [method, setMethod] = useState<'email' | 'phone'>('email');
+
+  useEffect(() => {
+    if (isOpen && initialMode) {
+      setMode(initialMode);
+    }
+  }, [isOpen, initialMode]);
 
   // Form Fields
   const [email, setEmail] = useState('');
