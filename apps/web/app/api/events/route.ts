@@ -62,8 +62,8 @@ export async function POST(req: Request) {
 
     const finalSlug = event.slug || (await generateUniqueSlug(event.title));
 
-    const VALID_STATUSES = ['DRAFT', 'PUBLISHED', 'REGISTRATION_OPEN', 'LIVE', 'JUDGING', 'COMPLETED', 'ARCHIVED'];
-    const sanitizedStatus = VALID_STATUSES.includes(event.status) ? event.status : 'PUBLISHED';
+    const VALID_STATUSES = ['DRAFT', 'PENDING_APPROVAL', 'PUBLISHED', 'REGISTRATION_OPEN', 'LIVE', 'JUDGING', 'COMPLETED', 'ARCHIVED'];
+    const sanitizedStatus = VALID_STATUSES.includes(event.status) ? event.status : 'PENDING_APPROVAL';
 
     let validOrganizerId: string | null = null;
     if (userId && typeof userId === 'string' && userId.length >= 10 && userId.includes('-')) {
@@ -177,7 +177,7 @@ export async function PATCH(req: Request) {
     if (updates.customQuestions !== undefined) updatePayload.custom_questions = updates.customQuestions;
     if (updates.registrationFields !== undefined) updatePayload.registration_fields = updates.registrationFields;
 
-    const VALID_STATUSES = ['DRAFT', 'PUBLISHED', 'REGISTRATION_OPEN', 'LIVE', 'JUDGING', 'COMPLETED', 'ARCHIVED'];
+    const VALID_STATUSES = ['DRAFT', 'PENDING_APPROVAL', 'PUBLISHED', 'REGISTRATION_OPEN', 'LIVE', 'JUDGING', 'COMPLETED', 'ARCHIVED'];
     if (updates.status && VALID_STATUSES.includes(updates.status)) {
       updatePayload.status = updates.status;
     }

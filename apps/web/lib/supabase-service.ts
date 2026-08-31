@@ -208,8 +208,13 @@ export async function fetchPublishedEvents(): Promise<ExtendedEvent[]> {
       }
     });
     custom.forEach((e) => {
-      // Local custom events will take priority or complement
-      if (!deletedIds.includes(e.id) && !deletedIds.includes(e.slug)) {
+      // Local custom events will take priority or complement (only if published/active)
+      if (
+        !deletedIds.includes(e.id) &&
+        !deletedIds.includes(e.slug) &&
+        e.status !== EventStatus.PENDING_APPROVAL &&
+        e.status !== EventStatus.DRAFT
+      ) {
         map.set(e.id, e);
       }
     });
@@ -229,7 +234,12 @@ export async function fetchPublishedEvents(): Promise<ExtendedEvent[]> {
       }
     });
     custom.forEach((e) => {
-      if (!deletedIds.includes(e.id) && !deletedIds.includes(e.slug)) {
+      if (
+        !deletedIds.includes(e.id) &&
+        !deletedIds.includes(e.slug) &&
+        e.status !== EventStatus.PENDING_APPROVAL &&
+        e.status !== EventStatus.DRAFT
+      ) {
         map.set(e.id, e);
       }
     });

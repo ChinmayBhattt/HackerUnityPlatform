@@ -224,6 +224,7 @@ function HostHackathonContent() {
 
   // Step 5: Registration Settings
   const [registrationType, setRegistrationType] = useState<'FREE' | 'PAID'>('FREE');
+  const [entryFee, setEntryFee] = useState<number | string>(0);
   const [registrationCapacity, setRegistrationCapacity] = useState<number | null>(null);
   const [isUnlimitedCapacity, setIsUnlimitedCapacity] = useState(true);
   const [approvalMode, setApprovalMode] = useState<'AUTO' | 'MANUAL'>('MANUAL');
@@ -235,8 +236,6 @@ function HostHackathonContent() {
   const [customQuestions, setCustomQuestions] = useState<CustomQuestion[]>([]);
   const [newQuestionLabel, setNewQuestionLabel] = useState('');
   const [newQuestionType, setNewQuestionType] = useState<'text' | 'select' | 'textarea'>('text');
-  const [copiedEmail, setCopiedEmail] = useState(false);
-  const [copiedTemplate, setCopiedTemplate] = useState(false);
 
   // Step 6: Project Submission Settings
   const [submissionGuidelines, setSubmissionGuidelines] = useState(
@@ -259,48 +258,6 @@ function HostHackathonContent() {
   const totalPrize = useMemo(() => {
     return prizes.reduce((sum, p) => sum + Number(p.amount || 0), 0);
   }, [prizes]);
-
-  const paidEmailSubject = useMemo(() => {
-    return `Paid Hackathon Listing Request: ${title || 'New Hackathon'} - Hacker's Unity`;
-  }, [title]);
-
-  const paidEmailBodyText = useMemo(() => {
-    return `Hi Hacker's Unity Team,
-
-I am organizing a hackathon on Hacker's Unity and would like to enable Paid Entry / Ticket Registrations.
-
---- EVENT DETAILS ---
-• Event Title: ${title || 'Untitled Hackathon'}
-• Tagline: ${tagline || 'N/A'}
-• Organizing Entity: ${institutionName || 'N/A'} (${hostType === 'COLLEGE' ? 'College/University' : 'Organization/Community'})
-• Organizer / Lead: ${organizerLeadName || user?.name || 'N/A'}
-• Organizer Contact: ${user?.email || 'N/A'}${user?.phone ? ` | ${user.phone}` : ''}
-• Event Format: ${eventType} (${location || 'Online'})
-• Registration Window: ${registrationStart ? new Date(registrationStart).toLocaleDateString('en-IN') : 'TBD'} to ${registrationDeadline ? new Date(registrationDeadline).toLocaleDateString('en-IN') : 'TBD'}
-• Hackathon Schedule: ${startDate ? new Date(startDate).toLocaleDateString('en-IN') : 'TBD'} to ${endDate ? new Date(endDate).toLocaleDateString('en-IN') : 'TBD'}
-• Total Prize Pool: ₹${totalPrize.toLocaleString('en-IN')}
-• Registration Capacity: ${isUnlimitedCapacity || !registrationCapacity ? 'Unlimited Participants' : `${registrationCapacity} Participants`}
-• Team Size: ${minTeamSize} to ${maxTeamSize} Members
-• Tech Domains / Tags: ${tagsInput || 'N/A'}
-
---- PAID ENTRY DETAILS ---
-• Proposed Entry Fee per participant/team: 
-• Payment Gateway Preference: [Razorpay / Stripe / UPI / Escrow]
-• Additional Requirements: 
-
-Please help us enable paid ticketing and payment gateway setup for this event.
-
-Best regards,
-${organizerLeadName || user?.name || 'Organizer'}`;
-  }, [title, tagline, institutionName, hostType, organizerLeadName, user?.name, user?.email, user?.phone, eventType, location, registrationStart, registrationDeadline, startDate, endDate, totalPrize, registrationCapacity, minTeamSize, maxTeamSize, tagsInput]);
-
-  const paidMailtoUrl = useMemo(() => {
-    return `mailto:hackersunity.events@gmail.com?subject=${encodeURIComponent(paidEmailSubject)}&body=${encodeURIComponent(paidEmailBodyText)}`;
-  }, [paidEmailSubject, paidEmailBodyText]);
-
-  const paidGmailWebUrl = useMemo(() => {
-    return `https://mail.google.com/mail/?view=cm&fs=1&to=hackersunity.events@gmail.com&su=${encodeURIComponent(paidEmailSubject)}&body=${encodeURIComponent(paidEmailBodyText)}`;
-  }, [paidEmailSubject, paidEmailBodyText]);
 
   // ─── LOAD EVENT FOR EDIT MODE ────────────────────────────
   useEffect(() => {
@@ -414,6 +371,9 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
           }
           if (found.registrationType) {
             setRegistrationType(found.registrationType as 'FREE' | 'PAID');
+          }
+          if (found.entryFee !== undefined && found.entryFee !== null) {
+            setEntryFee(found.entryFee);
           }
           if (found.registrationCapacity) {
             setRegistrationCapacity(found.registrationCapacity);
@@ -620,7 +580,7 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
       logoUrl: logoPreview,
       image: bannerPreview || undefined,
       rulesDocUrl: null,
-      status: EventStatus.PUBLISHED,
+      status: isEditMode ? EventStatus.PUBLISHED : EventStatus.PENDING_APPROVAL,
       maxParticipants: isUnlimitedCapacity || !registrationCapacity ? null : registrationCapacity,
       minTeamSize: Number(minTeamSize),
       maxTeamSize: Number(maxTeamSize),
@@ -633,6 +593,7 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
       bannerGradient: 'from-sky-50 via-white to-orange-50/60',
       tracks,
       registrationType,
+      entryFee: registrationType === 'PAID' ? Number(entryFee) || 0 : null,
       registrationCapacity: isUnlimitedCapacity ? null : registrationCapacity,
       approvalMode,
       registrationFields: [
@@ -709,6 +670,7 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
     tagsInput,
     tracks,
     registrationType,
+    entryFee,
     approvalMode,
     customQuestions,
   ]);
@@ -716,7 +678,8 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
   // ─── Publish & Draft Handlers ───────────────────────────
   const handlePublish = async () => {
     setIsSaving(true);
-    const event: ExtendedEvent = { ...previewEvent, status: EventStatus.PUBLISHED };
+    const targetStatus = isEditMode ? EventStatus.PUBLISHED : EventStatus.PENDING_APPROVAL;
+    const event: ExtendedEvent = { ...previewEvent, status: targetStatus };
     const organizerId = supabaseUser?.id || user?.id;
 
     if (isEditMode && editingEventId) {
@@ -740,16 +703,32 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
 
     // 2. Persist to Supabase / Server API
     const res = await createEventInSupabase(event, organizerId);
+
+    // 3. Dispatch approval request email to hackerunity.community@gmail.com
+    try {
+      fetch('/api/host-approval-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event,
+          organizerName: organizerName || user?.name || 'Organizer',
+          organizerEmail: user?.email || '',
+          organizerPhone: user?.phone || '',
+          hostType,
+          institutionName,
+          origin: typeof window !== 'undefined' ? window.location.origin : '',
+        }),
+      }).catch((err) => {
+        console.warn('Failed to send approval email notification:', err);
+      });
+    } catch (err) {
+      console.warn('Approval email trigger error:', err);
+    }
+
     setIsSaving(false);
-    
     const finalEvent = (res.success && res.data) ? res.data : event;
     setSubmittedEvent(finalEvent);
     setIsSuccess(true);
-
-    // Redirect to live event page
-    setTimeout(() => {
-      router.push(`/hackathons/${finalEvent.slug}`);
-    }, 1500);
   };
 
   const handleSaveDraft = async () => {
@@ -843,165 +822,52 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
           <Loader2 className="w-8 h-8 text-[#0099e6] animate-spin" />
           <p className="text-xs font-bold text-slate-600">Loading hackathon parameters for editing...</p>
         </div>
-      ) : isSuccess && registrationType === 'FREE' ? (
-        <div className="py-20 bg-white rounded-3xl border border-emerald-200 shadow-xl text-center flex flex-col items-center justify-center space-y-4 animate-in zoom-in-95">
-          <div className="w-20 h-20 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
-            <CheckCircle2 className="w-10 h-10" />
+      ) : isSuccess ? (
+        <div className="py-16 px-6 bg-white rounded-3xl border border-sky-200 shadow-xl text-center flex flex-col items-center justify-center space-y-6 animate-in zoom-in-95 max-w-2xl mx-auto">
+          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-sky-50 to-orange-50 border-2 border-[#0099e6]/30 flex items-center justify-center text-[#0099e6] shadow-sm">
+            <CheckCircle2 className="w-10 h-10 text-[#0099e6]" />
           </div>
-          <h2 className="text-2xl font-black text-slate-900">
-            {isEditMode ? 'Hackathon Updated Successfully!' : 'Hackathon Published Successfully!'}
-          </h2>
-          <p className="text-sm text-slate-600 max-w-md">
-            {isEditMode
-              ? <>Changes for <span className="text-[#0099e6] font-bold">{submittedEvent?.title || previewEvent.title}</span> have been saved. Returning to dashboard...</>
-              : <>Your event <span className="text-[#0099e6] font-bold">{submittedEvent?.title || previewEvent.title}</span> is now live in the global directory. Redirecting you to the live event page...</>}
-          </p>
-        </div>
-      ) : isSuccess && registrationType === 'PAID' ? (
-        <div className="bg-white rounded-3xl border border-orange-200 shadow-xl p-6 sm:p-10 space-y-8 animate-in zoom-in-95">
-          {/* Header */}
-          <div className="text-center max-w-2xl mx-auto space-y-3">
-            <div className="w-20 h-20 rounded-3xl bg-orange-50 border-2 border-orange-200 text-[#ea580c] flex items-center justify-center mx-auto shadow-sm">
-              <ShieldCheck className="w-10 h-10" />
-            </div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-black uppercase tracking-wider">
+          
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold uppercase tracking-wider">
               <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-              <span>Verification Request Recorded</span>
+              <span>{isEditMode ? 'Updated' : 'Request Submitted • Pending Review'}</span>
             </div>
-            <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
-              Paid Hackathon Verification Request Submitted!
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+              {isEditMode ? 'Hackathon Updated Successfully!' : 'Hackathon Submission Request Received!'}
             </h2>
-            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-              Your hackathon <strong className="text-slate-900">&quot;{submittedEvent?.title || previewEvent.title}&quot;</strong> has been submitted with status <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold border border-amber-300 text-xs">Verification Pending</span>. Our operations team will review your organizing entity and configure ticketing &amp; payment gateway routing before publishing live.
+            <p className="text-xs sm:text-sm text-slate-600 max-w-lg mx-auto leading-relaxed font-medium">
+              {isEditMode ? (
+                <>Changes for <strong className="text-slate-900">{submittedEvent?.title || previewEvent.title}</strong> have been saved successfully.</>
+              ) : (
+                <>Your hackathon <strong className="text-slate-900">&quot;{submittedEvent?.title || previewEvent.title}&quot;</strong> has been submitted for review. An approval request has been sent to <strong className="text-[#0099e6]">hackerunity.community@gmail.com</strong>. Once approved by the team, it will go live globally across the platform.</>
+              )}
             </p>
           </div>
 
-          {/* Event Summary Card */}
-          <div className="max-w-3xl mx-auto p-5 sm:p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-200/80 pb-3">
-              <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500">Submission Snapshot</span>
-              <span className="text-xs font-mono font-bold text-[#0099e6]">Slug: /{submittedEvent?.slug || previewEvent.slug}</span>
+          {/* Quick Details Card */}
+          <div className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-200/80 text-left text-xs space-y-2.5">
+            <div className="flex justify-between items-center text-slate-500 font-medium">
+              <span>Event Title:</span>
+              <strong className="text-slate-900 font-bold">{submittedEvent?.title || previewEvent.title}</strong>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
-              <div>
-                <span className="text-slate-400 font-bold uppercase text-[10px] block">Event Title</span>
-                <span className="font-bold text-slate-900">{submittedEvent?.title || previewEvent.title}</span>
-              </div>
-              <div>
-                <span className="text-slate-400 font-bold uppercase text-[10px] block">Organizer / Guild</span>
-                <span className="font-bold text-slate-900">{submittedEvent?.organizerName || organizerName}</span>
-              </div>
-              <div>
-                <span className="text-slate-400 font-bold uppercase text-[10px] block">Format &amp; Venue</span>
-                <span className="font-bold text-slate-900">{submittedEvent?.eventType || eventType} ({submittedEvent?.location || location})</span>
-              </div>
-              <div>
-                <span className="text-slate-400 font-bold uppercase text-[10px] block">Schedule</span>
-                <span className="font-bold text-slate-900">{startDate ? new Date(startDate).toLocaleDateString('en-IN') : 'TBD'} to {endDate ? new Date(endDate).toLocaleDateString('en-IN') : 'TBD'}</span>
-              </div>
-              <div>
-                <span className="text-slate-400 font-bold uppercase text-[10px] block">Prize Pool</span>
-                <span className="font-mono font-black text-[#ea580c]">₹{totalPrize.toLocaleString('en-IN')}</span>
-              </div>
-              <div>
-                <span className="text-slate-400 font-bold uppercase text-[10px] block">Capacity</span>
-                <span className="font-bold text-slate-900">{isUnlimitedCapacity || !registrationCapacity ? '♾️ Unlimited' : `${registrationCapacity} Hackers`}</span>
-              </div>
-              <div>
-                <span className="text-slate-400 font-bold uppercase text-[10px] block">Registration Fee Model</span>
-                <span className="font-bold text-orange-600 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-                  Paid Entry (Escrow Pending)
-                </span>
-              </div>
+            <div className="flex justify-between items-center text-slate-500 font-medium">
+              <span>Format &amp; Mode:</span>
+              <span className="text-slate-800 font-semibold">{previewEvent.eventType} • {previewEvent.location}</span>
+            </div>
+            <div className="flex justify-between items-center text-slate-500 font-medium">
+              <span>Entry Fee:</span>
+              <span className="text-slate-800 font-semibold">{previewEvent.registrationType === 'PAID' ? `₹${Number(previewEvent.entryFee || 0).toLocaleString('en-IN')}` : 'Free Entry'}</span>
+            </div>
+            <div className="flex justify-between items-center text-slate-500 font-medium">
+              <span>Review Status:</span>
+              <span className="text-amber-700 font-bold bg-amber-100 px-2.5 py-0.5 rounded-full text-[10px] border border-amber-200">
+                {isEditMode ? 'Saved' : '⏳ Pending Review'}
+              </span>
             </div>
           </div>
 
-          {/* Email Fast-Track Box */}
-          <div className="max-w-3xl mx-auto p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-orange-50/90 via-white to-amber-50/70 border-2 border-orange-200 shadow-sm space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-xl bg-[#ea580c] text-white shadow-xs shrink-0 mt-0.5">
-                <Mail className="w-5 h-5" />
-              </div>
-              <div className="space-y-1">
-                <h4 className="text-sm font-bold text-slate-900">Fast-Track Verification with Hacker&apos;s Unity Team</h4>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Send your pre-filled event details to our verification desk to expedite payment gateway setup and approval within 24 hours.
-                </p>
-              </div>
-            </div>
-
-            <div className="p-4 bg-white rounded-xl border border-orange-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center text-[#ea580c] shrink-0">
-                  <Mail className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Hacker&apos;s Unity Verification Email</div>
-                  <a
-                    href={paidMailtoUrl}
-                    className="text-xs font-black text-[#0099e6] hover:underline flex items-center gap-1 font-mono"
-                  >
-                    hackersunity.events@gmail.com
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText('hackersunity.events@gmail.com');
-                    setCopiedEmail(true);
-                    setTimeout(() => setCopiedEmail(false), 2000);
-                  }}
-                  className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
-                >
-                  {copiedEmail ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
-                  <span>{copiedEmail ? 'Copied' : 'Copy Email'}</span>
-                </button>
-
-                <a
-                  href={paidGmailWebUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2 rounded-xl bg-[#ea580c] hover:bg-[#c2410c] text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 text-center cursor-pointer whitespace-nowrap"
-                  title="Open pre-filled draft directly in Gmail on the web"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Open in Gmail (Web)</span>
-                </a>
-
-                <a
-                  href={paidMailtoUrl}
-                  className="px-3 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 text-center cursor-pointer whitespace-nowrap"
-                  title="Open in Apple Mail, Outlook or default desktop mail app"
-                >
-                  <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Mail App</span>
-                </a>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-orange-100">
-              <span>Includes complete event specifications, timeline, contact info &amp; prize pool.</span>
-              <button
-                type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(paidEmailBodyText);
-                  setCopiedTemplate(true);
-                  setTimeout(() => setCopiedTemplate(false), 2000);
-                }}
-                className="text-[#0099e6] hover:underline font-semibold cursor-pointer"
-              >
-                {copiedTemplate ? '✓ Template Copied to Clipboard' : 'Copy Formatted Details'}
-              </button>
-            </div>
-          </div>
-
-          {/* Action CTAs */}
-          <div className="max-w-3xl mx-auto pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full justify-center pt-2">
             <button
               type="button"
               onClick={() => router.push('/dashboard')}
@@ -1010,16 +876,6 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
               <span>Go to Organizer Dashboard</span>
               <ArrowRight className="w-4 h-4" />
             </button>
-
-            <button
-              type="button"
-              onClick={() => window.open(`/hackathons/${submittedEvent?.slug || previewEvent.slug}`, '_blank')}
-              className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-bold text-xs shadow-xs flex items-center justify-center gap-2 cursor-pointer transition-all"
-            >
-              <Eye className="w-4 h-4 text-[#0099e6]" />
-              <span>Preview Hackathon Page</span>
-            </button>
-
             <button
               type="button"
               onClick={() => {
@@ -1028,7 +884,7 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
                 setTitle('');
                 setDescription('');
               }}
-              className="w-full sm:w-auto px-4 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition-colors cursor-pointer"
+              className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
             >
               <span>Host Another Hackathon</span>
             </button>
@@ -1552,93 +1408,37 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
                     </button>
                   </div>
 
-                  {/* Contact Organization Box when Paid Entry is chosen */}
+                  {/* Amount Input Box when Paid Entry is chosen */}
                   {registrationType === 'PAID' && (
-                    <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-orange-50/90 via-white to-amber-50/80 border-2 border-orange-200 shadow-sm space-y-3.5 animate-in fade-in zoom-in-95 duration-200">
-                      <div className="flex items-start gap-3">
-                        <div className="p-2.5 rounded-xl bg-[#ea580c] text-white shadow-xs shrink-0 mt-0.5">
-                          <Mail className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="text-sm font-bold text-slate-900">Contact Organization for Paid Entry Setup</h4>
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-orange-100 text-[#ea580c] border border-orange-200 uppercase">
-                              Verification Required
-                            </span>
-                          </div>
-                          <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                            Paid registration hackathons require merchant payment gateway setup and escrow verification by Hacker’s Unity. Click below to directly email our team with your <strong>auto-filled hackathon details</strong>.
-                          </p>
-                        </div>
+                    <div className="p-4 sm:p-5 rounded-2xl bg-orange-50/70 border border-orange-200 shadow-xs space-y-3 animate-in fade-in zoom-in-95 duration-200">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-xs font-bold text-slate-800">
+                          Registration Fee / Entry Amount (₹) *
+                        </label>
+                        <span className="text-[10px] font-extrabold text-[#ea580c] bg-orange-100 px-2.5 py-0.5 rounded-full uppercase border border-orange-200">
+                          Paid Hackathon
+                        </span>
                       </div>
-
-                      <div className="p-3.5 bg-white rounded-xl border border-orange-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-9 h-9 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center text-[#ea580c]">
-                            <Mail className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Hacker&apos;s Unity Events Email</div>
-                            <a
-                              href={paidMailtoUrl}
-                              className="text-xs font-black text-[#0099e6] hover:underline flex items-center gap-1 font-mono"
-                            >
-                              hackersunity.events@gmail.com
-                              <ExternalLink className="w-3 h-3" />
-                            </a>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              navigator.clipboard.writeText('hackersunity.events@gmail.com');
-                              setCopiedEmail(true);
-                              setTimeout(() => setCopiedEmail(false), 2000);
-                            }}
-                            className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
-                          >
-                            {copiedEmail ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
-                            <span>{copiedEmail ? 'Copied' : 'Copy Email'}</span>
-                          </button>
-
-                          <a
-                            href={paidGmailWebUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-4 py-2 rounded-xl bg-[#ea580c] hover:bg-[#c2410c] text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 text-center cursor-pointer whitespace-nowrap"
-                            title="Open pre-filled draft directly in Gmail on the web"
-                          >
-                            <Send className="w-3.5 h-3.5" />
-                            <span>Open in Gmail (Web)</span>
-                          </a>
-
-                          <a
-                            href={paidMailtoUrl}
-                            className="px-3 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 text-center cursor-pointer whitespace-nowrap"
-                            title="Open in Apple Mail, Outlook or default desktop mail app"
-                          >
-                            <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
-                            <span>Mail App</span>
-                          </a>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-orange-100/80">
-                        <span>ℹ️ Includes title, dates, prize pool, format &amp; contact info.</span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            navigator.clipboard.writeText(paidEmailBodyText);
-                            setCopiedTemplate(true);
-                            setTimeout(() => setCopiedTemplate(false), 2000);
+                      <div className="relative">
+                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-black text-slate-400 text-sm">
+                          ₹
+                        </span>
+                        <input
+                          type="number"
+                          min="1"
+                          value={entryFee === 0 || entryFee === '0' ? '' : entryFee}
+                          onChange={(e) => {
+                            const val = e.target.value === '' ? '' : Math.max(0, Number(e.target.value));
+                            setEntryFee(val);
                           }}
-                          className="text-[#0099e6] hover:underline font-semibold cursor-pointer"
-                        >
-                          {copiedTemplate ? '✓ Template Copied to Clipboard' : 'Copy Formatted Details'}
-                        </button>
+                          placeholder="e.g. 250"
+                          required={registrationType === 'PAID'}
+                          className="w-full pl-8 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#f97316]"
+                        />
                       </div>
+                      <p className="text-[11px] text-slate-500 font-medium">
+                        Participants will pay ₹{Number(entryFee || 0).toLocaleString('en-IN')} as entry fee when registering for this hackathon.
+                      </p>
                     </div>
                   )}
 
@@ -2132,7 +1932,7 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
                         <button type="button" onClick={() => setStep(5)} className="text-[10px] text-[#0099e6] font-bold cursor-pointer hover:underline">Edit</button>
                       </div>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                        <div><span className="text-slate-500">Type:</span> <span className={`font-semibold ${registrationType === 'PAID' ? 'text-[#ea580c]' : 'text-slate-900'}`}>{registrationType === 'PAID' ? 'Paid Entry (Verification Required)' : 'Free Entry'}</span></div>
+                        <div><span className="text-slate-500">Type:</span> <span className={`font-semibold ${registrationType === 'PAID' ? 'text-[#ea580c]' : 'text-slate-900'}`}>{registrationType === 'PAID' ? `Paid Entry (₹${Number(entryFee || 0).toLocaleString('en-IN')})` : 'Free Entry'}</span></div>
                         <div><span className="text-slate-500">Capacity:</span> <span className="font-semibold text-slate-900">{isUnlimitedCapacity || !registrationCapacity ? '♾️ Unlimited' : `${registrationCapacity} Participants`}</span></div>
                         <div><span className="text-slate-500">Approval:</span> <span className="font-semibold text-slate-900">🔒 Manual (Default)</span></div>
                         <div><span className="text-slate-500">Custom Q&apos;s:</span> <span className="font-semibold text-slate-900">{customQuestions.length}</span></div>
@@ -2174,19 +1974,6 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
                     </div>
                   </div>
 
-                  {/* Verification Notice Banner for Paid Hackathons */}
-                  {registrationType === 'PAID' && (
-                    <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-amber-50 via-orange-50/60 to-white border-2 border-amber-200/80 shadow-xs space-y-2 animate-in fade-in">
-                      <div className="flex items-center gap-2 text-amber-900 font-bold text-xs sm:text-sm">
-                        <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
-                        <span>Paid Hackathon Verification & Escrow Notice</span>
-                      </div>
-                      <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                        Paid entry hackathons require organizer credential verification and payment gateway configuration by the Hacker&apos;s Unity team before going live. Clicking <strong>&quot;Submit Verification Request&quot;</strong> will save your hackathon with <span className="font-semibold text-amber-700">Verification Pending</span> status and provide you with instant pre-filled details to fast-track your launch.
-                      </p>
-                    </div>
-                  )}
-
                   {/* Action Buttons */}
                   <div className="pt-4 flex flex-wrap gap-3">
                     <button type="button" onClick={goBack} className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer">
@@ -2202,23 +1989,24 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
                       type="button"
                       onClick={handlePublish}
                       disabled={isSaving || !title.trim()}
-                      className={`flex-1 sm:flex-none px-6 py-2.5 rounded-xl text-white font-bold text-xs shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                        registrationType === 'PAID'
-                          ? 'bg-[#ea580c] hover:bg-[#c2410c] shadow-orange-500/20'
-                          : 'bg-[#0099e6] hover:bg-[#0284c7] shadow-sky-500/20'
-                      }`}
+                      className="flex-1 sm:flex-none px-7 py-2.5 rounded-xl text-white font-bold text-xs shadow-md shadow-sky-500/20 bg-[#0099e6] hover:bg-[#0284c7] flex items-center justify-center gap-2 cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {registrationType === 'PAID' ? (
-                        <>
-                          <ShieldCheck className="w-4 h-4" />
-                          <span>{isSaving ? 'Submitting Request...' : isEditMode ? 'Save & Request Verification' : 'Submit Verification Request'}</span>
-                        </>
+                      {isSaving ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : isEditMode ? (
+                        <Save className="w-4 h-4" />
                       ) : (
-                        <>
-                          {isEditMode ? <Save className="w-4 h-4" /> : <Rocket className="w-4 h-4" />}
-                          <span>{isSaving ? 'Saving Changes...' : isEditMode ? 'Save & Update Hackathon' : 'Publish Hackathon Live'}</span>
-                        </>
+                        <Send className="w-4 h-4" />
                       )}
+                      <span>
+                        {isSaving
+                          ? isEditMode
+                            ? 'Saving Changes...'
+                            : 'Submitting Request...'
+                          : isEditMode
+                          ? 'Save & Update Hackathon'
+                          : 'Submit Request'}
+                      </span>
                     </button>
                   </div>
                 </div>

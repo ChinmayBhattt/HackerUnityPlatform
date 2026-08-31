@@ -67,6 +67,7 @@ export interface EventPublic {
   difficulty?: string;
   rulesText?: string;
   registrationType?: 'FREE' | 'PAID';
+  entryFee?: number | null;
   registrationCapacity?: number | null;
   approvalMode?: 'AUTO' | 'MANUAL';
   customQuestions?: CustomQuestion[];

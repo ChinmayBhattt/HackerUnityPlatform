@@ -12,7 +12,6 @@ import {
   Compass,
   LogOut,
   User,
-  Newspaper,
   Megaphone,
   ChevronDown,
   Sparkles,
@@ -244,22 +243,7 @@ export function Navbar() {
                         <Compass className="w-3.5 h-3.5 text-[#0099e6]" />
                         <span>My Dashboard & Analytics</span>
                       </Link>
-                      <Link
-                        href="/news"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 hover:text-slate-950 transition-colors"
-                      >
-                        <Newspaper className="w-3.5 h-3.5 text-[#0099e6]" />
-                        <span>News & Tech Hub</span>
-                      </Link>
-                      <Link
-                        href="/host"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 hover:text-slate-950 transition-colors"
-                      >
-                        <PlusCircle className="w-3.5 h-3.5 text-[#ea580c]" />
-                        <span>Organizer Studio</span>
-                      </Link>
+
                       {/* Admin Announcement Studio Link */}
                       {(currentUser.role === UserRole.ADMIN ||
                         currentUser.role === UserRole.SUPER_ADMIN ||
@@ -270,7 +254,7 @@ export function Navbar() {
                           className="flex items-center gap-2 px-3 py-2 rounded-xl text-[#0099e6] bg-sky-50/70 hover:bg-sky-100/80 font-bold transition-colors"
                         >
                           <Megaphone className="w-3.5 h-3.5 text-[#0099e6]" />
-                          <span>Announcements & News</span>
+                          <span>Announcements Studio</span>
                         </Link>
                       )}
                     </div>
