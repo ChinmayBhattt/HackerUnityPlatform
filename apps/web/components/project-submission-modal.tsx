@@ -18,21 +18,30 @@ import {
   UploadCloud,
   FileCheck,
   Trash2,
+  Edit3,
+  Layers,
+  User,
+  Mail,
+  HelpCircle,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import {
   ProjectSubmission,
-  saveProjectSubmission,
   getProjectSubmission,
-  deleteProjectSubmission,
 } from '@/lib/storage';
+import {
+  saveSubmissionSupabase,
+  deleteSubmissionSupabase,
+} from '@/lib/supabase-service';
 
 interface ProjectSubmissionModalProps {
   isOpen: boolean;
   onClose: () => void;
   eventId: string;
   eventName: string;
+  tracks?: string[];
   onSuccess?: () => void;
+  onDelete?: () => void;
 }
 
 export function ProjectSubmissionModal({
@@ -40,19 +49,25 @@ export function ProjectSubmissionModal({
   onClose,
   eventId,
   eventName,
+  tracks = [],
   onSuccess,
+  onDelete,
 }: ProjectSubmissionModalProps) {
   const { user, supabaseUser } = useAuth();
-  const currentUserId = supabaseUser?.id || user?.id || 'usr_guest';
+  const currentUserId = supabaseUser?.id || user?.id || 'usr_builder';
+  const currentUserName = user?.name || supabaseUser?.user_metadata?.name || 'Hacker Builder';
   const currentUserEmail = supabaseUser?.email || user?.email || '';
 
   // Form Fields State
   const [title, setTitle] = useState('');
+  const [tagline, setTagline] = useState('');
+  const [track, setTrack] = useState('');
   const [description, setDescription] = useState('');
   const [projectLink, setProjectLink] = useState('');
   const [demoVideoUrl, setDemoVideoUrl] = useState('');
   const [presentationUrl, setPresentationUrl] = useState('');
   const [additionalResources, setAdditionalResources] = useState('');
+  const [submitterName, setSubmitterName] = useState('');
 
   // File Upload State (Optional ZIP file)
   const [zipFile, setZipFile] = useState<File | null>(null);
@@ -65,8 +80,19 @@ export function ProjectSubmissionModal({
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submissionData, setSubmissionData] = useState<ProjectSubmission | null>(null);
+
+  // Default track options if none passed
+  const trackOptions = tracks.length > 0 ? tracks : [
+    'Open Innovation & DeepTech',
+    'AI Agents & Intelligent Systems',
+    'Web3 & Decentralized Primitives',
+    'Cloud, DevOps & Systems',
+    'FinTech & Consumer Applications',
+  ];
 
   // Load existing submission if already submitted
   useEffect(() => {
@@ -74,6 +100,8 @@ export function ProjectSubmissionModal({
     const existing = getProjectSubmission(eventId, currentUserId);
     if (existing) {
       setTitle(existing.projectTitle);
+      setTagline(existing.tagline || '');
+      setTrack(existing.track || trackOptions[0] || 'General');
       setDescription(existing.projectDescription);
       setProjectLink(existing.projectLink);
       setDemoVideoUrl(existing.demoVideoUrl || '');
@@ -81,15 +109,28 @@ export function ProjectSubmissionModal({
       setAdditionalResources(existing.additionalResources || '');
       setZipFileName(existing.zipFileName || '');
       setZipFileSize(existing.zipFileSize || '');
+      setSubmitterName(existing.submittedByName || currentUserName);
       setSubmissionData(existing);
       setIsSubmitted(true);
     } else {
+      setTitle('');
+      setTagline('');
+      setTrack(trackOptions[0] || 'General');
+      setDescription('');
+      setProjectLink('');
+      setDemoVideoUrl('');
+      setPresentationUrl('');
+      setAdditionalResources('');
+      setZipFileName('');
+      setZipFileSize('');
+      setSubmitterName(currentUserName);
       setIsSubmitted(false);
       setSubmissionData(null);
     }
     setErrors({});
     setTouched({});
-  }, [isOpen, eventId, currentUserId]);
+    setShowDeleteConfirm(false);
+  }, [isOpen, eventId, currentUserId, currentUserName]);
 
   // Validation function
   const validate = () => {
@@ -145,7 +186,7 @@ export function ProjectSubmissionModal({
     }
   };
 
-  const handleZipDrop = (e: React.DragEvent) => {
+  const handleZipDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDraggingZip(false);
     const file = e.dataTransfer.files?.[0];
@@ -183,15 +224,18 @@ export function ProjectSubmissionModal({
     setIsSubmitting(true);
 
     try {
-      // Create or update project submission
       const newSubmission: ProjectSubmission = {
         id: submissionData?.id || `sub_${Date.now()}`,
         eventId,
         eventName,
         submittedBy: currentUserId,
+        submittedByName: submitterName.trim() || currentUserName,
         submittedByEmail: currentUserEmail,
-        submittedAt: new Date().toISOString(),
+        submittedAt: submissionData?.submittedAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         projectTitle: title.trim(),
+        tagline: tagline.trim() || undefined,
+        track: track || trackOptions[0] || 'General',
         projectDescription: description.trim(),
         projectLink: projectLink.trim(),
         demoVideoUrl: demoVideoUrl.trim() || undefined,
@@ -199,10 +243,11 @@ export function ProjectSubmissionModal({
         zipFileSize: zipFileSize || undefined,
         presentationUrl: presentationUrl.trim() || undefined,
         additionalResources: additionalResources.trim() || undefined,
-        status: 'SUBMITTED',
+        status: submissionData?.status || 'SUBMITTED',
+        score: submissionData?.score || 0,
       };
 
-      saveProjectSubmission(newSubmission);
+      await saveSubmissionSupabase(newSubmission);
       setSubmissionData(newSubmission);
       setIsSubmitted(true);
       if (onSuccess) onSuccess();
@@ -210,6 +255,31 @@ export function ProjectSubmissionModal({
       console.error('Submission failed:', err);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!submissionData) return;
+    setIsDeleting(true);
+    try {
+      await deleteSubmissionSupabase(submissionData.id, eventId);
+      setIsSubmitted(false);
+      setSubmissionData(null);
+      setTitle('');
+      setTagline('');
+      setDescription('');
+      setProjectLink('');
+      setDemoVideoUrl('');
+      setPresentationUrl('');
+      setAdditionalResources('');
+      setZipFileName('');
+      setZipFileSize('');
+      setShowDeleteConfirm(false);
+      if (onDelete) onDelete();
+    } catch (err) {
+      console.error('Error deleting submission:', err);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -227,10 +297,10 @@ export function ProjectSubmissionModal({
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
-                  Project Submission
+                  Project Submission Portal
                 </h3>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-100 text-[#0099e6] uppercase">
-                  Participant Portal
+                  Live Builder Portal
                 </span>
               </div>
               <p className="text-xs text-slate-500 font-medium truncate max-w-sm sm:max-w-md">
@@ -247,23 +317,57 @@ export function ProjectSubmissionModal({
           </button>
         </div>
 
-        {/* Informational Guidance Banner */}
-        <div className="px-6 py-3 bg-amber-50/80 border-b border-amber-100 flex items-center justify-between gap-2 text-xs">
-          <div className="flex items-center gap-2 text-amber-800 font-medium">
-            <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
-            <span>Please review all fields. Items marked with red badge are required.</span>
+        {/* Delete Confirmation Overlay */}
+        {showDeleteConfirm && (
+          <div className="p-6 bg-rose-50 border-b border-rose-200 text-slate-900 space-y-3 animate-in fade-in">
+            <div className="flex items-center gap-2 font-black text-sm text-rose-700">
+              <AlertCircle className="w-4 h-4 text-rose-600" />
+              <span>Confirm Project Submission Deletion?</span>
+            </div>
+            <p className="text-xs text-rose-800 leading-relaxed font-medium">
+              Are you sure you want to withdraw and delete your submission for{' '}
+              <strong>&ldquo;{submissionData?.projectTitle}&rdquo;</strong>? This will remove your prototype from the judges review roster.
+            </p>
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer"
+              >
+                {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                <span>Yes, Delete Submission</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="px-2 py-0.5 rounded-md bg-rose-100 text-rose-700 text-[10px] font-black uppercase">
-              Required *
-            </span>
-            <span className="px-2 py-0.5 rounded-md bg-slate-200 text-slate-700 text-[10px] font-bold uppercase">
-              Optional
-            </span>
-          </div>
-        </div>
+        )}
 
-        {/* ─── Success Confirmation View ─────────────────────────────── */}
+        {/* Informational Guidance Banner */}
+        {!isSubmitted && (
+          <div className="px-6 py-3 bg-amber-50/80 border-b border-amber-100 flex items-center justify-between gap-2 text-xs">
+            <div className="flex items-center gap-2 text-amber-800 font-medium">
+              <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>Review all deliverables carefully. Red badges indicate mandatory fields.</span>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="px-2 py-0.5 rounded-md bg-rose-100 text-rose-700 text-[10px] font-black uppercase">
+                Required *
+              </span>
+              <span className="px-2 py-0.5 rounded-md bg-slate-200 text-slate-700 text-[10px] font-bold uppercase">
+                Optional
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* ─── Success / Already Submitted Confirmation View ─────────── */}
         {isSubmitted && submissionData ? (
           <div className="p-6 sm:p-8 space-y-6 text-center animate-in fade-in">
             <div className="w-16 h-16 rounded-3xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-sm">
@@ -275,7 +379,7 @@ export function ProjectSubmissionModal({
                 Project Successfully Submitted!
               </h4>
               <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
-                Your hackathon project has been recorded for evaluation by the judges.
+                Your prototype is recorded and ready for organizer evaluation.
               </p>
             </div>
 
@@ -285,15 +389,34 @@ export function ProjectSubmissionModal({
                 <div>
                   <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Project Title</div>
                   <div className="text-sm font-black text-slate-900 mt-0.5">{submissionData.projectTitle}</div>
+                  {submissionData.tagline && (
+                    <p className="text-xs text-[#0099e6] font-semibold mt-0.5">{submissionData.tagline}</p>
+                  )}
                 </div>
-                <span className="px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-black">
-                  STATUS: SUBMITTED
+                <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase border ${
+                  submissionData.status === 'WINNER'
+                    ? 'bg-amber-100 text-amber-800 border-amber-300'
+                    : submissionData.status === 'ACCEPTED'
+                    ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                    : submissionData.status === 'REJECTED'
+                    ? 'bg-rose-100 text-rose-800 border-rose-300'
+                    : 'bg-sky-100 text-[#0099e6] border-sky-300'
+                }`}>
+                  STATUS: {submissionData.status || 'SUBMITTED'}
                 </span>
               </div>
 
+              {submissionData.track && (
+                <div className="flex items-center gap-1.5 text-xs text-slate-700">
+                  <Layers className="w-3.5 h-3.5 text-[#0099e6]" />
+                  <span className="font-bold">Track:</span>
+                  <span className="font-semibold text-slate-900">{submissionData.track}</span>
+                </div>
+              )}
+
               <div>
                 <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Description</div>
-                <p className="text-slate-700 font-medium mt-1 line-clamp-3 leading-relaxed">
+                <p className="text-slate-700 font-medium mt-1 line-clamp-3 leading-relaxed whitespace-pre-line">
                   {submissionData.projectDescription}
                 </p>
               </div>
@@ -360,9 +483,19 @@ export function ProjectSubmissionModal({
               <button
                 type="button"
                 onClick={() => setIsSubmitted(false)}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-all cursor-pointer"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                Edit Submission Details
+                <Edit3 className="w-3.5 h-3.5 text-[#0099e6]" />
+                <span>Edit Submission Details</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete Submission</span>
               </button>
 
               <button
@@ -375,7 +508,7 @@ export function ProjectSubmissionModal({
             </div>
           </div>
         ) : (
-          /* ─── Active Submission Form ──────────────────────────────── */
+          /* ─── Active Submission / Edit Form ───────────────────────── */
           <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-6 max-h-[75vh] overflow-y-auto">
             {/* Section 1: Required Fields */}
             <div className="space-y-4">
@@ -420,22 +553,55 @@ export function ProjectSubmissionModal({
                     <span>{errors.title}</span>
                   </p>
                 )}
-                <p className="text-[10px] text-slate-400">Give your prototype a clear and recognizable name.</p>
               </div>
 
-              {/* 2. Project Description (Required) */}
+              {/* 2. Tagline / Pitch (Optional) */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-[#0099e6]" />
+                  <span>One-Line Tagline / Elevator Pitch</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Zero-latency collaboration engine for high-velocity teams"
+                  value={tagline}
+                  onChange={(e) => setTagline(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-[#0099e6] focus:bg-white text-xs text-slate-900 outline-none transition-all placeholder:text-slate-400"
+                />
+              </div>
+
+              {/* 3. Track Selection */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <Layers className="w-3.5 h-3.5 text-[#ea580c]" />
+                  <span>Competition Track</span>
+                </label>
+                <select
+                  value={track}
+                  onChange={(e) => setTrack(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-[#0099e6] focus:bg-white text-xs text-slate-900 outline-none transition-all cursor-pointer"
+                >
+                  {trackOptions.map((t, idx) => (
+                    <option key={idx} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 4. Project Description (Required) */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-slate-800">
-                    Project Description / Pitch <span className="text-rose-500">*</span>
+                    Detailed Project Description <span className="text-rose-500">*</span>
                   </label>
-                  <span className="px-2 py-0.5 rounded-md bg-rose-50 border border-rose-200 text-rose-600 text-[10px] font-black uppercase">
-                    Required
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    {description.length} chars (min 20)
                   </span>
                 </div>
                 <textarea
                   rows={4}
-                  placeholder="Describe the problem you solved, architecture, tools & APIs used, key technical innovations, and how users interact with your project..."
+                  placeholder="Describe the problem, your architecture, tech stack used, challenges faced, and how your prototype solves the issue..."
                   value={description}
                   onChange={(e) => {
                     setDescription(e.target.value);
@@ -448,12 +614,6 @@ export function ProjectSubmissionModal({
                       : 'border-slate-200 focus:border-[#0099e6] focus:bg-white'
                   }`}
                 />
-                <div className="flex items-center justify-between text-[10px] text-slate-400">
-                  <span>Explain the problem, technology stack, and real-world impact.</span>
-                  <span className={description.trim().length < 20 ? 'text-amber-600 font-semibold' : 'text-emerald-600 font-semibold'}>
-                    {description.trim().length} chars (min 20)
-                  </span>
-                </div>
                 {touched.description && errors.description && (
                   <p className="text-[11px] font-semibold text-rose-600 flex items-center gap-1 mt-1 animate-in fade-in">
                     <AlertCircle className="w-3.5 h-3.5" />
@@ -462,73 +622,77 @@ export function ProjectSubmissionModal({
                 )}
               </div>
 
-              {/* 3. Project Link / GitHub Repository Link (Required) */}
+              {/* 5. Project Link / GitHub (Required) */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                    <Github className="w-3.5 h-3.5 text-slate-700" />
-                    <span>Project Link / GitHub Repository Link</span>
-                    <span className="text-rose-500">*</span>
+                    <Github className="w-3.5 h-3.5 text-slate-900" />
+                    <span>GitHub Repository or Live Production Link <span className="text-rose-500">*</span></span>
                   </label>
                   <span className="px-2 py-0.5 rounded-md bg-rose-50 border border-rose-200 text-rose-600 text-[10px] font-black uppercase">
                     Required
                   </span>
                 </div>
-                <div className="relative">
-                  <input
-                    type="url"
-                    placeholder="https://github.com/your-team/awesome-hackathon-build"
-                    value={projectLink}
-                    onChange={(e) => {
-                      setProjectLink(e.target.value);
-                      if (errors.projectLink) validate();
-                    }}
-                    onBlur={() => handleBlur('projectLink')}
-                    className={`w-full px-4 py-2.5 rounded-xl bg-slate-50 border text-xs text-slate-900 outline-none transition-all placeholder:text-slate-400 ${
-                      touched.projectLink && errors.projectLink
-                        ? 'border-rose-400 bg-rose-50/20 focus:border-rose-500'
-                        : 'border-slate-200 focus:border-[#0099e6] focus:bg-white'
-                    }`}
-                  />
-                </div>
+                <input
+                  type="url"
+                  placeholder="https://github.com/username/project-name or https://myproject.vercel.app"
+                  value={projectLink}
+                  onChange={(e) => {
+                    setProjectLink(e.target.value);
+                    if (errors.projectLink) validate();
+                  }}
+                  onBlur={() => handleBlur('projectLink')}
+                  className={`w-full px-4 py-2.5 rounded-xl bg-slate-50 border text-xs text-slate-900 outline-none transition-all placeholder:text-slate-400 ${
+                    touched.projectLink && errors.projectLink
+                      ? 'border-rose-400 bg-rose-50/20 focus:border-rose-500'
+                      : 'border-slate-200 focus:border-[#0099e6] focus:bg-white'
+                  }`}
+                />
                 {touched.projectLink && errors.projectLink && (
                   <p className="text-[11px] font-semibold text-rose-600 flex items-center gap-1 mt-1 animate-in fade-in">
                     <AlertCircle className="w-3.5 h-3.5" />
                     <span>{errors.projectLink}</span>
                   </p>
                 )}
-                <p className="text-[10px] text-slate-400">
-                  Public GitHub, GitLab, Bitbucket repository, or direct production deployment URL.
-                </p>
               </div>
             </div>
 
-            {/* Section 2: Optional Fields */}
+            {/* Section 2: Optional Deliverables */}
             <div className="space-y-4 pt-4 border-t border-slate-100">
               <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                 <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-amber-500" />
-                  <span>Optional Submissions (Enhance Your Judging Score)</span>
+                  <Sparkles className="w-4 h-4 text-[#ea580c]" />
+                  <span>Optional Supporting Deliverables</span>
                 </h4>
-                <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[10px] font-bold uppercase border border-slate-200">
+                <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-bold uppercase">
                   Optional
                 </span>
               </div>
 
-              {/* 1. Project Demo Video (Optional) */}
+              {/* Submitter Name Override */}
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                    <Video className="w-3.5 h-3.5 text-[#ea580c]" />
-                    <span>Project Demo Video</span>
-                  </label>
-                  <span className="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-500 text-[10px] font-bold uppercase">
-                    Optional
-                  </span>
-                </div>
+                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Submitter / Team Lead Name</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Your Name"
+                  value={submitterName}
+                  onChange={(e) => setSubmitterName(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-[#0099e6] focus:bg-white text-xs text-slate-900 outline-none transition-all placeholder:text-slate-400"
+                />
+              </div>
+
+              {/* Demo Video URL */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <Video className="w-3.5 h-3.5 text-[#ea580c]" />
+                  <span>Demo Video Walkthrough (Loom / YouTube / Drive)</span>
+                </label>
                 <input
                   type="url"
-                  placeholder="https://youtu.be/... or https://loom.com/share/..."
+                  placeholder="https://www.youtube.com/watch?v=... or Loom URL"
                   value={demoVideoUrl}
                   onChange={(e) => setDemoVideoUrl(e.target.value)}
                   onBlur={() => handleBlur('demoVideoUrl')}
@@ -544,88 +708,14 @@ export function ProjectSubmissionModal({
                     <span>{errors.demoVideoUrl}</span>
                   </p>
                 )}
-                <p className="text-[10px] text-slate-400">
-                  2-3 minute walkthrough link showing the user flow and working functionality.
-                </p>
               </div>
 
-              {/* 2. ZIP File Upload (Optional) */}
+              {/* Presentation / PPT URL */}
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                    <Archive className="w-3.5 h-3.5 text-indigo-500" />
-                    <span>ZIP File Upload (Source Code / Artifacts)</span>
-                  </label>
-                  <span className="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-500 text-[10px] font-bold uppercase">
-                    Optional
-                  </span>
-                </div>
-
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".zip,.tar,.gz,.rar,.7z"
-                  onChange={handleZipSelect}
-                  className="hidden"
-                />
-
-                {zipFileName ? (
-                  <div className="p-3.5 rounded-2xl bg-sky-50 border border-sky-200 flex items-center justify-between gap-3 animate-in fade-in">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-8 h-8 rounded-xl bg-sky-100 text-[#0099e6] flex items-center justify-center shrink-0">
-                        <Archive className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-xs font-bold text-slate-900 truncate">{zipFileName}</div>
-                        <div className="text-[10px] text-slate-500 font-mono">{zipFileSize} • Ready to submit</div>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={removeZipFile}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer shrink-0"
-                      title="Remove file"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <div
-                    onClick={() => fileInputRef.current?.click()}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      setIsDraggingZip(true);
-                    }}
-                    onDragLeave={() => setIsDraggingZip(false)}
-                    onDrop={handleZipDrop}
-                    className={`p-5 rounded-2xl border-2 border-dashed text-center transition-all cursor-pointer ${
-                      isDraggingZip
-                        ? 'border-[#0099e6] bg-sky-50/50'
-                        : 'border-slate-200 bg-slate-50 hover:bg-slate-100/80 hover:border-slate-300'
-                    }`}
-                  >
-                    <UploadCloud className="w-6 h-6 text-slate-400 mx-auto mb-1.5" />
-                    <div className="text-xs font-bold text-slate-800">
-                      Click to upload or drag and drop ZIP archive
-                    </div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">
-                      Supports .zip, .tar.gz, .rar up to 50MB
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* 3. Presentation / PPT (Optional) */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                    <Presentation className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Presentation / Pitch Deck (PPT)</span>
-                  </label>
-                  <span className="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-500 text-[10px] font-bold uppercase">
-                    Optional
-                  </span>
-                </div>
+                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <Presentation className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Presentation / Pitch Deck (Google Slides / Canva / Pitch.com)</span>
+                </label>
                 <input
                   type="url"
                   placeholder="https://docs.google.com/presentation/... or Canva link"
@@ -644,22 +734,68 @@ export function ProjectSubmissionModal({
                     <span>{errors.presentationUrl}</span>
                   </p>
                 )}
-                <p className="text-[10px] text-slate-400">
-                  Google Slides, Canva, Pitch.com, or PDF slide deck link.
-                </p>
               </div>
 
-              {/* 4. Additional Resources or Links (Optional) */}
+              {/* ZIP File Upload */}
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                    <Link2 className="w-3.5 h-3.5 text-purple-600" />
-                    <span>Additional Resources or Links</span>
-                  </label>
-                  <span className="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-500 text-[10px] font-bold uppercase">
-                    Optional
-                  </span>
-                </div>
+                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <Archive className="w-3.5 h-3.5 text-sky-600" />
+                  <span>Offline Source Code / ZIP Archive</span>
+                </label>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleZipSelect}
+                  accept=".zip,.tar,.gz,.rar,.7z"
+                  className="hidden"
+                />
+                {zipFileName ? (
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-sky-50 border border-sky-200 text-xs">
+                    <div className="flex items-center gap-2 truncate">
+                      <Archive className="w-4 h-4 text-[#0099e6] shrink-0" />
+                      <span className="font-bold text-slate-900 truncate">{zipFileName}</span>
+                      <span className="text-[10px] text-slate-500 font-mono">({zipFileSize})</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={removeZipFile}
+                      className="p-1 text-slate-400 hover:text-rose-600 rounded-lg cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setIsDraggingZip(true);
+                    }}
+                    onDragLeave={() => setIsDraggingZip(false)}
+                    onDrop={handleZipDrop}
+                    className={`p-4 rounded-xl border-2 border-dashed text-center transition-all cursor-pointer ${
+                      isDraggingZip
+                        ? 'border-[#0099e6] bg-sky-50/50'
+                        : 'border-slate-200 bg-slate-50 hover:bg-slate-100/80 hover:border-slate-300'
+                    }`}
+                  >
+                    <UploadCloud className="w-5 h-5 text-slate-400 mx-auto mb-1" />
+                    <div className="text-xs font-bold text-slate-700">
+                      Click to upload ZIP or drag and drop
+                    </div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">
+                      Supports .zip, .tar.gz up to 50MB
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Additional Resources */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <Link2 className="w-3.5 h-3.5 text-purple-600" />
+                  <span>Supplemental Notes & Research Links</span>
+                </label>
                 <textarea
                   rows={2}
                   placeholder="Figma prototypes, smart contracts, API docs, dataset sources, or research papers..."
@@ -667,39 +803,51 @@ export function ProjectSubmissionModal({
                   onChange={(e) => setAdditionalResources(e.target.value)}
                   className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-[#0099e6] focus:bg-white text-xs text-slate-900 outline-none transition-all placeholder:text-slate-400 resize-none leading-relaxed"
                 />
-                <p className="text-[10px] text-slate-400">
-                  Any supplemental materials that support your hackathon project evaluation.
-                </p>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
+            <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-100">
+              {submissionData ? (
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="px-3 py-2 rounded-xl text-rose-600 hover:bg-rose-50 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete</span>
+                </button>
+              ) : (
+                <div />
+              )}
 
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="px-6 py-2.5 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] disabled:opacity-50 text-white font-extrabold text-xs shadow-md shadow-sky-500/20 transition-all flex items-center gap-2 cursor-pointer"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Submitting Project...</span>
-                  </>
-                ) : (
-                  <>
-                    <Rocket className="w-4 h-4" />
-                    <span>Submit Project Now</span>
-                  </>
-                )}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-6 py-2.5 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] disabled:opacity-50 text-white font-extrabold text-xs shadow-md shadow-sky-500/20 transition-all flex items-center gap-2 cursor-pointer"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>{submissionData ? 'Updating...' : 'Submitting...'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Rocket className="w-4 h-4" />
+                      <span>{submissionData ? 'Save Changes' : 'Submit Project Now'}</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </form>
         )}

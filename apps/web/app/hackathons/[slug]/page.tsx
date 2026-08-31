@@ -18,6 +18,7 @@ import {
   Users,
   ShieldCheck,
   Rocket,
+  Github,
   Video,
   Archive,
   Presentation,
@@ -490,18 +491,84 @@ export default function HackathonDetailPage({ params }: PageProps) {
 
                 {/* Submission Status Alert */}
                 {userSubmission ? (
-                  <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 font-bold text-xs sm:text-sm">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <div className="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-slate-800 space-y-4">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div className="flex items-center gap-2 font-bold text-sm text-emerald-800">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                         <span>Project Successfully Submitted!</span>
                       </div>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase">
-                        Status: Under Review
+                      <span className="px-3 py-1 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-800 text-xs font-black uppercase">
+                        Status: {userSubmission.status || 'Under Review'}
                       </span>
                     </div>
-                    <div className="text-xs text-emerald-700 font-medium">
-                      Submitted on {new Date(userSubmission.submittedAt).toLocaleDateString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}. You can update your submission anytime before the deadline.
+
+                    <div className="bg-white p-4 rounded-xl border border-emerald-200/80 space-y-2.5">
+                      <div>
+                        <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Project Title</div>
+                        <div className="text-base font-black text-slate-900">{userSubmission.projectTitle}</div>
+                        {userSubmission.tagline && (
+                          <div className="text-xs text-[#0099e6] font-semibold">{userSubmission.tagline}</div>
+                        )}
+                      </div>
+
+                      {userSubmission.track && (
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-50 text-[#0099e6] text-xs font-bold">
+                          <Layers className="w-3.5 h-3.5" />
+                          <span>Track: {userSubmission.track}</span>
+                        </div>
+                      )}
+
+                      <p className="text-xs text-slate-600 leading-relaxed line-clamp-3">
+                        {userSubmission.projectDescription}
+                      </p>
+
+                      <div className="flex items-center gap-3 flex-wrap pt-2 border-t border-slate-100 text-xs">
+                        <a
+                          href={userSubmission.projectLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-bold text-[#0099e6] hover:underline flex items-center gap-1"
+                        >
+                          <Github className="w-3.5 h-3.5" />
+                          <span>Repository Link ↗</span>
+                        </a>
+                        {userSubmission.demoVideoUrl && (
+                          <a
+                            href={userSubmission.demoVideoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-bold text-[#ea580c] hover:underline flex items-center gap-1"
+                          >
+                            <Video className="w-3.5 h-3.5" />
+                            <span>Demo Video ↗</span>
+                          </a>
+                        )}
+                        {userSubmission.presentationUrl && (
+                          <a
+                            href={userSubmission.presentationUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-bold text-emerald-600 hover:underline flex items-center gap-1"
+                          >
+                            <Presentation className="w-3.5 h-3.5" />
+                            <span>Slide Deck ↗</span>
+                          </a>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs text-emerald-800 font-medium">
+                      <span>
+                        Last updated on {new Date(userSubmission.updatedAt || userSubmission.submittedAt).toLocaleDateString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setShowSubmissionModal(true)}
+                        className="px-3.5 py-1.5 rounded-xl bg-white border border-emerald-300 hover:bg-emerald-100/60 font-bold text-xs text-emerald-800 transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                      >
+                        <Rocket className="w-3.5 h-3.5 text-[#0099e6]" />
+                        <span>Edit / Manage Deliverables</span>
+                      </button>
                     </div>
                   </div>
                 ) : (
@@ -813,14 +880,39 @@ export default function HackathonDetailPage({ params }: PageProps) {
                   >
                     Register on External Portal ↗
                   </a>
-                  <button
-                    type="button"
-                    onClick={() => setShowSubmissionModal(true)}
-                    className="w-full py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs text-center flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-                  >
-                    <Rocket className="w-3.5 h-3.5 text-[#0099e6]" />
-                    <span>Submission Portal</span>
-                  </button>
+                  {userSubmission ? (
+                    <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200/90 text-left space-y-1.5 animate-in fade-in">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-black text-emerald-800 flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Project Submitted</span>
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase">
+                          {userSubmission.status || 'Submitted'}
+                        </span>
+                      </div>
+                      <div className="text-xs font-black text-slate-900 line-clamp-1">
+                        {userSubmission.projectTitle}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowSubmissionModal(true)}
+                        className="w-full py-1.5 rounded-xl bg-white border border-emerald-300 hover:bg-emerald-100/50 text-emerald-800 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                      >
+                        <Rocket className="w-3 h-3 text-[#0099e6]" />
+                        <span>Manage Submission</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setShowSubmissionModal(true)}
+                      className="w-full py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs text-center flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                    >
+                      <Rocket className="w-3.5 h-3.5 text-[#0099e6]" />
+                      <span>Submission Portal</span>
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-2.5">
@@ -831,14 +923,39 @@ export default function HackathonDetailPage({ params }: PageProps) {
                     <Rocket className="w-4 h-4" />
                     <span>Register for Hackathon</span>
                   </Link>
-                  <button
-                    type="button"
-                    onClick={() => setShowSubmissionModal(true)}
-                    className="w-full py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs text-center flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-                  >
-                    <Rocket className="w-3.5 h-3.5 text-[#0099e6]" />
-                    <span>Submission Portal</span>
-                  </button>
+                  {userSubmission ? (
+                    <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200/90 text-left space-y-1.5 animate-in fade-in">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-black text-emerald-800 flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Project Submitted</span>
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase">
+                          {userSubmission.status || 'Submitted'}
+                        </span>
+                      </div>
+                      <div className="text-xs font-black text-slate-900 line-clamp-1">
+                        {userSubmission.projectTitle}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowSubmissionModal(true)}
+                        className="w-full py-1.5 rounded-xl bg-white border border-emerald-300 hover:bg-emerald-100/50 text-emerald-800 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                      >
+                        <Rocket className="w-3 h-3 text-[#0099e6]" />
+                        <span>Manage Submission</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setShowSubmissionModal(true)}
+                      className="w-full py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs text-center flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                    >
+                      <Rocket className="w-3.5 h-3.5 text-[#0099e6]" />
+                      <span>Submission Portal</span>
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -903,9 +1020,14 @@ export default function HackathonDetailPage({ params }: PageProps) {
         onClose={() => setShowSubmissionModal(false)}
         eventId={event.id}
         eventName={event.title}
+        tracks={event.tracks?.map((t: any) => t.title || t.name || t) || []}
         onSuccess={() => {
           const userId = supabaseUser?.id || user?.id;
           setUserSubmission(getProjectSubmission(event.id, userId));
+          refresh();
+        }}
+        onDelete={() => {
+          setUserSubmission(null);
           refresh();
         }}
       />

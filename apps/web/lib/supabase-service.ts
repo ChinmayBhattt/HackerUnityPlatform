@@ -9,7 +9,15 @@ import {
   NotificationTargetType,
 } from '@hackers-unity/shared-types';
 import { createNotification, sendNotificationToUser } from './notification-service';
-import { getCustomEvents, saveHostedEvent } from './storage';
+import {
+  getCustomEvents,
+  saveHostedEvent,
+  ProjectSubmission,
+  getAllProjectSubmissions,
+  saveProjectSubmission,
+  deleteProjectSubmission,
+  updateProjectSubmissionStatus,
+} from './storage';
 
 /**
  * ─── HELPER: MAP DATABASE EVENT ROW TO EXTENDED EVENT ─────────────────────────
@@ -1768,3 +1776,204 @@ export async function saveProfileToSupabase(user: UserPublic): Promise<{ success
     return { success: true };
   }
 }
+
+/**
+ * ─── 9. PROJECT SUBMISSION OPERATIONS ─────────────────────────────────────────
+ */
+export async function saveSubmissionSupabase(
+  submission: ProjectSubmission
+): Promise<{ success: boolean; data?: ProjectSubmission; error?: string }> {
+  // Always save to local storage as fallback/cache first
+  saveProjectSubmission(submission);
+
+  try {
+    // Resolve UUID for eventId if slug passed
+    let resolvedEventId = submission.eventId;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(submission.eventId);
+    if (!isUuid) {
+      const { data: eventRow } = await supabase
+        .from('events')
+        .select('id')
+        .eq('slug', submission.eventId)
+        .maybeSingle();
+      if (eventRow?.id) {
+        resolvedEventId = eventRow.id;
+      }
+    }
+
+    const payload = {
+      event_id: resolvedEventId,
+      submitter_id: submission.submittedBy,
+      project_name: submission.projectTitle,
+      tagline: submission.tagline || '',
+      description: submission.projectDescription,
+      repo_url: submission.projectLink,
+      demo_url: submission.demoVideoUrl || '',
+      video_url: submission.demoVideoUrl || '',
+      track: submission.track || 'General Open Track',
+      status: submission.status || 'SUBMITTED',
+      score: submission.score || 0,
+      created_at: submission.submittedAt,
+    };
+
+    const { data, error } = await supabase
+      .from('submissions')
+      .upsert(payload, { onConflict: 'event_id,submitter_id' })
+      .select()
+      .maybeSingle();
+
+    if (error) {
+      console.warn('Supabase submission upsert warning (falling back to client storage):', error.message);
+      return { success: true, data: submission };
+    }
+
+    return { success: true, data: submission };
+  } catch (err: any) {
+    console.warn('Supabase submission error (using client storage):', err);
+    return { success: true, data: submission };
+  }
+}
+
+export async function fetchEventSubmissions(
+  eventId: string
+): Promise<ProjectSubmission[]> {
+  const localList = getAllProjectSubmissions(eventId);
+
+  try {
+    let resolvedEventId = eventId;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId);
+    if (!isUuid) {
+      const { data: eventRow } = await supabase
+        .from('events')
+        .select('id')
+        .eq('slug', eventId)
+        .maybeSingle();
+      if (eventRow?.id) {
+        resolvedEventId = eventRow.id;
+      }
+    }
+
+    const { data, error } = await supabase
+      .from('submissions')
+      .select(`
+        *,
+        profiles:submitter_id (
+          id,
+          name,
+          email,
+          avatar_url,
+          college
+        )
+      `)
+      .eq('event_id', resolvedEventId)
+      .order('created_at', { ascending: false });
+
+    if (error || !data || data.length === 0) {
+      return localList;
+    }
+
+    // Merge Supabase rows with local submissions
+    const remoteMapped: ProjectSubmission[] = data.map((row: any) => ({
+      id: row.id,
+      eventId: eventId,
+      submittedBy: row.submitter_id,
+      submittedByName: row.profiles?.name || 'Hacker Builder',
+      submittedByEmail: row.profiles?.email || '',
+      submittedAt: row.created_at,
+      projectTitle: row.project_name,
+      tagline: row.tagline || '',
+      projectDescription: row.description,
+      projectLink: row.repo_url,
+      demoVideoUrl: row.demo_url || row.video_url || '',
+      track: row.track || 'General',
+      score: Number(row.score || 0),
+      status: row.status || 'SUBMITTED',
+    }));
+
+    // Deduplicate with local list
+    const combined = [...remoteMapped];
+    localList.forEach((local) => {
+      if (!combined.some((c) => c.submittedBy === local.submittedBy || c.id === local.id)) {
+        combined.push(local);
+      }
+    });
+
+    return combined;
+  } catch (err) {
+    console.warn('Error fetching remote submissions, using local list:', err);
+    return localList;
+  }
+}
+
+export async function deleteSubmissionSupabase(
+  submissionId: string,
+  eventId?: string
+): Promise<{ success: boolean; error?: string }> {
+  deleteProjectSubmission(submissionId);
+
+  try {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(submissionId);
+    if (isUuid) {
+      await supabase.from('submissions').delete().eq('id', submissionId);
+    }
+    return { success: true };
+  } catch {
+    return { success: true };
+  }
+}
+
+export async function updateSubmissionReviewSupabase(
+  submissionId: string,
+  status: 'SUBMITTED' | 'UNDER_REVIEW' | 'ACCEPTED' | 'WINNER' | 'REJECTED',
+  score?: number,
+  notes?: string
+): Promise<{ success: boolean }> {
+  updateProjectSubmissionStatus(submissionId, status, score, notes);
+
+  try {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(submissionId);
+    if (isUuid) {
+      const updateData: any = { status };
+      if (score !== undefined) updateData.score = score;
+      await supabase.from('submissions').update(updateData).eq('id', submissionId);
+    }
+    return { success: true };
+  } catch {
+    return { success: true };
+  }
+}
+
+export function subscribeToEventSubmissions(
+  eventId: string,
+  onUpdate: () => void
+): () => void {
+  if (typeof window === 'undefined') return () => {};
+
+  try {
+    const channel = supabase
+      .channel(`submissions_stream_${eventId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'submissions',
+        },
+        () => {
+          onUpdate();
+        }
+      )
+      .subscribe();
+
+    const handleLocal = () => onUpdate();
+    window.addEventListener('hackers_unity_storage_change', handleLocal);
+
+    return () => {
+      supabase.removeChannel(channel);
+      window.removeEventListener('hackers_unity_storage_change', handleLocal);
+    };
+  } catch {
+    return () => {};
+  }
+}
+

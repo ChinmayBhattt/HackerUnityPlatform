@@ -404,20 +404,28 @@ export interface ProjectSubmission {
   eventId: string;
   eventName?: string;
   submittedBy: string;
+  submittedByName?: string;
   submittedByEmail?: string;
   submittedAt: string;
+  updatedAt?: string;
   // Required fields:
   projectTitle: string;
+  tagline?: string;
   projectDescription: string;
   projectLink: string; // GitHub repository or live project link
+  track?: string;
   // Optional fields:
   demoVideoUrl?: string;
   zipFileName?: string;
   zipFileSize?: string;
   presentationUrl?: string;
   additionalResources?: string;
-  status?: 'SUBMITTED' | 'UNDER_REVIEW' | 'ACCEPTED';
+  score?: number;
+  reviewNotes?: string;
+  status?: 'SUBMITTED' | 'UNDER_REVIEW' | 'ACCEPTED' | 'WINNER' | 'REJECTED';
 }
+
+const GOOGLE_SHEETS_WEBHOOK_PREFIX = 'hackers_unity_gsheet_webhook_';
 
 export function getAllProjectSubmissions(eventId?: string): ProjectSubmission[] {
   if (typeof window === 'undefined') return [];
@@ -433,11 +441,15 @@ export function getAllProjectSubmissions(eventId?: string): ProjectSubmission[] 
   }
 }
 
+export function getEventSubmissionsCount(eventId: string): number {
+  return getAllProjectSubmissions(eventId).length;
+}
+
 export function getProjectSubmission(eventId: string, userId?: string): ProjectSubmission | null {
   const all = getAllProjectSubmissions(eventId);
   if (!all.length) return null;
   if (userId) {
-    return all.find((s) => s.submittedBy === userId) || all[0] || null;
+    return all.find((s) => s.submittedBy === userId) || null;
   }
   return all[0] || null;
 }
@@ -446,18 +458,57 @@ export function saveProjectSubmission(submission: ProjectSubmission): void {
   if (typeof window === 'undefined') return;
   try {
     const all = getAllProjectSubmissions();
-    const existingIdx = all.findIndex((s) => s.id === submission.id || (s.eventId === submission.eventId && s.submittedBy === submission.submittedBy));
+    const existingIdx = all.findIndex(
+      (s) => s.id === submission.id || (s.eventId === submission.eventId && s.submittedBy === submission.submittedBy)
+    );
     let updated: ProjectSubmission[];
     if (existingIdx >= 0) {
       updated = [...all];
-      updated[existingIdx] = submission;
+      updated[existingIdx] = {
+        ...updated[existingIdx],
+        ...submission,
+        updatedAt: new Date().toISOString(),
+      };
     } else {
-      updated = [submission, ...all];
+      updated = [{ ...submission, updatedAt: new Date().toISOString() }, ...all];
     }
     localStorage.setItem(STORAGE_KEYS.SUBMISSIONS, JSON.stringify(updated));
     window.dispatchEvent(new Event('hackers_unity_storage_change'));
+
+    // Trigger background webhook if configured
+    const webhook = getGoogleSheetsWebhook(submission.eventId);
+    if (webhook) {
+      fetch('/api/submissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'sync_webhook', submission, webhookUrl: webhook }),
+      }).catch((e) => console.warn('Background Google Sheets webhook sync notice:', e));
+    }
   } catch (e) {
     console.error('Error saving project submission:', e);
+  }
+}
+
+export function updateProjectSubmissionStatus(
+  submissionId: string,
+  status: 'SUBMITTED' | 'UNDER_REVIEW' | 'ACCEPTED' | 'WINNER' | 'REJECTED',
+  score?: number,
+  reviewNotes?: string
+): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const all = getAllProjectSubmissions();
+    const idx = all.findIndex((s) => s.id === submissionId);
+    if (idx >= 0) {
+      all[idx].status = status;
+      if (score !== undefined) all[idx].score = score;
+      if (reviewNotes !== undefined) all[idx].reviewNotes = reviewNotes;
+      all[idx].updatedAt = new Date().toISOString();
+      localStorage.setItem(STORAGE_KEYS.SUBMISSIONS, JSON.stringify(all));
+      window.dispatchEvent(new Event('hackers_unity_storage_change'));
+    }
+  } catch (e) {
+    console.error('Error updating submission status:', e);
   }
 }
 
@@ -472,4 +523,24 @@ export function deleteProjectSubmission(submissionId: string): void {
     console.error('Error deleting project submission:', e);
   }
 }
+
+export function saveGoogleSheetsWebhook(eventId: string, webhookUrl: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(`${GOOGLE_SHEETS_WEBHOOK_PREFIX}${eventId}`, webhookUrl.trim());
+    window.dispatchEvent(new Event('hackers_unity_storage_change'));
+  } catch (e) {
+    console.error('Error saving Google Sheets webhook:', e);
+  }
+}
+
+export function getGoogleSheetsWebhook(eventId: string): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return localStorage.getItem(`${GOOGLE_SHEETS_WEBHOOK_PREFIX}${eventId}`) || null;
+  } catch {
+    return null;
+  }
+}
+
 
