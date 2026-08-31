@@ -827,11 +827,36 @@ export async function registerForEventSupabase(
 
 export async function fetchEventRegistrations(eventId: string): Promise<any[]> {
   try {
-    const { data, error } = await supabase
+    if (!eventId || eventId.startsWith('evt_custom_')) {
+      return [];
+    }
+
+    let targetId = eventId;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId);
+    if (!isUuid) {
+      const { data: ev } = await supabase
+        .from('events')
+        .select('id')
+        .eq('slug', eventId)
+        .maybeSingle();
+      if (ev?.id) {
+        targetId = ev.id;
+      } else {
+        return [];
+      }
+    }
+
+    const fetchPromise = supabase
       .from('registrations')
       .select('*')
-      .eq('event_id', eventId)
+      .eq('event_id', targetId)
       .order('registered_at', { ascending: false });
+
+    const timeoutPromise = new Promise<{ data: null; error: any }>((resolve) =>
+      setTimeout(() => resolve({ data: null, error: 'timeout' }), 3000)
+    );
+
+    const { data, error } = (await Promise.race([fetchPromise, timeoutPromise])) as any;
 
     if (error || !data) return [];
     return data;

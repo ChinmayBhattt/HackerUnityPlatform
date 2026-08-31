@@ -330,21 +330,37 @@ export default function DashboardPage() {
 
   // ─── Realtime Event Registrations Loader ───────────────────
   const loadModalRegistrations = useCallback(async (evt: ExtendedEvent) => {
-    setLoadingRegistrations(true);
+    // 1. Immediately read local registrations so user sees data without any delay
+    const localById = getEventRegistrations(evt.id);
+    const localBySlug = evt.slug ? getEventRegistrations(evt.slug) : [];
+    const map = new Map<string, any>();
+    [...localById, ...localBySlug].forEach((r: any) => {
+      const key = r.user_email || r.userEmail || r.email || r.id;
+      if (key) map.set(key, r);
+    });
+
+    // Populate immediately with zero freeze
+    setEventRegistrations(Array.from(map.values()));
+
+    // Custom local events don't have remote DB records, so exit immediately
+    if (evt.id && evt.id.startsWith('evt_custom_')) {
+      setLoadingRegistrations(false);
+      return;
+    }
+
+    if (map.size === 0) {
+      setLoadingRegistrations(true);
+    }
+
     try {
-      // 1. Remote Supabase registrations
+      // 2. Fetch remote Supabase registrations with safety
       const remoteRegs = await fetchEventRegistrations(evt.id);
       let slugRegs: any[] = [];
       if (evt.slug && evt.slug !== evt.id) {
         slugRegs = await fetchEventRegistrations(evt.slug);
       }
 
-      // 2. Local registrations
-      const localById = getEventRegistrations(evt.id);
-      const localBySlug = evt.slug ? getEventRegistrations(evt.slug) : [];
-
-      const map = new Map<string, any>();
-      [...remoteRegs, ...slugRegs, ...localById, ...localBySlug].forEach((r) => {
+      [...remoteRegs, ...slugRegs].forEach((r) => {
         const key = r.user_email || r.userEmail || r.email || r.id;
         if (key) map.set(key, r);
       });
@@ -352,8 +368,6 @@ export default function DashboardPage() {
       setEventRegistrations(Array.from(map.values()));
     } catch (err) {
       console.warn('Failed to load event registrations:', err);
-      const local = getEventRegistrations(evt.id);
-      setEventRegistrations(local);
     } finally {
       setLoadingRegistrations(false);
     }
@@ -362,34 +376,31 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!viewingHackersEvent) {
       setEventRegistrations([]);
+      setLoadingRegistrations(false);
       return;
     }
 
     loadModalRegistrations(viewingHackersEvent);
 
-    // Setup realtime subscription for registrations on this event
-    const regChannel = supabase
-      .channel(`modal_event_regs_${viewingHackersEvent.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'registrations',
-        },
-        () => {
-          loadModalRegistrations(viewingHackersEvent);
-        }
-      )
-      .on('broadcast', { event: 'registration_created' }, (payload: any) => {
-        if (
-          payload?.payload?.eventId === viewingHackersEvent.id ||
-          payload?.payload?.eventId === viewingHackersEvent.slug
-        ) {
-          loadModalRegistrations(viewingHackersEvent);
-        }
-      })
-      .subscribe();
+    let regChannel: any = null;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(viewingHackersEvent.id);
+
+    if (isUuid) {
+      regChannel = supabase
+        .channel(`modal_event_regs_${viewingHackersEvent.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'registrations',
+          },
+          () => {
+            loadModalRegistrations(viewingHackersEvent);
+          }
+        )
+        .subscribe();
+    }
 
     const handleStorage = () => {
       loadModalRegistrations(viewingHackersEvent);
@@ -397,7 +408,7 @@ export default function DashboardPage() {
     window.addEventListener('hackers_unity_storage_change', handleStorage);
 
     return () => {
-      supabase.removeChannel(regChannel);
+      if (regChannel) supabase.removeChannel(regChannel);
       window.removeEventListener('hackers_unity_storage_change', handleStorage);
     };
   }, [viewingHackersEvent, loadModalRegistrations]);
@@ -1457,6 +1468,15 @@ export default function DashboardPage() {
               </div>
 
               <div className="flex items-center gap-2">
+                <Link
+                  href={`/dashboard/events/${viewingHackersEvent.id || viewingHackersEvent.slug}/registrations`}
+                  className="px-3.5 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-[#0099e6] border border-sky-200 text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                  title="Manage attendees in full-page table"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Full Table</span>
+                </Link>
+
                 <button
                   onClick={() => handleExportCSV(viewingHackersEvent)}
                   disabled={eventRegistrations.length === 0}
