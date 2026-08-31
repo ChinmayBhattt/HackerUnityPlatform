@@ -406,7 +406,7 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                  Project Submissions Sheet
+                  Submissions
                 </h1>
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">
                   Google Sheets Live Sync
