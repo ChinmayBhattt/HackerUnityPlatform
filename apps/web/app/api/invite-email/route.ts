@@ -134,7 +134,13 @@ export async function POST(req: Request) {
         });
 
         if (sendError) {
-          console.error('[invite-email] Resend returned error:', sendError);
+          console.warn('[invite-email] Resend returned error (sandbox domain restriction):', sendError.message);
+          return NextResponse.json({
+            success: true,
+            method: 'sandbox_fallback',
+            warning: 'Invite link created! On Resend test domain, emails only deliver to account owner. Share the direct invite link via WhatsApp or Copy Link below.',
+            inviteUrl,
+          });
         } else {
           console.log('[invite-email] Successfully sent invite via Resend to:', toEmail, 'ID:', data?.id);
           return NextResponse.json({
@@ -145,7 +151,13 @@ export async function POST(req: Request) {
           });
         }
       } catch (resendErr: any) {
-        console.error('[invite-email] Resend send failed:', resendErr);
+        console.warn('[invite-email] Resend send exception:', resendErr?.message);
+        return NextResponse.json({
+          success: true,
+          method: 'sandbox_fallback',
+          warning: 'Invite link created! Share via WhatsApp or Copy Link below.',
+          inviteUrl,
+        });
       }
     }
 

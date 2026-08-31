@@ -144,6 +144,26 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
 
     async function checkExisting() {
       try {
+        // 1. Check if user already has a squad for this event ID or slug
+        const squad =
+          (await fetchUserTeamForEvent(currentEvent.id, userId || '')) ||
+          (await fetchUserTeamForEvent(currentEvent.slug, userId || ''));
+
+        if (squad) {
+          setIsAlreadyRegistered(true);
+          setCreatedTeamId(squad.id);
+          setCreatedTeamData(squad);
+          setTeamName(squad.name);
+          setRegisteredRole(
+            squad.leader_id === userId ? `Squad Leader (${squad.name})` : `Squad Member (${squad.name})`
+          );
+          setMode(squad.leader_id === userId ? 'CREATE_TEAM' : 'JOIN_TEAM');
+          fetchTeamInvites(squad.id).then((invs) => setTeamInvitesList(invs));
+          setCurrentStep(3);
+          return;
+        }
+
+        // 2. Check registration record
         const reg = await checkUserRegistration(currentEvent.id, userId, userEmail);
         if (reg.isRegistered && reg.registration) {
           setIsAlreadyRegistered(true);
@@ -151,29 +171,17 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
           setRegisteredRole(
             reg.registration.role || (reg.registration.is_team ? `Squad (${reg.registration.team_name || 'Team'})` : 'Individual Hacker')
           );
-
-          // Fetch squad details strictly for this event
-          const squad = await fetchUserTeamForEvent(currentEvent.id, userId || '');
-          if (squad) {
-            setCreatedTeamId(squad.id);
-            setCreatedTeamData(squad);
-            setTeamName(squad.name);
-            setMode(squad.leader_id === userId ? 'CREATE_TEAM' : 'JOIN_TEAM');
-            fetchTeamInvites(squad.id).then((invs) => setTeamInvitesList(invs));
-          } else {
-            setCreatedTeamId(null);
-            setCreatedTeamData(null);
-          }
-
           setCurrentStep(3);
-        } else {
-          setIsAlreadyRegistered(false);
-          setCreatedTeamId(null);
-          setCreatedTeamData(null);
-          setTeamName('');
-          setTeamInvitesList([]);
-          setCurrentStep(1);
+          return;
         }
+
+        // 3. Not registered & no squad
+        setIsAlreadyRegistered(false);
+        setCreatedTeamId(null);
+        setCreatedTeamData(null);
+        setTeamName('');
+        setTeamInvitesList([]);
+        setCurrentStep(1);
       } catch (e) {
         console.warn('Error checking existing registration:', e);
       }
