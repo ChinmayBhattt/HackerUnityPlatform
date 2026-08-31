@@ -19,6 +19,15 @@ import {
   updateProjectSubmissionStatus,
   registerForEventStorage,
   saveEventRegistration,
+  getLocalEventTeams,
+  saveLocalEventTeam,
+  getLocalTeamWithMembers,
+  deleteLocalTeam,
+  joinLocalEventTeam,
+  getLocalTeamInvites,
+  saveLocalTeamInvite,
+  getLocalInviteByToken,
+  updateLocalInviteStatus,
 } from './storage';
 
 /**
@@ -1042,6 +1051,41 @@ export async function createTeamSupabase(
   maxMembers: number = 4,
   description?: string
 ): Promise<{ success: boolean; team?: any; error?: string }> {
+  // Check if event is a custom local event or non-UUID
+  const isEventUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId);
+  const isLeaderUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(leaderId);
+
+  if (!isEventUuid || eventId.startsWith('evt_custom_') || !isLeaderUuid) {
+    const localTeam = {
+      id: `team_${Date.now()}`,
+      event_id: eventId,
+      name: teamName,
+      leader_id: leaderId,
+      max_members: maxMembers,
+      description: description || '',
+      created_at: new Date().toISOString(),
+      profiles: {
+        name: 'Squad Leader',
+        email: 'leader@hackersunity.dev',
+      },
+      team_members: [
+        {
+          id: `member_${Date.now()}`,
+          team_id: `team_${Date.now()}`,
+          user_id: leaderId,
+          role: 'LEADER',
+          status: 'ACCEPTED',
+          profiles: {
+            name: 'Squad Leader',
+            email: 'leader@hackersunity.dev',
+          },
+        },
+      ],
+    };
+    saveLocalEventTeam(eventId, localTeam);
+    return { success: true, team: localTeam };
+  }
+
   try {
     // 1. Try server API route first (handles RLS bypass and profile ensuring)
     if (typeof window !== 'undefined') {
@@ -1112,6 +1156,11 @@ export async function createTeamSupabase(
 }
 
 export async function fetchEventTeams(eventId: string): Promise<any[]> {
+  const localTeams = getLocalEventTeams(eventId);
+  const isEventUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId);
+  if (!isEventUuid || eventId.startsWith('evt_custom_')) {
+    return localTeams;
+  }
   try {
     const { data, error } = await supabase
       .from('teams')
@@ -1119,10 +1168,10 @@ export async function fetchEventTeams(eventId: string): Promise<any[]> {
       .eq('event_id', eventId)
       .order('created_at', { ascending: false });
 
-    if (error || !data) return [];
-    return data;
+    if (error || !data) return localTeams;
+    return [...data, ...localTeams];
   } catch {
-    return [];
+    return localTeams;
   }
 }
 
@@ -1131,6 +1180,24 @@ export async function joinTeamSupabase(
   userId: string,
   maxMembers: number = 4
 ): Promise<{ success: boolean; error?: string }> {
+  if (teamId.startsWith('team_')) {
+    const member = {
+      id: `member_${Date.now()}`,
+      team_id: teamId,
+      user_id: userId,
+      role: 'MEMBER',
+      status: 'ACCEPTED',
+      profiles: {
+        name: 'Squad Member',
+        email: 'member@hackersunity.dev',
+      },
+    };
+    const success = joinLocalEventTeam('', teamId, member);
+    return success
+      ? { success: true }
+      : { success: false, error: 'Failed to join team or team is full' };
+  }
+
   try {
     // 1. Try server API route first
     if (typeof window !== 'undefined') {
@@ -1199,13 +1266,65 @@ export async function sendTeamInvite(
   invitedByUserId: string,
   invitedEmail: string
 ): Promise<{ success: boolean; invite?: any; inviteLink?: string; error?: string }> {
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const cleanEmail = invitedEmail.toLowerCase().trim();
+
+  // 1. Handle local / custom squads
+  if (teamId.startsWith('team_') || eventId.startsWith('evt_custom_')) {
+    const token = `inv_token_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    const localTeam = getLocalTeamWithMembers(teamId);
+    const teamName = localTeam?.name || 'Squad';
+
+    const localInvite = {
+      id: `inv_${Date.now()}`,
+      team_id: teamId,
+      event_id: eventId,
+      invited_by: invitedByUserId,
+      invited_email: cleanEmail,
+      status: 'PENDING',
+      invite_token: token,
+      created_at: new Date().toISOString(),
+      profiles: {
+        name: 'Squad Leader',
+        email: 'leader@hackersunity.dev',
+      },
+    };
+    saveLocalTeamInvite(teamId, localInvite);
+    const inviteLink = `${origin}/hackathons/${eventId}/invite?token=${token}`;
+
+    // Dispatch real email via /api/invite-email!
+    try {
+      if (typeof window !== 'undefined') {
+        const emailRes = await fetch('/api/invite-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            toEmail: cleanEmail,
+            teamName: teamName,
+            hackathonTitle: 'Hackathon Arena',
+            hackathonSlug: eventId,
+            invitedByName: 'Squad Leader',
+            inviteToken: token,
+            origin,
+          }),
+        });
+        const resJson = await emailRes.json();
+        console.log('[sendTeamInvite - local team] Email dispatch result:', resJson);
+      }
+    } catch (e) {
+      console.warn('Email dispatch warning for local team:', e);
+    }
+
+    return { success: true, invite: localInvite, inviteLink };
+  }
+
   try {
     // Check if invite already exists for this email + team
     const { data: existing } = await supabase
       .from('team_invitations')
       .select('id, status, invite_token')
       .eq('team_id', teamId)
-      .eq('invited_email', invitedEmail.toLowerCase().trim())
+      .eq('invited_email', cleanEmail)
       .maybeSingle();
 
     // Fetch team and event metadata for link and email
@@ -1225,7 +1344,6 @@ export async function sendTeamInvite(
     const eventSlug = (teamData?.events as any)?.slug || eventId;
     const eventTitle = (teamData?.events as any)?.title || 'Hackathon';
     const inviterName = profileData?.name || 'A teammate';
-    const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
     let inviteRecord: any = null;
 
@@ -1262,7 +1380,7 @@ export async function sendTeamInvite(
           team_id: teamId,
           event_id: eventId,
           invited_by: invitedByUserId,
-          invited_email: invitedEmail.toLowerCase().trim(),
+          invited_email: cleanEmail,
           status: 'PENDING',
         })
         .select('*')
@@ -1279,11 +1397,11 @@ export async function sendTeamInvite(
     // Dispatch email via API route
     try {
       if (typeof window !== 'undefined') {
-        fetch('/api/invite-email', {
+        const emailRes = await fetch('/api/invite-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            toEmail: invitedEmail.toLowerCase().trim(),
+            toEmail: cleanEmail,
             teamName,
             hackathonTitle: eventTitle,
             hackathonSlug: eventSlug,
@@ -1291,7 +1409,9 @@ export async function sendTeamInvite(
             inviteToken: inviteRecord.invite_token,
             origin,
           }),
-        }).catch((e) => console.warn('Email dispatch warning:', e));
+        });
+        const resJson = await emailRes.json();
+        console.log('[sendTeamInvite] Email dispatch result:', resJson);
       }
     } catch (e) {
       console.warn('Could not trigger invite email:', e);
@@ -1307,6 +1427,10 @@ export async function sendTeamInvite(
  * Fetch all invites for a specific team (leader view)
  */
 export async function fetchTeamInvites(teamId: string): Promise<any[]> {
+  const localInvites = getLocalTeamInvites(teamId);
+  if (teamId.startsWith('team_')) {
+    return localInvites;
+  }
   try {
     const { data, error } = await supabase
       .from('team_invitations')
@@ -1314,10 +1438,10 @@ export async function fetchTeamInvites(teamId: string): Promise<any[]> {
       .eq('team_id', teamId)
       .order('created_at', { ascending: false });
 
-    if (error || !data) return [];
-    return data;
+    if (error || !data) return localInvites;
+    return [...data, ...localInvites];
   } catch {
-    return [];
+    return localInvites;
   }
 }
 
@@ -1345,6 +1469,11 @@ export async function fetchPendingInvitesForUser(email: string): Promise<any[]> 
  * Get invite details by token (for the accept page)
  */
 export async function getInviteByToken(token: string): Promise<{ invite: any | null; error?: string }> {
+  if (token.startsWith('inv_token_')) {
+    const local = getLocalInviteByToken(token);
+    if (local) return { invite: local };
+  }
+
   try {
     const { data, error } = await supabase
       .from('team_invitations')
@@ -1352,11 +1481,21 @@ export async function getInviteByToken(token: string): Promise<{ invite: any | n
       .eq('invite_token', token)
       .maybeSingle();
 
-    if (error) return { invite: null, error: error.message };
-    if (!data) return { invite: null, error: 'Invite not found or has expired.' };
+    if (error) {
+      const local = getLocalInviteByToken(token);
+      if (local) return { invite: local };
+      return { invite: null, error: error.message };
+    }
+    if (!data) {
+      const local = getLocalInviteByToken(token);
+      if (local) return { invite: local };
+      return { invite: null, error: 'Invite not found or has expired.' };
+    }
 
     return { invite: data };
   } catch (err: any) {
+    const local = getLocalInviteByToken(token);
+    if (local) return { invite: local };
     return { invite: null, error: err.message || 'Failed to fetch invite' };
   }
 }
@@ -1368,6 +1507,29 @@ export async function acceptTeamInvite(
   inviteToken: string,
   userId: string
 ): Promise<{ success: boolean; teamId?: string; eventSlug?: string; error?: string }> {
+  if (inviteToken.startsWith('inv_token_')) {
+    const localInvite = getLocalInviteByToken(inviteToken);
+    if (!localInvite) {
+      return { success: false, error: 'Invite not found or expired.' };
+    }
+    if (localInvite.status !== 'PENDING') {
+      return { success: false, error: `This invite has already been ${localInvite.status.toLowerCase()}.` };
+    }
+    updateLocalInviteStatus(inviteToken, 'ACCEPTED');
+    joinLocalEventTeam(localInvite.event_id, localInvite.team_id, {
+      id: `mem_${Date.now()}`,
+      team_id: localInvite.team_id,
+      user_id: userId,
+      role: 'MEMBER',
+      status: 'ACCEPTED',
+      profiles: {
+        name: 'Teammate',
+        email: localInvite.invited_email,
+      },
+    });
+    return { success: true, teamId: localInvite.team_id, eventSlug: localInvite.event_id };
+  }
+
   try {
     // 1. Get the invite
     const { invite, error: fetchErr } = await getInviteByToken(inviteToken);
@@ -1437,6 +1599,11 @@ export async function acceptTeamInvite(
 export async function declineTeamInvite(
   inviteToken: string
 ): Promise<{ success: boolean; error?: string }> {
+  if (inviteToken.startsWith('inv_token_')) {
+    updateLocalInviteStatus(inviteToken, 'DECLINED');
+    return { success: true };
+  }
+
   try {
     const { error } = await supabase
       .from('team_invitations')
@@ -1506,6 +1673,11 @@ export async function deleteTeamSupabase(
   teamId: string,
   userId: string
 ): Promise<{ success: boolean; error?: string }> {
+  if (teamId.startsWith('team_')) {
+    deleteLocalTeam(teamId);
+    return { success: true };
+  }
+
   try {
     if (!teamId || !userId) {
       return { success: false, error: 'Team ID and user ID are required' };
@@ -1594,6 +1766,10 @@ export async function deleteTeamSupabase(
  * Fetch full team details with all members (for team view)
  */
 export async function fetchTeamWithMembers(teamId: string): Promise<any | null> {
+  const local = getLocalTeamWithMembers(teamId);
+  if (teamId.startsWith('team_') || local) {
+    return local;
+  }
   try {
     const { data, error } = await supabase
       .from('teams')
@@ -1601,10 +1777,10 @@ export async function fetchTeamWithMembers(teamId: string): Promise<any | null> 
       .eq('id', teamId)
       .maybeSingle();
 
-    if (error || !data) return null;
+    if (error || !data) return local;
     return data;
   } catch {
-    return null;
+    return local;
   }
 }
 
@@ -1653,6 +1829,17 @@ export async function fetchUserTeams(userId: string): Promise<any[]> {
  * Fetch a specific team for an event where the user is a leader or member
  */
 export async function fetchUserTeamForEvent(eventId: string, userId: string): Promise<any | null> {
+  const localTeams = getLocalEventTeams(eventId);
+  const foundLocal = localTeams.find(
+    (t) => t.leader_id === userId || t.team_members?.some((m: any) => m.user_id === userId)
+  );
+  if (foundLocal) return foundLocal;
+
+  const isEventUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId);
+  if (!isEventUuid || eventId.startsWith('evt_custom_')) {
+    return null;
+  }
+
   try {
     if (!eventId || !userId) return null;
 

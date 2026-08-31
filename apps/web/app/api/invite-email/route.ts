@@ -134,8 +134,9 @@ export async function POST(req: Request) {
         });
 
         if (sendError) {
-          console.warn('Resend returned error, falling back:', sendError);
+          console.error('[invite-email] Resend returned error:', sendError);
         } else {
+          console.log('[invite-email] Successfully sent invite via Resend to:', toEmail, 'ID:', data?.id);
           return NextResponse.json({
             success: true,
             method: 'resend',
@@ -144,7 +145,7 @@ export async function POST(req: Request) {
           });
         }
       } catch (resendErr: any) {
-        console.warn('Resend send failed, falling back:', resendErr);
+        console.error('[invite-email] Resend send failed:', resendErr);
       }
     }
 

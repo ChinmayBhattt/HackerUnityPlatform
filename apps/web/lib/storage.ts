@@ -547,4 +547,177 @@ export function getGoogleSheetsWebhook(eventId: string): string | null {
   }
 }
 
+// ─── Local Teams Management (For Custom Events & Offline Fallbacks) ─────────────
+const LOCAL_TEAMS_PREFIX = 'hackers_unity_teams_';
+const LOCAL_INVITES_PREFIX = 'hackers_unity_invites_';
 
+export function getLocalEventTeams(eventId: string): any[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(`${LOCAL_TEAMS_PREFIX}${eventId}`);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveLocalEventTeam(eventId: string, team: any): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const current = getLocalEventTeams(eventId);
+    const filtered = current.filter((t) => t.id !== team.id);
+    const updated = [team, ...filtered];
+    localStorage.setItem(`${LOCAL_TEAMS_PREFIX}${eventId}`, JSON.stringify(updated));
+    window.dispatchEvent(new Event('hackers_unity_storage_change'));
+  } catch (e) {
+    console.error('Error saving local team:', e);
+  }
+}
+
+export function getLocalTeamWithMembers(teamId: string): any | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(LOCAL_TEAMS_PREFIX)) {
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          const list: any[] = JSON.parse(raw);
+          const found = list.find((t) => t.id === teamId);
+          if (found) return found;
+        }
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function deleteLocalTeam(teamId: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(LOCAL_TEAMS_PREFIX)) {
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          const list: any[] = JSON.parse(raw);
+          const filtered = list.filter((t) => t.id !== teamId);
+          localStorage.setItem(key, JSON.stringify(filtered));
+        }
+      }
+    }
+    window.dispatchEvent(new Event('hackers_unity_storage_change'));
+  } catch (e) {
+    console.error('Error deleting local team:', e);
+  }
+}
+
+export function joinLocalEventTeam(eventId: string, teamId: string, member: any): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(LOCAL_TEAMS_PREFIX)) {
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          const teams: any[] = JSON.parse(raw);
+          const teamIdx = teams.findIndex((t) => t.id === teamId);
+          if (teamIdx !== -1) {
+            const team = teams[teamIdx];
+            const members = team.team_members || [];
+            if (members.length >= (team.max_members || 4)) return false;
+            team.team_members = [...members, member];
+            teams[teamIdx] = team;
+            localStorage.setItem(key, JSON.stringify(teams));
+            window.dispatchEvent(new Event('hackers_unity_storage_change'));
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+export function getLocalTeamInvites(teamId: string): any[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(`${LOCAL_INVITES_PREFIX}${teamId}`);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveLocalTeamInvite(teamId: string, invite: any): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const current = getLocalTeamInvites(teamId);
+    const filtered = current.filter((inv) => inv.invited_email !== invite.invited_email);
+    const updated = [invite, ...filtered];
+    localStorage.setItem(`${LOCAL_INVITES_PREFIX}${teamId}`, JSON.stringify(updated));
+    window.dispatchEvent(new Event('hackers_unity_storage_change'));
+  } catch (e) {
+    console.error('Error saving local team invite:', e);
+  }
+}
+
+export function getLocalInviteByToken(token: string): any | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(LOCAL_INVITES_PREFIX)) {
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          const invites: any[] = JSON.parse(raw);
+          const found = invites.find((inv) => inv.invite_token === token);
+          if (found) {
+            const team = getLocalTeamWithMembers(found.team_id);
+            return {
+              ...found,
+              teams: team,
+              events: {
+                id: found.event_id,
+                slug: found.event_id,
+                title: team?.name ? `${team.name}'s Hackathon` : 'Hackathon Arena',
+              },
+            };
+          }
+        }
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function updateLocalInviteStatus(token: string, status: 'ACCEPTED' | 'DECLINED'): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(LOCAL_INVITES_PREFIX)) {
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          const invites: any[] = JSON.parse(raw);
+          const idx = invites.findIndex((inv) => inv.invite_token === token);
+          if (idx !== -1) {
+            invites[idx].status = status;
+            localStorage.setItem(key, JSON.stringify(invites));
+            window.dispatchEvent(new Event('hackers_unity_storage_change'));
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
