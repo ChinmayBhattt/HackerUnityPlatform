@@ -31,6 +31,9 @@ export async function POST(req: Request) {
         .maybeSingle();
       if (eventData?.id) {
         targetEventId = eventData.id;
+      } else {
+        // Custom or local event not stored in database
+        return NextResponse.json({ success: true, localOnly: true });
       }
     }
 

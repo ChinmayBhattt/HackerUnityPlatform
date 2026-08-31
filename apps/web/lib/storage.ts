@@ -307,15 +307,19 @@ export function clearStoredUser(): void {
 export interface EventRegistration {
   id: string;
   eventId: string;
+  userId?: string;
   userName: string;
   userEmail: string;
-  phone: string;
-  college: string;
-  city: string;
-  githubUrl: string;
-  linkedinUrl: string;
-  skills: string[];
-  customAnswers: Record<string, string>;
+  phone?: string;
+  college?: string;
+  city?: string;
+  githubUrl?: string;
+  linkedinUrl?: string;
+  skills?: string[];
+  customAnswers?: Record<string, string>;
+  isTeam?: boolean;
+  teamName?: string;
+  role?: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CONFIRMED';
   registeredAt: string;
 }

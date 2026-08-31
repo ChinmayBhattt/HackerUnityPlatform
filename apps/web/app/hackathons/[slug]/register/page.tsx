@@ -255,12 +255,8 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
       setErrorMsg('Email address is required.');
       return;
     }
-    if (!githubUrl.trim()) {
-      setErrorMsg('GitHub Profile URL is required.');
-      return;
-    }
-    if (!linkedinUrl.trim()) {
-      setErrorMsg('LinkedIn Profile URL is required.');
+    if (!phone.trim()) {
+      setErrorMsg('Phone number is required.');
       return;
     }
     if (!agreeRules) {
@@ -294,21 +290,22 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
         // 2. Register leader
         const regRes = await registerForEventSupabase({
           eventId: event.id,
+          eventName: event.title,
           userId,
           userEmail,
           userName: fullName.trim(),
           phone: phone.trim() || undefined,
           college: college.trim() || undefined,
           city: city.trim() || undefined,
-          githubUrl: githubUrl.trim(),
-          linkedinUrl: linkedinUrl.trim(),
+          githubUrl: githubUrl.trim() || undefined,
+          linkedinUrl: linkedinUrl.trim() || undefined,
           skills: skills.split(',').map((s) => s.trim()).filter(Boolean),
           customAnswers,
           isTeam: true,
           teamName: teamName.trim(),
           role: 'Squad Leader',
           status,
-        });
+        } as any);
 
         if (!regRes.success) {
           setErrorMsg(regRes.error || 'Registration failed.');
@@ -337,21 +334,22 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
         // 2. Register member
         const regRes = await registerForEventSupabase({
           eventId: event.id,
+          eventName: event.title,
           userId,
           userEmail,
           userName: fullName.trim(),
           phone: phone.trim() || undefined,
           college: college.trim() || undefined,
           city: city.trim() || undefined,
-          githubUrl: githubUrl.trim(),
-          linkedinUrl: linkedinUrl.trim(),
+          githubUrl: githubUrl.trim() || undefined,
+          linkedinUrl: linkedinUrl.trim() || undefined,
           skills: skills.split(',').map((s) => s.trim()).filter(Boolean),
           customAnswers,
           isTeam: true,
           teamName: teamObj?.name || 'Squad Member',
           role: 'Squad Member',
           status,
-        });
+        } as any);
 
         if (!regRes.success) {
           setErrorMsg(regRes.error || 'Registration failed.');
@@ -364,20 +362,21 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
         // Solo registration
         const regRes = await registerForEventSupabase({
           eventId: event.id,
+          eventName: event.title,
           userId,
           userEmail,
           userName: fullName.trim(),
           phone: phone.trim() || undefined,
           college: college.trim() || undefined,
           city: city.trim() || undefined,
-          githubUrl: githubUrl.trim(),
-          linkedinUrl: linkedinUrl.trim(),
+          githubUrl: githubUrl.trim() || undefined,
+          linkedinUrl: linkedinUrl.trim() || undefined,
           skills: skills.split(',').map((s) => s.trim()).filter(Boolean),
           customAnswers,
           isTeam: false,
           role: 'Solo Builder',
           status,
-        });
+        } as any);
 
         if (!regRes.success) {
           setErrorMsg(regRes.error || 'Registration failed.');
@@ -1200,6 +1199,14 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                   </label>
                 </div>
 
+                {/* Inline Error Display if any */}
+                {errorMsg && (
+                  <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-xs text-red-700 font-medium flex items-center gap-3 animate-in fade-in">
+                    <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+                    <span>{errorMsg}</span>
+                  </div>
+                )}
+
                 {/* Action Buttons */}
                 <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-4">
                 <button
@@ -1215,7 +1222,7 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                   disabled={submitting || !agreeRules}
                   className="px-8 py-3 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white text-xs font-extrabold transition-all shadow-md shadow-sky-500/20 flex items-center gap-2 cursor-pointer disabled:opacity-50"
                 >
-                  <Rocket className="w-4 h-4" />
+                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Rocket className="w-4 h-4" />}
                   <span>
                     {submitting
                       ? 'Submitting Registration...'

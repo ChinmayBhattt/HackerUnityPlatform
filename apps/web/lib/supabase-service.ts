@@ -17,6 +17,8 @@ import {
   saveProjectSubmission,
   deleteProjectSubmission,
   updateProjectSubmissionStatus,
+  registerForEventStorage,
+  saveEventRegistration,
 } from './storage';
 
 /**
@@ -704,8 +706,48 @@ export async function checkUserRegistration(
 export async function registerForEventSupabase(
   input: RegistrationInput
 ): Promise<{ success: boolean; error?: string }> {
+  // 1. Always save in client storage first so participant & organizer dashboards update immediately
   try {
-    // 1. Try server API route first (handles RLS bypass and profile ensuring)
+    registerForEventStorage({
+      eventId: input.eventId,
+      eventName: (input as any).eventName || 'Hackathon Arena',
+      registeredAt: new Date().toISOString(),
+      teamName: input.teamName,
+      isTeam: Boolean(input.isTeam),
+      role: input.role || (input.isTeam ? 'Team Leader' : 'Individual Hacker'),
+      status: (input.status as any) || 'CONFIRMED',
+    });
+
+    saveEventRegistration({
+      id: `reg_${Date.now()}`,
+      eventId: input.eventId,
+      userId: input.userId || 'usr_builder',
+      userName: input.userName,
+      userEmail: input.userEmail,
+      phone: input.phone || undefined,
+      college: input.college || undefined,
+      city: input.city || undefined,
+      githubUrl: input.githubUrl || undefined,
+      linkedinUrl: input.linkedinUrl || undefined,
+      skills: input.skills || [],
+      customAnswers: input.customAnswers || {},
+      isTeam: Boolean(input.isTeam),
+      teamName: input.teamName,
+      role: input.role,
+      status: input.status === 'PENDING' ? 'PENDING' : 'CONFIRMED',
+      registeredAt: new Date().toISOString(),
+    });
+  } catch (localErr) {
+    console.warn('Local registration cache notice:', localErr);
+  }
+
+  // If this is a custom client-hosted event, finish successfully immediately
+  if (input.eventId && input.eventId.startsWith('evt_custom_')) {
+    return { success: true };
+  }
+
+  try {
+    // 2. Try server API route for database sync
     if (typeof window !== 'undefined') {
       try {
         const response = await fetch('/api/registrations', {
