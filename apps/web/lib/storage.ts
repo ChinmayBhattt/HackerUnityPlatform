@@ -18,6 +18,7 @@ const STORAGE_KEYS = {
   HOSTED_EVENTS: 'hackers_unity_hosted_events',
   USER_PROFILE: 'hackers_unity_user_profile',
   INVITES: 'hackers_unity_invites',
+  SUBMISSIONS: 'hackers_unity_project_submissions',
 };
 
 export const DEFAULT_USER: UserPublic = {
@@ -395,3 +396,80 @@ export function saveDraftEvent(event: ExtendedEvent): void {
     console.error(e);
   }
 }
+
+// ─── Project Submissions ────────────────────────────────────
+
+export interface ProjectSubmission {
+  id: string;
+  eventId: string;
+  eventName?: string;
+  submittedBy: string;
+  submittedByEmail?: string;
+  submittedAt: string;
+  // Required fields:
+  projectTitle: string;
+  projectDescription: string;
+  projectLink: string; // GitHub repository or live project link
+  // Optional fields:
+  demoVideoUrl?: string;
+  zipFileName?: string;
+  zipFileSize?: string;
+  presentationUrl?: string;
+  additionalResources?: string;
+  status?: 'SUBMITTED' | 'UNDER_REVIEW' | 'ACCEPTED';
+}
+
+export function getAllProjectSubmissions(eventId?: string): ProjectSubmission[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.SUBMISSIONS);
+    const list: ProjectSubmission[] = raw ? JSON.parse(raw) : [];
+    if (eventId) {
+      return list.filter((s) => s.eventId === eventId);
+    }
+    return list;
+  } catch {
+    return [];
+  }
+}
+
+export function getProjectSubmission(eventId: string, userId?: string): ProjectSubmission | null {
+  const all = getAllProjectSubmissions(eventId);
+  if (!all.length) return null;
+  if (userId) {
+    return all.find((s) => s.submittedBy === userId) || all[0] || null;
+  }
+  return all[0] || null;
+}
+
+export function saveProjectSubmission(submission: ProjectSubmission): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const all = getAllProjectSubmissions();
+    const existingIdx = all.findIndex((s) => s.id === submission.id || (s.eventId === submission.eventId && s.submittedBy === submission.submittedBy));
+    let updated: ProjectSubmission[];
+    if (existingIdx >= 0) {
+      updated = [...all];
+      updated[existingIdx] = submission;
+    } else {
+      updated = [submission, ...all];
+    }
+    localStorage.setItem(STORAGE_KEYS.SUBMISSIONS, JSON.stringify(updated));
+    window.dispatchEvent(new Event('hackers_unity_storage_change'));
+  } catch (e) {
+    console.error('Error saving project submission:', e);
+  }
+}
+
+export function deleteProjectSubmission(submissionId: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const all = getAllProjectSubmissions();
+    const updated = all.filter((s) => s.id !== submissionId);
+    localStorage.setItem(STORAGE_KEYS.SUBMISSIONS, JSON.stringify(updated));
+    window.dispatchEvent(new Event('hackers_unity_storage_change'));
+  } catch (e) {
+    console.error('Error deleting project submission:', e);
+  }
+}
+

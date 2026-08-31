@@ -366,15 +366,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
-        console.error('[Supabase Phone Auth] ❌ signInWithOtp error:', error.message, error);
+        console.warn('[Supabase Phone Auth] signInWithOtp message:', error.message);
+        if (error.message?.toLowerCase().includes('unsupported phone provider')) {
+          return {
+            error:
+              'SMS Phone Verification is not configured on this Supabase project. Please sign up or sign in using Email or Google.',
+          };
+        }
         return { error: error.message };
       }
 
       console.log('[Supabase Phone Auth] ✅ SMS OTP successfully requested for:', e164Phone);
       return {};
     } catch (err: any) {
-      console.error('[Supabase Phone Auth] ❌ signInWithPhone exception:', err);
-      return { error: err.message || 'Phone sign in error' };
+      console.warn('[Supabase Phone Auth] signInWithPhone exception:', err?.message || err);
+      return { error: err?.message || 'Phone sign in error' };
     }
   };
 
@@ -404,7 +410,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
-        console.error('[Supabase Phone Auth] ❌ verifyOtp error:', error.message, error);
+        console.warn('[Supabase Phone Auth] verifyOtp error:', error.message);
         return { error: error.message };
       }
 
@@ -414,8 +420,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       return {};
     } catch (err: any) {
-      console.error('[Supabase Phone Auth] ❌ verifyPhoneOtp exception:', err);
-      return { error: err.message || 'OTP verification failed' };
+      console.warn('[Supabase Phone Auth] verifyPhoneOtp exception:', err?.message || err);
+      return { error: err?.message || 'OTP verification failed' };
     }
   };
 

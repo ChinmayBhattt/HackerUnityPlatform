@@ -18,6 +18,7 @@ import {
   Sparkles,
   Mail,
   Info,
+  ArrowRight,
 } from 'lucide-react';
 import { Logo } from './logo';
 import { AuthModal } from './auth-modal';
@@ -289,15 +290,12 @@ export function Navbar() {
                 )}
               </div>
             ) : (
-              <button
-                onClick={() => {
-                  setAuthMode('login');
-                  setAuthOpen(true);
-                }}
-                className="px-5 py-2 rounded-full bg-slate-950 hover:bg-slate-800 text-white font-bold text-xs transition-all shadow-sm shadow-slate-900/10 cursor-pointer whitespace-nowrap"
+              <Link
+                href="/signup"
+                className="px-5 py-2 rounded-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-all shadow-xs cursor-pointer whitespace-nowrap"
               >
                 Get Started
-              </button>
+              </Link>
             )}
 
             {/* Mobile Menu Button */}
@@ -398,16 +396,13 @@ export function Navbar() {
 
             {!currentUser && (
               <div className="pt-3 mt-2 border-t border-slate-100">
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    setAuthMode('login');
-                    setAuthOpen(true);
-                  }}
-                  className="w-full py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-colors text-center shadow-xs cursor-pointer"
+                <Link
+                  href="/signup"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors text-center shadow-xs block"
                 >
                   Get Started
-                </button>
+                </Link>
               </div>
             )}
           </div>

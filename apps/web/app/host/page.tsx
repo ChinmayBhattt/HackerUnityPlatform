@@ -44,6 +44,11 @@ import {
   Utensils,
   TrendingUp,
   Infinity as InfinityIcon,
+  Video,
+  Archive,
+  Presentation,
+  Link2,
+  FileCheck,
 } from 'lucide-react';
 import { EventCategory, EventStatus, EventType, CustomQuestion } from '@hackers-unity/shared-types';
 import { ExtendedEvent, MOCK_EVENTS } from '@/lib/mock-data';
@@ -54,7 +59,62 @@ import { RichTextEditor } from '@/components/rich-text-editor';
 import { VenuePicker } from '@/components/venue-picker';
 import { useAuth } from '@/lib/auth-context';
 
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 7;
+
+const MANDATORY_SUBMISSION_FIELDS = [
+  {
+    id: 'title',
+    label: 'Project Title',
+    icon: Rocket,
+    description: 'Crisp and memorable name of the hackathon prototype',
+    badge: 'Required',
+  },
+  {
+    id: 'description',
+    label: 'Project Description',
+    icon: FileText,
+    description: 'Summary of the problem, tech stack, and key features (min 20 chars)',
+    badge: 'Required',
+  },
+  {
+    id: 'projectLink',
+    label: 'Project Link / GitHub Repository Link',
+    icon: Github,
+    description: 'Public GitHub / GitLab repository URL or production live demo link',
+    badge: 'Required',
+  },
+];
+
+const OPTIONAL_SUBMISSION_FIELDS = [
+  {
+    id: 'demoVideo',
+    label: 'Project Demo Video',
+    icon: Video,
+    hint: 'Loom, YouTube, or Google Drive walkthrough link (2-3 mins)',
+    badge: 'Optional',
+  },
+  {
+    id: 'zipUpload',
+    label: 'ZIP File Upload',
+    icon: Archive,
+    hint: 'Direct zip archive of source code, build bundle, or offline binaries',
+    badge: 'Optional',
+  },
+  {
+    id: 'presentation',
+    label: 'Presentation / PPT',
+    icon: Presentation,
+    hint: 'Pitch deck slides, Google Slides, Canva or PDF presentation',
+    badge: 'Optional',
+  },
+  {
+    id: 'additionalResources',
+    label: 'Additional Resources or Links',
+    icon: Link2,
+    hint: 'Figma prototypes, smart contracts, dataset sources, or documentation',
+    badge: 'Optional',
+  },
+];
 
 const TIMEZONES = [
   'Asia/Kolkata',
@@ -177,6 +237,18 @@ function HostHackathonContent() {
   const [newQuestionType, setNewQuestionType] = useState<'text' | 'select' | 'textarea'>('text');
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [copiedTemplate, setCopiedTemplate] = useState(false);
+
+  // Step 6: Project Submission Settings
+  const [submissionGuidelines, setSubmissionGuidelines] = useState(
+    'Ensure all GitHub repositories are set to public during the judging window. Demo videos should be 2-3 minutes highlighting key user workflows.'
+  );
+  const [enabledSubmissionFields, setEnabledSubmissionFields] = useState<string[]>([]);
+
+  const toggleSubmissionField = (fieldId: string) => {
+    setEnabledSubmissionFields((prev) =>
+      prev.includes(fieldId) ? prev.filter((id) => id !== fieldId) : [...prev, fieldId]
+    );
+  };
 
   const slug = useMemo(() => {
     return title
@@ -725,7 +797,8 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
     { num: 3, label: 'Details', icon: FileText },
     { num: 4, label: 'Prizes', icon: Trophy },
     { num: 5, label: 'Registration', icon: Settings },
-    { num: 6, label: 'Review', icon: Eye },
+    { num: 6, label: 'Submission', icon: Rocket },
+    { num: 7, label: 'Review', icon: Eye },
   ];
 
   return (
@@ -1795,14 +1868,196 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
                       <ArrowLeft className="w-3.5 h-3.5" /> <span>Back</span>
                     </button>
                     <button type="button" onClick={goNext} className="px-5 py-2 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs">
+                      <span>Continue to Submission</span> <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ═══ STEP 6: Submission Settings ══════════ */}
+              {step === 6 && (
+                <div className="space-y-5 animate-in fade-in">
+                  <div className="border-b border-slate-200 pb-3">
+                    <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                      <Rocket className="w-4 h-4 text-[#0099e6]" />
+                      <span>Submission Setup</span>
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Configure the project submission portal where participants will submit their final builds.
+                    </p>
+                  </div>
+
+                  {/* Section 1: Required Submission Fields (Locked) */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <label className="text-xs font-bold text-slate-800">
+                            Mandatory Submission Fields
+                          </label>
+                          <span className="px-2 py-0.5 rounded-md bg-rose-100 text-rose-700 text-[10px] font-black uppercase">
+                            Required *
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                          These fields are strictly mandatory for all submitting builders and squads.
+                        </p>
+                      </div>
+                      <span className="text-[10px] font-bold text-slate-400 bg-white border border-slate-200 px-2 py-1 rounded-lg">
+                        3 Fields Locked
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                      {MANDATORY_SUBMISSION_FIELDS.map((field) => {
+                        const Icon = field.icon;
+                        return (
+                          <div
+                            key={field.id}
+                            className="p-3.5 rounded-xl bg-white border border-slate-200 flex flex-col justify-between space-y-2 shadow-2xs"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
+                                <Icon className="w-4 h-4" />
+                              </div>
+                              <span className="px-1.5 py-0.5 rounded bg-rose-50 text-rose-600 text-[9px] font-black uppercase border border-rose-200">
+                                Required *
+                              </span>
+                            </div>
+                            <div>
+                              <div className="text-xs font-bold text-slate-900">{field.label}</div>
+                              <div className="text-[10px] text-slate-400 mt-0.5 leading-snug">{field.description}</div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Section 2: Optional Submission Fields (Customizable) */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <label className="text-xs font-bold text-slate-800">
+                            Optional Submission Fields
+                          </label>
+                          <span className="px-2 py-0.5 rounded-md bg-slate-200 text-slate-700 text-[10px] font-bold uppercase">
+                            Optional
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                          Toggle which optional materials participants can submit to support their projects.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setEnabledSubmissionFields(OPTIONAL_SUBMISSION_FIELDS.map((f) => f.id))}
+                          className="text-[10px] font-bold px-2 py-1 rounded-lg bg-sky-50 text-[#0099e6] hover:bg-sky-100 border border-sky-200 cursor-pointer"
+                        >
+                          Select All
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEnabledSubmissionFields([])}
+                          className="text-[10px] font-bold px-2 py-1 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer"
+                        >
+                          Deselect All
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                      {OPTIONAL_SUBMISSION_FIELDS.map((field) => {
+                        const Icon = field.icon;
+                        const isEnabled = enabledSubmissionFields.includes(field.id);
+                        return (
+                          <button
+                            key={field.id}
+                            type="button"
+                            onClick={() => toggleSubmissionField(field.id)}
+                            className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                              isEnabled
+                                ? 'bg-white border-[#0099e6] shadow-xs ring-1 ring-[#0099e6]/20'
+                                : 'bg-slate-100/60 border-slate-200 hover:border-slate-300 opacity-60'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div
+                                className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                                  isEnabled ? 'bg-sky-50 text-[#0099e6]' : 'bg-slate-200 text-slate-500'
+                                }`}
+                              >
+                                <Icon className="w-4 h-4" />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-bold text-slate-900 truncate">{field.label}</span>
+                                  <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 text-[9px] font-bold uppercase border border-slate-200">
+                                    Optional
+                                  </span>
+                                </div>
+                                <div className="text-[10px] text-slate-400 truncate mt-0.5">{field.hint}</div>
+                              </div>
+                            </div>
+
+                            <div
+                              className={`w-5 h-5 rounded-lg flex items-center justify-center shrink-0 border transition-all ${
+                                isEnabled
+                                  ? 'bg-[#0099e6] border-[#0099e6] text-white shadow-2xs'
+                                  : 'border-slate-300 bg-white'
+                              }`}
+                            >
+                              {isEnabled && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Section 3: Submission Guidelines */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5 text-[#0099e6]" />
+                      <span>Submission Guidelines & Judging Criteria for Participants</span>
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={submissionGuidelines}
+                      onChange={(e) => setSubmissionGuidelines(e.target.value)}
+                      placeholder="e.g. Ensure all GitHub repositories are public during judging. Video walkthroughs must be within 3 minutes..."
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 outline-none resize-none leading-relaxed"
+                    />
+                    <p className="text-[10px] text-slate-400">
+                      These instructions will be displayed at the top of the participant project submission modal.
+                    </p>
+                  </div>
+
+                  {/* Navigation Buttons */}
+                  <div className="pt-2 flex justify-between">
+                    <button
+                      type="button"
+                      onClick={goBack}
+                      className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" /> <span>Back</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={goNext}
+                      className="px-5 py-2 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                    >
                       <span>Continue to Review</span> <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* ═══ STEP 6: Review & Publish ═══════════════════════ */}
-              {step === 6 && (
+              {/* ═══ STEP 7: Review & Publish ═══════════════════════ */}
+              {step === 7 && (
                 <div className="space-y-4 animate-in fade-in">
                   <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                     <Eye className="w-4 h-4 text-[#0099e6]" />
@@ -1881,6 +2136,40 @@ ${organizerLeadName || user?.name || 'Organizer'}`;
                         <div><span className="text-slate-500">Capacity:</span> <span className="font-semibold text-slate-900">{isUnlimitedCapacity || !registrationCapacity ? '♾️ Unlimited' : `${registrationCapacity} Participants`}</span></div>
                         <div><span className="text-slate-500">Approval:</span> <span className="font-semibold text-slate-900">🔒 Manual (Default)</span></div>
                         <div><span className="text-slate-500">Custom Q&apos;s:</span> <span className="font-semibold text-slate-900">{customQuestions.length}</span></div>
+                      </div>
+                    </div>
+
+                    {/* Project Submission Requirements Summary */}
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                          <Rocket className="w-3.5 h-3.5 text-[#0099e6]" />
+                          <span>Submission Requirements</span>
+                        </span>
+                        <button type="button" onClick={() => setStep(6)} className="text-[10px] text-[#0099e6] font-bold cursor-pointer hover:underline">Edit</button>
+                      </div>
+                      <div className="space-y-1.5 text-xs">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[10px] font-bold text-slate-500 uppercase">Required:</span>
+                          <span className="px-2 py-0.5 rounded-md bg-rose-50 border border-rose-200 text-rose-600 font-bold text-[10px]">Project Title *</span>
+                          <span className="px-2 py-0.5 rounded-md bg-rose-50 border border-rose-200 text-rose-600 font-bold text-[10px]">Project Description *</span>
+                          <span className="px-2 py-0.5 rounded-md bg-rose-50 border border-rose-200 text-rose-600 font-bold text-[10px]">Project / GitHub Link *</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                          <span className="text-[10px] font-bold text-slate-500 uppercase">Optional:</span>
+                          {enabledSubmissionFields.length > 0 ? (
+                            enabledSubmissionFields.map((fId) => {
+                              const field = OPTIONAL_SUBMISSION_FIELDS.find((f) => f.id === fId);
+                              return field ? (
+                                <span key={fId} className="px-2 py-0.5 rounded-md bg-slate-200 text-slate-700 font-bold text-[10px]">
+                                  {field.label}
+                                </span>
+                              ) : null;
+                            })
+                          ) : (
+                            <span className="text-[10px] text-slate-400 italic">None enabled</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
