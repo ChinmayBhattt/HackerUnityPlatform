@@ -105,12 +105,12 @@ export function Footer() {
               <li className="flex items-center gap-2.5 text-slate-400">
                 <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
                 <a
-                  href="https://www.google.com/maps/search/?api=1&query=Trainzex+AI"
+                  href="https://www.google.com/maps/place/Hacker's+Unity/@19.1172167,72.8642732,17z/data=!3m1!4b1!4m15!1m7!3m6!1s0x3be7c97b475f9155:0xe5b912633881889!2sHacker's+Unity!8m2!3d19.1172116!4d72.8668481!16s%2Fg%2F11zxcs0wbc!3m6!1s0x3be7c97b475f9155:0xe5b912633881889!8m2!3d19.1172116!4d72.8668481!15sCg5IYWNrZXIncyBVbml0eZIBGGV2ZW50X21hbmFnZW1lbnRfY29tcGFueeABAA!16s%2Fg%2F11zxcs0wbc?entry=ttu&g_ep=EgoyMDI2MDgzMC4wIKXMDSoASAFQAw%3D%3D"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-medium hover:text-white transition-colors cursor-pointer"
                 >
-                  A-41, Vinmar House, Ground Floor, Road no. 2, MIDC, Andheri East, Mumbai - 400093
+                  A-41, Vinmar House, 1st Floor, Road no. 2, MIDC, Andheri East, Mumbai - 400093
                 </a>
               </li>
             </ul>
