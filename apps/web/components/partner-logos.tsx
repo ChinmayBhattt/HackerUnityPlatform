@@ -25,22 +25,6 @@ export const PARTNER_LOGOS: PartnerLogoItem[] = [
     ),
   },
   {
-    name: 'NextEase Solution',
-    url: 'https://www.linkedin.com/company/nextease-solution/?originalSubdomain=in',
-    svg: (
-      <div className="flex items-center gap-2">
-        <svg className="w-7 h-7 shrink-0" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="32" height="32" rx="8" fill="#0f172a" />
-          <path d="M9 23V9l10 14V9" stroke="#38bdf8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M20 16h5M20 23h5" stroke="#f97316" strokeWidth="2.5" strokeLinecap="round" />
-        </svg>
-        <span className="font-extrabold text-slate-900 text-lg tracking-tight">
-          NextEase <span className="font-medium text-slate-500 text-sm">Solution</span>
-        </span>
-      </div>
-    ),
-  },
-  {
     name: 'OpenAI',
     svg: (
       <div className="flex items-center gap-2 text-slate-800 font-bold text-lg tracking-tight">

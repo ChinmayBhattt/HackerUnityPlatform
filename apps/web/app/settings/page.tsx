@@ -934,7 +934,7 @@ export default function SettingsPage() {
                               type="text"
                               value={company}
                               onChange={(e) => setCompany(e.target.value)}
-                              placeholder="e.g. Google / Microsoft / NextEase / Startup"
+                              placeholder="e.g. Google / Microsoft / Amazon / Startup"
                               className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0099e6]"
                             />
                           </div>
