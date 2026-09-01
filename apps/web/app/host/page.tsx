@@ -54,12 +54,24 @@ import { EventCategory, EventStatus, EventType, CustomQuestion } from '@hackers-
 import { ExtendedEvent, MOCK_EVENTS } from '@/lib/mock-data';
 import { saveHostedEvent, saveDraftEvent, updateHostedEvent, getCustomEvents } from '@/lib/storage';
 import { createEventInSupabase, updateEventInSupabase, fetchEventBySlug, uploadHackathonAsset } from '@/lib/supabase-service';
+import { getEventPreviewToken, getEventPrivateLink } from '@/lib/utils';
 import { HackathonCard } from '@/components/hackathon-card';
 import { RichTextEditor } from '@/components/rich-text-editor';
 import { VenuePicker } from '@/components/venue-picker';
 import { useAuth } from '@/lib/auth-context';
 
 const TOTAL_STEPS = 7;
+
+const CURRENCIES = [
+  { code: 'INR', symbol: '₹', label: 'INR (₹)' },
+  { code: 'USD', symbol: '$', label: 'USD ($)' },
+  { code: 'EUR', symbol: '€', label: 'EUR (€)' },
+  { code: 'GBP', symbol: '£', label: 'GBP (£)' },
+  { code: 'AED', symbol: 'AED', label: 'AED' },
+  { code: 'CAD', symbol: 'CA$', label: 'CAD (CA$)' },
+  { code: 'SGD', symbol: 'S$', label: 'SGD (S$)' },
+  { code: 'AUD', symbol: 'A$', label: 'AUD (A$)' },
+];
 
 const MANDATORY_SUBMISSION_FIELDS = [
   {
@@ -222,6 +234,12 @@ function HostHackathonContent() {
     { title: 'Core Innovation Track', prize: '₹1,75,000 Pool', description: 'Build the most innovative end-to-end working system solving real user workflows.' },
   ]);
 
+  // Currency Setting
+  const [currency, setCurrency] = useState('INR');
+  const currencySymbol = useMemo(() => {
+    return CURRENCIES.find((c) => c.code === currency)?.symbol || '₹';
+  }, [currency]);
+
   // Step 5: Registration Settings
   const [registrationType, setRegistrationType] = useState<'FREE' | 'PAID'>('FREE');
   const [entryFee, setEntryFee] = useState<number | string>(0);
@@ -258,6 +276,18 @@ function HostHackathonContent() {
   const totalPrize = useMemo(() => {
     return prizes.reduce((sum, p) => sum + Number(p.amount || 0), 0);
   }, [prizes]);
+
+  // Email Draft & Sending State
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [emailSentSuccess, setEmailSentSuccess] = useState<string | null>(null);
+  const [copiedDetails, setCopiedDetails] = useState(false);
+
+  // Private Preview Link State
+  const [previewToken, setPreviewToken] = useState<string>(() => {
+    const rand = Math.random().toString(36).substring(2, 10);
+    return `hu_prv_${rand}`;
+  });
+  const [copiedPrivateLink, setCopiedPrivateLink] = useState(false);
 
   // ─── LOAD EVENT FOR EDIT MODE ────────────────────────────
   useEffect(() => {
@@ -368,6 +398,12 @@ function HostHackathonContent() {
           }
           if (found.tracks && found.tracks.length > 0) {
             setTracks(found.tracks);
+          }
+          if (found.currency) {
+            setCurrency(found.currency);
+          }
+          if (found.previewToken) {
+            setPreviewToken(found.previewToken);
           }
           if (found.registrationType) {
             setRegistrationType(found.registrationType as 'FREE' | 'PAID');
@@ -592,6 +628,9 @@ function HostHackathonContent() {
       tags: tagsInput.split(',').map((t) => t.trim()).filter(Boolean),
       bannerGradient: 'from-sky-50 via-white to-orange-50/60',
       tracks,
+      currency,
+      previewToken: previewToken || getEventPreviewToken({ slug, id: editingEventId || undefined }),
+      prize: `${currencySymbol}${totalPrize.toLocaleString('en-IN')}`,
       registrationType,
       entryFee: registrationType === 'PAID' ? Number(entryFee) || 0 : null,
       registrationCapacity: isUnlimitedCapacity ? null : registrationCapacity,
@@ -669,11 +708,183 @@ function HostHackathonContent() {
     location,
     tagsInput,
     tracks,
+    currency,
+    currencySymbol,
+    previewToken,
     registrationType,
     entryFee,
     approvalMode,
     customQuestions,
   ]);
+
+  // ─── PRIVATE LINK & PREVIEW ACCESS ─────────────────────
+  const privateLink = useMemo(() => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://hackersunity.com';
+    const token = previewEvent.previewToken || previewToken || getEventPreviewToken(previewEvent);
+    return `${origin}/hackathons/${previewEvent.slug}?preview_key=${token}`;
+  }, [previewEvent.slug, previewEvent.previewToken, previewToken]);
+
+  const handleCopyPrivateLink = () => {
+    if (typeof navigator !== 'undefined') {
+      navigator.clipboard.writeText(privateLink);
+      setCopiedPrivateLink(true);
+      setTimeout(() => setCopiedPrivateLink(false), 2500);
+    }
+  };
+
+  // ─── EMAIL DRAFT & NOTIFICATION GENERATORS ──────────────
+  const emailSubject = useMemo(() => {
+    return `[Hackathon Approval Request] "${title || previewEvent.title}" hosted by ${organizerName || 'Organizer'}`;
+  }, [title, previewEvent.title, organizerName]);
+
+  const emailBodyText = useMemo(() => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://hackersunity.com';
+    const feeText =
+      registrationType === 'PAID'
+        ? `${currencySymbol}${Number(entryFee || 0).toLocaleString('en-IN')} ${currency} (Paid Entry)`
+        : 'Free Entry (No Fee)';
+
+    return `Dear Hacker's Unity Operations Team,
+
+A new hackathon submission request has been submitted on Hacker's Unity and is awaiting your review & approval:
+
+========================================
+📋 HACKATHON SPECIFICATIONS
+========================================
+• Event Title: ${title || previewEvent.title}
+• Tagline: ${tagline || 'N/A'}
+• Organizer / Guild: ${organizerName || 'Host'}
+• Organizer Contact: ${user?.email || 'N/A'}${user?.phone ? ` (${user?.phone})` : ''}
+• Host Entity: ${institutionName || 'Independent'} (${hostType === 'COLLEGE' ? 'College' : 'Organization'})
+• Format & Venue: ${eventType} • ${location || 'Virtual'}
+• Total Prize Pool: ${currencySymbol}${totalPrize.toLocaleString('en-IN')} (${currency})
+• Registration Type: ${feeText}
+• Registration Capacity: ${isUnlimitedCapacity || !registrationCapacity ? 'Unlimited' : `${registrationCapacity} Hackers`}
+• Team Size: ${minTeamSize} to ${maxTeamSize} Members
+• Tech Tags / Domains: ${tagsInput || 'N/A'}
+
+========================================
+📅 SCHEDULE & DATES
+========================================
+• Registration Opens: ${registrationStart || 'Immediate'}
+• Registration Deadline: ${registrationDeadline || 'TBD'}
+• Hackathon Sprint Starts: ${startDate || 'TBD'}
+• Hackathon Sprint Ends: ${endDate || 'TBD'}
+• Timezone: ${timezone}
+
+========================================
+🏆 PRIZE DISTRIBUTION
+========================================
+${prizes.map((p) => `• ${p.position}: ${currencySymbol}${Number(p.amount || 0).toLocaleString('en-IN')} - ${p.description || 'Prize'}`).join('\n')}
+
+========================================
+🎯 TRACKS
+========================================
+${tracks.map((t) => `• ${t.title} [Prize: ${t.prize}]: ${t.description}`).join('\n')}
+
+========================================
+📝 DESCRIPTION & RULES
+========================================
+Description:
+${description || 'N/A'}
+
+Eligibility:
+${eligibility || 'Open to all builders'}
+
+Rules & Guidelines:
+${rulesText || 'Standard platform hackathon rules apply'}
+
+========================================
+🔗 DIRECT PRIVATE PREVIEW LINK
+========================================
+${privateLink}
+(Anyone with this private link can view full event details even before public approval)
+
+Please review the specifications and approve this hackathon to publish it live on the platform.
+
+Best regards,
+${organizerName || 'Organizer'}`;
+  }, [
+    title,
+    previewEvent.title,
+    privateLink,
+    tagline,
+    organizerName,
+    user?.email,
+    user?.phone,
+    institutionName,
+    hostType,
+    eventType,
+    location,
+    currencySymbol,
+    totalPrize,
+    currency,
+    registrationType,
+    entryFee,
+    isUnlimitedCapacity,
+    registrationCapacity,
+    minTeamSize,
+    maxTeamSize,
+    tagsInput,
+    registrationStart,
+    registrationDeadline,
+    startDate,
+    endDate,
+    timezone,
+    prizes,
+    tracks,
+    description,
+    eligibility,
+    rulesText,
+  ]);
+
+  const gmailDraftUrl = useMemo(() => {
+    return `https://mail.google.com/mail/?view=cm&fs=1&to=hackerunity.community@gmail.com&su=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBodyText)}`;
+  }, [emailSubject, emailBodyText]);
+
+  const mailtoUrl = useMemo(() => {
+    return `mailto:hackerunity.community@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBodyText)}`;
+  }, [emailSubject, emailBodyText]);
+
+  const handleTriggerResend = async () => {
+    setIsSendingEmail(true);
+    setEmailSentSuccess(null);
+    try {
+      const res = await fetch('/api/host-approval-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: previewEvent,
+          organizerName: organizerName || user?.name || 'Organizer',
+          organizerEmail: user?.email || '',
+          organizerPhone: user?.phone || '',
+          hostType,
+          institutionName,
+          origin: typeof window !== 'undefined' ? window.location.origin : '',
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data?.success) {
+        if (data.sentTo) {
+          setEmailSentSuccess(`✅ Approval notification dispatched via Resend to ${data.sentTo}!`);
+        } else {
+          setEmailSentSuccess(`✅ Approval notification dispatched successfully!`);
+        }
+      } else {
+        setEmailSentSuccess(`⚠️ Resend: ${data.message || data.error || 'Check Resend domain setup'}. Use the "Open in Gmail Draft" button below.`);
+      }
+    } catch (err: any) {
+      setEmailSentSuccess(`⚠️ Resend request error: ${err.message}. Please use the "Open in Gmail Draft" button.`);
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
+  const handleCopyAllInfo = () => {
+    navigator.clipboard.writeText(emailBodyText);
+    setCopiedDetails(true);
+    setTimeout(() => setCopiedDetails(false), 2500);
+  };
 
   // ─── Publish & Draft Handlers ───────────────────────────
   const handlePublish = async () => {
@@ -718,9 +929,16 @@ function HostHackathonContent() {
           institutionName,
           origin: typeof window !== 'undefined' ? window.location.origin : '',
         }),
-      }).catch((err) => {
-        console.warn('Failed to send approval email notification:', err);
-      });
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data?.sentTo) {
+            setEmailSentSuccess(`✅ Approval notification dispatched via Resend to ${data.sentTo}`);
+          }
+        })
+        .catch((err) => {
+          console.warn('Failed to send approval email notification:', err);
+        });
     } catch (err) {
       console.warn('Approval email trigger error:', err);
     }
@@ -845,6 +1063,143 @@ function HostHackathonContent() {
             </p>
           </div>
 
+          {/* ═══ PRIVATE SHAREABLE LINK CARD ═══════════════════ */}
+          <div className="w-full p-5 rounded-3xl bg-gradient-to-br from-amber-50/90 via-orange-50/40 to-amber-50/90 border-2 border-amber-300/80 text-left space-y-3.5 shadow-sm">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-amber-500 to-[#ea580c] flex items-center justify-center text-white shadow-xs">
+                  <Lock className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-2">
+                    <span>Private Shareable Link</span>
+                    <span className="text-[10px] font-extrabold text-amber-800 bg-amber-200/80 px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-amber-300">
+                      Private Access
+                    </span>
+                  </h4>
+                  <p className="text-[11px] text-slate-600 font-medium">
+                    Anyone with this link can view the event specifications right now
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed font-medium">
+              This hackathon is not publicly listed on the platform yet. However, <strong>anyone you share this private link with</strong> can open and preview all event details, prizes, timeline, and rules without restrictions:
+            </p>
+
+            {/* Input & Copy Row */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white p-2 rounded-2xl border border-amber-200 shadow-2xs">
+              <div className="flex-1 flex items-center gap-2 px-2 overflow-hidden">
+                <Link2 className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                <input
+                  type="text"
+                  readOnly
+                  value={privateLink}
+                  className="w-full bg-transparent text-xs font-mono font-bold text-slate-800 outline-none truncate select-all"
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                />
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleCopyPrivateLink}
+                  className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-all"
+                >
+                  {copiedPrivateLink ? <Check className="w-3.5 h-3.5 text-white" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedPrivateLink ? 'Copied Link!' : 'Copy Private Link'}</span>
+                </button>
+                <a
+                  href={privateLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>Open Preview</span>
+                  <ExternalLink className="w-3 h-3 opacity-60" />
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Email Dispatch & Gmail Draft Action Box */}
+          {!isEditMode && (
+            <div className="w-full p-5 rounded-2xl bg-sky-50/80 border border-sky-200 text-left space-y-3.5 shadow-xs">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-[#0099e6] flex items-center justify-center text-white shadow-xs">
+                    <Mail className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-900">
+                      Send Details to hackerunity.community@gmail.com
+                    </h4>
+                    <p className="text-[11px] text-slate-500 font-medium">
+                      One-click draft creation with full hackathon specifications
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[11px] font-mono font-bold text-[#0099e6] bg-white px-3 py-1 rounded-full border border-sky-200 shadow-2xs">
+                  hackerunity.community@gmail.com
+                </span>
+              </div>
+
+              <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                Click <strong className="text-slate-900">&quot;Open in Gmail Draft&quot;</strong> below to instantly open Gmail with a pre-filled draft containing all event specifications (prizes, dates, venue, rules, links) addressed to <strong className="text-slate-900">hackerunity.community@gmail.com</strong>:
+              </p>
+
+              <div className="flex flex-wrap items-center gap-2.5 pt-1">
+                {/* Gmail Draft Button */}
+                <a
+                  href={gmailDraftUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-all cursor-pointer"
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>Open in Gmail Draft</span>
+                  <ExternalLink className="w-3 h-3 opacity-80" />
+                </a>
+
+                {/* Direct Resend Dispatch */}
+                <button
+                  type="button"
+                  onClick={handleTriggerResend}
+                  disabled={isSendingEmail}
+                  className="px-4 py-2.5 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {isSendingEmail ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                  <span>{isSendingEmail ? 'Dispatching...' : 'Send via Resend API'}</span>
+                </button>
+
+                {/* Default Mail Client */}
+                <a
+                  href={mailtoUrl}
+                  className="px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                >
+                  <span>Default Mail App</span>
+                </a>
+
+                {/* Copy Information Button */}
+                <button
+                  type="button"
+                  onClick={handleCopyAllInfo}
+                  className="px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                >
+                  {copiedDetails ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
+                  <span>{copiedDetails ? 'Details Copied!' : 'Copy All Details'}</span>
+                </button>
+              </div>
+
+              {emailSentSuccess && (
+                <div className="p-3 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800 animate-in fade-in flex items-center gap-2">
+                  <span>{emailSentSuccess}</span>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Quick Details Card */}
           <div className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-200/80 text-left text-xs space-y-2.5">
             <div className="flex justify-between items-center text-slate-500 font-medium">
@@ -857,7 +1212,7 @@ function HostHackathonContent() {
             </div>
             <div className="flex justify-between items-center text-slate-500 font-medium">
               <span>Entry Fee:</span>
-              <span className="text-slate-800 font-semibold">{previewEvent.registrationType === 'PAID' ? `₹${Number(previewEvent.entryFee || 0).toLocaleString('en-IN')}` : 'Free Entry'}</span>
+              <span className="text-slate-800 font-semibold">{previewEvent.registrationType === 'PAID' ? `${currencySymbol}${Number(previewEvent.entryFee || 0).toLocaleString('en-IN')} (${currency})` : 'Free Entry'}</span>
             </div>
             <div className="flex justify-between items-center text-slate-500 font-medium">
               <span>Review Status:</span>
@@ -1320,18 +1675,32 @@ function HostHackathonContent() {
 
                   {/* Prizes */}
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
                       <label className="text-xs font-bold text-slate-700">Prize Distribution</label>
-                      <button type="button" onClick={addPrize} className="text-xs text-[#0099e6] font-bold flex items-center gap-1 cursor-pointer hover:underline">
-                        <Plus className="w-3 h-3" /> Add Prize
-                      </button>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <span className="text-[11px] font-bold text-slate-500">Currency:</span>
+                          <select
+                            value={currency}
+                            onChange={(e) => setCurrency(e.target.value)}
+                            className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-800 outline-none focus:border-[#0099e6] cursor-pointer"
+                          >
+                            {CURRENCIES.map((c) => (
+                              <option key={c.code} value={c.code}>{c.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <button type="button" onClick={addPrize} className="text-xs text-[#0099e6] font-bold flex items-center gap-1 cursor-pointer hover:underline">
+                          <Plus className="w-3 h-3" /> Add Prize
+                        </button>
+                      </div>
                     </div>
                     {prizes.map((prize, idx) => (
                       <div key={idx} className="flex gap-2 items-start p-3 rounded-xl bg-slate-50 border border-slate-200">
                         <div className="flex-1 space-y-2">
                           <input type="text" placeholder="e.g. 🥇 1st Prize" value={prize.position} onChange={(e) => updatePrize(idx, 'position', e.target.value)} className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 outline-none focus:border-[#0099e6]" />
                           <div className="grid grid-cols-2 gap-2">
-                            <input type="number" placeholder="Amount (₹)" value={prize.amount} onChange={(e) => updatePrize(idx, 'amount', Number(e.target.value))} className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 outline-none focus:border-[#0099e6] font-mono" />
+                            <input type="number" placeholder={`Amount (${currencySymbol})`} value={prize.amount} onChange={(e) => updatePrize(idx, 'amount', Number(e.target.value))} className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 outline-none focus:border-[#0099e6] font-mono" />
                             <input type="text" placeholder="Description" value={prize.description} onChange={(e) => updatePrize(idx, 'description', e.target.value)} className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 outline-none focus:border-[#0099e6]" />
                           </div>
                         </div>
@@ -1346,7 +1715,7 @@ function HostHackathonContent() {
 
                   <div className="p-3.5 rounded-2xl bg-orange-50 border border-orange-200 text-xs text-[#ea580c] flex items-center justify-between font-mono font-black">
                     <span>Total Prize Pool:</span>
-                    <span className="text-base font-extrabold">₹{totalPrize.toLocaleString('en-IN')}</span>
+                    <span className="text-base font-extrabold">{currencySymbol}{totalPrize.toLocaleString('en-IN')}</span>
                   </div>
 
                   {/* Tracks */}
@@ -1363,7 +1732,7 @@ function HostHackathonContent() {
                       <div key={idx} className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
                         <div className="flex gap-2">
                           <input type="text" placeholder="Track Name" value={track.title} onChange={(e) => updateTrack(idx, 'title', e.target.value)} className="flex-1 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 outline-none focus:border-[#0099e6]" />
-                          <input type="text" placeholder="Prize (e.g. ₹50,000)" value={track.prize} onChange={(e) => updateTrack(idx, 'prize', e.target.value)} className="w-32 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 outline-none focus:border-[#0099e6]" />
+                          <input type="text" placeholder={`Prize (e.g. ${currencySymbol}50,000)`} value={track.prize} onChange={(e) => updateTrack(idx, 'prize', e.target.value)} className="w-32 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 outline-none focus:border-[#0099e6]" />
                           {tracks.length > 1 && (
                             <button type="button" onClick={() => removeTrack(idx)} className="p-1 text-slate-400 hover:text-red-500 cursor-pointer">
                               <X className="w-4 h-4" />
@@ -1410,34 +1779,60 @@ function HostHackathonContent() {
 
                   {/* Amount Input Box when Paid Entry is chosen */}
                   {registrationType === 'PAID' && (
-                    <div className="p-4 sm:p-5 rounded-2xl bg-orange-50/70 border border-orange-200 shadow-xs space-y-3 animate-in fade-in zoom-in-95 duration-200">
+                    <div className="p-4 sm:p-5 rounded-2xl bg-orange-50/70 border border-orange-200 shadow-xs space-y-3.5 animate-in fade-in zoom-in-95 duration-200">
                       <div className="flex items-center justify-between">
                         <label className="block text-xs font-bold text-slate-800">
-                          Registration Fee / Entry Amount (₹) *
+                          Registration Fee / Entry Amount *
                         </label>
                         <span className="text-[10px] font-extrabold text-[#ea580c] bg-orange-100 px-2.5 py-0.5 rounded-full uppercase border border-orange-200">
                           Paid Hackathon
                         </span>
                       </div>
-                      <div className="relative">
-                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-black text-slate-400 text-sm">
-                          ₹
-                        </span>
-                        <input
-                          type="number"
-                          min="1"
-                          value={entryFee === 0 || entryFee === '0' ? '' : entryFee}
-                          onChange={(e) => {
-                            const val = e.target.value === '' ? '' : Math.max(0, Number(e.target.value));
-                            setEntryFee(val);
-                          }}
-                          placeholder="e.g. 250"
-                          required={registrationType === 'PAID'}
-                          className="w-full pl-8 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#f97316]"
-                        />
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                            Currency
+                          </label>
+                          <select
+                            value={currency}
+                            onChange={(e) => setCurrency(e.target.value)}
+                            className="w-full px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#f97316] cursor-pointer"
+                          >
+                            {CURRENCIES.map((c) => (
+                              <option key={c.code} value={c.code}>
+                                {c.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="sm:col-span-2">
+                          <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                            Fee Amount ({currencySymbol})
+                          </label>
+                          <div className="relative">
+                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-black text-slate-400 text-xs">
+                              {currencySymbol}
+                            </span>
+                            <input
+                              type="number"
+                              min="1"
+                              value={entryFee === 0 || entryFee === '0' ? '' : entryFee}
+                              onChange={(e) => {
+                                const val = e.target.value === '' ? '' : Math.max(0, Number(e.target.value));
+                                setEntryFee(val);
+                              }}
+                              placeholder="e.g. 250"
+                              required={registrationType === 'PAID'}
+                              className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#f97316]"
+                            />
+                          </div>
+                        </div>
                       </div>
+
                       <p className="text-[11px] text-slate-500 font-medium">
-                        Participants will pay ₹{Number(entryFee || 0).toLocaleString('en-IN')} as entry fee when registering for this hackathon.
+                        Participants will pay {currencySymbol}{Number(entryFee || 0).toLocaleString('en-IN')} as entry fee when registering for this hackathon.
                       </p>
                     </div>
                   )}
@@ -1912,14 +2307,14 @@ function HostHackathonContent() {
                     {/* Prizes Summary */}
                     <div className="p-4 rounded-2xl bg-orange-50 border border-orange-200 space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-[#ea580c]">Prizes — ₹{totalPrize.toLocaleString('en-IN')} Total</span>
+                        <span className="text-xs font-bold text-[#ea580c]">Prizes — {currencySymbol}{totalPrize.toLocaleString('en-IN')} Total ({currency})</span>
                         <button type="button" onClick={() => setStep(4)} className="text-[10px] text-[#0099e6] font-bold cursor-pointer hover:underline">Edit</button>
                       </div>
                       <div className="space-y-1">
                         {prizes.map((p, i) => (
                           <div key={i} className="text-xs flex justify-between">
                             <span className="text-slate-700 font-medium">{p.position}</span>
-                            <span className="font-mono font-bold text-[#ea580c]">₹{Number(p.amount).toLocaleString('en-IN')}</span>
+                            <span className="font-mono font-bold text-[#ea580c]">{currencySymbol}{Number(p.amount).toLocaleString('en-IN')}</span>
                           </div>
                         ))}
                       </div>
@@ -1932,7 +2327,7 @@ function HostHackathonContent() {
                         <button type="button" onClick={() => setStep(5)} className="text-[10px] text-[#0099e6] font-bold cursor-pointer hover:underline">Edit</button>
                       </div>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                        <div><span className="text-slate-500">Type:</span> <span className={`font-semibold ${registrationType === 'PAID' ? 'text-[#ea580c]' : 'text-slate-900'}`}>{registrationType === 'PAID' ? `Paid Entry (₹${Number(entryFee || 0).toLocaleString('en-IN')})` : 'Free Entry'}</span></div>
+                        <div><span className="text-slate-500">Type:</span> <span className={`font-semibold ${registrationType === 'PAID' ? 'text-[#ea580c]' : 'text-slate-900'}`}>{registrationType === 'PAID' ? `Paid Entry (${currencySymbol}${Number(entryFee || 0).toLocaleString('en-IN')} ${currency})` : 'Free Entry'}</span></div>
                         <div><span className="text-slate-500">Capacity:</span> <span className="font-semibold text-slate-900">{isUnlimitedCapacity || !registrationCapacity ? '♾️ Unlimited' : `${registrationCapacity} Participants`}</span></div>
                         <div><span className="text-slate-500">Approval:</span> <span className="font-semibold text-slate-900">🔒 Manual (Default)</span></div>
                         <div><span className="text-slate-500">Custom Q&apos;s:</span> <span className="font-semibold text-slate-900">{customQuestions.length}</span></div>
@@ -1973,6 +2368,28 @@ function HostHackathonContent() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Approval Notice & Email Draft Preview */}
+                  {!isEditMode && (
+                    <div className="p-3.5 rounded-2xl bg-sky-50/70 border border-sky-200/80 flex items-center justify-between flex-wrap gap-2 text-xs">
+                      <div className="flex items-center gap-2 text-slate-700">
+                        <Mail className="w-4 h-4 text-[#0099e6] shrink-0" />
+                        <span className="font-medium">
+                          On submit, an approval request is dispatched to <strong className="text-slate-900">hackerunity.community@gmail.com</strong>
+                        </span>
+                      </div>
+                      <a
+                        href={gmailDraftUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-1.5 rounded-xl bg-white border border-sky-200 hover:bg-sky-50 text-[#0099e6] text-[11px] font-bold flex items-center gap-1.5 shadow-2xs cursor-pointer transition-colors"
+                      >
+                        <Mail className="w-3.5 h-3.5 text-red-600" />
+                        <span>Preview Gmail Draft</span>
+                        <ExternalLink className="w-3 h-3 opacity-70" />
+                      </a>
+                    </div>
+                  )}
 
                   {/* Action Buttons */}
                   <div className="pt-4 flex flex-wrap gap-3">

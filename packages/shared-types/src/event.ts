@@ -68,10 +68,12 @@ export interface EventPublic {
   rulesText?: string;
   registrationType?: 'FREE' | 'PAID';
   entryFee?: number | null;
+  currency?: string;
   registrationCapacity?: number | null;
   approvalMode?: 'AUTO' | 'MANUAL';
   customQuestions?: CustomQuestion[];
   registrationFields?: string[];
+  previewToken?: string;
 }
 
 export interface Prize {

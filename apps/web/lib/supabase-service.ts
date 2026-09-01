@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { ExtendedEvent, MOCK_EVENTS } from './mock-data';
+import { getEventPreviewToken } from './utils';
 import {
   UserPublic,
   EventStatus,
@@ -94,10 +95,13 @@ export function mapDbEventToExtended(item: any): ExtendedEvent {
     difficulty: item.difficulty || 'OPEN',
     rulesText: item.rules_text || '',
     registrationType: item.registration_type || 'FREE',
+    entryFee: item.entry_fee ?? item.entryFee ?? null,
+    currency: item.currency || 'INR',
     registrationCapacity: item.registration_capacity || null,
     approvalMode: item.approval_mode || 'MANUAL',
     customQuestions: item.custom_questions || [],
     registrationFields: item.registration_fields || ['name', 'email', 'phone', 'college', 'city', 'github', 'linkedin', 'skills'],
+    previewToken: item.preview_token || item.previewToken || (item.slug ? getEventPreviewToken(item) : undefined),
   };
 }
 

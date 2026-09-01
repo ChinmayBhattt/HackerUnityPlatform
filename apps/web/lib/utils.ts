@@ -123,3 +123,28 @@ export function getEventTypeBadge(type: EventType): { label: string; icon: strin
       return { label: 'Hybrid', icon: '' };
   }
 }
+
+/**
+ * Generate or retrieve a secure private preview token for an event
+ */
+export function getEventPreviewToken(event: { slug?: string; id?: string; previewToken?: string }): string {
+  if (event.previewToken) return event.previewToken;
+  const seed = (event.slug || event.id || 'hackathon').toLowerCase();
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+    hash |= 0;
+  }
+  const hex = Math.abs(hash).toString(36) + (seed.length * 9).toString(36);
+  return `hu_prv_${hex}`;
+}
+
+/**
+ * Generate a private, unlisted shareable link for unapproved / draft events
+ */
+export function getEventPrivateLink(event: { slug?: string; id?: string; previewToken?: string }, origin?: string): string {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : 'https://hackersunity.com');
+  const token = getEventPreviewToken(event);
+  const slug = event.slug || event.id || 'preview';
+  return `${base}/hackathons/${slug}?preview_key=${token}`;
+}

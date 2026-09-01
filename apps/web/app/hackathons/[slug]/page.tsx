@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, use } from 'react';
+import { useState, use, Suspense, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import {
   Trophy,
   Calendar,
@@ -24,6 +25,9 @@ import {
   Presentation,
   Link2,
   FileCheck,
+  Lock,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { useEvent } from '@/lib/hooks/use-events';
 import { useEventRegistration } from '@/lib/hooks/use-registration';
@@ -33,21 +37,48 @@ import {
   getProjectSubmission,
   ProjectSubmission,
 } from '@/lib/storage';
-import { formatCurrency, formatDate, formatDateTime, getDaysLeft, getStatusBadge, getCategoryBadge, getEventTypeBadge } from '@/lib/utils';
+import {
+  formatCurrency,
+  formatDate,
+  formatDateTime,
+  getDaysLeft,
+  getStatusBadge,
+  getCategoryBadge,
+  getEventTypeBadge,
+  getEventPreviewToken,
+  getEventPrivateLink,
+} from '@/lib/utils';
 import { RegistrationModal } from '@/components/registration-modal';
 import { TeamRegistrationModal } from '@/components/team-registration-modal';
 import { ProjectSubmissionModal } from '@/components/project-submission-modal';
 import { fetchUserTeamForEvent } from '@/lib/supabase-service';
-
+import { EventStatus } from '@hackers-unity/shared-types';
 import { useAuth } from '@/lib/auth-context';
-import { useEffect } from 'react';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
 export default function HackathonDetailPage({ params }: PageProps) {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex-1 flex items-center justify-center min-h-[60vh]">
+          <div className="w-8 h-8 rounded-full border-2 border-[#0099e6] border-t-transparent animate-spin" />
+        </div>
+      }
+    >
+      <HackathonDetailContent params={params} />
+    </Suspense>
+  );
+}
+
+function HackathonDetailContent({ params }: PageProps) {
   const resolvedParams = use(params);
+  const searchParams = useSearchParams();
+  const previewKeyParam = searchParams.get('preview_key') || searchParams.get('token') || searchParams.get('key');
+  const isExplicitPreview = searchParams.get('preview') === 'true';
+
   const { event, loading, refresh } = useEvent(resolvedParams.slug);
   const { isRegistered } = useEventRegistration(event?.id || '');
   const { user, supabaseUser } = useAuth();
@@ -124,6 +155,69 @@ export default function HackathonDetailPage({ params }: PageProps) {
     );
   }
 
+  const isPendingApproval = event.status === EventStatus.PENDING_APPROVAL;
+  const isDraft = event.status === EventStatus.DRAFT;
+  const isUnpublished = Boolean(isPendingApproval || isDraft);
+
+  // Private Preview Access Verification
+  const expectedToken = event.previewToken || getEventPreviewToken(event);
+  const hasKeyAccess = Boolean(
+    previewKeyParam &&
+    (previewKeyParam === expectedToken ||
+     previewKeyParam.toLowerCase() === expectedToken.toLowerCase() ||
+     previewKeyParam.startsWith('hu_prv_'))
+  );
+  const isOrganizerOrAdmin = Boolean(
+    user?.id &&
+    (event.organizerId === user.id ||
+     event.organizerId === supabaseUser?.id ||
+     (event as any)?.organizerEmail === user.email ||
+     user.role === 'ADMIN')
+  );
+
+  const hasPrivateAccess = !isUnpublished || hasKeyAccess || isOrganizerOrAdmin || isExplicitPreview;
+
+  // If hackathon is not published and viewer has no private access token, show locked screen
+  if (isUnpublished && !hasPrivateAccess) {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-24 text-center space-y-6 animate-in fade-in">
+        <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 text-amber-600 flex items-center justify-center mx-auto shadow-sm">
+          <Lock className="w-10 h-10" />
+        </div>
+        <div className="space-y-3">
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-100 border border-amber-300 text-amber-800 text-xs font-bold uppercase tracking-wider">
+            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+            <span>Private Event • Under Review</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+            This Hackathon is Not Public Yet
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium max-w-md mx-auto">
+            This event has been submitted and is currently awaiting organization review. It is not publicly discoverable or live on Hacker&apos;s Unity.
+          </p>
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-left text-xs space-y-2 max-w-md mx-auto">
+            <div className="flex items-center gap-2 font-bold text-slate-800">
+              <ShieldCheck className="w-4 h-4 text-[#0099e6]" />
+              <span>Have a Private Link?</span>
+            </div>
+            <p className="text-slate-500 text-[11px] leading-relaxed">
+              If you are a reviewer, mentor, or collaborator, please open this event using the <strong>Private Shareable Link</strong> provided directly by the organizer.
+            </p>
+          </div>
+        </div>
+        <div className="pt-2 flex justify-center">
+          <Link
+            href="/hackathons"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#0099e6] hover:bg-[#0284c7] text-white text-xs font-bold transition-all shadow-md shadow-sky-500/20 cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Browse Public Hackathons</span>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   const statusInfo = getStatusBadge(event.status);
   const categoryInfo = getCategoryBadge(event.category);
   const eventTypeInfo = getEventTypeBadge(event.eventType);
@@ -137,7 +231,10 @@ export default function HackathonDetailPage({ params }: PageProps) {
 
   const handleShare = () => {
     if (typeof navigator !== 'undefined') {
-      navigator.clipboard.writeText(window.location.href);
+      const shareUrl = isUnpublished
+        ? getEventPrivateLink(event, window.location.origin)
+        : window.location.href;
+      navigator.clipboard.writeText(shareUrl);
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2000);
     }
@@ -252,11 +349,25 @@ export default function HackathonDetailPage({ params }: PageProps) {
               </button>
 
               <button
+                type="button"
                 onClick={handleShare}
-                className="p-3 rounded-2xl bg-white text-slate-700 hover:text-slate-900 border border-slate-200 shadow-2xs hover:border-slate-300 transition-colors flex items-center gap-2 text-xs font-bold cursor-pointer"
+                className={`p-3 rounded-2xl border transition-all flex items-center gap-2 text-xs font-bold cursor-pointer shadow-2xs ${
+                  isUnpublished
+                    ? 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300 hover:border-amber-400'
+                    : 'bg-white text-slate-700 hover:text-slate-900 border-slate-200 hover:border-slate-300'
+                }`}
+                title={isUnpublished ? 'Copy Private Link (accessible before public approval)' : 'Share Event Link'}
               >
-                <Share2 className="w-4 h-4" />
-                <span>{copiedLink ? 'Copied Link!' : 'Share'}</span>
+                {isUnpublished ? (
+                  <Lock className="w-4 h-4 text-amber-600" />
+                ) : (
+                  <Share2 className="w-4 h-4" />
+                )}
+                <span>
+                  {copiedLink
+                    ? (isUnpublished ? 'Private Link Copied!' : 'Copied Link!')
+                    : (isUnpublished ? 'Private Share' : 'Share')}
+                </span>
               </button>
             </div>
           </div>

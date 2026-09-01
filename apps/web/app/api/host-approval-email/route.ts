@@ -23,7 +23,8 @@ export async function POST(req: Request) {
 
     const adminEmail = 'hackerunity.community@gmail.com';
     const baseUrl = origin || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    const eventPreviewUrl = `${baseUrl}/hackathons/${event.slug || 'preview'}`;
+    const previewToken = event.previewToken || (event.slug ? 'hu_prv_' + Buffer.from(event.slug).toString('hex').slice(0, 10) : 'hu_prv_demo');
+    const eventPreviewUrl = `${baseUrl}/hackathons/${event.slug || 'preview'}?preview_key=${previewToken}`;
     const subject = `[Hackathon Approval Request] "${event.title}" hosted by ${organizerName || 'Organizer'}`;
 
     const formattedStartDate = event.startDate
@@ -53,9 +54,21 @@ export async function POST(req: Request) {
         })
       : 'TBD';
 
+    const CURRENCY_SYMBOLS: Record<string, string> = {
+      INR: '₹',
+      USD: '$',
+      EUR: '€',
+      GBP: '£',
+      AED: 'AED ',
+      CAD: 'CA$',
+      SGD: 'S$',
+      AUD: 'A$',
+    };
+    const currencySymbol = CURRENCY_SYMBOLS[event.currency || 'INR'] || '₹';
+
     const entryFeeDisplay =
       event.registrationType === 'PAID'
-        ? `₹${Number(event.entryFee || 0).toLocaleString('en-IN')} (Paid Entry)`
+        ? `${currencySymbol}${Number(event.entryFee || 0).toLocaleString('en-IN')} ${event.currency || 'INR'} (Paid Entry)`
         : 'Free Entry (No Fee)';
 
     const htmlContent = `
@@ -125,7 +138,7 @@ export async function POST(req: Request) {
                       </tr>
                       <tr>
                         <td style="padding: 5px 0; font-size: 13px; color: #64748b;"><strong>Total Prize Pool:</strong></td>
-                        <td style="padding: 5px 0; font-size: 13px; color: #ea580c; font-weight: 800;">₹${Number(event.totalPrizeValue || 0).toLocaleString('en-IN')}</td>
+                        <td style="padding: 5px 0; font-size: 13px; color: #ea580c; font-weight: 800;">${currencySymbol}${Number(event.totalPrizeValue || 0).toLocaleString('en-IN')} (${event.currency || 'INR'})</td>
                       </tr>
                       <tr>
                         <td style="padding: 5px 0; font-size: 13px; color: #64748b;"><strong>Registration Fee:</strong></td>
@@ -206,6 +219,7 @@ export async function POST(req: Request) {
         const resend = new Resend(process.env.RESEND_API_KEY);
         const fromEmail = process.env.RESEND_FROM_EMAIL || 'Hacker\'s Unity <onboarding@resend.dev>';
 
+        // Attempt delivery to primary admin address
         const { data, error: sendError } = await resend.emails.send({
           from: fromEmail,
           to: adminEmail,
@@ -213,11 +227,38 @@ export async function POST(req: Request) {
           html: htmlContent,
         });
 
-        if (sendError) {
-          console.warn('[host-approval-email] Resend error:', sendError.message);
-        } else {
-          console.log('[host-approval-email] Sent approval request via Resend:', data?.id);
-          return NextResponse.json({ success: true, method: 'resend', data });
+        if (!sendError) {
+          console.log('[host-approval-email] Sent approval request via Resend to admin:', data?.id);
+          return NextResponse.json({ success: true, method: 'resend', sentTo: adminEmail, data });
+        }
+
+        console.warn('[host-approval-email] Resend primary recipient error:', sendError.message);
+
+        // Fallback for Resend test/sandbox mode: Send to verified Resend account owner
+        const ownerEmail = process.env.RESEND_TEST_EMAIL || 'chinmaybhatt26@gmail.com';
+        const fallbackRes = await resend.emails.send({
+          from: fromEmail,
+          to: ownerEmail,
+          subject: `[FORWARD TO: ${adminEmail}] ${subject}`,
+          html: `
+            <div style="background-color: #fef3c7; border: 1px solid #fde68a; padding: 14px 18px; border-radius: 10px; margin-bottom: 20px; font-family: sans-serif; font-size: 12px; color: #92400e; line-height: 1.5;">
+              ⚠️ <strong>Resend Sandbox Delivery Notice:</strong><br>
+              Direct delivery to <code>${adminEmail}</code> was restricted because your Resend account is currently in test sandbox mode (using <code>onboarding@resend.dev</code>). This approval request has been delivered to your verified Resend account email: <strong>${ownerEmail}</strong>.
+            </div>
+            ${htmlContent}
+          `,
+        });
+
+        if (!fallbackRes.error) {
+          console.log('[host-approval-email] Sent approval request to verified Resend owner fallback:', ownerEmail);
+          return NextResponse.json({
+            success: true,
+            method: 'resend_sandbox_owner',
+            sentTo: ownerEmail,
+            intendedRecipient: adminEmail,
+            message: `Delivered to verified Resend email (${ownerEmail}). Verify your custom domain on Resend.com to send directly to ${adminEmail}`,
+            data: fallbackRes.data,
+          });
         }
       } catch (resendErr: any) {
         console.warn('[host-approval-email] Resend exception:', resendErr?.message);

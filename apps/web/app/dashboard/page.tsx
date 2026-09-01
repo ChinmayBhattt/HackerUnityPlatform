@@ -50,6 +50,7 @@ import {
   FileSpreadsheet,
   Github,
   Video,
+  Lock,
 } from 'lucide-react';
 import {
   getMyRegistrations,
@@ -76,7 +77,7 @@ import {
 } from '@/lib/supabase-service';
 import { supabase } from '@/lib/supabase';
 import { HackathonCard } from '@/components/hackathon-card';
-import { formatDate, formatCurrency } from '@/lib/utils';
+import { formatDate, formatCurrency, getEventPrivateLink } from '@/lib/utils';
 import { AuthModal } from '@/components/auth-modal';
 import { EditEventModal } from '@/components/edit-event-modal';
 import { PublicProfileModal } from '@/components/public-profile-modal';
@@ -123,8 +124,7 @@ export default function DashboardPage() {
   const [eventRegistrations, setEventRegistrations] = useState<any[]>([]);
   const [loadingRegistrations, setLoadingRegistrations] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
-
-
+  const [copiedEventId, setCopiedEventId] = useState<string | null>(null);
 
   const userId = supabaseUser?.id || user?.id;
 
@@ -1268,12 +1268,20 @@ export default function DashboardPage() {
                             className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide border ${
                               evt.status === 'COMPLETED'
                                 ? 'bg-slate-100 text-slate-600 border-slate-200'
-                                : evt.status === 'DRAFT'
+                                : evt.status === 'PENDING_APPROVAL'
                                 ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                : evt.status === 'DRAFT'
+                                ? 'bg-slate-100 text-slate-600 border-slate-200'
                                 : 'bg-emerald-50 text-emerald-700 border-emerald-200'
                             }`}
                           >
-                            {evt.status === 'COMPLETED' ? 'Completed' : evt.status === 'DRAFT' ? 'Draft' : 'Live / Active'}
+                            {evt.status === 'COMPLETED'
+                              ? 'Completed'
+                              : evt.status === 'PENDING_APPROVAL'
+                              ? '⏳ Under Review'
+                              : evt.status === 'DRAFT'
+                              ? 'Draft'
+                              : 'Live / Active'}
                           </span>
                           <span className="text-xs text-slate-400 font-medium">
                             Starts: {formatDate(evt.startDate)}
@@ -1298,6 +1306,24 @@ export default function DashboardPage() {
 
                       {/* Action Buttons */}
                       <div className="flex items-center gap-2 flex-wrap shrink-0">
+                        {/* Private Shareable Link for pending/draft events */}
+                        {(evt.status === 'PENDING_APPROVAL' || evt.status === 'DRAFT') && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const link = getEventPrivateLink(evt, window.location.origin);
+                              navigator.clipboard.writeText(link);
+                              setCopiedEventId(evt.id);
+                              setTimeout(() => setCopiedEventId(null), 2500);
+                            }}
+                            className="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                            title="Copy Private Shareable Link (allows anyone with the link to preview)"
+                          >
+                            <Lock className="w-3.5 h-3.5 text-amber-600" />
+                            <span>{copiedEventId === evt.id ? 'Link Copied!' : 'Private Link'}</span>
+                          </button>
+                        )}
+
                         <button
                           onClick={() => {
                             try {
@@ -1330,13 +1356,15 @@ export default function DashboardPage() {
                           <span>Submissions ({getEventSubmissionsCount(evt.id) || getEventSubmissionsCount(evt.slug)})</span>
                         </Link>
 
-                        <Link
-                          href={`/hackathons/${evt.slug}`}
+                        <a
+                          href={getEventPrivateLink(evt, typeof window !== 'undefined' ? window.location.origin : '')}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors"
-                          title="View Live Page"
+                          title="View Event Preview"
                         >
                           <ExternalLink className="w-4 h-4" />
-                        </Link>
+                        </a>
 
                         <button
                           onClick={() => setDeleteConfirmEvent(evt)}
