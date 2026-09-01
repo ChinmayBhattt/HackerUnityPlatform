@@ -35,6 +35,7 @@ export const metadata: Metadata = {
 import { AuthProvider } from '@/lib/auth-context';
 import { NotificationProvider } from '@/lib/notification-context';
 import { NotificationToast } from '@/components/notification-toast';
+import { CookieConsent } from '@/components/cookie-consent';
 
 export default function RootLayout({
   children,
@@ -59,6 +60,7 @@ export default function RootLayout({
             <Footer />
           </NotificationProvider>
         </AuthProvider>
+        <CookieConsent />
       </body>
     </html>
   );
