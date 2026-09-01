@@ -143,3 +143,98 @@ body {
 .animate-events-marquee:hover {
   animation-play-state: paused;
 }
+
+/* ─── Event Gallery ──────────────────────────────────────── */
+
+/* Gallery marquee — left direction (row 1) */
+@keyframes gallery-scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* Gallery marquee — right direction (row 2) */
+@keyframes gallery-scroll-right {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.animate-gallery-left {
+  animation: gallery-scroll-left 45s linear infinite;
+  will-change: transform;
+}
+
+.animate-gallery-right {
+  animation: gallery-scroll-right 50s linear infinite;
+  will-change: transform;
+}
+
+.animate-gallery-left:hover,
+.animate-gallery-right:hover {
+  animation-play-state: paused;
+}
+
+/* 3D perspective card container */
+.gallery-card-3d {
+  transform-style: preserve-3d;
+  perspective: 800px;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gallery-card-3d:hover {
+  transform: rotateY(3deg) rotateX(-2deg) scale(1.06);
+  box-shadow:
+    0 20px 40px -12px rgba(0, 153, 230, 0.25),
+    0 8px 20px -4px rgba(0, 0, 0, 0.3);
+}
+
+/* Caption overlay — slides up on hover */
+.gallery-caption {
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0;
+}
+
+.gallery-card-3d:hover .gallery-caption {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Scroll-reveal entrance animation */
+@keyframes gallery-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(48px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.gallery-section-hidden {
+  opacity: 0;
+  transform: translateY(48px);
+}
+
+.gallery-section-visible {
+  animation: gallery-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Stagger delays for rows */
+.gallery-row-delay-1 {
+  animation-delay: 0.15s;
+}
+
+.gallery-row-delay-2 {
+  animation-delay: 0.35s;
+}

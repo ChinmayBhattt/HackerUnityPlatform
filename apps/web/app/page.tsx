@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Sparkles,
   Trophy,
@@ -18,9 +19,99 @@ import { usePublishedEvents } from '@/lib/hooks/use-events';
 import { AuthModal } from '@/components/auth-modal';
 import { HeroSearch } from '@/components/hero-search';
 
+// Event gallery photos
+import galleryStage from '@/assets/hackstorm_stage.jpg';
+import galleryHall from '@/assets/hackstorm_hall.jpg';
+import galleryWinners from '@/assets/hackstorm_winners.jpg';
+import galleryInauguration from '@/assets/hackstorm_inauguration.jpg';
+import gallerySpeaker from '@/assets/hackstorm_speaker.jpg';
+import galleryBooth from '@/assets/hackstorm_booth.jpg';
+import galleryDevelopers from '@/assets/hackstorm_developers.jpg';
+import galleryMentoring from '@/assets/hackstorm_mentoring.jpg';
+import galleryDiscussions from '@/assets/hackstorm_discussions.jpg';
+import galleryFocus from '@/assets/hackstorm_focus.jpg';
+import galleryStellar from '@/assets/stellar_bootcamp.jpg';
+import galleryHive from '@/assets/hive_mentors.jpg';
+
+// CodeWars event photos
+import codeWars1 from '@/assets/CodeWars1.jpg';
+import codeWars2 from '@/assets/CodeWars2.jpg';
+import codeWars3 from '@/assets/CodeWars3.jpg';
+import codeWars4 from '@/assets/CodeWars4.jpg';
+import codeWars5 from '@/assets/CodeWars5.jpg';
+import codeWars6 from '@/assets/CodeWars6.jpg';
+import codeWars7 from '@/assets/CodeWars7.jpg';
+import codeWars8 from '@/assets/CodeWars8.jpg';
+import codeWars9 from '@/assets/CodeWars9.jpg';
+import codeWars10 from '@/assets/CodeWars10.jpg';
+import codeWars11 from '@/assets/CodeWars11.jpg';
+import codeWars12 from '@/assets/CodeWars12.jpg';
+import codeWars13 from '@/assets/CodeWars13.jpg';
+import codeWars14 from '@/assets/CodeWars14.jpg';
+import codeWars15 from '@/assets/CodeWars15.jpg';
+import stellarHU from '@/assets/StellarHU.jpg';
+import stellarHU1 from '@/assets/StellarHU1.jpg';
+import stellarHU2 from '@/assets/StellarHU2.jpg';
+
 export default function HomePage() {
   const { events, loading } = usePublishedEvents();
   const [authOpen, setAuthOpen] = useState(false);
+
+  // Gallery scroll-reveal via Intersection Observer
+  const gallerySectionRef = useRef<HTMLElement>(null);
+  const [galleryVisible, setGalleryVisible] = useState(false);
+
+  useEffect(() => {
+    const node = gallerySectionRef.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setGalleryVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  const galleryRow1 = [
+    { src: galleryStage, label: 'Hackstorm — Grand Stage' },
+    { src: codeWars1, label: 'CodeWars — Inauguration Stage' },
+    { src: galleryHall, label: 'Hackstorm — Hacking Arena' },
+    { src: codeWars2, label: 'CodeWars — Opening Ceremony' },
+    { src: galleryWinners, label: 'Hackstorm — Winners' },
+    { src: codeWars3, label: 'CodeWars — Keynote Session' },
+    { src: galleryInauguration, label: 'Hackstorm — Inauguration' },
+    { src: codeWars4, label: 'CodeWars — Panel Discussion' },
+    { src: gallerySpeaker, label: 'Hackstorm — Speaker Session' },
+    { src: codeWars5, label: 'CodeWars — Hacking Arena' },
+    { src: galleryBooth, label: 'Hackstorm — Sponsor Booth' },
+    { src: codeWars6, label: 'CodeWars — Team Collaboration' },
+    { src: codeWars7, label: 'CodeWars — Demo Presentation' },
+    { src: stellarHU, label: 'Stellar Bootcamp — Workshop' },
+  ];
+
+  const galleryRow2 = [
+    { src: galleryDevelopers, label: 'Hackstorm — Developers' },
+    { src: codeWars8, label: 'CodeWars — Mentoring Session' },
+    { src: galleryMentoring, label: 'Hackstorm — Mentoring' },
+    { src: codeWars9, label: 'CodeWars — Judging Round' },
+    { src: galleryDiscussions, label: 'Hackstorm — Discussions' },
+    { src: codeWars10, label: 'CodeWars — Audience' },
+    { src: galleryFocus, label: 'Hackstorm — Focus Mode' },
+    { src: codeWars11, label: 'CodeWars — Prize Ceremony' },
+    { src: galleryStellar, label: 'Stellar Bootcamp' },
+    { src: codeWars12, label: 'CodeWars — Winners Celebration' },
+    { src: galleryHive, label: 'Hive — Mentor Connect' },
+    { src: codeWars13, label: 'CodeWars — Networking' },
+    { src: codeWars14, label: 'CodeWars — Closing Ceremony' },
+    { src: codeWars15, label: 'CodeWars — Group Photo' },
+    { src: stellarHU1, label: 'Stellar Bootcamp — Hands-on' },
+    { src: stellarHU2, label: 'Stellar Bootcamp — Community' },
+  ];
 
   return (
     <div className="flex flex-col flex-1">
@@ -262,6 +353,158 @@ export default function HomePage() {
             </div>
           </div>
         )}
+      </section>
+
+      {/* ─── Event Gallery ─────────────────────────────────────────── */}
+      <section
+        ref={gallerySectionRef}
+        className={`relative py-20 md:py-28 overflow-hidden ${
+          galleryVisible ? 'gallery-section-visible' : 'gallery-section-hidden'
+        }`}
+        style={{
+          background:
+            'linear-gradient(165deg, #0f172a 0%, #1e293b 40%, #0f172a 70%, #1a1a2e 100%)',
+        }}
+      >
+        {/* Ambient mesh blobs */}
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-[#0099e6]/8 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-[#f97316]/6 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#0284c7]/5 rounded-full blur-[140px] pointer-events-none" />
+
+        {/* Section Header */}
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-14">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-sky-300 text-xs font-bold uppercase tracking-wider mb-3 backdrop-blur-sm">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Community Highlights</span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
+            Moments from Our{' '}
+            <span
+              style={{
+                background:
+                  'linear-gradient(135deg, #38bdf8 0%, #0099e6 50%, #f97316 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              Events
+            </span>
+          </h2>
+          <p className="text-sm text-slate-400 mt-3 max-w-xl mx-auto font-medium">
+            From 24-hour hackathons to speaker sessions and bootcamps — here's a
+            glimpse of the energy that powers Hacker&apos;s Unity.
+          </p>
+        </div>
+
+        {/* Row 1 — scrolls left */}
+        <div className="relative w-full overflow-hidden mb-5">
+          {/* Edge fades */}
+          <div className="absolute inset-y-0 left-0 w-16 sm:w-32 bg-gradient-to-r from-[#0f172a] to-transparent z-10 pointer-events-none" />
+          <div className="absolute inset-y-0 right-0 w-16 sm:w-32 bg-gradient-to-l from-[#0f172a] to-transparent z-10 pointer-events-none" />
+
+          <div className="flex animate-gallery-left gap-5 w-max hover:[animation-play-state:paused]">
+            {/* Set 1 */}
+            {galleryRow1.map((photo, i) => (
+              <div
+                key={`r1-${i}`}
+                className="gallery-card-3d relative w-[320px] sm:w-[400px] h-[220px] sm:h-[270px] rounded-2xl overflow-hidden shrink-0 cursor-pointer group"
+              >
+                <Image
+                  src={photo.src}
+                  alt={photo.label}
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-110"
+                  sizes="400px"
+                  quality={80}
+                />
+                {/* Dark vignette overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10 pointer-events-none" />
+                {/* Caption */}
+                <div className="gallery-caption absolute bottom-0 left-0 right-0 px-4 py-3 backdrop-blur-md bg-white/10 border-t border-white/15">
+                  <p className="text-white text-xs font-bold tracking-wide">
+                    {photo.label}
+                  </p>
+                </div>
+              </div>
+            ))}
+            {/* Duplicate for seamless loop */}
+            {galleryRow1.map((photo, i) => (
+              <div
+                key={`r1-dup-${i}`}
+                className="gallery-card-3d relative w-[320px] sm:w-[400px] h-[220px] sm:h-[270px] rounded-2xl overflow-hidden shrink-0 cursor-pointer group"
+              >
+                <Image
+                  src={photo.src}
+                  alt={photo.label}
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-110"
+                  sizes="400px"
+                  quality={80}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10 pointer-events-none" />
+                <div className="gallery-caption absolute bottom-0 left-0 right-0 px-4 py-3 backdrop-blur-md bg-white/10 border-t border-white/15">
+                  <p className="text-white text-xs font-bold tracking-wide">
+                    {photo.label}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Row 2 — scrolls right */}
+        <div className="relative w-full overflow-hidden">
+          {/* Edge fades */}
+          <div className="absolute inset-y-0 left-0 w-16 sm:w-32 bg-gradient-to-r from-[#0f172a] to-transparent z-10 pointer-events-none" />
+          <div className="absolute inset-y-0 right-0 w-16 sm:w-32 bg-gradient-to-l from-[#0f172a] to-transparent z-10 pointer-events-none" />
+
+          <div className="flex animate-gallery-right gap-5 w-max hover:[animation-play-state:paused]">
+            {/* Set 1 */}
+            {galleryRow2.map((photo, i) => (
+              <div
+                key={`r2-${i}`}
+                className="gallery-card-3d relative w-[280px] sm:w-[360px] h-[200px] sm:h-[240px] rounded-2xl overflow-hidden shrink-0 cursor-pointer group"
+              >
+                <Image
+                  src={photo.src}
+                  alt={photo.label}
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-110"
+                  sizes="360px"
+                  quality={80}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10 pointer-events-none" />
+                <div className="gallery-caption absolute bottom-0 left-0 right-0 px-4 py-3 backdrop-blur-md bg-white/10 border-t border-white/15">
+                  <p className="text-white text-xs font-bold tracking-wide">
+                    {photo.label}
+                  </p>
+                </div>
+              </div>
+            ))}
+            {/* Duplicate for seamless loop */}
+            {galleryRow2.map((photo, i) => (
+              <div
+                key={`r2-dup-${i}`}
+                className="gallery-card-3d relative w-[280px] sm:w-[360px] h-[200px] sm:h-[240px] rounded-2xl overflow-hidden shrink-0 cursor-pointer group"
+              >
+                <Image
+                  src={photo.src}
+                  alt={photo.label}
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-110"
+                  sizes="360px"
+                  quality={80}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10 pointer-events-none" />
+                <div className="gallery-caption absolute bottom-0 left-0 right-0 px-4 py-3 backdrop-blur-md bg-white/10 border-t border-white/15">
+                  <p className="text-white text-xs font-bold tracking-wide">
+                    {photo.label}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* ─── Why Hacker's Unity Matrix ─────────────────────────────── */}
