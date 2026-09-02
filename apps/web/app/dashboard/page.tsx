@@ -102,6 +102,26 @@ export default function DashboardPage() {
   const [myHostedEvents, setMyHostedEvents] = useState<ExtendedEvent[]>([]);
   const [loadingData, setLoadingData] = useState(true);
 
+  // Database-driven dashboard KPI stats
+  const [dashStats, setDashStats] = useState<{
+    totalBuilders: number;
+    liveArenas: number;
+    myRegistered: number;
+    totalPrizePool: number;
+    trajectory: {
+      data: { label: string; count: number }[];
+      currentCount: number;
+      prevCount: number;
+      growthPercent: number | null;
+      rangeDays: number;
+    };
+    domainBreakdown: { category: string; count: number; percentage: number }[];
+    participationSummary: { total: number; upcoming: number; active: number; completed: number };
+  } | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState(false);
+  const [trajectoryRange, setTrajectoryRange] = useState<number>(30);
+
   // Filter States
   const [partFilter, setPartFilter] = useState<'ALL' | 'ACTIVE' | 'COMPLETED'>('ALL');
   const [partSearch, setPartSearch] = useState('');
@@ -247,17 +267,38 @@ export default function DashboardPage() {
     };
   }, [loadDashboardData]);
 
+  // ─── 2.5. FETCH REAL DATABASE STATS FOR KPI CARDS + ANALYTICS ──────────────
+  useEffect(() => {
+    async function fetchDashStats() {
+      setStatsLoading(true);
+      setStatsError(false);
+      try {
+        const params = new URLSearchParams();
+        if (userId) params.set('userId', userId);
+        params.set('rangeDays', String(trajectoryRange));
+        const res = await fetch(`/api/dashboard-stats?${params.toString()}`);
+        if (!res.ok) throw new Error('Stats fetch failed');
+        const json = await res.json();
+        if (json.error) throw new Error(json.error);
+        setDashStats(json);
+        // Reset active chart point to last data point
+        if (json.trajectory?.data?.length > 0) {
+          setActiveChartPoint(json.trajectory.data.length - 1);
+        }
+      } catch (err) {
+        console.warn('Dashboard stats fetch error:', err);
+        setStatsError(true);
+      } finally {
+        setStatsLoading(false);
+      }
+    }
+    fetchDashStats();
+  }, [userId, allEvents.length, registrations.length, trajectoryRange]);
+
   // ─── 3. DYNAMIC COMPUTED METRICS ───────────────────────────────────────────
   const bookmarkedEvents = allEvents.filter(
     (e) => bookmarkedIds.includes(e.id) || (e.slug && bookmarkedIds.includes(e.slug))
   );
-
-  const totalBuildersCount = allEvents.reduce(
-    (acc, e) => acc + (Number(e.registrationCount || e.participantsCount) || 500),
-    0
-  );
-  const totalPrizeSum = allEvents.reduce((acc, e) => acc + (e.totalPrizeValue || 0), 0);
-  const liveEventsCount = allEvents.filter((e) => e.status !== 'COMPLETED' && e.status !== 'DRAFT').length;
 
   // Filtered Participations
   const filteredParticipations = registrations.filter((reg) => {
@@ -443,15 +484,44 @@ export default function DashboardPage() {
     document.body.removeChild(link);
   };
 
-  // Trajectory chart points
-  const trajectoryPoints = [
-    { month: 'Mar', count: 850, velocity: '+120/wk', x: 20, y: 140 },
-    { month: 'Apr', count: 1420, velocity: '+180/wk', x: 120, y: 115 },
-    { month: 'May', count: 2100, velocity: '+240/wk', x: 220, y: 92 },
-    { month: 'Jun', count: 3450, velocity: '+320/wk', x: 320, y: 65 },
-    { month: 'Jul', count: 4900, velocity: '+390/wk', x: 420, y: 40 },
-    { month: 'Aug', count: 6800, velocity: '+420/wk', x: 520, y: 15 },
+  // Trajectory chart — compute SVG points from real API data
+  const trajectoryData = dashStats?.trajectory?.data ?? [];
+  const trajectoryPoints = (() => {
+    if (trajectoryData.length === 0) return [];
+    const maxCount = Math.max(...trajectoryData.map((d) => d.count), 1);
+    const svgW = 540;
+    const svgH = 160;
+    const padX = 20;
+    const padY = 10;
+    const usableW = svgW - padX * 2;
+    const usableH = svgH - padY * 2;
+    return trajectoryData.map((d, i) => ({
+      label: d.label,
+      count: d.count,
+      x: padX + (i / Math.max(trajectoryData.length - 1, 1)) * usableW,
+      y: padY + usableH - (d.count / maxCount) * usableH,
+    }));
+  })();
+
+  // Build SVG path strings from trajectory points
+  const trajectoryLinePath = trajectoryPoints.length > 1
+    ? 'M ' + trajectoryPoints.map((p) => `${p.x} ${p.y}`).join(' L ')
+    : '';
+  const trajectoryAreaPath = trajectoryLinePath
+    ? `${trajectoryLinePath} L ${trajectoryPoints[trajectoryPoints.length - 1].x} 160 L ${trajectoryPoints[0].x} 160 Z`
+    : '';
+
+  // Time range options
+  const rangeOptions = [
+    { label: '7D', days: 7 },
+    { label: '30D', days: 30 },
+    { label: '3M', days: 90 },
+    { label: '6M', days: 180 },
+    { label: '1Y', days: 365 },
   ];
+
+  // Domain breakdown color palette
+  const domainColors = ['#0099e6', '#7c3aed', '#10b981', '#f97316', '#ec4899', '#6366f1', '#64748b'];
 
   // Auth Guard
   if (!loading && !user) {
@@ -558,11 +628,10 @@ export default function DashboardPage() {
             {/* Nav Tab 1: Overview & Analytics */}
             <button
               onClick={() => setActiveTab('overview')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${
-                activeTab === 'overview'
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${activeTab === 'overview'
                   ? 'bg-[#0099e6] text-white shadow-xs'
                   : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`}
+                }`}
             >
               <BarChart3 className="w-4 h-4 shrink-0" />
               <div className="flex-1">
@@ -576,22 +645,20 @@ export default function DashboardPage() {
             {/* Nav Tab 2: My Participations */}
             <button
               onClick={() => setActiveTab('participations')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${
-                activeTab === 'participations'
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${activeTab === 'participations'
                   ? 'bg-[#0099e6] text-white shadow-xs'
                   : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`}
+                }`}
             >
               <Trophy className="w-4 h-4 shrink-0" />
               <div className="flex-1">
                 <div className="flex items-center justify-between">
                   <span>My Participations</span>
                   <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                      activeTab === 'participations'
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${activeTab === 'participations'
                         ? 'bg-white text-[#0099e6]'
                         : 'bg-sky-50 text-[#0099e6] border border-sky-200'
-                    }`}
+                      }`}
                   >
                     {registrations.length}
                   </span>
@@ -605,22 +672,20 @@ export default function DashboardPage() {
             {/* Nav Tab 3: My Hosted Events */}
             <button
               onClick={() => setActiveTab('organizing')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${
-                activeTab === 'organizing'
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${activeTab === 'organizing'
                   ? 'bg-[#0099e6] text-white shadow-xs'
                   : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`}
+                }`}
             >
               <Layers className="w-4 h-4 shrink-0" />
               <div className="flex-1">
                 <div className="flex items-center justify-between">
                   <span>My Events / Organizing</span>
                   <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                      activeTab === 'organizing'
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${activeTab === 'organizing'
                         ? 'bg-white text-[#0099e6]'
                         : 'bg-orange-50 text-[#ea580c] border border-orange-200'
-                    }`}
+                      }`}
                   >
                     {myHostedEvents.length}
                   </span>
@@ -634,22 +699,20 @@ export default function DashboardPage() {
             {/* Nav Tab 4: Saved / Bookmarks */}
             <button
               onClick={() => setActiveTab('bookmarks')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${
-                activeTab === 'bookmarks'
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${activeTab === 'bookmarks'
                   ? 'bg-[#0099e6] text-white shadow-xs'
                   : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`}
+                }`}
             >
               <Bookmark className="w-4 h-4 shrink-0" />
               <div className="flex-1">
                 <div className="flex items-center justify-between">
                   <span>Saved Bookmarks</span>
                   <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                      activeTab === 'bookmarks'
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${activeTab === 'bookmarks'
                         ? 'bg-white text-[#0099e6]'
                         : 'bg-slate-100 text-slate-600'
-                    }`}
+                      }`}
                   >
                     {bookmarkedEvents.length}
                   </span>
@@ -666,16 +729,16 @@ export default function DashboardPage() {
             {(user?.role === UserRole.ADMIN ||
               user?.role === UserRole.SUPER_ADMIN ||
               user?.role === UserRole.ORGANIZER) && (
-              <div className="pt-2 border-t border-slate-100 mt-2">
-                <Link
-                  href="/admin/notifications"
-                  className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-2xl text-xs font-bold text-[#0099e6] bg-sky-50/70 hover:bg-sky-100 transition-colors"
-                >
-                  <Megaphone className="w-4 h-4 text-[#0099e6]" />
-                  <span>Broadcast & News Studio</span>
-                </Link>
-              </div>
-            )}
+                <div className="pt-2 border-t border-slate-100 mt-2">
+                  <Link
+                    href="/admin/notifications"
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-2xl text-xs font-bold text-[#0099e6] bg-sky-50/70 hover:bg-sky-100 transition-colors"
+                  >
+                    <Megaphone className="w-4 h-4 text-[#0099e6]" />
+                    <span>Broadcast & News Studio</span>
+                  </Link>
+                </div>
+              )}
           </div>
         </aside>
 
@@ -688,6 +751,7 @@ export default function DashboardPage() {
             <div className="space-y-6 animate-in fade-in duration-150">
               {/* Analytics KPI Strip */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {/* Total Builders */}
                 <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Builders</span>
@@ -697,7 +761,12 @@ export default function DashboardPage() {
                   </div>
                   <div className="mt-3">
                     <div className="text-2xl sm:text-3xl font-black text-[#0099e6] font-mono">
-                      {totalBuildersCount.toLocaleString()}+
+                      {statsLoading ? (
+                        <span className="inline-block w-20 h-8 rounded-lg bg-sky-50 animate-pulse" />
+                      ) : statsError ? (
+                        <span className="text-slate-300">—</span>
+                      ) : (
+                        <>{(dashStats?.totalBuilders ?? 0).toLocaleString()}</>)}
                     </div>
                     <div className="flex items-center gap-1 mt-1 text-[10px] font-bold text-emerald-600">
                       <TrendingUp className="w-3 h-3" />
@@ -706,6 +775,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
+                {/* Live Arenas */}
                 <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Live Arenas</span>
@@ -714,13 +784,22 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <div className="mt-3">
-                    <div className="text-2xl sm:text-3xl font-black text-emerald-600 font-mono">{liveEventsCount}</div>
+                    <div className="text-2xl sm:text-3xl font-black text-emerald-600 font-mono">
+                      {statsLoading ? (
+                        <span className="inline-block w-12 h-8 rounded-lg bg-emerald-50 animate-pulse" />
+                      ) : statsError ? (
+                        <span className="text-slate-300">—</span>
+                      ) : (
+                        <>{dashStats?.liveArenas ?? 0}</>
+                      )}
+                    </div>
                     <div className="flex items-center gap-1 mt-1 text-[10px] font-bold text-slate-500">
                       <span>Open for registration</span>
                     </div>
                   </div>
                 </div>
 
+                {/* My Registered */}
                 <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">My Registered</span>
@@ -730,7 +809,13 @@ export default function DashboardPage() {
                   </div>
                   <div className="mt-3">
                     <div className="text-2xl sm:text-3xl font-black text-purple-600 font-mono">
-                      {registrations.length}
+                      {statsLoading ? (
+                        <span className="inline-block w-12 h-8 rounded-lg bg-purple-50 animate-pulse" />
+                      ) : statsError ? (
+                        <span className="text-slate-300">—</span>
+                      ) : (
+                        <>{dashStats?.myRegistered ?? 0}</>
+                      )}
                     </div>
                     <div className="flex items-center gap-1 mt-1 text-[10px] font-bold text-purple-700">
                       <span>Active events</span>
@@ -738,6 +823,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
+                {/* Prize Pool */}
                 <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Prize Pool</span>
@@ -746,8 +832,14 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <div className="mt-3">
-                    <div className="text-2xl sm:text-3xl font-black text-[#ea580c] font-mono truncate" title={formatCurrency(totalPrizeSum)}>
-                      {formatCurrency(totalPrizeSum)}
+                    <div className="text-2xl sm:text-3xl font-black text-[#ea580c] font-mono truncate" title={statsLoading ? '' : formatCurrency(dashStats?.totalPrizePool ?? 0)}>
+                      {statsLoading ? (
+                        <span className="inline-block w-24 h-8 rounded-lg bg-orange-50 animate-pulse" />
+                      ) : statsError ? (
+                        <span className="text-slate-300">—</span>
+                      ) : (
+                        <>{formatCurrency(dashStats?.totalPrizePool ?? 0)}</>
+                      )}
                     </div>
                     <div className="flex items-center gap-1 mt-1 text-[10px] font-bold text-orange-600">
                       <span>Verified Bounties</span>
@@ -760,7 +852,7 @@ export default function DashboardPage() {
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                 {/* Chart: Growth Curve */}
                 <div className="md:col-span-7 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
                     <div>
                       <div className="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#0099e6] uppercase tracking-wider">
                         <TrendingUp className="w-3 h-3" />
@@ -768,129 +860,151 @@ export default function DashboardPage() {
                       </div>
                       <h3 className="text-base font-black text-slate-900 mt-0.5">Platform Trajectory</h3>
                     </div>
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      +340% Growth
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {/* Time Range Selector */}
+                      <div className="flex items-center gap-1 bg-slate-50 rounded-xl p-0.5 border border-slate-200">
+                        {rangeOptions.map((opt) => (
+                          <button
+                            key={opt.days}
+                            onClick={() => setTrajectoryRange(opt.days)}
+                            className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${trajectoryRange === opt.days
+                                ? 'bg-[#0099e6] text-white shadow-xs'
+                                : 'text-slate-500 hover:text-slate-800 hover:bg-white'
+                              }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                      {/* Growth Badge */}
+                      {statsLoading ? (
+                        <span className="inline-block w-20 h-6 rounded-full bg-slate-50 animate-pulse" />
+                      ) : dashStats?.trajectory?.growthPercent != null ? (
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${dashStats.trajectory.growthPercent >= 0
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : 'bg-rose-50 text-rose-700 border-rose-200'
+                          }`}>
+                          {dashStats.trajectory.growthPercent >= 0 ? '+' : ''}{dashStats.trajectory.growthPercent}% Growth
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-50 text-slate-400 border border-slate-200">
+                          Not enough data
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="h-36 w-full relative">
-                    <svg className="w-full h-full overflow-visible" viewBox="0 0 540 160" preserveAspectRatio="none">
-                      <defs>
-                        <linearGradient id="dashAreaGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#0099e6" stopOpacity="0.35" />
-                          <stop offset="100%" stopColor="#0099e6" stopOpacity="0.0" />
-                        </linearGradient>
-                        <linearGradient id="dashLineGradient" x1="0" y1="0" x2="1" y2="0">
-                          <stop offset="0%" stopColor="#0284c7" />
-                          <stop offset="100%" stopColor="#0099e6" />
-                        </linearGradient>
-                      </defs>
-                      <path
-                        d="M 20 140 Q 70 128 120 115 T 220 92 T 320 65 T 420 40 T 520 15 L 520 160 L 20 160 Z"
-                        fill="url(#dashAreaGradient)"
-                      />
-                      <path
-                        d="M 20 140 Q 70 128 120 115 T 220 92 T 320 65 T 420 40 T 520 15"
-                        fill="none"
-                        stroke="url(#dashLineGradient)"
-                        strokeWidth="3.5"
-                        strokeLinecap="round"
-                      />
-                      {trajectoryPoints.map((pt, i) => (
-                        <circle
-                          key={i}
-                          cx={pt.x}
-                          cy={pt.y}
-                          r={activeChartPoint === i ? 6 : 4}
-                          onClick={() => setActiveChartPoint(i)}
-                          className={`cursor-pointer transition-all duration-300 ${
-                            activeChartPoint === i
-                              ? 'fill-[#0099e6] stroke-white stroke-2 shadow-lg'
-                              : 'fill-white stroke-[#0099e6] stroke-2 hover:r-6 hover:fill-[#0099e6]'
-                          }`}
-                        />
-                      ))}
-                    </svg>
+                    {statsLoading ? (
+                      <div className="w-full h-full rounded-2xl bg-slate-50 animate-pulse" />
+                    ) : trajectoryPoints.length > 1 ? (
+                      <svg className="w-full h-full overflow-visible" viewBox="0 0 540 160" preserveAspectRatio="none">
+                        <defs>
+                          <linearGradient id="dashAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#0099e6" stopOpacity="0.35" />
+                            <stop offset="100%" stopColor="#0099e6" stopOpacity="0.0" />
+                          </linearGradient>
+                          <linearGradient id="dashLineGradient" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stopColor="#0284c7" />
+                            <stop offset="100%" stopColor="#0099e6" />
+                          </linearGradient>
+                        </defs>
+                        <path d={trajectoryAreaPath} fill="url(#dashAreaGradient)" />
+                        <path d={trajectoryLinePath} fill="none" stroke="url(#dashLineGradient)" strokeWidth="3.5" strokeLinecap="round" />
+                        {trajectoryPoints.map((pt, i) => (
+                          <circle
+                            key={i}
+                            cx={pt.x}
+                            cy={pt.y}
+                            r={activeChartPoint === i ? 6 : 4}
+                            onClick={() => setActiveChartPoint(i)}
+                            className={`cursor-pointer transition-all duration-300 ${activeChartPoint === i
+                                ? 'fill-[#0099e6] stroke-white stroke-2 shadow-lg'
+                                : 'fill-white stroke-[#0099e6] stroke-2 hover:r-6 hover:fill-[#0099e6]'
+                              }`}
+                          />
+                        ))}
+                      </svg>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-xs text-slate-400 font-medium">
+                        No registration data for this period
+                      </div>
+                    )}
                   </div>
 
-                  <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 border-t border-slate-100 pt-2">
-                    {trajectoryPoints.map((pt, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setActiveChartPoint(i)}
-                        className={`transition-colors cursor-pointer ${
-                          activeChartPoint === i ? 'text-[#0099e6] font-extrabold' : 'hover:text-slate-700'
-                        }`}
-                      >
-                        {pt.month}
-                      </button>
-                    ))}
-                  </div>
+                  {trajectoryPoints.length > 0 && (
+                    <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 border-t border-slate-100 pt-2">
+                      {trajectoryPoints.map((pt, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setActiveChartPoint(i)}
+                          className={`transition-colors cursor-pointer flex flex-col items-center gap-0.5 ${activeChartPoint === i ? 'text-[#0099e6] font-extrabold' : 'hover:text-slate-700'
+                            }`}
+                        >
+                          <span>{pt.label}</span>
+                          {activeChartPoint === i && (
+                            <span className="text-[9px] font-mono text-[#0099e6]">{pt.count}</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Domain Distribution */}
                 <div className="md:col-span-5 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between">
                   <div>
-                    <span className="text-[10px] font-bold text-[#0099e6] uppercase tracking-wider">Tech Stacks</span>
+                    <span className="text-[10px] font-bold text-[#0099e6] uppercase tracking-wider">Event Categories</span>
                     <h3 className="text-base font-black text-slate-900 mt-0.5">Builder Domain Breakdown</h3>
                   </div>
 
-                  <div className="space-y-3">
-                    <div>
-                      <div className="flex items-center justify-between text-xs font-bold text-slate-800 mb-1">
-                        <span className="flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-[#0099e6]" />
-                          AI Agents & GenAI
-                        </span>
-                        <span>42%</span>
-                      </div>
-                      <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-[#0099e6] rounded-full" style={{ width: '42%' }} />
-                      </div>
+                  {statsLoading ? (
+                    <div className="space-y-3">
+                      {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="inline-block w-28 h-3 rounded bg-slate-100 animate-pulse" />
+                            <span className="inline-block w-8 h-3 rounded bg-slate-100 animate-pulse" />
+                          </div>
+                          <div className="h-2 w-full bg-slate-100 rounded-full" />
+                        </div>
+                      ))}
                     </div>
-
-                    <div>
-                      <div className="flex items-center justify-between text-xs font-bold text-slate-800 mb-1">
-                        <span className="flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-violet-600" />
-                          Web3 & Blockchain
-                        </span>
-                        <span>28%</span>
-                      </div>
-                      <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-violet-600 rounded-full" style={{ width: '28%' }} />
-                      </div>
+                  ) : (dashStats?.domainBreakdown ?? []).length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-6 text-center">
+                      <Activity className="w-8 h-8 text-slate-300 mb-2" />
+                      <p className="text-xs text-slate-400 font-medium">No category data available yet</p>
                     </div>
-
-                    <div>
-                      <div className="flex items-center justify-between text-xs font-bold text-slate-800 mb-1">
-                        <span className="flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                          Fullstack & Cloud
-                        </span>
-                        <span>20%</span>
-                      </div>
-                      <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-emerald-500 rounded-full" style={{ width: '20%' }} />
-                      </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {(dashStats?.domainBreakdown ?? []).map((item, idx) => (
+                        <div key={item.category}>
+                          <div className="flex items-center justify-between text-xs font-bold text-slate-800 mb-1">
+                            <span className="flex items-center gap-1.5">
+                              <span
+                                className="w-2 h-2 rounded-full"
+                                style={{ backgroundColor: domainColors[idx % domainColors.length] }}
+                              />
+                              {item.category}
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                              <span className="text-slate-400 font-medium">{item.count}</span>
+                              <span>{item.percentage}%</span>
+                            </span>
+                          </div>
+                          <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all duration-500"
+                              style={{ width: `${item.percentage}%`, backgroundColor: domainColors[idx % domainColors.length] }}
+                            />
+                          </div>
+                        </div>
+                      ))}
                     </div>
-
-                    <div>
-                      <div className="flex items-center justify-between text-xs font-bold text-slate-800 mb-1">
-                        <span className="flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-orange-500" />
-                          IoT & Open Innovation
-                        </span>
-                        <span>10%</span>
-                      </div>
-                      <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-orange-500 rounded-full" style={{ width: '10%' }} />
-                      </div>
-                    </div>
-                  </div>
+                  )}
 
                   <div className="text-[11px] text-slate-400 font-medium text-center pt-2 border-t border-slate-100">
-                    Realtime breakdown based on verified registrations
+                    Realtime breakdown from database registrations
                   </div>
                 </div>
               </div>
@@ -910,7 +1024,7 @@ export default function DashboardPage() {
                         My Participations
                       </h4>
                       <p className="text-[11px] text-slate-500 font-medium">
-                        {registrations.length} active registered arena{registrations.length !== 1 ? 's' : ''}
+                        {dashStats?.participationSummary?.total ?? registrations.length} registered arena{(dashStats?.participationSummary?.total ?? registrations.length) !== 1 ? 's' : ''}
                       </p>
                     </div>
                   </div>
@@ -965,6 +1079,27 @@ export default function DashboardPage() {
                 </Link>
               </div>
 
+              {/* Participation Summary Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { label: 'Total', value: dashStats?.participationSummary?.total ?? registrations.length, color: 'text-[#0099e6]', bg: 'bg-sky-50', border: 'border-sky-200' },
+                  { label: 'Upcoming', value: dashStats?.participationSummary?.upcoming ?? 0, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-200' },
+                  { label: 'Active', value: dashStats?.participationSummary?.active ?? 0, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' },
+                  { label: 'Completed', value: dashStats?.participationSummary?.completed ?? 0, color: 'text-slate-600', bg: 'bg-slate-50', border: 'border-slate-200' },
+                ].map((stat) => (
+                  <div key={stat.label} className={`p-3.5 rounded-2xl ${stat.bg} border ${stat.border} flex flex-col items-center justify-center text-center`}>
+                    <div className={`text-xl font-black font-mono ${stat.color}`}>
+                      {statsLoading ? (
+                        <span className="inline-block w-8 h-6 rounded bg-white/60 animate-pulse" />
+                      ) : (
+                        stat.value
+                      )}
+                    </div>
+                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+
               {/* Filters & Search */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
@@ -972,11 +1107,10 @@ export default function DashboardPage() {
                     <button
                       key={filter}
                       onClick={() => setPartFilter(filter)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                        partFilter === filter
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${partFilter === filter
                           ? 'bg-[#0099e6] text-white shadow-2xs'
                           : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
+                        }`}
                     >
                       {filter === 'ALL' ? 'All Participations' : filter === 'ACTIVE' ? 'Live / Upcoming' : 'Completed'}
                     </button>
@@ -1065,15 +1199,14 @@ export default function DashboardPage() {
                                     <span>Project Deliverable</span>
                                   </div>
                                   {projectSub ? (
-                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase border ${
-                                      projectSub.status === 'WINNER'
+                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase border ${projectSub.status === 'WINNER'
                                         ? 'bg-amber-100 text-amber-800 border-amber-300'
                                         : projectSub.status === 'ACCEPTED'
-                                        ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                                        : projectSub.status === 'REJECTED'
-                                        ? 'bg-rose-100 text-rose-800 border-rose-300'
-                                        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                    }`}>
+                                          ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                                          : projectSub.status === 'REJECTED'
+                                            ? 'bg-rose-100 text-rose-800 border-rose-300'
+                                            : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                      }`}>
                                       ✓ {projectSub.status || 'Submitted'}
                                     </span>
                                   ) : (
@@ -1209,19 +1342,18 @@ export default function DashboardPage() {
                     <button
                       key={filter}
                       onClick={() => setHostFilter(filter)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                        hostFilter === filter
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${hostFilter === filter
                           ? 'bg-[#0099e6] text-white shadow-2xs'
                           : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
+                        }`}
                     >
                       {filter === 'ALL'
                         ? 'All Events'
                         : filter === 'LIVE'
-                        ? 'Live / Open'
-                        : filter === 'COMPLETED'
-                        ? 'Completed'
-                        : 'Drafts'}
+                          ? 'Live / Open'
+                          : filter === 'COMPLETED'
+                            ? 'Completed'
+                            : 'Drafts'}
                     </button>
                   ))}
                 </div>
@@ -1265,23 +1397,22 @@ export default function DashboardPage() {
                       <div className="space-y-2 flex-1 min-w-0">
                         <div className="flex items-center gap-2.5 flex-wrap">
                           <span
-                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide border ${
-                              evt.status === 'COMPLETED'
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide border ${evt.status === 'COMPLETED'
                                 ? 'bg-slate-100 text-slate-600 border-slate-200'
                                 : evt.status === 'PENDING_APPROVAL'
-                                ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                : evt.status === 'DRAFT'
-                                ? 'bg-slate-100 text-slate-600 border-slate-200'
-                                : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                            }`}
+                                  ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                  : evt.status === 'DRAFT'
+                                    ? 'bg-slate-100 text-slate-600 border-slate-200'
+                                    : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              }`}
                           >
                             {evt.status === 'COMPLETED'
                               ? 'Completed'
                               : evt.status === 'PENDING_APPROVAL'
-                              ? '⏳ Under Review'
-                              : evt.status === 'DRAFT'
-                              ? 'Draft'
-                              : 'Live / Active'}
+                                ? '⏳ Under Review'
+                                : evt.status === 'DRAFT'
+                                  ? 'Draft'
+                                  : 'Live / Active'}
                           </span>
                           <span className="text-xs text-slate-400 font-medium">
                             Starts: {formatDate(evt.startDate)}
@@ -1600,13 +1731,12 @@ export default function DashboardPage() {
                               </span>
                             </td>
                             <td className="py-3 px-4">
-                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
-                                status === 'CONFIRMED' || status === 'APPROVED'
+                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${status === 'CONFIRMED' || status === 'APPROVED'
                                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                   : status === 'REJECTED'
-                                  ? 'bg-red-50 text-red-700 border-red-200'
-                                  : 'bg-amber-50 text-amber-700 border-amber-200'
-                              }`}>
+                                    ? 'bg-red-50 text-red-700 border-red-200'
+                                    : 'bg-amber-50 text-amber-700 border-amber-200'
+                                }`}>
                                 {status}
                               </span>
                             </td>
