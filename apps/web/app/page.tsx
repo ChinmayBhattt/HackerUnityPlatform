@@ -18,6 +18,7 @@ import { usePublishedEvents } from '@/lib/hooks/use-events';
 
 import { AuthModal } from '@/components/auth-modal';
 import { HeroSearch } from '@/components/hero-search';
+import { PodcastSection } from '@/components/podcast-section';
 
 // Event gallery photos
 import galleryStage from '@/assets/hackstorm_stage.jpg';
@@ -552,6 +553,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ─── Industry Leaders Podcast Section ──────────────────────── */}
+      <PodcastSection />
 
       {/* ─── Host Hackathon CTA ───────────────────────────────────── */}
       <section className="pb-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
