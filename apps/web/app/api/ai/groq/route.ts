@@ -100,12 +100,59 @@ Return valid JSON in this exact structure:
     }
 
     if (action === 'build') {
-      const { prompt, sourceText = '' } = body;
-      if (!prompt && !sourceText) {
+      const { prompt, sourceText = '', imageBase64 } = body;
+      if (!prompt && !sourceText && !imageBase64) {
         return NextResponse.json(
-          { error: 'Either prompt or brochure source text is required' },
+          { error: 'Either prompt, brochure document, or hackathon poster image is required' },
           { status: 400 }
         );
+      }
+
+      // Native Multimodal Vision Poster Analysis via Groq
+      let extractedPosterText = '';
+      if (imageBase64) {
+        try {
+          const imgUrl = imageBase64.startsWith('data:')
+            ? imageBase64
+            : `data:image/jpeg;base64,${imageBase64}`;
+
+          const visionRes = await fetch(GROQ_URL, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${GROQ_API_KEY}`,
+              'Content-Type': 'application/json',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+            },
+            body: JSON.stringify({
+              model: 'qwen/qwen3.8-27b',
+              max_tokens: 600,
+              messages: [
+                {
+                  role: 'user',
+                  content: [
+                    {
+                      type: 'text',
+                      text: 'Analyze this hackathon / event poster thoroughly. Transcribe and extract all visible details: hackathon title, subtitle/tagline, organizing institution/college/brand, venue or city/mode, event dates, registration deadline, total prize pool & cash amounts, tracks/themes, team size, eligibility, and rules.',
+                    },
+                    {
+                      type: 'image_url',
+                      image_url: { url: imgUrl },
+                    },
+                  ],
+                },
+              ],
+            }),
+          });
+
+          if (visionRes.ok) {
+            const visionData = await visionRes.json();
+            extractedPosterText = visionData.choices?.[0]?.message?.content || '';
+          } else {
+            console.warn('Groq vision endpoint status:', visionRes.status, await visionRes.text());
+          }
+        } catch (visionErr: any) {
+          console.warn('Poster vision analysis warning:', visionErr.message);
+        }
       }
 
       const now = new Date();
@@ -120,11 +167,11 @@ Return valid JSON in this exact structure:
         .split('T')[0];
 
       const systemPrompt = `You are the AI Event Architect for Hacker's Unity (India's premier hackathon platform).
-Your task is to transform natural language instructions, event brochures, or guidelines into a complete, professional, production-ready Hackathon specification.
+Your task is to transform natural language instructions, event brochures, or hackathon poster/banner OCR text into a complete, professional, production-ready Hackathon specification.
 
 Rules:
-1. Always generate realistic, compelling, high-quality event details.
-2. If location is mentioned (e.g. Bangalore, Delhi, Pune, Mumbai, Hyderabad), set eventType to 'OFFLINE' or 'HYBRID'. Otherwise default to 'ONLINE'.
+1. If text extracted from a hackathon poster is provided, carefully read every detail (hackathon title, organizing college/brand, dates, prize pool, tracks/themes, team size, venue/city) and map them accurately.
+2. If location or city is mentioned (e.g. Bangalore, Delhi, Jaipur, Pune, Mumbai, Hyderabad), set eventType to 'OFFLINE' or 'HYBRID'. Otherwise default to 'ONLINE'.
 3. Category must be one of: 'HACKATHON', 'HIRING_CHALLENGE', 'TECH_EVENT', 'CONFERENCE'.
 4. EventType must be one of: 'ONLINE', 'OFFLINE', 'HYBRID'.
 5. Dates should be in YYYY-MM-DD format (upcoming dates relative to today: ${regStartStr}).
@@ -165,7 +212,9 @@ Rules:
   "tags": ["AI", "Web3", "Fullstack"]
 }`;
 
-      const userPrompt = `User Prompt: ${prompt || 'Create a hackathon based on the attached document'}\n\nDocument / Brochure Content:\n${sourceText || 'None provided'}`;
+      const userPrompt = `User Prompt: ${prompt || 'Create and configure the hackathon based on this poster/brochure'}
+${extractedPosterText ? `\n--- TEXT EXTRACTED FROM HACKATHON POSTER (OCR) ---\n${extractedPosterText}\n-------------------------------------------------` : ''}
+${sourceText ? `\n--- ATTACHED DOCUMENT CONTENT ---\n${sourceText}\n--------------------------------` : ''}`;
 
       const responseText = await callGroqChat([
         { role: 'system', content: systemPrompt },
@@ -177,6 +226,7 @@ Rules:
       return NextResponse.json({
         success: true,
         event: eventData,
+        extractedPosterText: extractedPosterText || undefined,
       });
     }
 

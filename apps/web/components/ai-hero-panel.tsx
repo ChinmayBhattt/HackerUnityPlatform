@@ -43,6 +43,8 @@ export function AiHeroPanel() {
     name: string;
     size: string;
     content: string;
+    isImage?: boolean;
+    dataUrl?: string;
   } | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [buildStepMessage, setBuildStepMessage] = useState('');
@@ -156,7 +158,20 @@ export function AiHeroPanel() {
 
     const sizeKb = (file.size / 1024).toFixed(1) + ' KB';
 
-    if (
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const dataUrl = (event.target?.result as string) || '';
+        setAttachedFile({
+          name: file.name,
+          size: sizeKb,
+          content: `[Attached Hackathon Poster / Banner: ${file.name}]`,
+          isImage: true,
+          dataUrl,
+        });
+      };
+      reader.readAsDataURL(file);
+    } else if (
       file.type.includes('text') ||
       file.name.endsWith('.txt') ||
       file.name.endsWith('.md') ||
@@ -170,6 +185,7 @@ export function AiHeroPanel() {
           name: file.name,
           size: sizeKb,
           content: text.slice(0, 15000),
+          isImage: false,
         });
       };
       reader.readAsText(file);
@@ -184,6 +200,7 @@ export function AiHeroPanel() {
           content: printableText.trim()
             ? `[Document: ${file.name} (${sizeKb})]\n\n${printableText}`
             : `[Attached Event Brochure: ${file.name}, File Size: ${sizeKb}]`,
+          isImage: false,
         });
       };
       reader.readAsBinaryString(file);
@@ -202,18 +219,26 @@ export function AiHeroPanel() {
   // ==========================================
   const handleBuildGenerate = async () => {
     if (!buildPrompt.trim() && !attachedFile) {
-      setBuildError('Please enter hackathon details or upload a brochure/doc.');
+      setBuildError('Please enter hackathon details or upload a poster/brochure.');
       return;
     }
 
     setIsGenerating(true);
     setBuildError(null);
-    setBuildStepMessage('Analyzing brief...');
+    setBuildStepMessage(
+      attachedFile?.isImage
+        ? 'Scanning hackathon poster with AI OCR...'
+        : 'Analyzing hackathon brief...'
+    );
 
     try {
       setTimeout(() => {
-        setBuildStepMessage('Architecting tracks & prizes via Groq...');
-      }, 700);
+        setBuildStepMessage(
+          attachedFile?.isImage
+            ? 'Extracting poster tracks, prizes & dates via Groq...'
+            : 'Architecting tracks & prizes via Groq...'
+        );
+      }, 900);
 
       const res = await fetch('/api/ai/groq', {
         method: 'POST',
@@ -222,6 +247,7 @@ export function AiHeroPanel() {
           action: 'build',
           prompt: buildPrompt.trim(),
           sourceText: attachedFile?.content || '',
+          imageBase64: attachedFile?.isImage ? attachedFile.dataUrl : undefined,
         }),
       });
 
@@ -279,7 +305,8 @@ export function AiHeroPanel() {
         participantsDisplay: '0 Builders Registered',
         maxParticipants: 500,
         isTeamEvent: true,
-        bannerUrl: '',
+        bannerUrl: attachedFile?.isImage && attachedFile.dataUrl ? attachedFile.dataUrl : '',
+        image: attachedFile?.isImage && attachedFile.dataUrl ? attachedFile.dataUrl : (aiEvent.image || ''),
         rulesDocUrl: '',
         registrationLink: '',
         createdAt: now.toISOString(),
@@ -446,7 +473,12 @@ export function AiHeroPanel() {
 
                 {attachedFile ? (
                   <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-50 border border-orange-200 text-xs text-[#ea580c] font-bold">
-                    <FileText className="w-3.5 h-3.5" />
+                    {attachedFile.isImage && attachedFile.dataUrl ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img src={attachedFile.dataUrl} alt="Poster" className="w-4 h-4 rounded object-cover shadow-xs" />
+                    ) : (
+                      <FileText className="w-3.5 h-3.5" />
+                    )}
                     <span className="max-w-[150px] truncate">{attachedFile.name}</span>
                     <button
                       type="button"
@@ -460,10 +492,11 @@ export function AiHeroPanel() {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
+                    title="Upload hackathon poster, banner image, or brochure"
                     className="px-3 py-1.5 rounded-full bg-slate-50 hover:bg-orange-50 border border-slate-200 hover:border-orange-300 text-slate-600 hover:text-[#ea580c] text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
                   >
                     <Paperclip className="w-3.5 h-3.5 text-[#ea580c]" />
-                    <span>Add Source / Brochure</span>
+                    <span>Add Source / Docs</span>
                   </button>
                 )}
               </div>
@@ -581,7 +614,12 @@ export function AiHeroPanel() {
 
                   {attachedFile ? (
                     <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl sm:rounded-full bg-orange-50 border border-orange-200 text-[11px] text-[#ea580c] font-bold">
-                      <FileText className="w-3 h-3" />
+                      {attachedFile.isImage && attachedFile.dataUrl ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img src={attachedFile.dataUrl} alt="Poster" className="w-3.5 h-3.5 rounded object-cover shadow-xs" />
+                      ) : (
+                        <FileText className="w-3 h-3" />
+                      )}
                       <span className="max-w-[70px] sm:max-w-[100px] truncate">{attachedFile.name}</span>
                       <button
                         type="button"
@@ -595,7 +633,7 @@ export function AiHeroPanel() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      title="Upload event PDF or brochure"
+                      title="Upload hackathon poster, image, or brochure"
                       className="px-2.5 py-1.5 rounded-xl sm:rounded-full bg-slate-50 hover:bg-orange-50 border border-slate-200 hover:border-orange-300 text-slate-600 hover:text-[#ea580c] text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
                     >
                       <Paperclip className="w-3.5 h-3.5" />
