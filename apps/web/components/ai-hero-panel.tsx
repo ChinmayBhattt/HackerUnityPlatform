@@ -399,29 +399,25 @@ export function AiHeroPanel() {
 
   return (
     <div className="relative w-full max-w-3xl mb-6 z-30">
-      {/* ─── COMMAND BAR CONTAINER ─── */}
+      {/* ─── COMMAND BAR CONTAINER (CLEAN ROUNDED-2XL CARD, NO BUBBLE/CIRCLE RING) ─── */}
       <div
-        className={`relative w-full bg-white transition-all duration-300 shadow-xl shadow-slate-200/70 ${
-          isExpandedBuild
-            ? 'rounded-3xl p-3 sm:p-4 border border-orange-300 ring-4 ring-orange-500/10'
-            : activeTab === 'build'
-            ? 'rounded-2xl sm:rounded-full p-1.5 sm:p-2 border border-orange-300 ring-4 ring-orange-500/10 flex flex-col sm:flex-row sm:items-center gap-2'
-            : 'rounded-2xl sm:rounded-full p-1.5 sm:p-2 border border-slate-200 hover:border-slate-300 focus-within:border-[#0099e6] focus-within:ring-4 focus-within:ring-[#0099e6]/10 flex flex-col sm:flex-row sm:items-center gap-2'
+        className={`relative w-full bg-white transition-all duration-200 shadow-lg shadow-slate-200/60 border border-slate-200/90 rounded-2xl ${
+          isExpandedBuild ? 'p-3.5 sm:p-4' : 'p-2 flex flex-col sm:flex-row sm:items-center gap-2'
         }`}
       >
         {isExpandedBuild ? (
-          /* ─── EXPANDED BUILD VIEW (PROMPT TEXT FULLY VISIBLE & ADJUSTED DOWNWARD) ─── */
+          /* ─── EXPANDED BUILD VIEW (CLEAN RECTANGULAR CARD) ─── */
           <div className="space-y-3">
             {/* Top Bar: Mode Toggle + Clear Button */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center bg-slate-100 p-1 rounded-full shrink-0">
+              <div className="flex items-center bg-slate-100 p-1 rounded-xl shrink-0">
                 <button
                   type="button"
                   onClick={() => {
                     setActiveTab('find');
                     setBuildError(null);
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black transition-all cursor-pointer text-slate-500 hover:text-slate-900"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer text-slate-500 hover:text-slate-900"
                 >
                   <Search className="w-3.5 h-3.5" />
                   <span>Find</span>
@@ -433,7 +429,7 @@ export function AiHeroPanel() {
                     setActiveTab('build');
                     setHasSearched(false);
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black transition-all cursor-pointer bg-white text-[#ea580c] shadow-xs"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer bg-white text-[#ea580c] shadow-xs"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>Build</span>
@@ -450,14 +446,22 @@ export function AiHeroPanel() {
               </button>
             </div>
 
-            {/* Expanded Textarea: Text is comfortably visible */}
+            {/* Expanded Textarea */}
             <textarea
               rows={3}
               value={buildPrompt}
               onChange={(e) => setBuildPrompt(e.target.value)}
               placeholder="Describe your hackathon to auto-create & review (e.g. 36h AI sprint in Bangalore, ₹2L prizes)..."
-              className="w-full bg-slate-50/70 hover:bg-slate-50 focus:bg-white p-3 rounded-2xl border border-slate-200/80 focus:border-[#ea580c] text-xs sm:text-sm text-slate-900 placeholder-slate-400 outline-none font-medium resize-none transition-all leading-relaxed shadow-inner"
+              className="w-full bg-slate-50/70 hover:bg-slate-50 focus:bg-white p-3 rounded-xl border border-slate-200 focus:border-slate-400 text-xs sm:text-sm text-slate-900 placeholder-slate-400 outline-none font-medium resize-none transition-all leading-relaxed shadow-2xs"
             />
+
+            {/* Loading Status Indicator (Doesn't distort the button) */}
+            {isGenerating && buildStepMessage && (
+              <div className="flex items-center gap-2 px-1 text-xs font-bold text-[#ea580c] animate-pulse">
+                <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+                <span>{buildStepMessage}</span>
+              </div>
+            )}
 
             {/* Bottom Actions Bar */}
             <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 flex-wrap">
@@ -472,7 +476,7 @@ export function AiHeroPanel() {
                 />
 
                 {attachedFile ? (
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-50 border border-orange-200 text-xs text-[#ea580c] font-bold">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 border border-orange-200 text-xs text-[#ea580c] font-bold">
                     {attachedFile.isImage && attachedFile.dataUrl ? (
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img src={attachedFile.dataUrl} alt="Poster" className="w-4 h-4 rounded object-cover shadow-xs" />
@@ -493,7 +497,7 @@ export function AiHeroPanel() {
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     title="Upload hackathon poster, banner image, or brochure"
-                    className="px-3 py-1.5 rounded-full bg-slate-50 hover:bg-orange-50 border border-slate-200 hover:border-orange-300 text-slate-600 hover:text-[#ea580c] text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                    className="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-orange-50 border border-slate-200 hover:border-orange-300 text-slate-600 hover:text-[#ea580c] text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
                   >
                     <Paperclip className="w-3.5 h-3.5 text-[#ea580c]" />
                     <span>Add Source / Docs</span>
@@ -505,12 +509,12 @@ export function AiHeroPanel() {
                 type="button"
                 onClick={handleBuildGenerate}
                 disabled={isGenerating || (!buildPrompt.trim() && !attachedFile)}
-                className="px-5 py-2.5 rounded-full bg-gradient-to-r from-[#ea580c] to-[#f97316] hover:opacity-95 disabled:opacity-50 text-white font-black text-xs shadow-md shadow-orange-500/20 transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap ml-auto"
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#ea580c] to-[#f97316] hover:opacity-95 disabled:opacity-50 text-white font-black text-xs shadow-md shadow-orange-500/20 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ml-auto"
               >
                 {isGenerating ? (
                   <>
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>{buildStepMessage || 'Auto-Hosting...'}</span>
+                    <span>Auto-Hosting...</span>
                   </>
                 ) : (
                   <>
@@ -522,17 +526,17 @@ export function AiHeroPanel() {
             </div>
           </div>
         ) : (
-          /* ─── SLEEK SINGLE LINE COMMAND BAR (DEFAULT EMPTY OR FIND MODE) ─── */
+          /* ─── SLEEK SINGLE LINE COMMAND BAR (CLEAN ROUNDED-2XL) ─── */
           <>
             {/* Mode Selector Pill (Find vs Build) */}
-            <div className="flex items-center bg-slate-100 p-1 rounded-xl sm:rounded-full shrink-0">
+            <div className="flex items-center bg-slate-100 p-1 rounded-xl shrink-0">
               <button
                 type="button"
                 onClick={() => {
                   setActiveTab('find');
                   setBuildError(null);
                 }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg sm:rounded-full text-xs font-black transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   activeTab === 'find'
                     ? 'bg-white text-[#0099e6] shadow-xs'
                     : 'text-slate-500 hover:text-slate-900'
@@ -548,7 +552,7 @@ export function AiHeroPanel() {
                   setActiveTab('build');
                   setHasSearched(false);
                 }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg sm:rounded-full text-xs font-black transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   activeTab === 'build'
                     ? 'bg-white text-[#ea580c] shadow-xs'
                     : 'text-slate-500 hover:text-slate-900'
@@ -613,7 +617,7 @@ export function AiHeroPanel() {
                   />
 
                   {attachedFile ? (
-                    <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl sm:rounded-full bg-orange-50 border border-orange-200 text-[11px] text-[#ea580c] font-bold">
+                    <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-orange-50 border border-orange-200 text-[11px] text-[#ea580c] font-bold">
                       {attachedFile.isImage && attachedFile.dataUrl ? (
                         /* eslint-disable-next-line @next/next/no-img-element */
                         <img src={attachedFile.dataUrl} alt="Poster" className="w-3.5 h-3.5 rounded object-cover shadow-xs" />
@@ -634,7 +638,7 @@ export function AiHeroPanel() {
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       title="Upload hackathon poster, image, or brochure"
-                      className="px-2.5 py-1.5 rounded-xl sm:rounded-full bg-slate-50 hover:bg-orange-50 border border-slate-200 hover:border-orange-300 text-slate-600 hover:text-[#ea580c] text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                      className="px-2.5 py-1.5 rounded-xl bg-slate-50 hover:bg-orange-50 border border-slate-200 hover:border-orange-300 text-slate-600 hover:text-[#ea580c] text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
                     >
                       <Paperclip className="w-3.5 h-3.5" />
                       <span className="hidden md:inline">Add Source</span>
@@ -645,12 +649,12 @@ export function AiHeroPanel() {
                     type="button"
                     onClick={handleBuildGenerate}
                     disabled={isGenerating || (!buildPrompt.trim() && !attachedFile)}
-                    className="px-4 py-2 rounded-xl sm:rounded-full bg-gradient-to-r from-[#ea580c] to-[#f97316] hover:opacity-95 disabled:opacity-50 text-white font-black text-xs shadow-md shadow-orange-500/20 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#ea580c] to-[#f97316] hover:opacity-95 disabled:opacity-50 text-white font-black text-xs shadow-md shadow-orange-500/20 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
                   >
                     {isGenerating ? (
                       <>
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        <span>{buildStepMessage || 'Auto-Hosting...'}</span>
+                        <span>Auto-Hosting...</span>
                       </>
                     ) : (
                       <>
@@ -668,7 +672,7 @@ export function AiHeroPanel() {
                   type="button"
                   onClick={() => handleFindSubmit()}
                   disabled={isSearching || !findQuery.trim()}
-                  className="px-4 py-2 rounded-xl sm:rounded-full bg-[#0099e6] hover:bg-[#0284c7] disabled:opacity-50 text-white font-black text-xs shadow-md shadow-sky-500/20 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                  className="px-4 py-2 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] disabled:opacity-50 text-white font-black text-xs shadow-md shadow-sky-500/20 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
                 >
                   {isSearching ? (
                     <>
@@ -727,6 +731,14 @@ export function AiHeroPanel() {
           </>
         )}
       </div>
+
+      {/* ─── LOADING STATUS FOR SINGLE LINE MODE ─── */}
+      {!isExpandedBuild && isGenerating && buildStepMessage && (
+        <div className="mt-2 p-2 rounded-xl bg-orange-50 border border-orange-200 text-xs font-bold text-[#ea580c] flex items-center justify-center gap-2 animate-pulse">
+          <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+          <span>{buildStepMessage}</span>
+        </div>
+      )}
 
       {/* ─── ERROR TOAST ─── */}
       {buildError && (
