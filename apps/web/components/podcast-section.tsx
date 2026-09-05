@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Image from 'next/image';
 import {
   Play,
@@ -8,8 +8,8 @@ import {
   ExternalLink,
   Sparkles,
   Radio,
-  ArrowRight,
-  Tv,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { FaAmazon, FaMicrosoft, FaYoutube } from 'react-icons/fa6';
 import { SiIeee } from 'react-icons/si';
@@ -214,11 +214,22 @@ function CompanyBadge({ type, name }: { type: PodcastEpisode['companyType']; nam
 
 export function PodcastSection() {
   const [activeVideo, setActiveVideo] = useState<PodcastEpisode | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = 380;
+      scrollContainerRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth',
+      });
+    }
+  };
 
   return (
-    <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+    <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full overflow-hidden">
       {/* ─── Header ────────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-8">
         <div className="space-y-3 max-w-2xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 border border-red-200 text-red-600 text-xs font-bold uppercase tracking-wider">
             <Radio className="w-3.5 h-3.5 animate-pulse" />
@@ -233,143 +244,124 @@ export function PodcastSection() {
           </p>
         </div>
 
-        <a
-          href="https://www.youtube.com/@HackerUnity/videos"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all shadow-sm hover:shadow cursor-pointer shrink-0 self-start md:self-auto group"
-        >
-          <FaYoutube className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
-          <span>Subscribe on YouTube</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </a>
-      </div>
-
-      {/* ─── Podcast Cards Grid ─────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {PODCAST_EPISODES.map((ep) => (
-          <div
-            key={ep.id}
-            className="group rounded-3xl bg-white border border-slate-200/90 hover:border-[#0099e6]/50 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden"
+        {/* Carousel Prev / Next Controls */}
+        <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+          <button
+            type="button"
+            onClick={() => scroll('left')}
+            aria-label="Previous podcast"
+            className="w-10 h-10 rounded-2xl bg-white border border-slate-200 hover:border-[#0099e6] hover:bg-slate-50 text-slate-700 hover:text-[#0099e6] shadow-xs flex items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95"
           >
-            {/* Speaker Image Thumbnail with Play Button */}
-            <div
-              onClick={() => setActiveVideo(ep)}
-              className="relative aspect-4/3 w-full bg-slate-100 overflow-hidden cursor-pointer"
-            >
-              <Image
-                src={ep.image}
-                alt={ep.name}
-                fill
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
-              />
-
-              {/* Gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
-
-              {/* Play button badge */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-12 h-12 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-lg group-hover:scale-115 group-hover:bg-red-600 transition-all duration-300">
-                  <Play className="w-5 h-5 fill-current ml-0.5" />
-                </div>
-              </div>
-
-              {/* Watch Video hint */}
-              <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white text-[11px] font-bold">
-                <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-xs">
-                  <Tv className="w-3 h-3 text-red-400" />
-                  Watch Podcast
-                </span>
-                <span className="text-white/80 font-mono text-[10px]">HD 1080p</span>
-              </div>
-            </div>
-
-            {/* Content Details */}
-            <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-              <div className="space-y-2.5">
-                {/* Company Logo / Badge */}
-                <CompanyBadge type={ep.companyType} name={ep.company} />
-
-                {/* Speaker Name & Designation */}
-                <div>
-                  <h3 className="text-base font-extrabold text-slate-900 group-hover:text-[#0099e6] transition-colors">
-                    {ep.name}
-                  </h3>
-                  <p className="text-xs font-semibold text-slate-500 mt-0.5">
-                    {ep.designation}
-                  </p>
-                </div>
-
-                {/* Episode Topic */}
-                <p className="text-xs text-slate-600 font-medium leading-relaxed line-clamp-2">
-                  {ep.tagline}
-                </p>
-
-                {/* Tags */}
-                <div className="flex flex-wrap gap-1 pt-1">
-                  {ep.tags.slice(0, 2).map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-2 py-0.5 bg-slate-100 rounded text-[10px] font-semibold text-slate-600 font-mono"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                <button
-                  type="button"
-                  onClick={() => setActiveVideo(ep)}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0099e6] hover:text-[#0077b6] cursor-pointer"
-                >
-                  <Play className="w-3 h-3 fill-current" />
-                  <span>Play Episode</span>
-                </button>
-
-                <a
-                  href={ep.youtubeUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                  title="Open in YouTube"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
-              </div>
-            </div>
-          </div>
-        ))}
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => scroll('right')}
+            aria-label="Next podcast"
+            className="w-10 h-10 rounded-2xl bg-white border border-slate-200 hover:border-[#0099e6] hover:bg-slate-50 text-slate-700 hover:text-[#0099e6] shadow-xs flex items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
-      {/* ─── YouTube Channel Promo Banner ──────────────────────── */}
-      <div className="mt-12 p-6 sm:p-8 rounded-3xl bg-slate-900 text-white border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-md">
-        <div className="flex items-center gap-4 text-center sm:text-left flex-col sm:flex-row">
-          <div className="w-14 h-14 rounded-2xl bg-red-600/20 text-red-500 border border-red-500/30 flex items-center justify-center shrink-0">
-            <FaYoutube className="w-7 h-7" />
-          </div>
-          <div>
-            <h4 className="text-base sm:text-lg font-black tracking-tight">
-              Watch All Episodes on @HackerUnity
-            </h4>
-            <p className="text-xs text-slate-400 mt-1 max-w-xl">
-              Catch in-depth talks on Agentic AI, Product Management, Big Tech interviews, and full episodes with industry leaders.
-            </p>
-          </div>
-        </div>
-
-        <a
-          href="https://www.youtube.com/@HackerUnity/videos"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="px-6 py-3 rounded-2xl bg-white hover:bg-slate-100 text-slate-950 text-xs font-black transition-all shadow-xs shrink-0 flex items-center gap-2 cursor-pointer"
+      {/* ─── Single Lane Horizontal Carousel (No Wrap) ──────────── */}
+      <div className="relative -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+        <div
+          ref={scrollContainerRef}
+          className="flex items-stretch gap-6 overflow-x-auto pb-6 pt-2 scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory"
         >
-          <span>Explore All Videos</span>
-          <ExternalLink className="w-3.5 h-3.5" />
-        </a>
+          {PODCAST_EPISODES.map((ep, idx) => (
+            <div
+              key={ep.id}
+              className="w-[310px] sm:w-[350px] shrink-0 snap-start group rounded-3xl bg-white border border-slate-200/90 hover:border-[#0099e6] shadow-xs hover:shadow-2xl hover:shadow-[#0099e6]/10 transition-all duration-300 flex flex-col overflow-hidden hover:-translate-y-2"
+              style={{
+                animationDelay: `${idx * 100}ms`,
+              }}
+            >
+              {/* 16:9 Full YouTube Thumbnail (Fully visible with zero cutoffs) */}
+              <div
+                onClick={() => setActiveVideo(ep)}
+                className="relative aspect-video w-full bg-slate-950 overflow-hidden cursor-pointer"
+              >
+                <Image
+                  src={ep.image}
+                  alt={ep.name}
+                  fill
+                  sizes="350px"
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+
+                {/* Subtle Hover Play Overlay */}
+                <div className="absolute inset-0 bg-slate-950/20 group-hover:bg-slate-950/40 transition-colors flex items-center justify-center">
+                  <div className="relative flex items-center justify-center">
+                    <span className="absolute w-14 h-14 rounded-full bg-red-500/40 group-hover:animate-ping duration-1000" />
+                    <div className="relative w-12 h-12 rounded-full bg-red-600 group-hover:bg-red-500 text-white flex items-center justify-center shadow-xl group-hover:scale-115 transition-all duration-300">
+                      <Play className="w-5 h-5 fill-current ml-0.5" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card Details */}
+              <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                <div className="space-y-2.5">
+                  {/* Company Logo / Badge */}
+                  <CompanyBadge type={ep.companyType} name={ep.company} />
+
+                  {/* Speaker Name & Designation */}
+                  <div>
+                    <h3 className="text-base font-extrabold text-slate-900 group-hover:text-[#0099e6] transition-colors">
+                      {ep.name}
+                    </h3>
+                    <p className="text-xs font-semibold text-slate-500 mt-0.5">
+                      {ep.designation}
+                    </p>
+                  </div>
+
+                  {/* Episode Topic */}
+                  <p className="text-xs text-slate-600 font-medium leading-relaxed line-clamp-2">
+                    {ep.tagline}
+                  </p>
+
+                  {/* Tags */}
+                  <div className="flex flex-wrap gap-1 pt-1">
+                    {ep.tags.slice(0, 2).map((tag) => (
+                      <span
+                        key={tag}
+                        className="px-2 py-0.5 bg-slate-100 rounded text-[10px] font-semibold text-slate-600 font-mono"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setActiveVideo(ep)}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0099e6] hover:text-[#0077b6] cursor-pointer group/btn"
+                  >
+                    <Play className="w-3 h-3 fill-current group-hover/btn:scale-110 transition-transform" />
+                    <span>Play Episode</span>
+                  </button>
+
+                  <a
+                    href={ep.youtubeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                    title="Open on YouTube"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* ─── Interactive Video Player Modal ────────────────────── */}
