@@ -16,6 +16,8 @@ import {
   ExternalLink,
   Shield,
   FileSpreadsheet,
+  Upload,
+  Sparkles,
 } from 'lucide-react';
 import {
   getEventRegistrations,
@@ -26,6 +28,7 @@ import {
 } from '@/lib/storage';
 import { ExtendedEvent } from '@/lib/mock-data';
 import { formatDate } from '@/lib/utils';
+import { BulkRegistrationModal } from '@/components/bulk-registration-modal';
 
 interface PageProps {
   params: Promise<{ eventId: string }>;
@@ -38,6 +41,8 @@ export default function EventRegistrationsPage({ params }: PageProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'>('ALL');
   const [stats, setStats] = useState({ total: 0, approved: 0, pending: 0, rejected: 0 });
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  const [notification, setNotification] = useState<{ text: string; type: 'success' | 'info' } | null>(null);
 
   const loadData = () => {
     const all = getAllEvents();
@@ -129,15 +134,41 @@ export default function EventRegistrationsPage({ params }: PageProps) {
           </p>
         </div>
 
-        <button
-          onClick={handleExportCSV}
-          disabled={registrations.length === 0}
-          className="px-4 py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-xs flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-          <span>Export CSV</span>
-        </button>
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <button
+            onClick={() => setIsBulkModalOpen(true)}
+            className="px-4 py-2.5 rounded-xl bg-linear-to-r from-[#0099e6] to-[#0077b6] hover:from-[#0088cc] hover:to-[#00669e] text-white text-xs font-bold transition-all shadow-xs hover:shadow flex items-center gap-2 cursor-pointer"
+          >
+            <Upload className="w-4 h-4" />
+            <span>Bulk Upload</span>
+          </button>
+
+          <button
+            onClick={handleExportCSV}
+            disabled={registrations.length === 0}
+            className="px-4 py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-xs flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+            <span>Export CSV</span>
+          </button>
+        </div>
       </div>
+
+      {/* ─── Success / Info Alert Notification ──────────────────── */}
+      {notification && (
+        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between gap-3 animate-in fade-in duration-200">
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            <span className="font-semibold">{notification.text}</span>
+          </div>
+          <button
+            onClick={() => setNotification(null)}
+            className="p-1 text-emerald-600 hover:text-emerald-900 rounded-lg hover:bg-emerald-100 transition-colors cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* ─── Stats Cards ────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -322,6 +353,27 @@ export default function EventRegistrationsPage({ params }: PageProps) {
           </div>
         )}
       </div>
+
+      {/* ─── Bulk Registration Modal ────────────────────────────── */}
+      {event && (
+        <BulkRegistrationModal
+          isOpen={isBulkModalOpen}
+          onClose={() => setIsBulkModalOpen(false)}
+          eventId={event.id}
+          eventName={event.title}
+          onSuccess={({ added, updated, total }) => {
+            loadData();
+            setNotification({
+              text: `Successfully imported registrations! Added ${added} new applicants, updated ${updated} existing. Total now: ${total}.`,
+              type: 'success',
+            });
+            setTimeout(() => {
+              setNotification((curr) => (curr?.type === 'success' ? null : curr));
+            }, 8000);
+          }}
+        />
+      )}
     </div>
   );
 }
+
