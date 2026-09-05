@@ -406,6 +406,49 @@ export function updateRegistrationStatus(
   }
 }
 
+export function deleteEventRegistration(eventId: string, regId: string): void {
+  if (typeof window === 'undefined') return;
+  const current = getEventRegistrations(eventId);
+  const updated = current.filter((r) => r.id !== regId);
+  try {
+    localStorage.setItem(`${EVENT_REGS_PREFIX}${eventId}`, JSON.stringify(updated));
+    window.dispatchEvent(new Event('hackers_unity_storage_change'));
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+export function deleteBulkEventRegistrations(eventId: string, regIds: string[]): number {
+  if (typeof window === 'undefined') return 0;
+  const idSet = new Set(regIds);
+  const current = getEventRegistrations(eventId);
+  const updated = current.filter((r) => !idSet.has(r.id));
+  const count = current.length - updated.length;
+  try {
+    localStorage.setItem(`${EVENT_REGS_PREFIX}${eventId}`, JSON.stringify(updated));
+    window.dispatchEvent(new Event('hackers_unity_storage_change'));
+    return count;
+  } catch (e) {
+    console.error(e);
+    return 0;
+  }
+}
+
+export function clearAllEventRegistrations(eventId: string): number {
+  if (typeof window === 'undefined') return 0;
+  const current = getEventRegistrations(eventId);
+  const count = current.length;
+  try {
+    localStorage.removeItem(`${EVENT_REGS_PREFIX}${eventId}`);
+    window.dispatchEvent(new Event('hackers_unity_storage_change'));
+    return count;
+  } catch (e) {
+    console.error(e);
+    return 0;
+  }
+}
+
+
 export function getRegistrationStats(eventId: string): {
   total: number;
   approved: number;
