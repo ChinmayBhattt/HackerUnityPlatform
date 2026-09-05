@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -18,10 +18,12 @@ import {
   Mail,
   Info,
   ArrowRight,
+  Search,
 } from 'lucide-react';
 import { Logo } from './logo';
 import { AuthModal } from './auth-modal';
 import { NotificationPanel } from './notification-panel';
+import { SearchDialog } from './search-dialog';
 import { useAuth } from '@/lib/auth-context';
 import { useNotifications } from '@/lib/notification-context';
 import { UserRole } from '@hackers-unity/shared-types';
@@ -35,8 +37,20 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileOppsOpen, setMobileOppsOpen] = useState(true);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [opportunitiesOpen, setOpportunitiesOpen] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -183,12 +197,33 @@ export function Navbar() {
           </nav>
 
           {/* Right: Action Bar */}
-          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+            {/* Quick Search Button (⌘K) */}
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs text-slate-500 hover:text-slate-900 transition-all cursor-pointer shadow-2xs group"
+              title="Search hackathons & builders (⌘K)"
+            >
+              <Search className="w-3.5 h-3.5 text-[#0099e6] group-hover:scale-110 transition-transform" />
+              <span className="text-slate-400 text-xs font-medium">Search...</span>
+              <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-200 text-[10px] font-mono font-bold text-slate-400 shadow-2xs">
+                ⌘K
+              </kbd>
+            </button>
+
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="sm:hidden p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+              aria-label="Open search"
+            >
+              <Search className="w-4 h-4 text-[#0099e6]" />
+            </button>
+
             {/* Notifications Menu Trigger */}
             <div className="relative">
               <button
                 onClick={() => setNotificationsOpen(!notificationsOpen)}
-                className="relative p-2.5 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+                className="relative p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
                 aria-label="Open notifications"
               >
                 <Bell className="w-4 h-4" />
@@ -398,6 +433,11 @@ export function Navbar() {
         isOpen={authOpen}
         onClose={() => setAuthOpen(false)}
         initialMode={authMode}
+      />
+
+      <SearchDialog
+        isOpen={searchOpen}
+        onClose={() => setSearchOpen(false)}
       />
     </>
   );

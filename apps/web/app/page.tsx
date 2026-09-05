@@ -17,7 +17,7 @@ import { HackathonCard } from '@/components/hackathon-card';
 import { usePublishedEvents } from '@/lib/hooks/use-events';
 
 import { AuthModal } from '@/components/auth-modal';
-import { HeroSearch } from '@/components/hero-search';
+import { AiHeroPanel } from '@/components/ai-hero-panel';
 import { PodcastSection } from '@/components/podcast-section';
 
 // Event gallery photos
@@ -145,8 +145,8 @@ export default function HomePage() {
             Discover premier hackathons across AI Agents, Web3, and DeepTech. Match with world-class teammates, build high-impact prototypes, and win verified payouts on Hacker&apos;s Unity.
           </p>
 
-          {/* Interactive Hero Search with Live Autocomplete & Redirection */}
-          <HeroSearch />
+          {/* AI Command Center: Find & Build with Groq */}
+          <AiHeroPanel />
 
 
 

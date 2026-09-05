@@ -174,7 +174,14 @@ function HostHackathonContent() {
   const editParam = searchParams?.get('edit') || searchParams?.get('id') || searchParams?.get('slug');
 
   const { user, supabaseUser } = useAuth();
-  const [step, setStep] = useState<number>(1);
+  const [step, setStep] = useState<number>(() => {
+    const s = searchParams?.get('step');
+    if (s) {
+      const p = parseInt(s, 10);
+      if (!isNaN(p) && p >= 1 && p <= 7) return p;
+    }
+    return 1;
+  });
   const [isSuccess, setIsSuccess] = useState(false);
   const [submittedEvent, setSubmittedEvent] = useState<ExtendedEvent | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -431,6 +438,14 @@ function HostHackathonContent() {
           }
           if (found.customQuestions && found.customQuestions.length > 0) {
             setCustomQuestions(found.customQuestions);
+          }
+
+          const stepParam = searchParams?.get('step');
+          if (stepParam) {
+            const s = parseInt(stepParam, 10);
+            if (!isNaN(s) && s >= 1 && s <= 7) {
+              setStep(s);
+            }
           }
         }
       } catch (err) {
