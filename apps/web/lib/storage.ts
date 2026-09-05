@@ -350,6 +350,46 @@ export function saveEventRegistration(reg: EventRegistration): void {
   }
 }
 
+export function bulkSaveEventRegistrations(
+  eventId: string,
+  newRegistrations: EventRegistration[]
+): { added: number; updated: number; total: number } {
+  if (typeof window === 'undefined') return { added: 0, updated: 0, total: 0 };
+  const current = getEventRegistrations(eventId);
+  const existingMap = new Map(current.map((r) => [r.userEmail.trim().toLowerCase(), r]));
+  let added = 0;
+  let updated = 0;
+
+  for (const reg of newRegistrations) {
+    if (!reg.userEmail) continue;
+    const emailKey = reg.userEmail.trim().toLowerCase();
+    if (existingMap.has(emailKey)) {
+      const prev = existingMap.get(emailKey)!;
+      existingMap.set(emailKey, {
+        ...prev,
+        ...reg,
+        id: prev.id, // maintain existing ID
+        registeredAt: prev.registeredAt || reg.registeredAt,
+      });
+      updated++;
+    } else {
+      existingMap.set(emailKey, reg);
+      added++;
+    }
+  }
+
+  const resultList = Array.from(existingMap.values());
+  try {
+    localStorage.setItem(`${EVENT_REGS_PREFIX}${eventId}`, JSON.stringify(resultList));
+    window.dispatchEvent(new Event('hackers_unity_storage_change'));
+    return { added, updated, total: resultList.length };
+  } catch (e) {
+    console.error(e);
+    return { added: 0, updated: 0, total: current.length };
+  }
+}
+
+
 export function updateRegistrationStatus(
   eventId: string,
   regId: string,
