@@ -25,6 +25,7 @@ export async function POST(req: Request) {
     const baseUrl = origin || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const previewToken = event.previewToken || (event.slug ? 'hu_prv_' + Buffer.from(event.slug).toString('hex').slice(0, 10) : 'hu_prv_demo');
     const eventPreviewUrl = `${baseUrl}/hackathons/${event.slug || 'preview'}?preview_key=${previewToken}`;
+    const approvalUrl = `${baseUrl}/api/events/approve?id=${event.id || event.slug || ''}&slug=${event.slug || ''}`;
     const subject = `[Hackathon Approval Request] "${event.title}" hosted by ${organizerName || 'Organizer'}`;
 
     const formattedStartDate = event.startDate
@@ -181,17 +182,24 @@ export async function POST(req: Request) {
               <!-- Action CTA -->
               <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 24px;">
                 <tr>
+                  <td align="center" style="padding-bottom: 12px;">
+                    <a href="${approvalUrl}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; font-size: 15px; font-weight: 800; text-decoration: none; padding: 14px 34px; border-radius: 12px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);">
+                      ✅ Approve &amp; Publish Hackathon
+                    </a>
+                  </td>
+                </tr>
+                <tr>
                   <td align="center">
-                    <a href="${eventPreviewUrl}" target="_blank" style="display: inline-block; background-color: #0099e6; color: #ffffff; font-size: 14px; font-weight: 800; text-decoration: none; padding: 14px 32px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 153, 230, 0.3);">
-                      Review Hackathon Draft →
+                    <a href="${eventPreviewUrl}" target="_blank" style="display: inline-block; background-color: #f1f5f9; color: #0f172a; font-size: 13px; font-weight: 700; text-decoration: none; padding: 10px 24px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                      Review Event Specifications →
                     </a>
                   </td>
                 </tr>
               </table>
 
               <p style="font-size: 12px; color: #94a3b8; line-height: 1.5; margin: 0; text-align: center;">
-                Direct Preview URL:<br>
-                <a href="${eventPreviewUrl}" style="color: #0099e6; word-break: break-all;">${eventPreviewUrl}</a>
+                Admin 1-Click Approve Link:<br>
+                <a href="${approvalUrl}" style="color: #10b981; font-weight: 600; word-break: break-all;">${approvalUrl}</a>
               </p>
             </td>
           </tr>

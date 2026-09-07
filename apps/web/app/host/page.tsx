@@ -912,7 +912,8 @@ ${organizerName || 'Organizer'}`;
   // ─── Publish & Draft Handlers ───────────────────────────
   const handlePublish = async () => {
     setIsSaving(true);
-    const targetStatus = isEditMode ? EventStatus.PUBLISHED : EventStatus.PENDING_APPROVAL;
+    // User hosting/editing hackathon -> status is always PENDING_APPROVAL until admin approves!
+    const targetStatus = EventStatus.PENDING_APPROVAL;
     const event: ExtendedEvent = { ...previewEvent, status: targetStatus };
     const organizerId = supabaseUser?.id || user?.id;
 
@@ -920,23 +921,15 @@ ${organizerName || 'Organizer'}`;
       // 1. Update in local storage
       updateHostedEvent(event);
 
-      // 2. Update in Supabase / Server API
+      // 2. Update in Supabase / Server API (upserts if not already in DB)
       await updateEventInSupabase(editingEventId, event);
-      setIsSaving(false);
-      setSubmittedEvent(event);
-      setIsSuccess(true);
+    } else {
+      // 1. Persist to local storage immediately
+      saveHostedEvent(event);
 
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 1500);
-      return;
+      // 2. Persist to Supabase / Server API
+      await createEventInSupabase(event, organizerId);
     }
-
-    // 1. Persist to local storage immediately
-    saveHostedEvent(event);
-
-    // 2. Persist to Supabase / Server API
-    const res = await createEventInSupabase(event, organizerId);
 
     // 3. Dispatch approval request email to chinmaybhatt26@gmail.com
     try {
@@ -956,7 +949,7 @@ ${organizerName || 'Organizer'}`;
         .then((r) => r.json())
         .then((data) => {
           if (data?.sentTo) {
-            setEmailSentSuccess(`✅ Approval notification dispatched via Resend to ${data.sentTo}`);
+            setEmailSentSuccess(`✅ Approval notification dispatched to ${data.sentTo}`);
           }
         })
         .catch((err) => {
@@ -967,8 +960,7 @@ ${organizerName || 'Organizer'}`;
     }
 
     setIsSaving(false);
-    const finalEvent = (res.success && res.data) ? res.data : event;
-    setSubmittedEvent(finalEvent);
+    setSubmittedEvent(event);
     setIsSuccess(true);
   };
 
@@ -1072,17 +1064,13 @@ ${organizerName || 'Organizer'}`;
           <div className="space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold uppercase tracking-wider">
               <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-              <span>{isEditMode ? 'Updated' : 'Request Submitted • Pending Review'}</span>
+              <span>Appeal Submitted • Pending Review</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-              {isEditMode ? 'Hackathon Updated Successfully!' : 'Hackathon Submission Request Received!'}
+              Hackathon Appeal Submitted Successfully!
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 max-w-lg mx-auto leading-relaxed font-medium">
-              {isEditMode ? (
-                <>Changes for <strong className="text-slate-900">{submittedEvent?.title || previewEvent.title}</strong> have been saved successfully.</>
-              ) : (
-                <>Your hackathon <strong className="text-slate-900">&quot;{submittedEvent?.title || previewEvent.title}&quot;</strong> has been submitted for review. An approval request has been sent to <strong className="text-[#0099e6]">chinmaybhatt26@gmail.com</strong>. Once approved by the team, it will go live globally across the platform.</>
-              )}
+              Your hackathon <strong className="text-slate-900">&quot;{submittedEvent?.title || previewEvent.title}&quot;</strong> has been submitted for review. An approval request has been sent to <strong className="text-[#0099e6]">chinmaybhatt26@gmail.com</strong>. Once approved by the admin, it will go live globally across the platform.
             </p>
           </div>
 
@@ -1147,8 +1135,7 @@ ${organizerName || 'Organizer'}`;
           </div>
 
           {/* Email Dispatch & Gmail Draft Action Box */}
-          {!isEditMode && (
-            <div className="w-full p-5 rounded-2xl bg-sky-50/80 border border-sky-200 text-left space-y-3.5 shadow-xs">
+          <div className="w-full p-5 rounded-2xl bg-sky-50/80 border border-sky-200 text-left space-y-3.5 shadow-xs">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-xl bg-[#0099e6] flex items-center justify-center text-white shadow-xs">
@@ -1221,7 +1208,6 @@ ${organizerName || 'Organizer'}`;
                 </div>
               )}
             </div>
-          )}
 
           {/* Quick Details Card */}
           <div className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-200/80 text-left text-xs space-y-2.5">
@@ -2393,26 +2379,24 @@ ${organizerName || 'Organizer'}`;
                   </div>
 
                   {/* Approval Notice & Email Draft Preview */}
-                  {!isEditMode && (
-                    <div className="p-3.5 rounded-2xl bg-sky-50/70 border border-sky-200/80 flex items-center justify-between flex-wrap gap-2 text-xs">
-                      <div className="flex items-center gap-2 text-slate-700">
-                        <Mail className="w-4 h-4 text-[#0099e6] shrink-0" />
-                        <span className="font-medium">
-                          On submit, an approval request is dispatched to <strong className="text-slate-900">chinmaybhatt26@gmail.com</strong>
-                        </span>
-                      </div>
-                      <a
-                        href={gmailDraftUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-3 py-1.5 rounded-xl bg-white border border-sky-200 hover:bg-sky-50 text-[#0099e6] text-[11px] font-bold flex items-center gap-1.5 shadow-2xs cursor-pointer transition-colors"
-                      >
-                        <Mail className="w-3.5 h-3.5 text-red-600" />
-                        <span>Preview Gmail Draft</span>
-                        <ExternalLink className="w-3 h-3 opacity-70" />
-                      </a>
+                  <div className="p-3.5 rounded-2xl bg-sky-50/70 border border-sky-200/80 flex items-center justify-between flex-wrap gap-2 text-xs">
+                    <div className="flex items-center gap-2 text-slate-700">
+                      <Mail className="w-4 h-4 text-[#0099e6] shrink-0" />
+                      <span className="font-medium">
+                        On submit, an approval request is dispatched to <strong className="text-slate-900">chinmaybhatt26@gmail.com</strong>
+                      </span>
                     </div>
-                  )}
+                    <a
+                      href={gmailDraftUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 rounded-xl bg-white border border-sky-200 hover:bg-sky-50 text-[#0099e6] text-[11px] font-bold flex items-center gap-1.5 shadow-2xs cursor-pointer transition-colors"
+                    >
+                      <Mail className="w-3.5 h-3.5 text-red-600" />
+                      <span>Preview Gmail Draft</span>
+                      <ExternalLink className="w-3 h-3 opacity-70" />
+                    </a>
+                  </div>
 
                   {/* Action Buttons */}
                   <div className="pt-4 flex flex-wrap gap-3">
@@ -2433,19 +2417,13 @@ ${organizerName || 'Organizer'}`;
                     >
                       {isSaving ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : isEditMode ? (
-                        <Save className="w-4 h-4" />
                       ) : (
                         <Send className="w-4 h-4" />
                       )}
                       <span>
                         {isSaving
-                          ? isEditMode
-                            ? 'Saving Changes...'
-                            : 'Submitting Request...'
-                          : isEditMode
-                          ? 'Save & Update Hackathon'
-                          : 'Submit Request'}
+                          ? 'Submitting Appeal...'
+                          : 'Submit Appeal'}
                       </span>
                     </button>
                   </div>

@@ -227,6 +227,28 @@ export async function PATCH(req: Request) {
       if (secondTry.data && secondTry.data.length > 0) {
         return NextResponse.json({ success: true, data: secondTry.data[0] });
       }
+
+      // If still not found in Supabase (e.g. AI draft or locally created event like evt_ai_...):
+      // Insert as a new event in Supabase so user data is permanently saved!
+      const insertSlug = updates.slug || (updates.title ? await generateUniqueSlug(updates.title) : `event-${Date.now()}`);
+      const insertData: any = {
+        ...updatePayload,
+        slug: insertSlug,
+        title: updates.title || 'Untitled Hackathon',
+        status: updatePayload.status || 'PENDING_APPROVAL',
+      };
+      if (isUuid) {
+        insertData.id = eventId;
+      }
+      const insertTry = await serverSupabase
+        .from('events')
+        .insert(insertData)
+        .select('*')
+        .single();
+
+      if (insertTry.data) {
+        return NextResponse.json({ success: true, data: insertTry.data });
+      }
     }
 
     return NextResponse.json({ success: true, data: updateResult?.data?.[0] });

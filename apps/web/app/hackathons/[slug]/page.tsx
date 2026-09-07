@@ -168,11 +168,13 @@ function HackathonDetailContent({ params }: PageProps) {
      previewKeyParam.startsWith('hu_prv_'))
   );
   const isOrganizerOrAdmin = Boolean(
-    user?.id &&
+    user &&
     (event.organizerId === user.id ||
      event.organizerId === supabaseUser?.id ||
      (event as any)?.organizerEmail === user.email ||
-     user.role === 'ADMIN')
+     user.email === 'chinmaybhatt26@gmail.com' ||
+     user.role === 'ADMIN' ||
+     (user as any)?.role === 'SUPER_ADMIN')
   );
 
   const hasPrivateAccess = !isUnpublished || hasKeyAccess || isOrganizerOrAdmin || isExplicitPreview;
@@ -252,6 +254,38 @@ function HackathonDetailContent({ params }: PageProps) {
 
   return (
     <div className="flex-1 pb-20">
+      {/* Pending Approval Notice Banner */}
+      {isUnpublished && (
+        <div className="bg-amber-400 text-slate-950 px-4 py-3 text-xs font-bold flex items-center justify-between flex-wrap gap-2 border-b border-amber-500 shadow-xs">
+          <div className="flex items-center gap-2">
+            <Lock className="w-4 h-4 text-slate-900 shrink-0" />
+            <span>This hackathon is pending admin approval and is not yet publicly visible.</span>
+          </div>
+          {(user?.email === 'chinmaybhatt26@gmail.com' ||
+            user?.role === 'ADMIN' ||
+            (user as any)?.role === 'SUPER_ADMIN') && (
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await fetch('/api/events/approve', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ eventId: event.id, slug: event.slug }),
+                  });
+                  window.location.reload();
+                } catch (e) {
+                  console.error(e);
+                }
+              }}
+              className="px-4 py-1.5 rounded-xl bg-slate-900 text-white font-extrabold hover:bg-slate-800 cursor-pointer shadow-xs transition-colors"
+            >
+              ✅ Approve &amp; Publish Now
+            </button>
+          )}
+        </div>
+      )}
+
       {/* ─── Top Banner Hero ────────────────────────────────────── */}
       <div className="relative bg-gradient-to-r from-sky-50 via-white to-orange-50/60 border-b border-slate-200 pt-8 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

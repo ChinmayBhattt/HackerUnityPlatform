@@ -1456,6 +1456,33 @@ export default function DashboardPage() {
                           </button>
                         )}
 
+                        {/* Approve button for admin */}
+                        {evt.status === 'PENDING_APPROVAL' &&
+                          (user?.email === 'chinmaybhatt26@gmail.com' ||
+                            user?.role === UserRole.ADMIN ||
+                            user?.role === UserRole.SUPER_ADMIN) && (
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                try {
+                                  await fetch('/api/events/approve', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ eventId: evt.id, slug: evt.slug }),
+                                  });
+                                  window.location.reload();
+                                } catch (e) {
+                                  console.error(e);
+                                }
+                              }}
+                              className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                              title="Approve and publish this hackathon"
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span>Approve &amp; Publish</span>
+                            </button>
+                          )}
+
                         <button
                           onClick={() => {
                             try {
