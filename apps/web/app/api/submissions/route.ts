@@ -1,15 +1,9 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'https://qifwhjfisipxkytsqxez.supabase.co';
-const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_VEbLNd33E-R6hlSsmvMXhA_k_xrQnX8';
-
-const serverSupabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-  },
-});
+import {
+  authenticateRequest,
+  createAdminClient,
+  unauthorizedResponse,
+} from '@/lib/api-auth';
 
 export async function GET(req: Request) {
   try {
@@ -20,6 +14,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Missing eventId parameter' }, { status: 400 });
     }
 
+    const serverSupabase = createAdminClient();
     let resolvedEventId = eventId;
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId);
     if (!isUuid) {
@@ -63,6 +58,12 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    const auth = await authenticateRequest();
+    if (!auth) {
+      return unauthorizedResponse('You must be signed in to submit a project.');
+    }
+
+    const serverSupabase = createAdminClient();
     const body = await req.json();
     const { action, submission, webhookUrl } = body;
 
@@ -76,8 +77,8 @@ export async function POST(req: Request) {
             timestamp: new Date().toISOString(),
             event: submission.eventName || submission.eventId,
             projectTitle: submission.projectTitle,
-            submitterName: submission.submittedByName || 'Hacker',
-            submitterEmail: submission.submittedByEmail || '',
+            submitterName: auth.user.user_metadata?.name || submission.submittedByName || 'Hacker',
+            submitterEmail: auth.email || submission.submittedByEmail || '',
             track: submission.track || 'General',
             repoUrl: submission.projectLink,
             demoUrl: submission.demoVideoUrl || '',
@@ -111,21 +112,23 @@ export async function POST(req: Request) {
         }
       }
 
-      let targetSubmitterId = submission.submittedBy;
-      const isSubmitterUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(submission.submittedBy);
-      if (!isSubmitterUuid) {
-        if (submission.submittedByEmail) {
-          const { data: prof } = await serverSupabase
-            .from('profiles')
-            .select('id')
-            .eq('email', submission.submittedByEmail)
-            .maybeSingle();
-          if (prof?.id) targetSubmitterId = prof.id;
-        }
-        if (!targetSubmitterId || targetSubmitterId === submission.submittedBy) {
-          const { data: fallbackProf } = await serverSupabase.from('profiles').select('id').limit(1).maybeSingle();
-          if (fallbackProf?.id) targetSubmitterId = fallbackProf.id;
-        }
+      // Bind submission to authenticated user ID
+      const targetSubmitterId = auth.userId;
+
+      // Ensure submitter profile exists
+      const { data: prof } = await serverSupabase
+        .from('profiles')
+        .select('id')
+        .eq('id', targetSubmitterId)
+        .maybeSingle();
+
+      if (!prof) {
+        await serverSupabase.from('profiles').insert({
+          id: targetSubmitterId,
+          name: auth.user.user_metadata?.name || submission.submittedByName || 'Hacker',
+          email: auth.email,
+          updated_at: new Date().toISOString(),
+        });
       }
 
       const { data, error } = await serverSupabase.from('submissions').upsert({

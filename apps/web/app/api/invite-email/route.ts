@@ -1,8 +1,24 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
+import {
+  authenticateRequest,
+  unauthorizedResponse,
+  rateLimitedResponse,
+} from '@/lib/api-auth';
+import { checkRateLimit, EMAIL_RATE_LIMIT } from '@/lib/rate-limit';
 
 export async function POST(req: Request) {
   try {
+    const auth = await authenticateRequest();
+    if (!auth) {
+      return unauthorizedResponse('You must be logged in to send team invitations.');
+    }
+
+    const rateLimit = checkRateLimit(auth.userId, EMAIL_RATE_LIMIT);
+    if (!rateLimit.allowed) {
+      return rateLimitedResponse(rateLimit.resetInMs);
+    }
+
     const body = await req.json();
     const {
       toEmail,

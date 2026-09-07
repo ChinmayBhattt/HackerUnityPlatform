@@ -1,25 +1,21 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import {
+  authenticateRequest,
+  createAdminClient,
+  unauthorizedResponse,
+  forbiddenResponse,
+} from '@/lib/api-auth';
 
-const supabaseUrl =
-  process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  process.env.SUPABASE_URL ||
-  'https://qifwhjfisipxkytsqxez.supabase.co';
-
-const supabaseServiceRoleKey =
-  process.env.SUPABASE_SECRET_KEY ||
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpZndoamZpc2lweGt5dHNxeGV6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc5NDYyOSwiZXhwIjoyMDkzMzcwNjI5fQ._yH8fbwEEsBz3YGeJFHgxFUwxoRbrH5cOsydLTDwZVg';
-
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false,
-  },
-});
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 
 export async function POST(req: Request) {
   try {
+    // 1. Authenticate the caller
+    const auth = await authenticateRequest();
+    if (!auth) {
+      return unauthorizedResponse('You must be logged in to update your profile.');
+    }
+
     const body = await req.json();
     const {
       userId,
@@ -42,14 +38,18 @@ export async function POST(req: Request) {
       socialLinks,
     } = body;
 
-    if (!userId) {
-      return NextResponse.json({ error: 'Missing userId parameter' }, { status: 400 });
+    // 2. Prevent IDOR: ensure user can only modify their own profile
+    if (userId && userId !== auth.userId) {
+      return forbiddenResponse('You are not authorized to update another user\'s profile.');
     }
+
+    const effectiveUserId = auth.userId;
+    const supabaseAdmin = createAdminClient();
 
     let finalAvatarUrl: string | null = avatarUrl || null;
     let finalBannerUrl: string | null = bannerUrl || null;
 
-    // 1. Process Avatar Image Upload to Supabase Storage if base64 data URL
+    // 3. Process Avatar Image Upload to Supabase Storage if base64 data URL
     if (avatarUrl && typeof avatarUrl === 'string' && avatarUrl.startsWith('data:image/')) {
       try {
         const matches = avatarUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
           const contentType = matches[1] || 'image/jpeg';
           const buffer = Buffer.from(matches[2], 'base64');
           const ext = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
-          const filePath = `profiles/${userId}/avatar.${ext}`;
+          const filePath = `profiles/${effectiveUserId}/avatar.${ext}`;
 
           const { error: uploadError } = await supabaseAdmin.storage
             .from('hackathon-assets')
@@ -77,7 +77,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // 2. Process Banner Image Upload to Supabase Storage if base64 data URL
+    // 4. Process Banner Image Upload to Supabase Storage if base64 data URL
     if (bannerUrl && typeof bannerUrl === 'string' && bannerUrl.startsWith('data:image/')) {
       try {
         const matches = bannerUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
@@ -85,7 +85,7 @@ export async function POST(req: Request) {
           const contentType = matches[1] || 'image/jpeg';
           const buffer = Buffer.from(matches[2], 'base64');
           const ext = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
-          const filePath = `profiles/${userId}/banner.${ext}`;
+          const filePath = `profiles/${effectiveUserId}/banner.${ext}`;
 
           const { error: uploadError } = await supabaseAdmin.storage
             .from('hackathon-assets')
@@ -124,12 +124,12 @@ export async function POST(req: Request) {
     const cleanLinkedin = socialLinks?.linkedin ? String(socialLinks.linkedin).trim() : null;
     const cleanPortfolio = socialLinks?.portfolio ? String(socialLinks.portfolio).trim() : null;
 
-    // 3. Fetch user info from Supabase Auth to guarantee email and base metadata
-    let userEmail = body.email ? String(body.email).trim().toLowerCase() : '';
-    let existingMeta: Record<string, any> = {};
+    // 5. Fetch existing user info from Supabase Auth
+    let userEmail = auth.email;
+    let existingMeta: Record<string, any> = auth.user.user_metadata || {};
 
     try {
-      const { data: userRes } = await supabaseAdmin.auth.admin.getUserById(userId);
+      const { data: userRes } = await supabaseAdmin.auth.admin.getUserById(effectiveUserId);
       if (userRes?.user) {
         if (!userEmail) userEmail = userRes.user.email || '';
         existingMeta = userRes.user.user_metadata || {};
@@ -138,9 +138,9 @@ export async function POST(req: Request) {
       console.warn('[Profile Update] Auth fetch warning:', authFetchErr);
     }
 
-    // 4. Upsert to Postgres `profiles` table (MUST include email since it is NOT NULL)
+    // 6. Upsert to Postgres `profiles` table
     const profileUpdateData: Record<string, any> = {
-      id: userId,
+      id: effectiveUserId,
       updated_at: new Date().toISOString(),
     };
     if (userEmail) profileUpdateData.email = userEmail;
@@ -161,16 +161,14 @@ export async function POST(req: Request) {
 
       if (profileDbError) {
         console.warn('[Profile Update] Database profiles upsert warning:', profileDbError);
-      } else {
-        console.log('[Profile Update] Database profiles upsert success for:', userId);
       }
     } catch (dbErr) {
       console.warn('[Profile Update] DB upsert exception:', dbErr);
     }
 
-    // 5. Update Supabase Auth user_metadata (holds all comprehensive fields across all devices)
+    // 7. Update Supabase Auth user_metadata
     try {
-      await supabaseAdmin.auth.admin.updateUserById(userId, {
+      await supabaseAdmin.auth.admin.updateUserById(effectiveUserId, {
         user_metadata: {
           ...existingMeta,
           name: cleanName || existingMeta.name,

@@ -272,7 +272,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return { error: apiData.error || 'Failed to create account.' };
         }
 
-        // 2. Immediately sign in with the new credentials
+        if (apiData.needsEmailConfirmation) {
+          return {
+            needsEmailConfirmation: true,
+            message: apiData.message || 'Account created! Please check your email to verify your account.',
+          };
+        }
+
+        // 2. Immediately sign in with the new credentials (if email verification is auto-confirmed)
         const loginRes = await supabase.auth.signInWithPassword({
           email: cleanEmail,
           password: pass,
@@ -339,17 +346,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithOAuth = async (provider: 'google' | 'github' = 'google') => {
     try {
-      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://hackersunity.com';
-      const { error } = await supabase.auth.signInWithOAuth({
+      const origin =
+        typeof window !== 'undefined'
+          ? window.location.origin
+          : process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${origin}/auth/callback?next=/dashboard`,
+          redirectTo: `${origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         },
       });
-      if (error) return { error: error.message };
-      return {};
+
+      if (error) throw error;
+      return { data };
     } catch (err: any) {
-      return { error: err.message || 'OAuth error' };
+      return { error: err.message || 'OAuth sign in failed' };
     }
   };
 
@@ -366,14 +382,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         e164Phone = validation.formattedPhone;
       }
 
-      console.log('[Supabase Phone Auth] 📲 Sending SMS OTP to E.164 phone number:', e164Phone);
-
       const { error } = await supabase.auth.signInWithOtp({
         phone: e164Phone,
       });
 
       if (error) {
-        console.warn('[Supabase Phone Auth] signInWithOtp message:', error.message);
         if (error.message?.toLowerCase().includes('unsupported phone provider')) {
           return {
             error:
@@ -383,10 +396,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error: error.message };
       }
 
-      console.log('[Supabase Phone Auth] ✅ SMS OTP successfully requested for:', e164Phone);
       return {};
     } catch (err: any) {
-      console.warn('[Supabase Phone Auth] signInWithPhone exception:', err?.message || err);
       return { error: err?.message || 'Phone sign in error' };
     }
   };
@@ -408,8 +419,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error: 'Please enter a valid 6-digit OTP code.' };
       }
 
-      console.log('[Supabase Phone Auth] 🔐 Verifying OTP for E.164 phone number:', e164Phone, 'Code:', cleanToken);
-
       const { data, error } = await supabase.auth.verifyOtp({
         phone: e164Phone,
         token: cleanToken,
@@ -417,17 +426,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
-        console.warn('[Supabase Phone Auth] verifyOtp error:', error.message);
         return { error: error.message };
       }
 
-      console.log('[Supabase Phone Auth] ✅ OTP verification successful for:', e164Phone, 'User:', data.user?.id);
       if (data.user) {
         await syncProfileFromSupabaseUser(data.user);
       }
       return {};
     } catch (err: any) {
-      console.warn('[Supabase Phone Auth] verifyPhoneOtp exception:', err?.message || err);
       return { error: err?.message || 'OTP verification failed' };
     }
   };

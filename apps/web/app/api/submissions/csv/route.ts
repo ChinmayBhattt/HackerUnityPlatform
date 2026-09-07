@@ -1,18 +1,15 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'https://qifwhjfisipxkytsqxez.supabase.co';
-const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_VEbLNd33E-R6hlSsmvMXhA_k_xrQnX8';
-
-const serverSupabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-  },
-});
+import {
+  authenticateRequest,
+  createAdminClient,
+} from '@/lib/api-auth';
 
 export async function GET(req: Request) {
   try {
+    const auth = await authenticateRequest();
+    if (!auth) {
+      return new Response('Unauthorized: You must be logged in to export submissions.', { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const eventId = searchParams.get('eventId');
 
@@ -20,30 +17,32 @@ export async function GET(req: Request) {
       return new Response('Error: Missing eventId parameter', { status: 400 });
     }
 
+    const serverSupabase = createAdminClient();
     let resolvedEventId = eventId;
     let eventTitle = 'Hackathon';
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId);
+
+    let eventDataQuery = serverSupabase.from('events').select('id, title, organizer_id');
     if (!isUuid) {
-      const { data: eventData } = await serverSupabase
-        .from('events')
-        .select('id, title')
-        .eq('slug', eventId)
-        .maybeSingle();
-      if (eventData?.id) {
-        resolvedEventId = eventData.id;
-        eventTitle = eventData.title || eventTitle;
-      } else {
-        resolvedEventId = '';
-      }
+      eventDataQuery = eventDataQuery.eq('slug', eventId);
     } else {
-      const { data: eventData } = await serverSupabase
-        .from('events')
-        .select('title')
-        .eq('id', eventId)
-        .maybeSingle();
-      if (eventData?.title) {
-        eventTitle = eventData.title;
-      }
+      eventDataQuery = eventDataQuery.eq('id', eventId);
+    }
+
+    const { data: eventData } = await eventDataQuery.maybeSingle();
+    if (eventData?.id) {
+      resolvedEventId = eventData.id;
+      eventTitle = eventData.title || eventTitle;
+    } else {
+      return new Response('Error: Event not found', { status: 404 });
+    }
+
+    // Verify organizer or admin authorization
+    const isOwner = eventData.organizer_id === auth.userId;
+    const isAdmin = auth.user.user_metadata?.role === 'ADMIN' || auth.email === process.env.ADMIN_EMAIL;
+
+    if (!isOwner && !isAdmin) {
+      return new Response('Forbidden: Only the event organizer or admin can export submissions.', { status: 403 });
     }
 
     let submissions: any[] = [];
@@ -110,7 +109,6 @@ export async function GET(req: Request) {
         'Content-Type': 'text/csv; charset=utf-8',
         'Content-Disposition': `attachment; filename="${eventId}-submissions.csv"`,
         'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
-        'Access-Control-Allow-Origin': '*',
       },
     });
   } catch (err: any) {

@@ -39,6 +39,7 @@ import {
   ChevronDown,
   Search,
 } from 'lucide-react';
+import { validatePassword } from '@/lib/password-validation';
 import { useAuth } from '@/lib/auth-context';
 import { AvatarUpload } from '@/components/avatar-upload';
 import { BannerUpload } from '@/components/banner-upload';
@@ -387,12 +388,14 @@ export default function SettingsPage() {
     e.preventDefault();
     setPasswordMsg(null);
 
-    if (newPassword.length < 6) {
-      setPasswordMsg({ type: 'error', text: 'Password must be at least 6 characters long.' });
-      return;
-    }
     if (newPassword !== confirmPassword) {
       setPasswordMsg({ type: 'error', text: 'Passwords do not match.' });
+      return;
+    }
+
+    const validation = validatePassword(newPassword);
+    if (!validation.isValid) {
+      setPasswordMsg({ type: 'error', text: validation.errors.join('. ') });
       return;
     }
 

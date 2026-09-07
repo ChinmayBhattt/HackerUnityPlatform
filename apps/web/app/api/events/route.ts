@@ -1,16 +1,10 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { EventStatus } from '@hackers-unity/shared-types';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'https://qifwhjfisipxkytsqxez.supabase.co';
-const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_VEbLNd33E-R6hlSsmvMXhA_k_xrQnX8';
-
-const serverSupabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-  },
-});
+import {
+  authenticateRequest,
+  createAdminClient,
+  unauthorizedResponse,
+  forbiddenResponse,
+} from '@/lib/api-auth';
 
 function slugify(text: string): string {
   return text
@@ -26,6 +20,7 @@ function slugify(text: string): string {
 
 async function generateUniqueSlug(title: string): Promise<string> {
   const baseSlug = slugify(title) || 'hackathon';
+  const serverSupabase = createAdminClient();
   try {
     const { data } = await serverSupabase
       .from('events')
@@ -53,27 +48,23 @@ async function generateUniqueSlug(title: string): Promise<string> {
 
 export async function POST(req: Request) {
   try {
+    const auth = await authenticateRequest();
+    if (!auth) {
+      return unauthorizedResponse('You must be signed in to create an event.');
+    }
+
     const body = await req.json();
-    const { event, userId } = body;
+    const { event } = body;
 
     if (!event || !event.title) {
       return NextResponse.json({ error: 'Missing required event fields' }, { status: 400 });
     }
 
+    const serverSupabase = createAdminClient();
     const finalSlug = event.slug || (await generateUniqueSlug(event.title));
 
     const VALID_STATUSES = ['DRAFT', 'PENDING_APPROVAL', 'PUBLISHED', 'REGISTRATION_OPEN', 'LIVE', 'JUDGING', 'COMPLETED', 'ARCHIVED'];
     const sanitizedStatus = VALID_STATUSES.includes(event.status) ? event.status : 'PENDING_APPROVAL';
-
-    let validOrganizerId: string | null = null;
-    if (userId && typeof userId === 'string' && userId.length >= 10 && userId.includes('-')) {
-      const { data: profileExists } = await serverSupabase
-        .from('profiles')
-        .select('id')
-        .eq('id', userId)
-        .maybeSingle();
-      validOrganizerId = profileExists ? userId : null;
-    }
 
     const insertPayload: any = {
       slug: finalSlug,
@@ -82,8 +73,8 @@ export async function POST(req: Request) {
       category: event.category || 'HACKATHON',
       event_type: event.eventType || 'ONLINE',
       location: event.location || 'Online',
-      organizer_id: validOrganizerId,
-      organizer_name: event.organizerName || 'Organizer',
+      organizer_id: auth.userId,
+      organizer_name: event.organizerName || auth.user.user_metadata?.name || 'Organizer',
       organizer_avatar: event.organizerAvatar || '⚡',
       start_date: event.startDate || new Date().toISOString(),
       end_date: event.endDate || new Date(Date.now() + 7 * 86400000).toISOString(),
@@ -141,11 +132,36 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
+    const auth = await authenticateRequest();
+    if (!auth) {
+      return unauthorizedResponse('You must be signed in to update an event.');
+    }
+
     const body = await req.json();
     const { eventId, updates } = body;
 
     if (!eventId) {
       return NextResponse.json({ error: 'Missing eventId' }, { status: 400 });
+    }
+
+    const serverSupabase = createAdminClient();
+    const isUuid = Boolean(eventId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId));
+
+    // Verify ownership or admin privileges
+    let existingEventQuery = serverSupabase.from('events').select('id, organizer_id, slug');
+    if (isUuid) {
+      existingEventQuery = existingEventQuery.eq('id', eventId);
+    } else {
+      existingEventQuery = existingEventQuery.eq('slug', eventId);
+    }
+    const { data: existingEvent } = await existingEventQuery.maybeSingle();
+
+    const userRole = auth.user.user_metadata?.role;
+    const isOwner = existingEvent?.organizer_id === auth.userId;
+    const isAdmin = userRole === 'ADMIN' || auth.email === process.env.ADMIN_EMAIL;
+
+    if (existingEvent && !isOwner && !isAdmin) {
+      return forbiddenResponse('You are not authorized to update this event.');
     }
 
     const updatePayload: any = {};
@@ -156,7 +172,6 @@ export async function PATCH(req: Request) {
     if (updates.location !== undefined) updatePayload.location = updates.location;
     if (updates.organizerName !== undefined) updatePayload.organizer_name = updates.organizerName;
     if (updates.organizerAvatar !== undefined) updatePayload.organizer_avatar = updates.organizerAvatar;
-    if (updates.organizerId !== undefined) updatePayload.organizer_id = updates.organizerId;
     if (updates.startDate !== undefined) updatePayload.start_date = updates.startDate;
     if (updates.endDate !== undefined) updatePayload.end_date = updates.endDate;
     if (updates.registrationDeadline !== undefined) updatePayload.registration_deadline = updates.registrationDeadline;
@@ -193,9 +208,7 @@ export async function PATCH(req: Request) {
       updatePayload.status = updates.status;
     }
 
-    const isUuid = Boolean(eventId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId));
     let updateResult: any = null;
-
     if (isUuid) {
       updateResult = await serverSupabase
         .from('events')
@@ -215,42 +228,6 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: updateResult.error.message }, { status: 500 });
     }
 
-    // Fallback: if no rows matched by UUID or slug, try matching the other
-    if (!updateResult?.data || updateResult.data.length === 0) {
-      const fallbackTarget = updates.slug || eventId;
-      const secondTry = await serverSupabase
-        .from('events')
-        .update(updatePayload)
-        .eq('slug', fallbackTarget)
-        .select('*');
-
-      if (secondTry.data && secondTry.data.length > 0) {
-        return NextResponse.json({ success: true, data: secondTry.data[0] });
-      }
-
-      // If still not found in Supabase (e.g. AI draft or locally created event like evt_ai_...):
-      // Insert as a new event in Supabase so user data is permanently saved!
-      const insertSlug = updates.slug || (updates.title ? await generateUniqueSlug(updates.title) : `event-${Date.now()}`);
-      const insertData: any = {
-        ...updatePayload,
-        slug: insertSlug,
-        title: updates.title || 'Untitled Hackathon',
-        status: updatePayload.status || 'PENDING_APPROVAL',
-      };
-      if (isUuid) {
-        insertData.id = eventId;
-      }
-      const insertTry = await serverSupabase
-        .from('events')
-        .insert(insertData)
-        .select('*')
-        .single();
-
-      if (insertTry.data) {
-        return NextResponse.json({ success: true, data: insertTry.data });
-      }
-    }
-
     return NextResponse.json({ success: true, data: updateResult?.data?.[0] });
   } catch (err: any) {
     console.error('Server error updating event:', err);
@@ -260,6 +237,11 @@ export async function PATCH(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
+    const auth = await authenticateRequest();
+    if (!auth) {
+      return unauthorizedResponse('You must be signed in to delete an event.');
+    }
+
     const url = new URL(req.url);
     const eventIdParam = url.searchParams.get('eventId') || url.searchParams.get('id');
     const slugParam = url.searchParams.get('slug');
@@ -280,14 +262,14 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: 'Missing eventId or slug' }, { status: 400 });
     }
 
-    // 1. Locate the event to find both ID and slug
+    const serverSupabase = createAdminClient();
     const isUuid = Boolean(eventId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId));
-    let existing: { id: string; slug: string } | null = null;
+    let existing: { id: string; slug: string; organizer_id: string } | null = null;
 
     if (isUuid && eventId) {
       const { data } = await serverSupabase
         .from('events')
-        .select('id, slug')
+        .select('id, slug, organizer_id')
         .eq('id', eventId)
         .maybeSingle();
       if (data) existing = data;
@@ -297,16 +279,24 @@ export async function DELETE(req: Request) {
       const targetSlug = slug || eventId;
       const { data } = await serverSupabase
         .from('events')
-        .select('id, slug')
+        .select('id, slug, organizer_id')
         .eq('slug', targetSlug)
         .maybeSingle();
       if (data) existing = data;
     }
 
+    const userRole = auth.user.user_metadata?.role;
+    const isOwner = existing?.organizer_id === auth.userId;
+    const isAdmin = userRole === 'ADMIN' || auth.email === process.env.ADMIN_EMAIL;
+
+    if (existing && !isOwner && !isAdmin) {
+      return forbiddenResponse('You are not authorized to delete this event.');
+    }
+
     const finalId = existing?.id || (isUuid ? eventId : null);
     const finalSlug = existing?.slug || slug || (isUuid ? null : eventId);
 
-    // 2. Cascade delete dependent child records first to prevent FK constraint failures
+    // Cascade delete dependent child records first to prevent FK constraint failures
     if (finalId) {
       await Promise.allSettled([
         serverSupabase.from('registrations').delete().eq('event_id', finalId),
@@ -318,7 +308,6 @@ export async function DELETE(req: Request) {
       ]);
     }
 
-    // 3. Delete from events table
     let deleteResult;
     if (finalId) {
       deleteResult = await serverSupabase.from('events').delete().eq('id', finalId);
@@ -341,4 +330,3 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
   }
 }
-

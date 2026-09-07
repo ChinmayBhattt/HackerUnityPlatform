@@ -15,6 +15,11 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { UserRole } from '@hackers-unity/shared-types';
+import {
+  validatePassword,
+  PASSWORD_STRENGTH_LABELS,
+  PASSWORD_STRENGTH_COLORS,
+} from '@/lib/password-validation';
 
 function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
   const router = useRouter();
@@ -65,8 +70,9 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
       return;
     }
 
-    if (password.length < 6) {
-      setErrorMessage('Password must be at least 6 characters');
+    const validation = validatePassword(password);
+    if (!validation.isValid) {
+      setErrorMessage(validation.errors[0]);
       return;
     }
 
@@ -306,6 +312,48 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
+
+                  {mode === 'login' && (
+                    <div className="flex justify-end -mt-1 pb-1">
+                      <Link
+                        href="/forgot-password"
+                        className="text-[11px] font-semibold text-[#0099e6] hover:underline"
+                      >
+                        Forgot password?
+                      </Link>
+                    </div>
+                  )}
+
+                  {mode === 'register' && password && (() => {
+                    const strengthRes = validatePassword(password);
+                    return (
+                      <div className="space-y-1.5 px-1 py-0.5">
+                        <div className="flex items-center justify-between text-[11px] font-semibold">
+                          <span className="text-slate-500">Password Strength:</span>
+                          <span style={{ color: PASSWORD_STRENGTH_COLORS[strengthRes.strength] }}>
+                            {PASSWORD_STRENGTH_LABELS[strengthRes.strength]}
+                          </span>
+                        </div>
+                        <div className="flex gap-1 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                          {[0, 1, 2, 3].map((step) => (
+                            <div
+                              key={step}
+                              className="flex-1 rounded-full transition-all duration-300"
+                              style={{
+                                backgroundColor:
+                                  step < strengthRes.strength
+                                    ? PASSWORD_STRENGTH_COLORS[strengthRes.strength]
+                                    : '#e2e8f0',
+                              }}
+                            />
+                          ))}
+                        </div>
+                        <p className="text-[10px] text-slate-400">
+                          Requires 8+ characters, uppercase, lowercase, and a number.
+                        </p>
+                      </div>
+                    );
+                  })()}
 
                   {mode === 'register' && (
                     <div className="relative">

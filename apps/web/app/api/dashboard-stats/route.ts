@@ -1,15 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'https://qifwhjfisipxkytsqxez.supabase.co';
-const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_VEbLNd33E-R6hlSsmvMXhA_k_xrQnX8';
-
-const serverSupabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-  },
-});
+import {
+  authenticateRequest,
+  createAdminClient,
+  unauthorizedResponse,
+} from '@/lib/api-auth';
 
 // Active event statuses — excludes DRAFT, PENDING_APPROVAL, ARCHIVED
 const ACTIVE_STATUSES = ['PUBLISHED', 'REGISTRATION_OPEN', 'LIVE', 'JUDGING', 'ONGOING'];
@@ -87,7 +81,13 @@ function bucketRegistrations(
 
 export async function GET(req: NextRequest) {
   try {
-    const userId = req.nextUrl.searchParams.get('userId');
+    const auth = await authenticateRequest();
+    if (!auth) {
+      return unauthorizedResponse('You must be signed in to view dashboard statistics.');
+    }
+
+    const serverSupabase = createAdminClient();
+    const effectiveUserId = auth.userId;
     const rangeDaysParam = req.nextUrl.searchParams.get('rangeDays');
     const rangeDays = rangeDaysParam ? parseInt(rangeDaysParam, 10) : 30;
 
@@ -105,11 +105,11 @@ export async function GET(req: NextRequest) {
       .in('status', ACTIVE_STATUSES);
 
     let myRegistered = 0;
-    if (userId) {
+    if (effectiveUserId) {
       const { count, error: regErr } = await serverSupabase
         .from('registrations')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId);
+        .eq('user_id', effectiveUserId);
       if (!regErr && count !== null) {
         myRegistered = count;
       }
@@ -216,12 +216,12 @@ export async function GET(req: NextRequest) {
       completed: 0,
     };
 
-    if (userId) {
+    if (effectiveUserId) {
       // Get user's registrations with joined event status
       const { data: userRegs } = await serverSupabase
         .from('registrations')
         .select('event_id, events(status, start_date, end_date)')
-        .eq('user_id', userId);
+        .eq('user_id', effectiveUserId);
 
       if (userRegs) {
         participationSummary.total = userRegs.length;

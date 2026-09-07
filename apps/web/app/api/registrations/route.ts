@@ -1,24 +1,25 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'https://qifwhjfisipxkytsqxez.supabase.co';
-const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_VEbLNd33E-R6hlSsmvMXhA_k_xrQnX8';
-
-const serverSupabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-  },
-});
+import {
+  authenticateRequest,
+  createAdminClient,
+  unauthorizedResponse,
+} from '@/lib/api-auth';
 
 export async function POST(req: Request) {
   try {
+    const auth = await authenticateRequest();
+    if (!auth) {
+      return unauthorizedResponse('You must be signed in to register for an event.');
+    }
+
     const body = await req.json();
     const { input } = body;
 
-    if (!input || !input.eventId || !input.userEmail) {
+    if (!input || !input.eventId) {
       return NextResponse.json({ error: 'Missing required registration fields' }, { status: 400 });
     }
+
+    const serverSupabase = createAdminClient();
 
     // Resolve event UUID if slug provided
     let targetEventId = input.eventId;
@@ -37,62 +38,61 @@ export async function POST(req: Request) {
       }
     }
 
-    // Ensure user profile exists
-    let validUserId = input.userId;
-    const isUserUuid = validUserId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(validUserId);
-    if (isUserUuid) {
-      const { data: existingProf } = await serverSupabase
-        .from('profiles')
-        .select('id')
-        .eq('id', validUserId)
-        .maybeSingle();
+    // Always bind registration to authenticated user's ID and email
+    const validUserId = auth.userId;
+    const userEmail = (auth.email || input.userEmail || '').toLowerCase().trim();
 
-      if (!existingProf) {
-        await serverSupabase.from('profiles').insert({
-          id: validUserId,
-          name: input.userName || 'Hacker',
-          email: input.userEmail,
-          phone: input.phone || null,
-          college: input.college || null,
-          github_url: input.githubUrl || null,
-          linkedin_url: input.linkedinUrl || null,
-          skills: input.skills || [],
-          updated_at: new Date().toISOString(),
-        });
-      }
-    } else {
-      validUserId = null;
+    // Ensure user profile exists
+    const { data: existingProf } = await serverSupabase
+      .from('profiles')
+      .select('id')
+      .eq('id', validUserId)
+      .maybeSingle();
+
+    if (!existingProf) {
+      await serverSupabase.from('profiles').insert({
+        id: validUserId,
+        name: input.userName || auth.user.user_metadata?.name || 'Hacker',
+        email: userEmail,
+        phone: input.phone || null,
+        college: input.college || null,
+        github_url: input.githubUrl || null,
+        linkedin_url: input.linkedinUrl || null,
+        skills: input.skills || [],
+        updated_at: new Date().toISOString(),
+      });
     }
 
     // Check if already registered
-    if (validUserId) {
-      const { data: existingReg } = await serverSupabase
-        .from('registrations')
-        .select('id')
-        .eq('event_id', targetEventId)
-        .eq('user_id', validUserId)
-        .maybeSingle();
-      if (existingReg) {
-        return NextResponse.json({ error: 'You are already registered for this event.' }, { status: 400 });
-      }
-    }
-
-    const { data: existingEmailReg } = await serverSupabase
+    const { data: existingReg } = await serverSupabase
       .from('registrations')
       .select('id')
       .eq('event_id', targetEventId)
-      .eq('user_email', input.userEmail.toLowerCase().trim())
+      .eq('user_id', validUserId)
       .maybeSingle();
 
-    if (existingEmailReg) {
-      return NextResponse.json({ error: 'This email is already registered for this event.' }, { status: 400 });
+    if (existingReg) {
+      return NextResponse.json({ error: 'You are already registered for this event.' }, { status: 400 });
+    }
+
+    if (userEmail) {
+      const { data: existingEmailReg } = await serverSupabase
+        .from('registrations')
+        .select('id')
+        .eq('event_id', targetEventId)
+        .eq('user_email', userEmail)
+        .maybeSingle();
+
+      if (existingEmailReg) {
+        return NextResponse.json({ error: 'This email is already registered for this event.' }, { status: 400 });
+      }
     }
 
     const payload: any = {
       event_id: targetEventId,
       user_id: validUserId,
-      user_name: input.userName,
-      user_email: input.userEmail.toLowerCase().trim(),
+      user_name: input.userName || auth.user.user_metadata?.name || 'Hacker',
+      user_email: userEmail,
       phone: input.phone || null,
       college: input.college || null,
       city: input.city || null,
