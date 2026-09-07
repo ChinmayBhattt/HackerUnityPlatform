@@ -10,16 +10,10 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
-  KeyRound,
   Info,
-  Eye,
-  EyeOff,
-  ChevronDown,
-  RotateCcw,
 } from 'lucide-react';
 
 import { useAuth } from '@/lib/auth-context';
-import { formatAndValidatePhone, COUNTRY_CODES } from '@/lib/phone-utils';
 import { Logo } from './logo';
 
 interface AuthModalProps {
@@ -34,12 +28,9 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'login' }:
     signInWithEmail,
     signUpWithEmail,
     signInWithOAuth,
-    signInWithPhone,
-    verifyPhoneOtp,
   } = useAuth();
 
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
-  const [method, setMethod] = useState<'email' | 'phone'>('email');
 
   useEffect(() => {
     if (isOpen && initialMode) {
@@ -51,12 +42,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'login' }:
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [countryCode, setCountryCode] = useState('+91');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [otpCode, setOtpCode] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
-  const [resendCountdown, setResendCountdown] = useState(0);
-  const [isResending, setIsResending] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -64,41 +50,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'login' }:
   const [isSuccess, setIsSuccess] = useState(false);
   const [successText, setSuccessText] = useState("Welcome to Hacker's Unity!");
 
-  // Countdown timer for Resend OTP
-  useEffect(() => {
-    if (resendCountdown > 0) {
-      const timer = setTimeout(() => setResendCountdown((prev) => prev - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [resendCountdown]);
-
   if (!isOpen) return null;
-
-  const handleResendOtp = async () => {
-    if (resendCountdown > 0 || isResending) return;
-    setIsResending(true);
-    setErrorMessage(null);
-    setInfoMessage(null);
-
-    const phoneValidation = formatAndValidatePhone(phoneNumber, countryCode);
-    if (!phoneValidation.isValid || !phoneValidation.formattedPhone) {
-      setErrorMessage(phoneValidation.error || 'Please enter a valid mobile number.');
-      setIsResending(false);
-      return;
-    }
-
-    console.log('[AuthModal] Resending Phone OTP to (E.164):', phoneValidation.formattedPhone);
-    const res = await signInWithPhone(phoneValidation.formattedPhone);
-    if (res.error) {
-      setErrorMessage(res.error);
-      setIsResending(false);
-      return;
-    }
-
-    setResendCountdown(30);
-    setInfoMessage(`New SMS OTP sent to ${phoneValidation.formattedPhone}! Please enter the 6-digit code.`);
-    setIsResending(false);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,58 +58,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'login' }:
     setErrorMessage(null);
     setInfoMessage(null);
 
-    // 1. Phone OTP Verification
-    if (method === 'phone') {
-      const phoneValidation = formatAndValidatePhone(phoneNumber, countryCode);
-      if (!phoneValidation.isValid || !phoneValidation.formattedPhone) {
-        setErrorMessage(phoneValidation.error || 'Please enter a valid mobile number.');
-        setIsLoading(false);
-        return;
-      }
-
-      const e164Phone = phoneValidation.formattedPhone;
-      console.log('[AuthModal] Submitting Phone OTP request for (E.164):', e164Phone);
-
-      if (!otpSent) {
-        const res = await signInWithPhone(e164Phone);
-        if (res.error) {
-          setErrorMessage(res.error);
-          setIsLoading(false);
-          return;
-        }
-        setOtpSent(true);
-        setResendCountdown(30);
-        setInfoMessage(`SMS OTP sent to ${e164Phone}! Please enter the 6-digit code below.`);
-        setIsLoading(false);
-        return;
-      } else {
-        const cleanOtp = otpCode.trim();
-        if (!cleanOtp || cleanOtp.length < 6) {
-          setErrorMessage('Please enter the complete 6-digit OTP code.');
-          setIsLoading(false);
-          return;
-        }
-
-        console.log('[AuthModal] Submitting OTP verification for:', e164Phone, 'with OTP:', cleanOtp);
-        const res = await verifyPhoneOtp(e164Phone, cleanOtp);
-        if (res.error) {
-          setErrorMessage(res.error);
-          setIsLoading(false);
-          return;
-        }
-        setSuccessText('Phone verified & signed in!');
-        setIsSuccess(true);
-        setTimeout(() => {
-          setIsSuccess(false);
-          setIsLoading(false);
-          onSuccess?.();
-          onClose();
-        }, 1000);
-        return;
-      }
-    }
-
-    // 2. Email Sign In
+    // Email Sign In
     if (mode === 'login') {
       const res = await signInWithEmail(email, password);
       if (res.error) {
@@ -250,7 +151,6 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'login' }:
                   setMode('login');
                   setErrorMessage(null);
                   setInfoMessage(null);
-                  setOtpSent(false);
                 }}
                 className={`flex-1 py-2 rounded-xl transition-all cursor-pointer ${
                   mode === 'login' ? 'bg-white text-[#0099e6] shadow-xs' : 'text-slate-500 hover:text-slate-900'
@@ -264,7 +164,6 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'login' }:
                   setMode('register');
                   setErrorMessage(null);
                   setInfoMessage(null);
-                  setOtpSent(false);
                 }}
                 className={`flex-1 py-2 rounded-xl transition-all cursor-pointer ${
                   mode === 'register' ? 'bg-white text-[#0099e6] shadow-xs' : 'text-slate-500 hover:text-slate-900'
@@ -320,101 +219,39 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'login' }:
               </button>
             </div>
 
-            {/* Method switch: Email vs Phone */}
-            <div className="flex items-center justify-between mb-3 text-[11px] text-slate-500 font-bold border-b border-slate-100 pb-2">
-              <span>Or continue with:</span>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMethod('email');
-                    setOtpSent(false);
-                    setErrorMessage(null);
-                    setInfoMessage(null);
-                  }}
-                  className={`cursor-pointer ${method === 'email' ? 'text-[#0099e6] underline' : 'hover:text-slate-800'}`}
-                >
-                  Email & Password
-                </button>
-                <span>•</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMethod('phone');
-                    setOtpSent(false);
-                    setErrorMessage(null);
-                    setInfoMessage(null);
-                  }}
-                  className={`cursor-pointer ${method === 'phone' ? 'text-[#0099e6] underline' : 'hover:text-slate-800'}`}
-                >
-                  Mobile Number
-                </button>
-              </div>
+            {/* Divider */}
+            <div className="relative flex items-center justify-center mb-3">
+              <div className="border-t border-slate-100 w-full" />
+              <span className="bg-white px-2 text-[11px] text-slate-400 font-medium">or continue with email</span>
             </div>
 
-
             <form onSubmit={handleSubmit} className="space-y-3 text-left">
-              {/* Method 1: Email Mode */}
-              {method === 'email' && (
+              {mode === 'register' && (
                 <>
-                  {mode === 'register' && (
-                    <>
-                      <div>
-                        <label className="block text-left text-xs font-bold text-slate-700 mb-1">Full Name *</label>
-                        <div className="relative">
-                          <User className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
-                          <input
-                            type="text"
-                            required
-                            placeholder="e.g. Satoshi Nakamoto"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 placeholder-slate-400 outline-none transition-colors"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-left text-xs font-bold text-slate-700 mb-1">Phone Number (Optional)</label>
-                        <div className="relative">
-                          <Phone className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
-                          <input
-                            type="tel"
-                            placeholder="+91 98765 43210"
-                            value={phoneNumber}
-                            onChange={(e) => setPhoneNumber(e.target.value)}
-                            className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 placeholder-slate-400 outline-none transition-colors"
-                          />
-                        </div>
-                      </div>
-                    </>
-                  )}
-
                   <div>
-                    <label className="block text-left text-xs font-bold text-slate-700 mb-1">Email Address *</label>
+                    <label className="block text-left text-xs font-bold text-slate-700 mb-1">Full Name *</label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+                      <User className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
                       <input
-                        type="email"
+                        type="text"
                         required
-                        placeholder="builder@hackersunity.dev"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="e.g. Satoshi Nakamoto"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
                         className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 placeholder-slate-400 outline-none transition-colors"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-left text-xs font-bold text-slate-700 mb-1">Password *</label>
+                    <label className="block text-left text-xs font-bold text-slate-700 mb-1">Phone Number (Optional)</label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+                      <Phone className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
                       <input
-                        type="password"
-                        required
-                        placeholder="••••••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        type="tel"
+                        placeholder="+91 98765 43210"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
                         className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 placeholder-slate-400 outline-none transition-colors"
                       />
                     </div>
@@ -422,111 +259,35 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'login' }:
                 </>
               )}
 
-              {/* Method 2: Phone Mode */}
-              {method === 'phone' && (
-                <>
-                  <div>
-                    <label className="block text-left text-xs font-bold text-slate-700 mb-1">Mobile Phone Number *</label>
-                    <div className="relative flex items-center bg-slate-50 border border-slate-200 focus-within:border-[#0099e6] rounded-xl transition-all overflow-hidden h-10">
-                      {/* Compact Fixed-Width Attached Country Badge */}
-                      <div className="relative shrink-0 flex items-center justify-center h-full px-2.5 bg-slate-100/70 hover:bg-slate-100 border-r border-slate-200 transition-colors">
-                        <div className="flex items-center gap-1.5 pointer-events-none select-none">
-                          <span className="text-sm leading-none">
-                            {COUNTRY_CODES.find((c) => c.code === countryCode)?.flag || '🌐'}
-                          </span>
-                          <span className="text-xs font-bold text-slate-800 tracking-tight">
-                            {countryCode}
-                          </span>
-                          <ChevronDown className="w-3 h-3 text-slate-400 shrink-0" />
-                        </div>
-                        <select
-                          value={countryCode}
-                          onChange={(e) => setCountryCode(e.target.value)}
-                          disabled={otpSent}
-                          aria-label="Select Country Code"
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-                        >
-                          {COUNTRY_CODES.map((c) => (
-                            <option key={`${c.iso}-${c.code}-${c.name}`} value={c.code}>
-                              {c.flag} {c.name} ({c.code})
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+              <div>
+                <label className="block text-left text-xs font-bold text-slate-700 mb-1">Email Address *</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+                  <input
+                    type="email"
+                    required
+                    placeholder="builder@hackersunity.dev"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                  />
+                </div>
+              </div>
 
-                      {/* Phone Number Input */}
-                      <div className="relative flex-1 flex items-center h-full">
-                        <input
-                          type="tel"
-                          required
-                          placeholder={COUNTRY_CODES.find((c) => c.code === countryCode)?.placeholder || '95561 47082'}
-                          value={phoneNumber}
-                          onChange={(e) => setPhoneNumber(e.target.value)}
-                          disabled={otpSent}
-                          className="w-full h-full px-3 bg-transparent text-xs font-medium text-slate-900 placeholder-slate-400 outline-none disabled:bg-slate-100"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {otpSent && (
-                    <div className="animate-in fade-in space-y-2">
-                      <div>
-                        <label className="block text-left text-xs font-bold text-slate-700 mb-1">Enter 6-Digit SMS Code *</label>
-                        <div className="relative">
-                          <KeyRound className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
-                          <input
-                            type="text"
-                            required
-                            placeholder="123456"
-                            maxLength={6}
-                            value={otpCode}
-                            onChange={(e) => setOtpCode(e.target.value)}
-                            className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 placeholder-slate-400 outline-none tracking-widest font-mono text-center font-bold"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Resend Code & Edit Number Actions */}
-                      <div className="flex items-center justify-between text-xs pt-1 px-0.5">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setOtpSent(false);
-                            setOtpCode('');
-                            setErrorMessage(null);
-                            setInfoMessage(null);
-                          }}
-                          className="text-slate-500 hover:text-slate-800 text-[11px] underline font-medium cursor-pointer"
-                        >
-                          Change Number
-                        </button>
-
-                        <button
-                          type="button"
-                          disabled={resendCountdown > 0 || isResending}
-                          onClick={handleResendOtp}
-                          className="text-[#0099e6] hover:text-[#0284c7] text-[11px] font-bold disabled:text-slate-400 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 transition-colors"
-                        >
-                          {isResending ? (
-                            <>
-                              <Loader2 className="w-3 h-3 animate-spin" />
-                              <span>Resending...</span>
-                            </>
-                          ) : resendCountdown > 0 ? (
-                            <span>Resend in {resendCountdown}s</span>
-                          ) : (
-                            <span className="flex items-center gap-1 underline">
-                              <RotateCcw className="w-3 h-3" />
-                              Resend Code
-                            </span>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
+              <div>
+                <label className="block text-left text-xs font-bold text-slate-700 mb-1">Password *</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+                  <input
+                    type="password"
+                    required
+                    placeholder="••••••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                  />
+                </div>
+              </div>
 
               <button
                 type="submit"
@@ -540,11 +301,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'login' }:
                   </>
                 ) : (
                   <span>
-                    {method === 'phone'
-                      ? otpSent
-                        ? 'Verify SMS OTP'
-                        : 'Send SMS OTP Code'
-                      : mode === 'login'
+                    {mode === 'login'
                       ? 'Sign In to Arena'
                       : 'Create Builder Account'}
                   </span>

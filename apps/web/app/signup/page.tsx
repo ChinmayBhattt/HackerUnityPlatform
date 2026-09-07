@@ -8,16 +8,13 @@ import {
   CheckCircle2,
   Eye,
   EyeOff,
-  Phone,
   ArrowRight,
   Loader2,
   AlertCircle,
   Sparkles,
-  KeyRound,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { UserRole } from '@hackers-unity/shared-types';
-import { formatAndValidatePhone } from '@/lib/phone-utils';
 
 function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
   const router = useRouter();
@@ -28,8 +25,6 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
     signInWithEmail,
     signUpWithEmail,
     signInWithOAuth,
-    signInWithPhone,
-    verifyPhoneOtp,
   } = useAuth();
 
   const modeFromQuery = searchParams.get('mode');
@@ -46,11 +41,6 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [phone, setPhone] = useState('');
   const [countryCode, setCountryCode] = useState('+91');
-
-  // Phone OTP Flow State
-  const [phoneAuthOpen, setPhoneAuthOpen] = useState(false);
-  const [otpCode, setOtpCode] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
 
   // Status State
   const [submitting, setSubmitting] = useState(false);
@@ -118,47 +108,6 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
       }
     } catch (err: any) {
       setErrorMessage(err.message || 'Failed to sign in. Please check your credentials.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // Handle Phone Auth
-  const handleSendPhoneOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMessage(null);
-    const fullPhone = `${countryCode}${phone}`;
-    setSubmitting(true);
-
-    try {
-      const res = await signInWithPhone(fullPhone);
-      if (res.error) {
-        setErrorMessage(res.error);
-      } else {
-        setOtpSent(true);
-      }
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Failed to send OTP.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleVerifyPhoneOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMessage(null);
-    const fullPhone = `${countryCode}${phone}`;
-    setSubmitting(true);
-
-    try {
-      const res = await verifyPhoneOtp(fullPhone, otpCode);
-      if (res.error) {
-        setErrorMessage(res.error);
-      } else {
-        router.push('/dashboard');
-      }
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Invalid or expired OTP.');
     } finally {
       setSubmitting(false);
     }
@@ -312,80 +261,8 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
               </div>
             )}
 
-            {/* Phone OTP Mode View */}
-            {phoneAuthOpen ? (
-              <div className="space-y-4">
-                {!otpSent ? (
-                  <form onSubmit={handleSendPhoneOtp} className="space-y-4">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700">Mobile Phone Number</label>
-                      <div className="flex gap-2">
-                        <div className="px-3.5 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 flex items-center">
-                          {countryCode}
-                        </div>
-                        <input
-                          required
-                          type="tel"
-                          placeholder="9876543210"
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                          className="flex-1 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:border-[#0099e6] focus:bg-white text-xs font-medium outline-none transition-all"
-                        />
-                      </div>
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={submitting || !phone}
-                      className="w-full py-3.5 rounded-2xl bg-[#0099e6] hover:bg-[#0284c7] disabled:opacity-50 text-white font-extrabold text-xs shadow-md shadow-sky-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Send Verification Code'}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setPhoneAuthOpen(false)}
-                      className="w-full text-center text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors py-1 cursor-pointer"
-                    >
-                      ← Back to Email / Password
-                    </button>
-                  </form>
-                ) : (
-                  <form onSubmit={handleVerifyPhoneOtp} className="space-y-4">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700">Enter 6-Digit OTP</label>
-                      <input
-                        required
-                        type="text"
-                        maxLength={6}
-                        placeholder="123456"
-                        value={otpCode}
-                        onChange={(e) => setOtpCode(e.target.value)}
-                        className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:border-[#0099e6] focus:bg-white text-center tracking-widest text-lg font-mono font-bold outline-none transition-all"
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={submitting || otpCode.length < 6}
-                      className="w-full py-3.5 rounded-2xl bg-[#0099e6] hover:bg-[#0284c7] disabled:opacity-50 text-white font-extrabold text-xs shadow-md shadow-sky-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Verify & Sign In'}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setOtpSent(false)}
-                      className="w-full text-center text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors py-1 cursor-pointer"
-                    >
-                      Resend to a different number
-                    </button>
-                  </form>
-                )}
-              </div>
-            ) : (
-              /* Standard Email Auth Flow */
-              <div className="space-y-5">
+            {/* Standard Email Auth Flow */}
+            <div className="space-y-5">
                 {/* Form Inputs */}
                 <form onSubmit={mode === 'register' ? handleSignUp : handleSignIn} className="space-y-3.5">
                   {mode === 'register' && (
@@ -515,15 +392,6 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
                     </svg>
                     <span>{mode === 'register' ? 'Sign up with Google' : 'Sign in with Google'}</span>
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setPhoneAuthOpen(true)}
-                    className="w-full py-3 px-4 rounded-2xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-2xs"
-                  >
-                    <Phone className="w-4 h-4 text-slate-500" />
-                    <span>{mode === 'register' ? 'Sign up with Mobile OTP' : 'Sign in with Mobile OTP'}</span>
-                  </button>
                 </div>
 
                 {/* Footer Switcher */}
@@ -559,7 +427,6 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
                   )}
                 </div>
               </div>
-            )}
           </div>
         </div>
       </div>
