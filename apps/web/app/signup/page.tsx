@@ -358,14 +358,8 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
                   </button>
                 </form>
 
-                {/* Divider */}
-                <div className="relative flex items-center justify-center my-4">
-                  <div className="border-t border-slate-200 w-full" />
-                  <span className="bg-white px-3 text-xs text-slate-400 font-medium">or</span>
-                </div>
-
                 {/* Social Sign Up / Sign In Options */}
-                <div className="space-y-2.5">
+                <div className="space-y-2.5 pt-3">
                   <button
                     type="button"
                     onClick={() => signInWithOAuth('google')}
