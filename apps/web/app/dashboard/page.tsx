@@ -60,6 +60,7 @@ import {
   deleteHostedEvent,
   syncBookmarksWithSupabase,
   getEventRegistrations,
+  getEventRegistrationsCount,
   UserRegistrationItem,
   getProjectSubmission,
   getEventSubmissionsCount,
@@ -373,7 +374,7 @@ export default function DashboardPage() {
   const loadModalRegistrations = useCallback(async (evt: ExtendedEvent) => {
     // 1. Immediately read local registrations so user sees data without any delay
     const localById = getEventRegistrations(evt.id);
-    const localBySlug = evt.slug ? getEventRegistrations(evt.slug) : [];
+    const localBySlug = evt.slug && evt.slug !== evt.id ? getEventRegistrations(evt.slug) : [];
     const map = new Map<string, any>();
     [...localById, ...localBySlug].forEach((r: any) => {
       const key = r.user_email || r.userEmail || r.email || r.id;
@@ -383,8 +384,8 @@ export default function DashboardPage() {
     // Populate immediately with zero freeze
     setEventRegistrations(Array.from(map.values()));
 
-    // Custom local events don't have remote DB records, so exit immediately
-    if (evt.id && evt.id.startsWith('evt_custom_')) {
+    // Custom local events don't have remote DB records, or if we already have local data, stop loading
+    if (evt.id && (evt.id.startsWith('evt_custom_') || evt.id.startsWith('evt_local_'))) {
       setLoadingRegistrations(false);
       return;
     }
@@ -394,12 +395,11 @@ export default function DashboardPage() {
     }
 
     try {
-      // 2. Fetch remote Supabase registrations with safety
-      const remoteRegs = await fetchEventRegistrations(evt.id);
-      let slugRegs: any[] = [];
-      if (evt.slug && evt.slug !== evt.id) {
-        slugRegs = await fetchEventRegistrations(evt.slug);
-      }
+      // 2. Fetch remote Supabase registrations in parallel with safety
+      const [remoteRegs, slugRegs] = await Promise.all([
+        fetchEventRegistrations(evt.id),
+        evt.slug && evt.slug !== evt.id ? fetchEventRegistrations(evt.slug) : Promise.resolve([]),
+      ]);
 
       [...remoteRegs, ...slugRegs].forEach((r) => {
         const key = r.user_email || r.userEmail || r.email || r.id;
@@ -1485,10 +1485,21 @@ export default function DashboardPage() {
                         <div className="pt-3 border-t border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                           {/* Metadata Pills */}
                           <div className="flex items-center gap-2.5 text-xs text-slate-600 font-medium flex-wrap">
-                            <span className="flex items-center gap-1 text-[#0099e6] font-bold whitespace-nowrap shrink-0 bg-sky-50 px-2.5 py-1 rounded-lg border border-sky-100">
-                              <Users className="w-3.5 h-3.5 shrink-0" />
-                              <span>{evt.participantsDisplay || `${evt.participantsCount || 500}+`} Builders</span>
-                            </span>
+                            {(() => {
+                              const localRegCount =
+                                (evt.id ? getEventRegistrationsCount(evt.id) : 0) +
+                                (evt.slug && evt.slug !== evt.id ? getEventRegistrationsCount(evt.slug) : 0);
+                              const displayBuilders = isPending
+                                ? `${localRegCount} Builder${localRegCount === 1 ? '' : 's'}`
+                                : evt.participantsDisplay || `${evt.participantsCount || 500}+ Builders`;
+
+                              return (
+                                <span className="flex items-center gap-1 text-[#0099e6] font-bold whitespace-nowrap shrink-0 bg-sky-50 px-2.5 py-1 rounded-lg border border-sky-100">
+                                  <Users className="w-3.5 h-3.5 shrink-0" />
+                                  <span>{displayBuilders}</span>
+                                </span>
+                              );
+                            })()}
 
                             <span className="flex items-center gap-1 text-[#ea580c] font-bold whitespace-nowrap shrink-0 bg-orange-50 px-2.5 py-1 rounded-lg border border-orange-100">
                               <Trophy className="w-3.5 h-3.5 shrink-0" />
@@ -1537,13 +1548,20 @@ export default function DashboardPage() {
                             </button>
 
                             {/* Registration Button */}
-                            <button
-                              onClick={() => setViewingHackersEvent(evt)}
-                              className="px-3 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 text-[#0099e6] border border-sky-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
-                            >
-                              <Users className="w-3.5 h-3.5 shrink-0" />
-                              <span>Registration</span>
-                            </button>
+                            {(() => {
+                              const localRegCount =
+                                (evt.id ? getEventRegistrationsCount(evt.id) : 0) +
+                                (evt.slug && evt.slug !== evt.id ? getEventRegistrationsCount(evt.slug) : 0);
+                              return (
+                                <button
+                                  onClick={() => setViewingHackersEvent(evt)}
+                                  className="px-3 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 text-[#0099e6] border border-sky-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
+                                >
+                                  <Users className="w-3.5 h-3.5 shrink-0" />
+                                  <span>Registrations ({localRegCount || (isPending ? 0 : evt.registrationCount || 0)})</span>
+                                </button>
+                              );
+                            })()}
 
                             {/* Submissions Button */}
                             <Link
@@ -1692,7 +1710,9 @@ export default function DashboardPage() {
                     Realtime Live
                   </span>
                 </div>
-                <h3 className="text-lg font-black text-slate-900 line-clamp-1">{viewingHackersEvent.title}</h3>
+                <h3 className="text-lg font-black text-slate-900 line-clamp-1">
+                  {viewingHackersEvent.title?.trim() || viewingHackersEvent.name?.trim() || viewingHackersEvent.tagline?.trim() || 'Hackathon'}
+                </h3>
                 <p className="text-xs text-slate-500 mt-0.5 font-medium">
                   {eventRegistrations.length} {eventRegistrations.length === 1 ? 'builder registered' : 'builders registered'}
                 </p>
@@ -1739,12 +1759,19 @@ export default function DashboardPage() {
                   </div>
                   <h4 className="text-base font-black text-slate-900">No Registrations Yet</h4>
                   <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                    No participants have registered for <strong className="text-slate-800">{viewingHackersEvent.title}</strong> yet. Share your event link to start receiving builder signups!
+                    No participants have registered for{' '}
+                    <strong className="text-slate-800">
+                      {viewingHackersEvent.title?.trim() || viewingHackersEvent.name?.trim() || viewingHackersEvent.tagline?.trim() || 'this hackathon'}
+                    </strong>{' '}
+                    yet. Share your event link to start receiving builder signups!
                   </p>
                   <div className="pt-2 flex items-center justify-center gap-2 flex-wrap">
                     <button
                       onClick={() => {
-                        const url = `${window.location.origin}/hackathons/${viewingHackersEvent.slug}`;
+                        const url =
+                          viewingHackersEvent.status === 'PENDING_APPROVAL' || viewingHackersEvent.status === 'DRAFT'
+                            ? getEventPrivateLink(viewingHackersEvent, window.location.origin)
+                            : `${window.location.origin}/hackathons/${viewingHackersEvent.slug}`;
                         navigator.clipboard.writeText(url);
                         setCopiedLink(true);
                         setTimeout(() => setCopiedLink(false), 2000);
@@ -1754,14 +1781,19 @@ export default function DashboardPage() {
                       {copiedLink ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                       <span>{copiedLink ? 'Link Copied!' : 'Copy Registration Link'}</span>
                     </button>
-                    <Link
-                      href={`/hackathons/${viewingHackersEvent.slug}`}
+                    <a
+                      href={
+                        viewingHackersEvent.status === 'PENDING_APPROVAL' || viewingHackersEvent.status === 'DRAFT'
+                          ? getEventPrivateLink(viewingHackersEvent, typeof window !== 'undefined' ? window.location.origin : '')
+                          : `/hackathons/${viewingHackersEvent.slug}`
+                      }
                       target="_blank"
+                      rel="noopener noreferrer"
                       className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors"
                     >
                       <span>Preview Event Page</span>
                       <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
-                    </Link>
+                    </a>
                   </div>
                 </div>
               ) : (

@@ -376,6 +376,11 @@ export function getEventRegistrations(eventId: string): EventRegistration[] {
   }
 }
 
+export function getEventRegistrationsCount(eventId: string): number {
+  if (!eventId) return 0;
+  return getEventRegistrations(eventId).length;
+}
+
 export function saveEventRegistration(reg: EventRegistration): void {
   if (typeof window === 'undefined') return;
   const current = getEventRegistrations(reg.eventId);

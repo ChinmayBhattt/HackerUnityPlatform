@@ -928,7 +928,7 @@ export async function fetchEventRegistrations(eventId: string): Promise<any[]> {
       .order('registered_at', { ascending: false });
 
     const timeoutPromise = new Promise<{ data: null; error: any }>((resolve) =>
-      setTimeout(() => resolve({ data: null, error: 'timeout' }), 3000)
+      setTimeout(() => resolve({ data: null, error: 'timeout' }), 1200)
     );
 
     const { data, error } = (await Promise.race([fetchPromise, timeoutPromise])) as any;

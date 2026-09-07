@@ -32,6 +32,7 @@ import {
 import { ExtendedEvent } from '@/lib/mock-data';
 import { formatDate } from '@/lib/utils';
 import { BulkRegistrationModal } from '@/components/bulk-registration-modal';
+import { fetchEventBySlug } from '@/lib/supabase-service';
 
 interface PageProps {
   params: Promise<{ eventId: string }>;
@@ -55,20 +56,36 @@ export default function EventRegistrationsPage({ params }: PageProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
 
-  const loadData = () => {
-    const all = getAllEvents();
-    const found = all.find((e) => e.id === resolvedParams.eventId || e.slug === resolvedParams.eventId);
+  const loadData = async () => {
+    let found = getAllEvents().find((e) => e.id === resolvedParams.eventId || e.slug === resolvedParams.eventId);
+    if (!found) {
+      found = (await fetchEventBySlug(resolvedParams.eventId)) || undefined;
+    }
     if (found) {
       setEvent(found);
-      const regs = getEventRegistrations(found.id);
-      setRegistrations(regs);
-      setStats(getRegistrationStats(found.id));
+      const localById = getEventRegistrations(found.id);
+      const localBySlug = found.slug && found.slug !== found.id ? getEventRegistrations(found.slug) : [];
+      const map = new Map<string, any>();
+      [...localById, ...localBySlug].forEach((r: any) => {
+        const key = r.userEmail || r.user_email || r.id;
+        if (key) map.set(key, r);
+      });
+      const combined = Array.from(map.values());
+      setRegistrations(combined);
+      setStats({
+        total: combined.length,
+        approved: combined.filter((r) => r.status === 'APPROVED' || r.status === 'CONFIRMED').length,
+        pending: combined.filter((r) => r.status === 'PENDING').length,
+        rejected: combined.filter((r) => r.status === 'REJECTED').length,
+      });
     }
   };
 
   useEffect(() => {
     loadData();
-    const handleStorage = () => loadData();
+    const handleStorage = () => {
+      loadData();
+    };
     window.addEventListener('hackers_unity_storage_change', handleStorage);
     return () => window.removeEventListener('hackers_unity_storage_change', handleStorage);
   }, [resolvedParams.eventId]);
