@@ -37,8 +37,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // Synchronously initialize user from storage to eliminate page load login flicker
-  const [user, setUser] = useState<UserPublic | null>(() => getStoredUser());
+  // Initialize user as null during SSR/initial hydration to avoid hydration mismatch
+  const [user, setUser] = useState<UserPublic | null>(null);
   const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -84,6 +84,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Load initial session
   useEffect(() => {
+    // 1. Immediately hydrate cached user from storage on client mount
+    const stored = getStoredUser();
+    if (stored) {
+      setUser(stored);
+    }
+
     async function initAuth() {
       // Catch OAuth code if redirected to root path by Supabase fallback
       if (typeof window !== 'undefined') {

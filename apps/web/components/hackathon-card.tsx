@@ -27,12 +27,7 @@ interface HackathonCardProps {
 
 export function HackathonCard({ event, isBookmarked, onBookmarkChange }: HackathonCardProps) {
   const { user, supabaseUser } = useAuth();
-  const [bookmarked, setBookmarked] = useState<boolean>(() => {
-    if (isBookmarked !== undefined) return isBookmarked;
-    if (typeof window === 'undefined') return false;
-    const ids = getBookmarkedEventIds();
-    return ids.includes(event.id) || ids.includes(event.slug);
-  });
+  const [bookmarked, setBookmarked] = useState<boolean>(() => isBookmarked ?? false);
   const [showRegModal, setShowRegModal] = useState(false);
   const [imgError, setImgError] = useState(false);
   const bannerImageSrc = getEventImageSrc(event);

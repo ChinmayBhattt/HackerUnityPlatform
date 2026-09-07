@@ -40,6 +40,11 @@ export function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [opportunitiesOpen, setOpportunitiesOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -227,7 +232,7 @@ export function Navbar() {
                 aria-label="Open notifications"
               >
                 <Bell className="w-5 h-5 text-slate-700" />
-                {unreadCount > 0 && (
+                {mounted && unreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#f97316] text-white text-[10px] font-black flex items-center justify-center ring-2 ring-white shadow-xs pointer-events-none">
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
@@ -241,17 +246,17 @@ export function Navbar() {
             </div>
 
             {/* User Profile / Supabase Login */}
-            {currentUser ? (
+            {mounted && currentUser ? (
               <div className="relative">
                 <button
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                   className="flex items-center gap-2 p-1.5 pl-2.5 pr-3 rounded-xl bg-sky-50 border border-[#0099e6]/30 hover:border-[#0099e6] transition-colors cursor-pointer"
                 >
                   <div className="w-6 h-6 rounded-lg bg-[#0099e6] text-white font-bold text-xs flex items-center justify-center shadow-xs">
-                    {currentUser.name.charAt(0)}
+                    {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
                   </div>
                   <span className="text-xs font-bold text-slate-800 max-w-[90px] truncate hidden sm:inline">
-                    {currentUser.name.split(' ')[0]}
+                    {currentUser.name ? currentUser.name.split(' ')[0] : 'User'}
                   </span>
                 </button>
 
@@ -415,7 +420,7 @@ export function Navbar() {
               <span>My Dashboard</span>
             </Link>
 
-            {!currentUser && (
+            {mounted && !currentUser && (
               <div className="pt-3 mt-2 border-t border-slate-100">
                 <Link
                   href="/signup"
