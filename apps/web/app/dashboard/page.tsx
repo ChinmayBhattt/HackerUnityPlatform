@@ -1390,80 +1390,74 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {filteredHostedEvents.map((evt) => (
-                    <div
-                      key={evt.id}
-                      className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200/90 hover:border-[#0099e6]/40 shadow-xs hover:shadow-md transition-all flex flex-col xl:flex-row xl:items-center justify-between gap-4"
-                    >
-                      <div className="space-y-2 flex-1 min-w-0">
-                        <div className="flex items-center gap-2.5 flex-wrap">
-                          <span
-                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide border whitespace-nowrap shrink-0 ${
-                              evt.status === 'COMPLETED'
-                                ? 'bg-slate-100 text-slate-600 border-slate-200'
-                                : evt.status === 'PENDING_APPROVAL'
-                                  ? 'bg-amber-50 text-amber-700 border-amber-200'
+                  {filteredHostedEvents.map((evt) => {
+                    const eventTitle =
+                      evt.title?.trim() || evt.name?.trim() || evt.tagline?.trim() || 'Untitled Hackathon';
+                    const prizeString =
+                      evt.prize || (evt.totalPrizeValue ? formatCurrency(evt.totalPrizeValue) : 'Perks & Swag');
+                    const isPending = evt.status === 'PENDING_APPROVAL';
+                    const isAdminUser =
+                      user?.email === 'chinmaybhatt26@gmail.com' ||
+                      user?.role === UserRole.ADMIN ||
+                      user?.role === UserRole.SUPER_ADMIN;
+
+                    return (
+                      <div
+                        key={evt.id}
+                        className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 hover:border-[#0099e6]/50 shadow-xs hover:shadow-md transition-all flex flex-col gap-3.5"
+                      >
+                        {/* 1. TOP ROW: Status Badge & Dates */}
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <div className="flex items-center gap-2.5 flex-wrap">
+                            <span
+                              className={`px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wide border whitespace-nowrap shrink-0 inline-flex items-center gap-1.5 ${
+                                evt.status === 'COMPLETED'
+                                  ? 'bg-slate-100 text-slate-700 border-slate-200'
+                                  : isPending
+                                    ? 'bg-amber-50 text-amber-800 border-amber-300 shadow-2xs'
+                                    : evt.status === 'DRAFT'
+                                      ? 'bg-slate-100 text-slate-600 border-slate-200'
+                                      : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              }`}
+                            >
+                              {evt.status === 'COMPLETED'
+                                ? 'Completed'
+                                : isPending
+                                  ? '⏳ Under Review'
                                   : evt.status === 'DRAFT'
-                                    ? 'bg-slate-100 text-slate-600 border-slate-200'
-                                    : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                            }`}
-                          >
-                            {evt.status === 'COMPLETED'
-                              ? 'Completed'
-                              : evt.status === 'PENDING_APPROVAL'
-                                ? '⏳ Under Review'
-                                : evt.status === 'DRAFT'
-                                  ? 'Draft'
-                                  : 'Live / Active'}
-                          </span>
-                          <span className="text-xs text-slate-400 font-medium whitespace-nowrap shrink-0">
-                            Starts: {formatDate(evt.startDate)}
-                          </span>
+                                    ? 'Draft'
+                                    : 'Live / Active'}
+                            </span>
+
+                            <span className="text-xs text-slate-500 font-medium whitespace-nowrap shrink-0 flex items-center gap-1">
+                              <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              <span>Starts: {formatDate(evt.startDate)}</span>
+                            </span>
+
+                            {evt.endDate && (
+                              <span className="text-xs text-slate-400 font-medium whitespace-nowrap shrink-0 hidden sm:inline">
+                                • Ends: {formatDate(evt.endDate)}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Review badge for pending approval */}
+                          {isPending && (
+                            <span className="text-[11px] font-semibold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200/80 flex items-center gap-1 shrink-0">
+                              <Clock className="w-3 h-3 text-amber-600 shrink-0" />
+                              <span>Pending Admin Review</span>
+                            </span>
+                          )}
                         </div>
 
-                        <h3 className="text-base sm:text-lg font-black text-slate-900 line-clamp-1">
-                          {evt.title || evt.name || evt.tagline || 'Untitled Hackathon'}
-                        </h3>
+                        {/* 2. MIDDLE ROW: Title & Admin 1-Click Approve */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight line-clamp-1 break-words">
+                            {eventTitle}
+                          </h3>
 
-                        <div className="flex items-center gap-3 text-xs text-slate-600 font-medium flex-wrap">
-                          <span className="flex items-center gap-1 text-[#0099e6] font-bold whitespace-nowrap shrink-0">
-                            <Users className="w-3.5 h-3.5" />
-                            {evt.participantsDisplay || `${evt.participantsCount || 500}+`} Builders
-                          </span>
-                          <span className="text-slate-300">•</span>
-                          <span className="text-[#ea580c] font-bold whitespace-nowrap shrink-0">
-                            Prize: {evt.prize || (evt.totalPrizeValue ? formatCurrency(evt.totalPrizeValue) : 'Perks & Swag')}
-                          </span>
-                          <span className="text-slate-300">•</span>
-                          <span className="text-slate-500 whitespace-nowrap shrink-0">{evt.mode || 'Online'}</span>
-                        </div>
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex items-center gap-2 flex-wrap pt-3 xl:pt-0 border-t xl:border-t-0 border-slate-100 xl:justify-end shrink-0">
-                        {/* Private Shareable Link for pending/draft events */}
-                        {(evt.status === 'PENDING_APPROVAL' || evt.status === 'DRAFT') && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const link = getEventPrivateLink(evt, window.location.origin);
-                              navigator.clipboard.writeText(link);
-                              setCopiedEventId(evt.id);
-                              setTimeout(() => setCopiedEventId(null), 2500);
-                            }}
-                            className="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
-                            title="Copy Private Shareable Link (allows anyone with the link to preview)"
-                          >
-                            <Lock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                            <span>{copiedEventId === evt.id ? 'Link Copied!' : 'Private Link'}</span>
-                          </button>
-                        )}
-
-                        {/* Approve button for admin */}
-                        {evt.status === 'PENDING_APPROVAL' &&
-                          (user?.email === 'chinmaybhatt26@gmail.com' ||
-                            user?.role === UserRole.ADMIN ||
-                            user?.role === UserRole.SUPER_ADMIN) && (
+                          {/* Admin One-Click Approve & Publish */}
+                          {isPending && isAdminUser && (
                             <button
                               type="button"
                               onClick={async () => {
@@ -1478,66 +1472,113 @@ export default function DashboardPage() {
                                   console.error(e);
                                 }
                               }}
-                              className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs whitespace-nowrap"
-                              title="Approve and publish this hackathon"
+                              className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs whitespace-nowrap shrink-0 self-start sm:self-auto"
+                              title="Approve and publish this hackathon immediately"
                             >
-                              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                              <CheckCircle2 className="w-4 h-4 shrink-0" />
                               <span>Approve &amp; Publish</span>
                             </button>
                           )}
+                        </div>
 
-                        <button
-                          onClick={() => {
-                            try {
-                              sessionStorage.setItem('hackers_unity_edit_event', JSON.stringify(evt));
-                            } catch (e) {
-                              console.warn('sessionStorage save error:', e);
-                            }
-                            window.location.href = `/host?edit=${encodeURIComponent(evt.id || evt.slug)}`;
-                          }}
-                          className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
-                        >
-                          <Edit3 className="w-3.5 h-3.5 text-[#0099e6] shrink-0" />
-                          <span>Edit</span>
-                        </button>
+                        {/* 3. BOTTOM ROW: Metadata Badges & Actions Toolbar */}
+                        <div className="pt-3 border-t border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                          {/* Metadata Pills */}
+                          <div className="flex items-center gap-2.5 text-xs text-slate-600 font-medium flex-wrap">
+                            <span className="flex items-center gap-1 text-[#0099e6] font-bold whitespace-nowrap shrink-0 bg-sky-50 px-2.5 py-1 rounded-lg border border-sky-100">
+                              <Users className="w-3.5 h-3.5 shrink-0" />
+                              <span>{evt.participantsDisplay || `${evt.participantsCount || 500}+`} Builders</span>
+                            </span>
 
-                        <button
-                          onClick={() => setViewingHackersEvent(evt)}
-                          className="px-3 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-[#0099e6] border border-sky-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
-                        >
-                          <Users className="w-3.5 h-3.5 shrink-0" />
-                          <span>Registration</span>
-                        </button>
+                            <span className="flex items-center gap-1 text-[#ea580c] font-bold whitespace-nowrap shrink-0 bg-orange-50 px-2.5 py-1 rounded-lg border border-orange-100">
+                              <Trophy className="w-3.5 h-3.5 shrink-0" />
+                              <span>Prize: {prizeString}</span>
+                            </span>
 
-                        <Link
-                          href={`/dashboard/events/${evt.id || evt.slug}/submissions`}
-                          className="px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
-                          title="View and Manage Submissions in Google Sheets Table"
-                        >
-                          <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                          <span>Submissions ({getEventSubmissionsCount(evt.id) || getEventSubmissionsCount(evt.slug)})</span>
-                        </Link>
+                            <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 border border-slate-200/80 whitespace-nowrap shrink-0 font-medium">
+                              {evt.mode || 'Online'}
+                            </span>
+                          </div>
 
-                        <a
-                          href={getEventPrivateLink(evt, typeof window !== 'undefined' ? window.location.origin : '')}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors shrink-0"
-                          title="View Event Preview"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
+                          {/* Action Toolbar */}
+                          <div className="flex items-center gap-2 flex-wrap lg:justify-end shrink-0">
+                            {/* Private Shareable Link for pending/draft */}
+                            {(isPending || evt.status === 'DRAFT') && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const link = getEventPrivateLink(evt, window.location.origin);
+                                  navigator.clipboard.writeText(link);
+                                  setCopiedEventId(evt.id);
+                                  setTimeout(() => setCopiedEventId(null), 2500);
+                                }}
+                                className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
+                                title="Copy Private Shareable Link (allows anyone with the link to preview)"
+                              >
+                                <Lock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                <span>{copiedEventId === evt.id ? 'Link Copied!' : 'Private Link'}</span>
+                              </button>
+                            )}
 
-                        <button
-                          onClick={() => setDeleteConfirmEvent(evt)}
-                          className="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors cursor-pointer shrink-0"
-                          title="Delete Event"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                            {/* Edit Button */}
+                            <button
+                              onClick={() => {
+                                try {
+                                  sessionStorage.setItem('hackers_unity_edit_event', JSON.stringify(evt));
+                                } catch (e) {
+                                  console.warn('sessionStorage save error:', e);
+                                }
+                                window.location.href = `/host?edit=${encodeURIComponent(evt.id || evt.slug)}`;
+                              }}
+                              className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
+                            >
+                              <Edit3 className="w-3.5 h-3.5 text-[#0099e6] shrink-0" />
+                              <span>Edit</span>
+                            </button>
+
+                            {/* Registration Button */}
+                            <button
+                              onClick={() => setViewingHackersEvent(evt)}
+                              className="px-3 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 text-[#0099e6] border border-sky-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
+                            >
+                              <Users className="w-3.5 h-3.5 shrink-0" />
+                              <span>Registration</span>
+                            </button>
+
+                            {/* Submissions Button */}
+                            <Link
+                              href={`/dashboard/events/${evt.id || evt.slug}/submissions`}
+                              className="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
+                              title="View and Manage Submissions in Google Sheets Table"
+                            >
+                              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                              <span>Submissions ({getEventSubmissionsCount(evt.id) || getEventSubmissionsCount(evt.slug)})</span>
+                            </Link>
+
+                            {/* External Preview Link */}
+                            <a
+                              href={getEventPrivateLink(evt, typeof window !== 'undefined' ? window.location.origin : '')}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors shrink-0"
+                              title="View Event Preview"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </a>
+
+                            {/* Delete Button */}
+                            <button
+                              onClick={() => setDeleteConfirmEvent(evt)}
+                              className="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors cursor-pointer shrink-0"
+                              title="Delete Event"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
