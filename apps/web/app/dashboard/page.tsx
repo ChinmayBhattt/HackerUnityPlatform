@@ -1393,19 +1393,20 @@ export default function DashboardPage() {
                   {filteredHostedEvents.map((evt) => (
                     <div
                       key={evt.id}
-                      className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200/90 hover:border-[#0099e6]/40 shadow-xs hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                      className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200/90 hover:border-[#0099e6]/40 shadow-xs hover:shadow-md transition-all flex flex-col xl:flex-row xl:items-center justify-between gap-4"
                     >
                       <div className="space-y-2 flex-1 min-w-0">
                         <div className="flex items-center gap-2.5 flex-wrap">
                           <span
-                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide border ${evt.status === 'COMPLETED'
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide border whitespace-nowrap shrink-0 ${
+                              evt.status === 'COMPLETED'
                                 ? 'bg-slate-100 text-slate-600 border-slate-200'
                                 : evt.status === 'PENDING_APPROVAL'
                                   ? 'bg-amber-50 text-amber-700 border-amber-200'
                                   : evt.status === 'DRAFT'
                                     ? 'bg-slate-100 text-slate-600 border-slate-200'
                                     : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                              }`}
+                            }`}
                           >
                             {evt.status === 'COMPLETED'
                               ? 'Completed'
@@ -1415,29 +1416,31 @@ export default function DashboardPage() {
                                   ? 'Draft'
                                   : 'Live / Active'}
                           </span>
-                          <span className="text-xs text-slate-400 font-medium">
+                          <span className="text-xs text-slate-400 font-medium whitespace-nowrap shrink-0">
                             Starts: {formatDate(evt.startDate)}
                           </span>
                         </div>
 
-                        <h3 className="text-base font-black text-slate-900 line-clamp-1">{evt.title}</h3>
+                        <h3 className="text-base sm:text-lg font-black text-slate-900 line-clamp-1">
+                          {evt.title || evt.name || evt.tagline || 'Untitled Hackathon'}
+                        </h3>
 
-                        <div className="flex items-center gap-4 text-xs text-slate-600 font-medium flex-wrap">
-                          <span className="flex items-center gap-1 text-[#0099e6] font-bold">
+                        <div className="flex items-center gap-3 text-xs text-slate-600 font-medium flex-wrap">
+                          <span className="flex items-center gap-1 text-[#0099e6] font-bold whitespace-nowrap shrink-0">
                             <Users className="w-3.5 h-3.5" />
                             {evt.participantsDisplay || `${evt.participantsCount || 500}+`} Builders
                           </span>
-                          <span>•</span>
-                          <span className="text-[#ea580c] font-bold">
-                            Prize: {evt.prize || formatCurrency(evt.totalPrizeValue)}
+                          <span className="text-slate-300">•</span>
+                          <span className="text-[#ea580c] font-bold whitespace-nowrap shrink-0">
+                            Prize: {evt.prize || (evt.totalPrizeValue ? formatCurrency(evt.totalPrizeValue) : 'Perks & Swag')}
                           </span>
-                          <span>•</span>
-                          <span className="text-slate-500">{evt.mode || 'Online'}</span>
+                          <span className="text-slate-300">•</span>
+                          <span className="text-slate-500 whitespace-nowrap shrink-0">{evt.mode || 'Online'}</span>
                         </div>
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="flex items-center gap-2 flex-wrap shrink-0">
+                      <div className="flex items-center gap-2 flex-wrap pt-3 xl:pt-0 border-t xl:border-t-0 border-slate-100 xl:justify-end shrink-0">
                         {/* Private Shareable Link for pending/draft events */}
                         {(evt.status === 'PENDING_APPROVAL' || evt.status === 'DRAFT') && (
                           <button
@@ -1448,10 +1451,10 @@ export default function DashboardPage() {
                               setCopiedEventId(evt.id);
                               setTimeout(() => setCopiedEventId(null), 2500);
                             }}
-                            className="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                            className="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
                             title="Copy Private Shareable Link (allows anyone with the link to preview)"
                           >
-                            <Lock className="w-3.5 h-3.5 text-amber-600" />
+                            <Lock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                             <span>{copiedEventId === evt.id ? 'Link Copied!' : 'Private Link'}</span>
                           </button>
                         )}
@@ -1475,10 +1478,10 @@ export default function DashboardPage() {
                                   console.error(e);
                                 }
                               }}
-                              className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                              className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs whitespace-nowrap"
                               title="Approve and publish this hackathon"
                             >
-                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                               <span>Approve &amp; Publish</span>
                             </button>
                           )}
@@ -1492,26 +1495,26 @@ export default function DashboardPage() {
                             }
                             window.location.href = `/host?edit=${encodeURIComponent(evt.id || evt.slug)}`;
                           }}
-                          className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                          className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
                         >
-                          <Edit3 className="w-3.5 h-3.5 text-[#0099e6]" />
+                          <Edit3 className="w-3.5 h-3.5 text-[#0099e6] shrink-0" />
                           <span>Edit</span>
                         </button>
 
                         <button
                           onClick={() => setViewingHackersEvent(evt)}
-                          className="px-3 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-[#0099e6] border border-sky-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                          className="px-3 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-[#0099e6] border border-sky-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
                         >
-                          <Users className="w-3.5 h-3.5" />
+                          <Users className="w-3.5 h-3.5 shrink-0" />
                           <span>Registration</span>
                         </button>
 
                         <Link
                           href={`/dashboard/events/${evt.id || evt.slug}/submissions`}
-                          className="px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                          className="px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
                           title="View and Manage Submissions in Google Sheets Table"
                         >
-                          <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+                          <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                           <span>Submissions ({getEventSubmissionsCount(evt.id) || getEventSubmissionsCount(evt.slug)})</span>
                         </Link>
 
@@ -1519,7 +1522,7 @@ export default function DashboardPage() {
                           href={getEventPrivateLink(evt, typeof window !== 'undefined' ? window.location.origin : '')}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors"
+                          className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors shrink-0"
                           title="View Event Preview"
                         >
                           <ExternalLink className="w-4 h-4" />
@@ -1527,7 +1530,7 @@ export default function DashboardPage() {
 
                         <button
                           onClick={() => setDeleteConfirmEvent(evt)}
-                          className="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors cursor-pointer"
+                          className="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors cursor-pointer shrink-0"
                           title="Delete Event"
                         >
                           <Trash2 className="w-4 h-4" />
