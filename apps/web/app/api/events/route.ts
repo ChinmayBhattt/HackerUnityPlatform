@@ -112,9 +112,14 @@ export async function POST(req: Request) {
       registration_capacity: event.registrationCapacity || null,
       approval_mode: event.approvalMode || 'MANUAL',
       custom_questions: event.customQuestions || [],
-      registration_fields: event.registrationFields || ['name', 'email', 'phone', 'college', 'city', 'github', 'linkedin', 'skills'],
       registration_count: 0,
     };
+
+    if (event.organizerName !== undefined) insertPayload.organizer_name = event.organizerName;
+    if (event.organizerAvatar !== undefined) insertPayload.organizer_avatar = event.organizerAvatar;
+    if (event.currency !== undefined) insertPayload.currency = event.currency;
+    if (event.entryFee !== undefined) insertPayload.entry_fee = event.entryFee;
+    if (event.bannerGradient !== undefined) insertPayload.banner_gradient = event.bannerGradient;
 
     const { data, error } = await serverSupabase
       .from('events')
@@ -149,6 +154,9 @@ export async function PATCH(req: Request) {
     if (updates.category !== undefined) updatePayload.category = updates.category;
     if (updates.eventType !== undefined) updatePayload.event_type = updates.eventType;
     if (updates.location !== undefined) updatePayload.location = updates.location;
+    if (updates.organizerName !== undefined) updatePayload.organizer_name = updates.organizerName;
+    if (updates.organizerAvatar !== undefined) updatePayload.organizer_avatar = updates.organizerAvatar;
+    if (updates.organizerId !== undefined) updatePayload.organizer_id = updates.organizerId;
     if (updates.startDate !== undefined) updatePayload.start_date = updates.startDate;
     if (updates.endDate !== undefined) updatePayload.end_date = updates.endDate;
     if (updates.registrationDeadline !== undefined) updatePayload.registration_deadline = updates.registrationDeadline;
@@ -166,33 +174,62 @@ export async function PATCH(req: Request) {
     if (updates.tagline !== undefined) updatePayload.tagline = updates.tagline;
     if (updates.logoUrl !== undefined) updatePayload.logo_url = updates.logoUrl;
     if (updates.bannerUrl !== undefined) updatePayload.banner_url = updates.bannerUrl;
+    if (updates.bannerGradient !== undefined) updatePayload.banner_gradient = updates.bannerGradient;
     if (updates.registrationStart !== undefined) updatePayload.registration_start = updates.registrationStart;
     if (updates.timezone !== undefined) updatePayload.timezone = updates.timezone;
     if (updates.eligibility !== undefined) updatePayload.eligibility = updates.eligibility;
     if (updates.difficulty !== undefined) updatePayload.difficulty = updates.difficulty;
     if (updates.rulesText !== undefined) updatePayload.rules_text = updates.rulesText;
     if (updates.registrationType !== undefined) updatePayload.registration_type = updates.registrationType;
+    if (updates.entryFee !== undefined) updatePayload.entry_fee = updates.entryFee;
+    if (updates.currency !== undefined) updatePayload.currency = updates.currency;
     if (updates.registrationCapacity !== undefined) updatePayload.registration_capacity = updates.registrationCapacity;
     if (updates.approvalMode !== undefined) updatePayload.approval_mode = updates.approvalMode;
     if (updates.customQuestions !== undefined) updatePayload.custom_questions = updates.customQuestions;
-    if (updates.registrationFields !== undefined) updatePayload.registration_fields = updates.registrationFields;
+    updatePayload.updated_at = new Date().toISOString();
 
     const VALID_STATUSES = ['DRAFT', 'PENDING_APPROVAL', 'PUBLISHED', 'REGISTRATION_OPEN', 'LIVE', 'JUDGING', 'COMPLETED', 'ARCHIVED'];
     if (updates.status && VALID_STATUSES.includes(updates.status)) {
       updatePayload.status = updates.status;
     }
 
-    const { error } = await serverSupabase
-      .from('events')
-      .update(updatePayload)
-      .eq('id', eventId);
+    const isUuid = Boolean(eventId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId));
+    let updateResult: any = null;
 
-    if (error) {
-      console.error('Server Supabase event update error:', error.message);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (isUuid) {
+      updateResult = await serverSupabase
+        .from('events')
+        .update(updatePayload)
+        .eq('id', eventId)
+        .select('*');
+    } else {
+      updateResult = await serverSupabase
+        .from('events')
+        .update(updatePayload)
+        .eq('slug', eventId)
+        .select('*');
     }
 
-    return NextResponse.json({ success: true });
+    if (updateResult?.error) {
+      console.error('Server Supabase event update error:', updateResult.error.message);
+      return NextResponse.json({ error: updateResult.error.message }, { status: 500 });
+    }
+
+    // Fallback: if no rows matched by UUID or slug, try matching the other
+    if (!updateResult?.data || updateResult.data.length === 0) {
+      const fallbackTarget = updates.slug || eventId;
+      const secondTry = await serverSupabase
+        .from('events')
+        .update(updatePayload)
+        .eq('slug', fallbackTarget)
+        .select('*');
+
+      if (secondTry.data && secondTry.data.length > 0) {
+        return NextResponse.json({ success: true, data: secondTry.data[0] });
+      }
+    }
+
+    return NextResponse.json({ success: true, data: updateResult?.data?.[0] });
   } catch (err: any) {
     console.error('Server error updating event:', err);
     return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });

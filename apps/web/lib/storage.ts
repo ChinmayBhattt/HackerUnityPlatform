@@ -206,9 +206,12 @@ export function updateHostedEvent(event: ExtendedEvent): void {
     overrides[sanitized.id] = sanitized;
     safeLocalStorageSet(STORAGE_KEYS_EVENTS_OVERRIDE, JSON.stringify(overrides));
 
-    // Also update in hosted events if present
+    // Also update in hosted events if present, or add if not already in local storage
     const custom = getCustomEvents();
-    const updatedCustom = custom.map((e) => (e.id === sanitized.id ? sanitized : e));
+    const exists = custom.some((e) => e.id === sanitized.id || (sanitized.slug && e.slug === sanitized.slug));
+    const updatedCustom = exists
+      ? custom.map((e) => (e.id === sanitized.id || (sanitized.slug && e.slug === sanitized.slug) ? sanitized : e))
+      : [sanitized, ...custom];
     safeLocalStorageSet(STORAGE_KEYS.HOSTED_EVENTS, JSON.stringify(updatedCustom));
 
     window.dispatchEvent(new Event('hackers_unity_storage_change'));

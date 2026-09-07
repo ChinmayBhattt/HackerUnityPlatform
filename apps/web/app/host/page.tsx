@@ -56,6 +56,7 @@ import { saveHostedEvent, saveDraftEvent, updateHostedEvent, getCustomEvents } f
 import { createEventInSupabase, updateEventInSupabase, fetchEventBySlug, uploadHackathonAsset } from '@/lib/supabase-service';
 import { getEventPreviewToken, getEventPrivateLink } from '@/lib/utils';
 import { HackathonCard } from '@/components/hackathon-card';
+import { getEventImageSrc } from '@/lib/event-images';
 import { RichTextEditor } from '@/components/rich-text-editor';
 import { VenuePicker } from '@/components/venue-picker';
 import { useAuth } from '@/lib/auth-context';
@@ -345,11 +346,18 @@ function HostHackathonContent() {
           setTitle(found.title || found.name || '');
           setTagline(found.tagline || '');
           setLogoPreview(found.logoUrl || found.organizerLogo || null);
-          setBannerPreview(found.bannerUrl || found.image || null);
+          const fallbackBanner = found.bannerUrl || found.image || getEventImageSrc(found) || null;
+          setBannerPreview(fallbackBanner);
           setDescription(found.description || '');
           setCategory(found.category || EventCategory.HACKATHON);
           setEventType(found.eventType || (found.mode === 'Online' ? EventType.ONLINE : EventType.OFFLINE));
           setLocation(found.location || 'Online');
+
+          if (found.organizerAvatar === '🎓' || (found.organizerName && /college|university|institute|campus/i.test(found.organizerName))) {
+            setHostType('COLLEGE');
+          } else {
+            setHostType('ORGANIZATION');
+          }
 
           if (found.organizerName) {
             if (found.organizerName.includes('•')) {
@@ -854,11 +862,11 @@ ${organizerName || 'Organizer'}`;
   ]);
 
   const gmailDraftUrl = useMemo(() => {
-    return `https://mail.google.com/mail/?view=cm&fs=1&to=hackerunity.community@gmail.com&su=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBodyText)}`;
+    return `https://mail.google.com/mail/?view=cm&fs=1&to=chinmaybhatt26@gmail.com&su=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBodyText)}`;
   }, [emailSubject, emailBodyText]);
 
   const mailtoUrl = useMemo(() => {
-    return `mailto:hackerunity.community@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBodyText)}`;
+    return `mailto:chinmaybhatt26@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBodyText)}`;
   }, [emailSubject, emailBodyText]);
 
   const handleTriggerResend = async () => {
@@ -930,7 +938,7 @@ ${organizerName || 'Organizer'}`;
     // 2. Persist to Supabase / Server API
     const res = await createEventInSupabase(event, organizerId);
 
-    // 3. Dispatch approval request email to hackerunity.community@gmail.com
+    // 3. Dispatch approval request email to chinmaybhatt26@gmail.com
     try {
       fetch('/api/host-approval-email', {
         method: 'POST',
@@ -1073,7 +1081,7 @@ ${organizerName || 'Organizer'}`;
               {isEditMode ? (
                 <>Changes for <strong className="text-slate-900">{submittedEvent?.title || previewEvent.title}</strong> have been saved successfully.</>
               ) : (
-                <>Your hackathon <strong className="text-slate-900">&quot;{submittedEvent?.title || previewEvent.title}&quot;</strong> has been submitted for review. An approval request has been sent to <strong className="text-[#0099e6]">hackerunity.community@gmail.com</strong>. Once approved by the team, it will go live globally across the platform.</>
+                <>Your hackathon <strong className="text-slate-900">&quot;{submittedEvent?.title || previewEvent.title}&quot;</strong> has been submitted for review. An approval request has been sent to <strong className="text-[#0099e6]">chinmaybhatt26@gmail.com</strong>. Once approved by the team, it will go live globally across the platform.</>
               )}
             </p>
           </div>
@@ -1148,7 +1156,7 @@ ${organizerName || 'Organizer'}`;
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-slate-900">
-                      Send Details to hackerunity.community@gmail.com
+                      Send Details to chinmaybhatt26@gmail.com
                     </h4>
                     <p className="text-[11px] text-slate-500 font-medium">
                       One-click draft creation with full hackathon specifications
@@ -1156,12 +1164,12 @@ ${organizerName || 'Organizer'}`;
                   </div>
                 </div>
                 <span className="text-[11px] font-mono font-bold text-[#0099e6] bg-white px-3 py-1 rounded-full border border-sky-200 shadow-2xs">
-                  hackerunity.community@gmail.com
+                  chinmaybhatt26@gmail.com
                 </span>
               </div>
 
               <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                Click <strong className="text-slate-900">&quot;Open in Gmail Draft&quot;</strong> below to instantly open Gmail with a pre-filled draft containing all event specifications (prizes, dates, venue, rules, links) addressed to <strong className="text-slate-900">hackerunity.community@gmail.com</strong>:
+                Click <strong className="text-slate-900">&quot;Open in Gmail Draft&quot;</strong> below to instantly open Gmail with a pre-filled draft containing all event specifications (prizes, dates, venue, rules, links) addressed to <strong className="text-slate-900">chinmaybhatt26@gmail.com</strong>:
               </p>
 
               <div className="flex flex-wrap items-center gap-2.5 pt-1">
@@ -2390,7 +2398,7 @@ ${organizerName || 'Organizer'}`;
                       <div className="flex items-center gap-2 text-slate-700">
                         <Mail className="w-4 h-4 text-[#0099e6] shrink-0" />
                         <span className="font-medium">
-                          On submit, an approval request is dispatched to <strong className="text-slate-900">hackerunity.community@gmail.com</strong>
+                          On submit, an approval request is dispatched to <strong className="text-slate-900">chinmaybhatt26@gmail.com</strong>
                         </span>
                       </div>
                       <a

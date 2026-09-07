@@ -461,7 +461,6 @@ export async function createEventInSupabase(
       registration_capacity: event.registrationCapacity || null,
       approval_mode: event.approvalMode || 'MANUAL',
       custom_questions: event.customQuestions || [],
-      registration_fields: event.registrationFields || ['name', 'email', 'phone', 'college', 'city', 'github', 'linkedin', 'skills'],
       registration_count: 0,
     };
 
@@ -564,17 +563,28 @@ export async function updateEventInSupabase(
     if (updates.tagline !== undefined) updatePayload.tagline = updates.tagline;
     if (updates.logoUrl !== undefined) updatePayload.logo_url = updates.logoUrl;
     if (updates.bannerUrl !== undefined) updatePayload.banner_url = updates.bannerUrl;
+    if (updates.organizerName !== undefined) updatePayload.organizer_name = updates.organizerName;
+    if (updates.organizerAvatar !== undefined) updatePayload.organizer_avatar = updates.organizerAvatar;
+    if (updates.organizerId !== undefined) updatePayload.organizer_id = updates.organizerId;
+    if (updates.currency !== undefined) updatePayload.currency = updates.currency;
+    if (updates.entryFee !== undefined) updatePayload.entry_fee = updates.entryFee;
+    if (updates.registrationType !== undefined) updatePayload.registration_type = updates.registrationType;
+    if (updates.registrationCapacity !== undefined) updatePayload.registration_capacity = updates.registrationCapacity;
+    if (updates.approvalMode !== undefined) updatePayload.approval_mode = updates.approvalMode;
     if (updates.eligibility !== undefined) updatePayload.eligibility = updates.eligibility;
     if (updates.difficulty !== undefined) updatePayload.difficulty = updates.difficulty;
     if (updates.rulesText !== undefined) updatePayload.rules_text = updates.rulesText;
     if (updates.customQuestions !== undefined) updatePayload.custom_questions = updates.customQuestions;
-    if (updates.registrationFields !== undefined) updatePayload.registration_fields = updates.registrationFields;
     updatePayload.updated_at = new Date().toISOString();
 
-    const { error } = await supabase
-      .from('events')
-      .update(updatePayload)
-      .eq('id', eventId);
+    const isUuid = Boolean(eventId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId));
+    let clientQuery = supabase.from('events').update(updatePayload);
+    if (isUuid) {
+      clientQuery = clientQuery.eq('id', eventId);
+    } else {
+      clientQuery = clientQuery.eq('slug', eventId);
+    }
+    const { error } = await clientQuery;
 
     if (error) {
       console.warn('Direct Supabase update error:', error.message);

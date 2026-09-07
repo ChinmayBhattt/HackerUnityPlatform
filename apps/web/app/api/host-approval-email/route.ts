@@ -21,7 +21,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const adminEmail = 'hackerunity.community@gmail.com';
+    const adminEmail = process.env.ADMIN_EMAIL || 'chinmaybhatt26@gmail.com';
     const baseUrl = origin || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const previewToken = event.previewToken || (event.slug ? 'hu_prv_' + Buffer.from(event.slug).toString('hex').slice(0, 10) : 'hu_prv_demo');
     const eventPreviewUrl = `${baseUrl}/hackathons/${event.slug || 'preview'}?preview_key=${previewToken}`;
