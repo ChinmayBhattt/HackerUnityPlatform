@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Mail,
   Phone,
@@ -9,6 +9,8 @@ import {
   MessageSquare,
   Sparkles,
   CheckCircle2,
+  AlertCircle,
+  Loader2,
 } from 'lucide-react';
 import {
   FaInstagram,
@@ -18,9 +20,14 @@ import {
   FaWhatsapp,
   FaYoutube,
 } from 'react-icons/fa6';
+import { useAuth } from '@/lib/auth-context';
+import { submitContactInquiry } from '@/lib/supabase-service';
 
 export default function ContactPage() {
+  const { user } = useAuth();
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -29,9 +36,41 @@ export default function ContactPage() {
     message: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Pre-fill user details if logged in
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        name: prev.name || user.name || '',
+        email: prev.email || user.email || '',
+      }));
+    }
+  }, [user]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFormSubmitted(true);
+    setErrorMsg(null);
+    setSubmitting(true);
+
+    try {
+      const res = await submitContactInquiry({
+        name: formData.name,
+        email: formData.email,
+        inquiryType: formData.inquiryType,
+        subject: formData.subject,
+        message: formData.message,
+      });
+
+      if (res.success) {
+        setFormSubmitted(true);
+      } else {
+        setErrorMsg(res.error || 'Failed to submit your message. Please try again.');
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Network error. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const socials = [
@@ -243,12 +282,29 @@ export default function ContactPage() {
                     />
                   </div>
 
+                  {errorMsg && (
+                    <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
+                      <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+                      <span>{errorMsg}</span>
+                    </div>
+                  )}
+
                   <button
                     type="submit"
-                    className="w-full py-3 px-6 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white text-xs font-bold flex items-center justify-center gap-2 shadow-md shadow-sky-500/20 transition-all cursor-pointer"
+                    disabled={submitting}
+                    className="w-full py-3 px-6 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] disabled:opacity-60 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-md shadow-sky-500/20 transition-all cursor-pointer"
                   >
-                    <Send className="w-4 h-4" />
-                    <span>Submit Inquiry</span>
+                    {submitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Submitting Inquiry...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        <span>Submit Inquiry</span>
+                      </>
+                    )}
                   </button>
                 </form>
               )}

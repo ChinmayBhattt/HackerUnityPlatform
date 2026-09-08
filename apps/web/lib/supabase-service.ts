@@ -2415,3 +2415,56 @@ export function subscribeToEventSubmissions(
   }
 }
 
+export interface ContactInquiryInput {
+  name: string;
+  email: string;
+  inquiryType?: string;
+  subject: string;
+  message: string;
+}
+
+export async function submitContactInquiry(
+  input: ContactInquiryInput
+): Promise<{ success: boolean; message?: string; error?: string }> {
+  try {
+    // 1. Try server API route first
+    if (typeof window !== 'undefined') {
+      try {
+        const response = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (response.ok && data.success) {
+          return { success: true, message: data.message };
+        } else if (data.error) {
+          return { success: false, error: data.error };
+        }
+      } catch (apiErr) {
+        console.warn('[Contact] API fetch error, falling back to client:', apiErr);
+      }
+    }
+
+    // 2. Direct client fallback
+    const { error } = await supabase.from('contact_inquiries').insert({
+      name: input.name.trim(),
+      email: input.email.trim().toLowerCase(),
+      inquiry_type: input.inquiryType || 'general',
+      subject: input.subject.trim(),
+      message: input.message.trim(),
+      status: 'PENDING',
+      created_at: new Date().toISOString(),
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, message: 'Your inquiry has been submitted successfully.' };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Failed to submit inquiry' };
+  }
+}
+
