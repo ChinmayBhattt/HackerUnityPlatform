@@ -133,7 +133,13 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
       const userEmail = email.trim();
 
       if (mode === 'CREATE_TEAM') {
-        const teamRes = await createTeam(teamName.trim(), maxTeam, teamDescription);
+        const teamRes = await createTeam(teamName.trim(), maxTeam, teamDescription, {
+          name: fullName.trim(),
+          email: userEmail,
+          phone,
+          college,
+          skills: skillsInput.split(',').map((s) => s.trim()).filter(Boolean),
+        });
         if (!teamRes.success) {
           setErrorMsg(teamRes.error || 'Failed to create team');
           setSubmitting(false);

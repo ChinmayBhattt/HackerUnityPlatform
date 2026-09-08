@@ -1073,7 +1073,14 @@ export async function createTeamSupabase(
   leaderId: string,
   teamName: string,
   maxMembers: number = 4,
-  description?: string
+  description?: string,
+  leaderDetails?: {
+    name?: string;
+    email?: string;
+    phone?: string | null;
+    college?: string | null;
+    skills?: string[];
+  }
 ): Promise<{ success: boolean; team?: any; error?: string }> {
   // Check if event is a custom local event or non-UUID
   const isEventUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId);
@@ -1089,8 +1096,8 @@ export async function createTeamSupabase(
       description: description || '',
       created_at: new Date().toISOString(),
       profiles: {
-        name: 'Squad Leader',
-        email: 'leader@hackersunity.dev',
+        name: leaderDetails?.name || 'Squad Leader',
+        email: leaderDetails?.email || 'leader@hackersunity.dev',
       },
       team_members: [
         {
@@ -1100,8 +1107,8 @@ export async function createTeamSupabase(
           role: 'LEADER',
           status: 'ACCEPTED',
           profiles: {
-            name: 'Squad Leader',
-            email: 'leader@hackersunity.dev',
+            name: leaderDetails?.name || 'Squad Leader',
+            email: leaderDetails?.email || 'leader@hackersunity.dev',
           },
         },
       ],
@@ -1124,6 +1131,11 @@ export async function createTeamSupabase(
             teamName,
             maxMembers,
             description,
+            leaderName: leaderDetails?.name,
+            leaderEmail: leaderDetails?.email,
+            phone: leaderDetails?.phone,
+            college: leaderDetails?.college,
+            skills: leaderDetails?.skills,
           }),
         });
 
@@ -1145,7 +1157,32 @@ export async function createTeamSupabase(
       }
     }
 
-    // 2. Direct client fallback
+    // 2. Direct client fallback: ensure leader profile exists to avoid teams_leader_id_fkey violation
+    try {
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', leaderId)
+        .maybeSingle();
+
+      if (!prof) {
+        await supabase.from('profiles').upsert(
+          {
+            id: leaderId,
+            name: leaderDetails?.name || 'Squad Leader',
+            email: leaderDetails?.email || '',
+            phone: leaderDetails?.phone || null,
+            college: leaderDetails?.college || null,
+            skills: leaderDetails?.skills || [],
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'id' }
+        );
+      }
+    } catch (profErr) {
+      console.warn('Profile ensure before team creation warning:', profErr);
+    }
+
     const { data: team, error: teamError } = await supabase
       .from('teams')
       .insert({
@@ -1202,7 +1239,11 @@ export async function fetchEventTeams(eventId: string): Promise<any[]> {
 export async function joinTeamSupabase(
   teamId: string,
   userId: string,
-  maxMembers: number = 4
+  maxMembers: number = 4,
+  userDetails?: {
+    name?: string;
+    email?: string;
+  }
 ): Promise<{ success: boolean; error?: string }> {
   if (teamId.startsWith('team_')) {
     const member = {
@@ -1212,8 +1253,8 @@ export async function joinTeamSupabase(
       role: 'MEMBER',
       status: 'ACCEPTED',
       profiles: {
-        name: 'Squad Member',
-        email: 'member@hackersunity.dev',
+        name: userDetails?.name || 'Squad Member',
+        email: userDetails?.email || 'member@hackersunity.dev',
       },
     };
     const success = joinLocalEventTeam('', teamId, member);
@@ -1234,6 +1275,8 @@ export async function joinTeamSupabase(
             teamId,
             userId,
             maxMembers,
+            userName: userDetails?.name,
+            userEmail: userDetails?.email,
           }),
         });
 
@@ -1250,7 +1293,29 @@ export async function joinTeamSupabase(
       }
     }
 
-    // 2. Direct client fallback
+    // 2. Direct client fallback: ensure member profile exists to avoid team_members_user_id_fkey
+    try {
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (!prof) {
+        await supabase.from('profiles').upsert(
+          {
+            id: userId,
+            name: userDetails?.name || 'Squad Member',
+            email: userDetails?.email || '',
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'id' }
+        );
+      }
+    } catch (profErr) {
+      console.warn('Profile ensure before join warning:', profErr);
+    }
+
     const { data: members } = await supabase
       .from('team_members')
       .select('id')

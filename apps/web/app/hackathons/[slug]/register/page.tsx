@@ -282,7 +282,13 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
 
       if (mode === 'CREATE_TEAM') {
         // 1. Create team
-        const teamRes = await createTeam(teamName.trim(), maxTeam, teamDescription.trim());
+        const teamRes = await createTeam(teamName.trim(), maxTeam, teamDescription.trim(), {
+          name: fullName.trim(),
+          email: userEmail,
+          phone: phone.trim() || undefined,
+          college: college.trim() || undefined,
+          skills: skills.split(',').map((s) => s.trim()).filter(Boolean),
+        });
         if (!teamRes.success) {
           setErrorMsg(teamRes.error || 'Failed to create squad.');
           setSubmitting(false);
@@ -330,7 +336,10 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
         }
 
         // 1. Join team
-        const joinRes = await joinTeam(selectedTeamId, maxTeam);
+        const joinRes = await joinTeam(selectedTeamId, maxTeam, {
+          name: fullName.trim(),
+          email: userEmail,
+        });
         if (!joinRes.success) {
           setErrorMsg(joinRes.error || 'Failed to join squad.');
           setSubmitting(false);

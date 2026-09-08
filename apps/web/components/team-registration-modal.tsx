@@ -59,7 +59,13 @@ export function TeamRegistrationModal({ event, isOpen, onClose, onSuccess }: Tea
       }
 
       // 1. Create team in Supabase
-      const teamRes = await createTeam(teamName.trim(), maxTeam, description);
+      const teamRes = await createTeam(teamName.trim(), maxTeam, description, {
+        name: fullName || user?.name || 'Squad Lead',
+        email: userEmail,
+        phone,
+        college,
+        skills: skills.split(',').map((s) => s.trim()).filter(Boolean),
+      });
       if (!teamRes.success) {
         setErrorMsg(teamRes.error || 'Failed to create team');
         setSubmitting(false);

@@ -85,7 +85,7 @@ export interface AuthenticatedUser {
  *
  * Returns the authenticated user on success, or null if not authenticated.
  */
-export async function authenticateRequest(): Promise<AuthenticatedUser | null> {
+export async function authenticateRequest(req?: Request): Promise<AuthenticatedUser | null> {
   try {
     const cookieStore = await cookies();
 
@@ -111,15 +111,32 @@ export async function authenticateRequest(): Promise<AuthenticatedUser | null> {
       error,
     } = await supabase.auth.getUser();
 
-    if (error || !user) {
-      return null;
+    if (!error && user) {
+      return {
+        user,
+        userId: user.id,
+        email: user.email || '',
+      };
     }
 
-    return {
-      user,
-      userId: user.id,
-      email: user.email || '',
-    };
+    // Fallback: check Authorization Bearer token if request was passed
+    if (req) {
+      const authHeader = req.headers.get('authorization') || req.headers.get('Authorization');
+      if (authHeader?.startsWith('Bearer ')) {
+        const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+        const admin = createAdminClient();
+        const { data: tokenUser, error: tokenErr } = await admin.auth.getUser(token);
+        if (!tokenErr && tokenUser?.user) {
+          return {
+            user: tokenUser.user,
+            userId: tokenUser.user.id,
+            email: tokenUser.user.email || '',
+          };
+        }
+      }
+    }
+
+    return null;
   } catch (err) {
     console.error('[api-auth] Authentication error:', err);
     return null;

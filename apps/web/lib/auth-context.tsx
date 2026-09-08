@@ -159,6 +159,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .maybeSingle();
 
       const meta = sbUser.user_metadata || {};
+
+      if (!profile && sbUser.id && (sbUser.email || saved?.email)) {
+        try {
+          const fallbackName = meta.name || meta.full_name || saved?.name || sbUser.email?.split('@')[0] || 'Hacker';
+          const fallbackEmail = sbUser.email || saved?.email || '';
+          await supabase
+            .from('profiles')
+            .upsert(
+              {
+                id: sbUser.id,
+                name: fallbackName,
+                email: fallbackEmail,
+                avatar_url: meta.avatar_url || saved?.avatarUrl || null,
+                role: (meta.role as UserRole) || saved?.role || UserRole.PARTICIPANT,
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: 'id' }
+            );
+        } catch (syncErr) {
+          console.warn('Auto profile sync upsert notice:', syncErr);
+        }
+      }
       const fullUser: UserPublic = {
         id: sbUser.id,
         name: profile?.name || meta.name || meta.full_name || saved?.name || sbUser.email?.split('@')[0] || 'Hacker',

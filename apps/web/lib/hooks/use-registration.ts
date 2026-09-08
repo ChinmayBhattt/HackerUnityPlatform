@@ -95,20 +95,51 @@ export function useEventTeams(eventId: string) {
     loadTeams();
   }, [loadTeams]);
 
-  const createTeam = async (teamName: string, maxMembers: number = 4, description?: string) => {
+  const createTeam = async (
+    teamName: string,
+    maxMembers: number = 4,
+    description?: string,
+    leaderDetails?: {
+      name?: string;
+      email?: string;
+      phone?: string | null;
+      college?: string | null;
+      skills?: string[];
+    }
+  ) => {
     const userId = supabaseUser?.id || user?.id || 'usr_me';
+    const leaderName = leaderDetails?.name || user?.name || supabaseUser?.user_metadata?.name || 'Squad Leader';
+    const leaderEmail = leaderDetails?.email || user?.email || supabaseUser?.email || '';
 
-    const res = await createTeamSupabase(eventId, userId, teamName, maxMembers, description);
+    const res = await createTeamSupabase(eventId, userId, teamName, maxMembers, description, {
+      name: leaderName,
+      email: leaderEmail,
+      phone: leaderDetails?.phone || user?.phone || null,
+      college: leaderDetails?.college || user?.college || null,
+      skills: leaderDetails?.skills || user?.skills || [],
+    });
     if (res.success) {
       await loadTeams();
     }
     return res;
   };
 
-  const joinTeam = async (teamId: string, maxMembers: number = 4) => {
+  const joinTeam = async (
+    teamId: string,
+    maxMembers: number = 4,
+    userDetails?: {
+      name?: string;
+      email?: string;
+    }
+  ) => {
     const userId = supabaseUser?.id || user?.id || 'usr_me';
+    const userName = userDetails?.name || user?.name || supabaseUser?.user_metadata?.name || 'Squad Member';
+    const userEmail = userDetails?.email || user?.email || supabaseUser?.email || '';
 
-    const res = await joinTeamSupabase(teamId, userId, maxMembers);
+    const res = await joinTeamSupabase(teamId, userId, maxMembers, {
+      name: userName,
+      email: userEmail,
+    });
     if (res.success) {
       await loadTeams();
     }
