@@ -688,7 +688,7 @@ export default function HomePage() {
 
                   <div className="flex items-center gap-6 pt-1">
                     <div>
-                      <p className="text-2xl sm:text-3xl font-black text-white">50+</p>
+                      <p className="text-2xl sm:text-3xl font-black text-white">30+</p>
                       <p className="text-[11px] text-slate-400 font-semibold">Workshops Hosted</p>
                     </div>
                     <div className="w-px h-10 bg-slate-800" />
@@ -698,7 +698,7 @@ export default function HomePage() {
                     </div>
                     <div className="w-px h-10 bg-slate-800" />
                     <div>
-                      <p className="text-2xl sm:text-3xl font-black text-white">30+</p>
+                      <p className="text-2xl sm:text-3xl font-black text-white">15+</p>
                       <p className="text-[11px] text-slate-400 font-semibold">Cities Reached</p>
                     </div>
                   </div>
