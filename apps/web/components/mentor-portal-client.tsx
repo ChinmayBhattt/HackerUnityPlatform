@@ -135,7 +135,7 @@ export function MentorPortalClient() {
                     setQuery(e.target.value);
                     if (searched) setSearched(false);
                   }}
-                  placeholder="e.g. HU-MTR-TAPENDRA-883 or Tapendra-stf4w4sdg883"
+                  placeholder="e.g. HU-MTR-XXXX-XXX or enter Credential ID"
                   className="w-full pl-4 pr-32 py-3.5 rounded-2xl border border-slate-300 focus:border-[#0099e6] focus:ring-2 focus:ring-[#0099e6]/20 bg-slate-50/50 text-slate-900 placeholder:text-slate-400 text-sm font-medium transition-all outline-hidden"
                 />
                 <button
@@ -281,7 +281,7 @@ export function MentorPortalClient() {
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Tapendra Singh Ranawat"
+                      placeholder="e.g. Rahul Sharma"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#0099e6] focus:ring-2 focus:ring-[#0099e6]/20 bg-slate-50/50 text-slate-900 text-xs sm:text-sm outline-hidden"
@@ -297,7 +297,7 @@ export function MentorPortalClient() {
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Metacube Software Pvt Ltd"
+                      placeholder="e.g. Acme Tech Solutions / Freelance"
                       value={formData.company}
                       onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#0099e6] focus:ring-2 focus:ring-[#0099e6]/20 bg-slate-50/50 text-slate-900 text-xs sm:text-sm outline-hidden"
@@ -313,7 +313,7 @@ export function MentorPortalClient() {
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Project Lead / Solution Architect"
+                      placeholder="e.g. Senior Software Engineer / Tech Lead"
                       value={formData.designation}
                       onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#0099e6] focus:ring-2 focus:ring-[#0099e6]/20 bg-slate-50/50 text-slate-900 text-xs sm:text-sm outline-hidden"
