@@ -148,6 +148,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/mentor" className="text-slate-400 hover:text-[#0099e6] transition-colors inline-flex items-center gap-1.5">
+                  <span>Mentors</span>
+                </Link>
+              </li>
+              <li>
                 <a
                   href="https://discord.com/invite/xcNNqdDhce"
                   target="_blank"
