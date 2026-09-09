@@ -17,6 +17,8 @@ import {
   Globe,
   Cloud,
   Code2,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { HackathonCard } from '@/components/hackathon-card';
 import { usePublishedEvents } from '@/lib/hooks/use-events';
@@ -73,6 +75,7 @@ export default function HomePage() {
   const [workshopVisible, setWorkshopVisible] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
   const [slideProgress, setSlideProgress] = useState(0);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   useEffect(() => {
     const node = gallerySectionRef.current;
@@ -107,9 +110,10 @@ export default function HomePage() {
     );
     observer.observe(node);
 
-    // Scroll-driven slide switching
+    // Scroll-driven slide switching (only on desktop lg screens)
     const SLIDE_COUNT = 2;
     const handleScroll = () => {
+      if (typeof window !== 'undefined' && window.innerWidth < 1024) return;
       const rect = node.getBoundingClientRect();
       const stickyHeight = window.innerHeight;
       const scrollableDistance = node.offsetHeight - stickyHeight;
@@ -616,39 +620,38 @@ export default function HomePage() {
       {/* ─── Industry Leaders Podcast Section ──────────────────────── */}
       <PodcastSection />
 
-      {/* ─── AI & Blockchain Workshops — Scroll-Driven 3D Carousel ── */}
+      {/* ─── AI & Blockchain Workshops — Scroll-Driven 3D Carousel (Responsive) ── */}
       <section
         ref={workshopScrollRef}
-        className="relative w-full"
-        style={{ height: '250vh' }}
+        className="relative w-full py-6 sm:py-10 lg:py-0 lg:h-[250vh]"
       >
-        {/* Sticky viewport */}
+        {/* Sticky viewport on desktop, natural flow on mobile */}
         <div
-          className={`sticky top-0 h-screen overflow-hidden transition-opacity duration-1000 ease-out ${
+          className={`relative lg:sticky lg:top-0 lg:h-screen lg:overflow-hidden flex items-center transition-opacity duration-1000 ease-out ${
             workshopVisible ? 'opacity-100' : 'opacity-0'
           }`}
         >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
-            <div className="w-full rounded-3xl bg-[#090d16] border border-slate-800/90 shadow-2xl p-6 sm:p-8 lg:p-10 relative overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <div className="w-full rounded-2xl sm:rounded-3xl bg-[#090d16] border border-slate-800/90 shadow-2xl p-5 sm:p-7 lg:p-10 relative overflow-hidden my-4 lg:my-0">
               {/* Decorative subtle ambient glows */}
               <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
               <div className="absolute bottom-0 left-0 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-violet-600/10 rounded-full blur-3xl pointer-events-none" />
 
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center w-full relative z-10">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-10 items-center w-full relative z-10">
 
                 {/* ── Left: Text content (5 cols) ── */}
-                <div className="lg:col-span-5 space-y-6">
-                  <div className="flex items-center gap-2">
-                    <span className="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-violet-500/15 text-violet-300 border border-violet-500/30">
+                <div className="lg:col-span-5 space-y-4 sm:space-y-6">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="px-2.5 sm:px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-violet-500/15 text-violet-300 border border-violet-500/30">
                       Workshops &amp; Events
                     </span>
-                    <span className="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-orange-500/15 text-orange-300 border border-orange-500/30">
+                    <span className="px-2.5 sm:px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-orange-500/15 text-orange-300 border border-orange-500/30">
                       In-Person
                     </span>
                   </div>
 
-                  <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-[1.1]">
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-white tracking-tight leading-[1.15]">
                     We Host{' '}
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00b4d8] via-[#38bdf8] to-[#f97316]">
                       AI &amp; Blockchain
@@ -656,13 +659,13 @@ export default function HomePage() {
                     Workshops Across India
                   </h2>
 
-                  <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
+                  <p className="text-xs sm:text-sm lg:text-base text-slate-300 leading-relaxed font-normal">
                     From hands-on Web3 bootcamps to AI/ML deep-dives, we bring developer-focused
                     workshops and sprints to colleges and tech communities nationwide. Our events
                     are designed to turn curious learners into confident builders.
                   </p>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5 pt-1">
                     {[
                       { label: 'AI / ML', icon: Bot, color: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20' },
                       { label: 'Blockchain', icon: Blocks, color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
@@ -680,63 +683,109 @@ export default function HomePage() {
                           <div className={`p-1.5 rounded-lg border flex items-center justify-center shrink-0 ${topic.color}`}>
                             <Icon className="w-3.5 h-3.5" />
                           </div>
-                          <span className="text-xs font-semibold text-slate-200 truncate">{topic.label}</span>
+                          <span className="text-[11px] sm:text-xs font-semibold text-slate-200 truncate">{topic.label}</span>
                         </div>
                       );
                     })}
                   </div>
 
-                  <div className="flex items-center gap-6 pt-1">
+                  <div className="flex items-center justify-between sm:justify-start gap-4 sm:gap-6 pt-1 border-t border-slate-800/80 sm:border-t-0 mt-2 sm:mt-0">
                     <div>
-                      <p className="text-2xl sm:text-3xl font-black text-white">30+</p>
-                      <p className="text-[11px] text-slate-400 font-semibold">Workshops Hosted</p>
+                      <p className="text-xl sm:text-2xl lg:text-3xl font-black text-white">30+</p>
+                      <p className="text-[10px] sm:text-[11px] text-slate-400 font-semibold">Workshops Hosted</p>
                     </div>
-                    <div className="w-px h-10 bg-slate-800" />
+                    <div className="w-px h-8 sm:h-10 bg-slate-800" />
                     <div>
-                      <p className="text-2xl sm:text-3xl font-black text-white">10K+</p>
-                      <p className="text-[11px] text-slate-400 font-semibold">Developers Trained</p>
+                      <p className="text-xl sm:text-2xl lg:text-3xl font-black text-white">10K+</p>
+                      <p className="text-[10px] sm:text-[11px] text-slate-400 font-semibold">Developers Trained</p>
                     </div>
-                    <div className="w-px h-10 bg-slate-800" />
+                    <div className="w-px h-8 sm:h-10 bg-slate-800" />
                     <div>
-                      <p className="text-2xl sm:text-3xl font-black text-white">15+</p>
-                      <p className="text-[11px] text-slate-400 font-semibold">Cities Reached</p>
+                      <p className="text-xl sm:text-2xl lg:text-3xl font-black text-white">15+</p>
+                      <p className="text-[10px] sm:text-[11px] text-slate-400 font-semibold">Cities Reached</p>
                     </div>
                   </div>
 
                   {/* Slide indicator dots */}
-                  <div className="flex items-center gap-2 pt-2">
+                  <div className="flex items-center gap-2 pt-1 sm:pt-2">
                     {[
                       'JECRC Foundation',
                       'Poornima College',
                     ].map((label, i) => (
                       <button
                         key={label}
-                        className={`h-2 rounded-full transition-all duration-500 ${
+                        type="button"
+                        onClick={() => {
+                          setActiveSlide(i);
+                          setSlideProgress(0);
+                        }}
+                        className={`h-2 sm:h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
                           activeSlide === i
-                            ? 'w-8 bg-gradient-to-r from-[#0099e6] to-[#f97316]'
-                            : 'w-2 bg-slate-700 hover:bg-slate-600'
+                            ? 'w-7 sm:w-8 bg-gradient-to-r from-[#0099e6] to-[#f97316]'
+                            : 'w-2 sm:w-2.5 bg-slate-700 hover:bg-slate-600'
                         }`}
                         aria-label={label}
                       />
                     ))}
-                    <span className="text-[11px] text-slate-400 font-medium ml-2">
+                    <span className="text-[10px] sm:text-[11px] text-slate-400 font-medium ml-2">
                       {activeSlide === 0 ? 'JECRC Foundation' : 'Poornima College of Engineering'}
                     </span>
                   </div>
                 </div>
 
-                {/* ── Right: Slide Gallery (7 cols - larger image focus) ── */}
-                <div className="lg:col-span-7 relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 h-[440px] sm:h-[480px] lg:h-[520px]">
+                {/* ── Right: Slide Gallery (7 cols - responsive image focus) ── */}
+                <div
+                  className="lg:col-span-7 relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border border-white/10 h-[260px] xs:h-[300px] sm:h-[380px] lg:h-[520px] touch-pan-y group"
+                  onTouchStart={(e) => setTouchStartX(e.touches[0].clientX)}
+                  onTouchEnd={(e) => {
+                    if (touchStartX === null) return;
+                    const diff = touchStartX - e.changedTouches[0].clientX;
+                    if (diff > 40) {
+                      setActiveSlide(1);
+                      setSlideProgress(0);
+                    } else if (diff < -40) {
+                      setActiveSlide(0);
+                      setSlideProgress(0);
+                    }
+                    setTouchStartX(null);
+                  }}
+                >
                   {/* Ambient glow */}
                   <div className="absolute -inset-4 bg-gradient-to-r from-cyan-500/20 via-violet-500/15 to-orange-500/20 rounded-3xl blur-2xl pointer-events-none" style={{ zIndex: -1 }} />
 
-                  {/* Slide track — slides horizontally like a gallery */}
+                  {/* Prev / Next buttons */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveSlide((prev) => (prev === 0 ? 1 : 0));
+                      setSlideProgress(0);
+                    }}
+                    aria-label="Previous event photo"
+                    className="absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/60 hover:bg-black/90 active:scale-95 backdrop-blur-md border border-white/20 text-white flex items-center justify-center transition-all shadow-lg"
+                  >
+                    <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveSlide((prev) => (prev === 1 ? 0 : 1));
+                      setSlideProgress(0);
+                    }}
+                    aria-label="Next event photo"
+                    className="absolute right-2.5 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/60 hover:bg-black/90 active:scale-95 backdrop-blur-md border border-white/20 text-white flex items-center justify-center transition-all shadow-lg"
+                  >
+                    <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
+
+                  {/* Slide track — slides horizontally */}
                   <div
                     className="flex h-full absolute inset-0"
                     style={{
                       width: '200%',
                       transform: `translateX(${-((activeSlide + (activeSlide === 0 ? slideProgress * 0.5 : 0)) * 50)}%)`,
-                      transition: 'transform 0.15s ease-out',
+                      transition: 'transform 0.35s ease-out',
                     }}
                   >
                     {/* Slide 0: workshopPhoto (6.jpg) */}
@@ -749,12 +798,12 @@ export default function HomePage() {
                         placeholder="blur"
                         sizes="(max-width: 1024px) 100vw, 60vw"
                       />
-                      <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex flex-col justify-end p-6">
-                        <span className="inline-block self-start px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 backdrop-blur-sm mb-2">
+                      <div className="absolute inset-x-0 bottom-0 h-28 sm:h-36 bg-gradient-to-t from-black/95 via-black/60 to-transparent flex flex-col justify-end p-3.5 sm:p-6">
+                        <span className="inline-block self-start px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 backdrop-blur-sm mb-1 sm:mb-2">
                           Hands-on Sprint
                         </span>
-                        <p className="text-white text-base sm:text-lg font-bold">Build on Stellar Bootcamp — JECRC Foundation</p>
-                        <p className="text-slate-300 text-xs sm:text-sm font-medium">Web3 &amp; Blockchain hands-on developer workshop</p>
+                        <p className="text-white text-xs sm:text-base lg:text-lg font-bold leading-tight sm:leading-snug">Build on Stellar Bootcamp — JECRC Foundation</p>
+                        <p className="text-slate-300 text-[10px] sm:text-xs lg:text-sm font-medium">Web3 &amp; Blockchain hands-on developer workshop</p>
                       </div>
                     </div>
 
@@ -768,12 +817,12 @@ export default function HomePage() {
                         placeholder="blur"
                         sizes="(max-width: 1024px) 100vw, 60vw"
                       />
-                      <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex flex-col justify-end p-6">
-                        <span className="inline-block self-start px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-orange-500/20 text-orange-300 border border-orange-500/30 backdrop-blur-sm mb-2">
+                      <div className="absolute inset-x-0 bottom-0 h-28 sm:h-36 bg-gradient-to-t from-black/95 via-black/60 to-transparent flex flex-col justify-end p-3.5 sm:p-6">
+                        <span className="inline-block self-start px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider bg-orange-500/20 text-orange-300 border border-orange-500/30 backdrop-blur-sm mb-1 sm:mb-2">
                           Featured Event
                         </span>
-                        <p className="text-white text-base sm:text-lg font-bold">Build on Stellar Bootcamp — PCE</p>
-                        <p className="text-slate-300 text-xs sm:text-sm font-medium">Poornima College of Engineering</p>
+                        <p className="text-white text-xs sm:text-base lg:text-lg font-bold leading-tight sm:leading-snug">Build on Stellar Bootcamp — PCE</p>
+                        <p className="text-slate-300 text-[10px] sm:text-xs lg:text-sm font-medium">Poornima College of Engineering</p>
                       </div>
                     </div>
                   </div>
