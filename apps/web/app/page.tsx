@@ -12,6 +12,11 @@ import {
   Zap,
   Flame,
   ChevronDown,
+  Bot,
+  Blocks,
+  Globe,
+  Cloud,
+  Code2,
 } from 'lucide-react';
 import { HackathonCard } from '@/components/hackathon-card';
 import { usePublishedEvents } from '@/lib/hooks/use-events';
@@ -53,6 +58,7 @@ import codeWars15 from '@/assets/CodeWars15.jpg';
 import stellarHU from '@/assets/StellarHU.jpg';
 import stellarHU1 from '@/assets/StellarHU1.jpg';
 import stellarHU2 from '@/assets/StellarHU2.jpg';
+import workshopPhoto from '@/assets/6.jpg';
 
 export default function HomePage() {
   const { events, loading } = usePublishedEvents();
@@ -61,6 +67,12 @@ export default function HomePage() {
   // Gallery scroll-reveal via Intersection Observer
   const gallerySectionRef = useRef<HTMLElement>(null);
   const [galleryVisible, setGalleryVisible] = useState(false);
+
+  // Workshop 3D scroll carousel
+  const workshopScrollRef = useRef<HTMLElement>(null);
+  const [workshopVisible, setWorkshopVisible] = useState(false);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [slideProgress, setSlideProgress] = useState(0);
 
   useEffect(() => {
     const node = gallerySectionRef.current;
@@ -76,6 +88,53 @@ export default function HomePage() {
     );
     observer.observe(node);
     return () => observer.disconnect();
+  }, []);
+
+  // Workshop scroll-reveal + 3D carousel scroll tracking
+  useEffect(() => {
+    const node = workshopScrollRef.current;
+    if (!node) return;
+
+    // Entrance reveal
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setWorkshopVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.05 }
+    );
+    observer.observe(node);
+
+    // Scroll-driven slide switching
+    const SLIDE_COUNT = 2;
+    const handleScroll = () => {
+      const rect = node.getBoundingClientRect();
+      const stickyHeight = window.innerHeight;
+      const scrollableDistance = node.offsetHeight - stickyHeight;
+      if (scrollableDistance <= 0) return;
+
+      // How far we've scrolled past the top of the section
+      const scrolled = -rect.top;
+      const progress = Math.max(0, Math.min(1, scrolled / scrollableDistance));
+
+      // Map progress → active slide + per-slide progress
+      const slideFloat = progress * SLIDE_COUNT;
+      const slide = Math.min(Math.floor(slideFloat), SLIDE_COUNT - 1);
+      const perSlide = slideFloat - slide;
+
+      setActiveSlide(slide);
+      setSlideProgress(perSlide);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, []);
 
   const galleryRow1 = [
@@ -556,6 +615,175 @@ export default function HomePage() {
 
       {/* ─── Industry Leaders Podcast Section ──────────────────────── */}
       <PodcastSection />
+
+      {/* ─── AI & Blockchain Workshops — Scroll-Driven 3D Carousel ── */}
+      <section
+        ref={workshopScrollRef}
+        className="relative w-full"
+        style={{ height: '250vh' }}
+      >
+        {/* Sticky viewport */}
+        <div
+          className={`sticky top-0 h-screen overflow-hidden transition-opacity duration-1000 ease-out ${
+            workshopVisible ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
+            <div className="w-full rounded-3xl bg-[#090d16] border border-slate-800/90 shadow-2xl p-6 sm:p-8 lg:p-10 relative overflow-hidden">
+              {/* Decorative subtle ambient glows */}
+              <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-violet-600/10 rounded-full blur-3xl pointer-events-none" />
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center w-full relative z-10">
+
+                {/* ── Left: Text content (5 cols) ── */}
+                <div className="lg:col-span-5 space-y-6">
+                  <div className="flex items-center gap-2">
+                    <span className="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-violet-500/15 text-violet-300 border border-violet-500/30">
+                      Workshops &amp; Events
+                    </span>
+                    <span className="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-orange-500/15 text-orange-300 border border-orange-500/30">
+                      In-Person
+                    </span>
+                  </div>
+
+                  <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-[1.1]">
+                    We Host{' '}
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00b4d8] via-[#38bdf8] to-[#f97316]">
+                      AI &amp; Blockchain
+                    </span>{' '}
+                    Workshops Across India
+                  </h2>
+
+                  <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
+                    From hands-on Web3 bootcamps to AI/ML deep-dives, we bring developer-focused
+                    workshops and sprints to colleges and tech communities nationwide. Our events
+                    are designed to turn curious learners into confident builders.
+                  </p>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
+                    {[
+                      { label: 'AI / ML', icon: Bot, color: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20' },
+                      { label: 'Blockchain', icon: Blocks, color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
+                      { label: 'Web3', icon: Globe, color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
+                      { label: 'Cloud & DevOps', icon: Cloud, color: 'text-sky-400 bg-sky-500/10 border-sky-500/20' },
+                      { label: 'Open Source', icon: Code2, color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+                      { label: 'Cybersecurity', icon: ShieldCheck, color: 'text-rose-400 bg-rose-500/10 border-rose-500/20' },
+                    ].map((topic) => {
+                      const Icon = topic.icon;
+                      return (
+                        <div
+                          key={topic.label}
+                          className="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 transition-colors shadow-sm"
+                        >
+                          <div className={`p-1.5 rounded-lg border flex items-center justify-center shrink-0 ${topic.color}`}>
+                            <Icon className="w-3.5 h-3.5" />
+                          </div>
+                          <span className="text-xs font-semibold text-slate-200 truncate">{topic.label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex items-center gap-6 pt-1">
+                    <div>
+                      <p className="text-2xl sm:text-3xl font-black text-white">50+</p>
+                      <p className="text-[11px] text-slate-400 font-semibold">Workshops Hosted</p>
+                    </div>
+                    <div className="w-px h-10 bg-slate-800" />
+                    <div>
+                      <p className="text-2xl sm:text-3xl font-black text-white">10K+</p>
+                      <p className="text-[11px] text-slate-400 font-semibold">Developers Trained</p>
+                    </div>
+                    <div className="w-px h-10 bg-slate-800" />
+                    <div>
+                      <p className="text-2xl sm:text-3xl font-black text-white">30+</p>
+                      <p className="text-[11px] text-slate-400 font-semibold">Cities Reached</p>
+                    </div>
+                  </div>
+
+                  {/* Slide indicator dots */}
+                  <div className="flex items-center gap-2 pt-2">
+                    {[
+                      'JECRC Foundation',
+                      'Poornima College',
+                    ].map((label, i) => (
+                      <button
+                        key={label}
+                        className={`h-2 rounded-full transition-all duration-500 ${
+                          activeSlide === i
+                            ? 'w-8 bg-gradient-to-r from-[#0099e6] to-[#f97316]'
+                            : 'w-2 bg-slate-700 hover:bg-slate-600'
+                        }`}
+                        aria-label={label}
+                      />
+                    ))}
+                    <span className="text-[11px] text-slate-400 font-medium ml-2">
+                      {activeSlide === 0 ? 'JECRC Foundation' : 'Poornima College of Engineering'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* ── Right: Slide Gallery (7 cols - larger image focus) ── */}
+                <div className="lg:col-span-7 relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 h-[440px] sm:h-[480px] lg:h-[520px]">
+                  {/* Ambient glow */}
+                  <div className="absolute -inset-4 bg-gradient-to-r from-cyan-500/20 via-violet-500/15 to-orange-500/20 rounded-3xl blur-2xl pointer-events-none" style={{ zIndex: -1 }} />
+
+                  {/* Slide track — slides horizontally like a gallery */}
+                  <div
+                    className="flex h-full absolute inset-0"
+                    style={{
+                      width: '200%',
+                      transform: `translateX(${-((activeSlide + (activeSlide === 0 ? slideProgress * 0.5 : 0)) * 50)}%)`,
+                      transition: 'transform 0.15s ease-out',
+                    }}
+                  >
+                    {/* Slide 0: workshopPhoto (6.jpg) */}
+                    <div className="relative w-1/2 h-full flex-shrink-0">
+                      <Image
+                        src={workshopPhoto}
+                        alt="AI & Blockchain Workshop — JECRC Foundation"
+                        className="w-full h-full object-cover"
+                        fill
+                        placeholder="blur"
+                        sizes="(max-width: 1024px) 100vw, 60vw"
+                      />
+                      <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex flex-col justify-end p-6">
+                        <span className="inline-block self-start px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 backdrop-blur-sm mb-2">
+                          Hands-on Sprint
+                        </span>
+                        <p className="text-white text-base sm:text-lg font-bold">Build on Stellar Bootcamp — JECRC Foundation</p>
+                        <p className="text-slate-300 text-xs sm:text-sm font-medium">Web3 &amp; Blockchain hands-on developer workshop</p>
+                      </div>
+                    </div>
+
+                    {/* Slide 1: stellarHU (StellarHU.jpg) */}
+                    <div className="relative w-1/2 h-full flex-shrink-0">
+                      <Image
+                        src={stellarHU}
+                        alt="Stellar Bootcamp — Poornima College"
+                        className="w-full h-full object-cover"
+                        fill
+                        placeholder="blur"
+                        sizes="(max-width: 1024px) 100vw, 60vw"
+                      />
+                      <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex flex-col justify-end p-6">
+                        <span className="inline-block self-start px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-orange-500/20 text-orange-300 border border-orange-500/30 backdrop-blur-sm mb-2">
+                          Featured Event
+                        </span>
+                        <p className="text-white text-base sm:text-lg font-bold">Build on Stellar Bootcamp — PCE</p>
+                        <p className="text-slate-300 text-xs sm:text-sm font-medium">Poornima College of Engineering</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* ─── Host Hackathon CTA ───────────────────────────────────── */}
       <section className="pb-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
