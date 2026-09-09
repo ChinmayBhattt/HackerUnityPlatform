@@ -1,19 +1,28 @@
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getMentorBySlug } from '@/lib/mentors-data';
-import { MentorProfileView } from './mentor-profile-view';
+import { getMentorBySlug, VERIFIED_MENTORS } from '@/lib/mentors-data';
+import { MentorProfileView } from '@/components/mentor-profile-view';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+export const dynamicParams = true;
+
+export function generateStaticParams() {
+  return Object.values(VERIFIED_MENTORS).map((mentor) => ({
+    slug: mentor.slug,
+  }));
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const mentor = getMentorBySlug(slug);
+  const decodedSlug = decodeURIComponent(slug);
+  const mentor = getMentorBySlug(decodedSlug);
 
   if (!mentor) {
     return {
-      title: 'Mentor Not Found | Hacker\'s Unity',
+      title: "Mentor Not Found | Hacker's Unity",
       robots: { index: false, follow: false },
     };
   }
@@ -25,14 +34,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title,
     description,
     robots: {
-      index: false, // Hidden from search engine indexes as requested (direct URL access only)
+      index: false,
       follow: false,
     },
     openGraph: {
       title,
       description,
       type: 'profile',
-      url: `https://www.hackersunity.com/mentor/${mentor.slug}`,
+      url: `https://hackersunity.com/mentor/${mentor.slug}`,
       images: [
         {
           url: mentor.avatarUrl,
@@ -53,7 +62,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function MentorPage({ params }: PageProps) {
   const { slug } = await params;
-  const mentor = getMentorBySlug(slug);
+  const decodedSlug = decodeURIComponent(slug);
+  const mentor = getMentorBySlug(decodedSlug);
 
   if (!mentor) {
     notFound();

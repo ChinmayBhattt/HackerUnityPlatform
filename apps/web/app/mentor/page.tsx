@@ -1,5 +1,5 @@
-import { Metadata } from 'next';
-import { MentorPortalClient } from './mentor-portal-client';
+import type { Metadata } from 'next';
+import { MentorPortalClient } from '@/components/mentor-portal-client';
 
 export const metadata: Metadata = {
   title: "Verify Mentor Credential & Mentor Network | Hacker's Unity",
