@@ -26,6 +26,7 @@ import { usePublishedEvents } from '@/lib/hooks/use-events';
 import { AuthModal } from '@/components/auth-modal';
 import { AiHeroPanel } from '@/components/ai-hero-panel';
 import { PodcastSection } from '@/components/podcast-section';
+import { TestimonialsSection } from '@/components/testimonials-section';
 
 // Event gallery photos
 import galleryStage from '@/assets/hackstorm_stage.jpg';
@@ -947,6 +948,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ─── Industry Leader Testimonials (H2S Style) ─────────────── */}
+      <TestimonialsSection />
 
       <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
     </div>
