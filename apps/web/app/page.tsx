@@ -77,6 +77,44 @@ export default function HomePage() {
   const [slideProgress, setSlideProgress] = useState(0);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
+  // Featured Hackathons manual horizontal scroll
+  const eventsScrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkEventsScroll = () => {
+    const el = eventsScrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 15);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 15);
+  };
+
+  useEffect(() => {
+    const el = eventsScrollRef.current;
+    if (!el) return;
+    checkEventsScroll();
+    const t1 = setTimeout(checkEventsScroll, 100);
+    const t2 = setTimeout(checkEventsScroll, 500);
+    el.addEventListener('scroll', checkEventsScroll, { passive: true });
+    window.addEventListener('resize', checkEventsScroll);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      el.removeEventListener('scroll', checkEventsScroll);
+      window.removeEventListener('resize', checkEventsScroll);
+    };
+  }, [events]);
+
+  const scrollEvents = (direction: 'left' | 'right') => {
+    if (eventsScrollRef.current) {
+      const scrollAmount = 404; // 380px card + 24px gap
+      eventsScrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth',
+      });
+    }
+  };
+
   useEffect(() => {
     const node = gallerySectionRef.current;
     if (!node) return;
@@ -356,10 +394,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── Featured & Trending Hackathons (Single-Row Continuous Marquee) ─── */}
+      {/* ─── Featured & Trending Hackathons (Horizontal Manual Carousel) ─── */}
       <section className="py-16 md:py-24 w-full overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 border border-orange-200 text-[#ea580c] text-xs font-bold uppercase tracking-wider mb-2">
                 <Flame className="w-3.5 h-3.5 text-[#f97316]" />
@@ -373,34 +411,79 @@ export default function HomePage() {
               </p>
             </div>
 
-            <Link
-              href="/hackathons"
-              className="inline-flex items-center gap-2 text-xs font-bold text-[#0099e6] hover:text-[#0284c7] hover:underline"
-            >
-              <span>View All Events</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+            <div className="flex items-center gap-4 self-end sm:self-auto shrink-0">
+              <Link
+                href="/hackathons"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0099e6] hover:text-[#0284c7] hover:underline"
+              >
+                <span>View All Events</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => scrollEvents('left')}
+                  disabled={!canScrollLeft}
+                  aria-label="Previous events"
+                  className="w-10 h-10 rounded-2xl bg-white border border-slate-200 hover:border-[#0099e6] hover:bg-slate-50 text-slate-700 hover:text-[#0099e6] shadow-xs flex items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95 disabled:opacity-30 disabled:pointer-events-none"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => scrollEvents('right')}
+                  disabled={!canScrollRight}
+                  aria-label="Next events"
+                  className="w-10 h-10 rounded-2xl bg-white border border-slate-200 hover:border-[#0099e6] hover:bg-slate-50 text-slate-700 hover:text-[#0099e6] shadow-xs flex items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95 disabled:opacity-30 disabled:pointer-events-none"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Continuous Horizontal Moving Track */}
+        {/* Manual Horizontal Scrollable Track */}
         {events.length > 0 ? (
-          <div className="relative w-full overflow-hidden py-4">
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 group">
+            {/* Floating Left Button on Track */}
+            {canScrollLeft && (
+              <button
+                type="button"
+                onClick={() => scrollEvents('left')}
+                aria-label="Scroll left"
+                className="hidden md:flex absolute left-6 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/95 hover:bg-white text-slate-800 shadow-xl border border-slate-200/90 items-center justify-center transition-all cursor-pointer hover:scale-110 active:scale-95 backdrop-blur-sm"
+              >
+                <ChevronLeft className="w-6 h-6 text-slate-700" />
+              </button>
+            )}
+
+            {/* Floating Right Button on Track */}
+            {canScrollRight && (
+              <button
+                type="button"
+                onClick={() => scrollEvents('right')}
+                aria-label="Scroll right"
+                className="hidden md:flex absolute right-6 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/95 hover:bg-white text-slate-800 shadow-xl border border-slate-200/90 items-center justify-center transition-all cursor-pointer hover:scale-110 active:scale-95 backdrop-blur-sm"
+              >
+                <ChevronRight className="w-6 h-6 text-slate-700" />
+              </button>
+            )}
+
             {/* Soft Edge Gradient Fades */}
-            <div className="absolute inset-y-0 left-0 w-8 sm:w-24 bg-gradient-to-r from-[#f8fafc] to-transparent z-10 pointer-events-none" />
-            <div className="absolute inset-y-0 right-0 w-8 sm:w-24 bg-gradient-to-l from-[#f8fafc] to-transparent z-10 pointer-events-none" />
+            {canScrollLeft && (
+              <div className="absolute inset-y-0 left-4 sm:left-6 lg:left-8 w-12 bg-gradient-to-r from-[#f8fafc] to-transparent z-10 pointer-events-none" />
+            )}
+            {canScrollRight && (
+              <div className="absolute inset-y-0 right-4 sm:right-6 lg:right-8 w-12 bg-gradient-to-l from-[#f8fafc] to-transparent z-10 pointer-events-none" />
+            )}
 
-            <div className="flex animate-events-marquee gap-6 items-stretch w-max hover:[animation-play-state:paused]">
-              {/* Set 1 */}
+            <div
+              ref={eventsScrollRef}
+              className="flex gap-6 items-stretch overflow-x-auto py-4 scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory"
+            >
               {events.map((event) => (
-                <div key={event.id} className="w-[340px] sm:w-[380px] shrink-0">
-                  <HackathonCard event={event} />
-                </div>
-              ))}
-
-              {/* Set 2 (Duplicate for seamless infinite right-to-left loop) */}
-              {events.map((event) => (
-                <div key={`${event.id}-dup`} className="w-[340px] sm:w-[380px] shrink-0">
+                <div key={event.id} className="w-[340px] sm:w-[380px] shrink-0 snap-start">
                   <HackathonCard event={event} />
                 </div>
               ))}
