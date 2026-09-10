@@ -410,8 +410,20 @@ export async function createEventInSupabase(
     const finalSlug = event.slug || (await generateUniqueSlug(event.title || 'untitled-hackathon'));
 
     // Validate status against DB CHECK constraint
-    const VALID_STATUSES = ['DRAFT', 'PUBLISHED', 'REGISTRATION_OPEN', 'LIVE', 'JUDGING', 'COMPLETED', 'ARCHIVED'];
-    const sanitizedStatus = VALID_STATUSES.includes(event.status || '') ? event.status : 'PUBLISHED';
+    const VALID_STATUSES = [
+      'DRAFT',
+      'PENDING_APPROVAL',
+      'PUBLISHED',
+      'REGISTRATION_OPEN',
+      'LIVE',
+      'JUDGING',
+      'COMPLETED',
+      'ARCHIVED',
+      'REJECTED',
+    ];
+    const sanitizedStatus = VALID_STATUSES.includes(event.status || '')
+      ? event.status
+      : 'PENDING_APPROVAL';
 
     // Validate organizer_id: ensure the profile exists to avoid FK constraint error
     let validOrganizerId: string | null = null;
@@ -458,17 +470,30 @@ export async function createEventInSupabase(
       difficulty: event.difficulty || 'OPEN',
       rules_text: event.rulesText || null,
       registration_type: event.registrationType || 'FREE',
-      registration_capacity: event.registrationCapacity || null,
-      approval_mode: event.approvalMode || 'MANUAL',
+      currency: event.currency || 'INR',
+      entry_fee: Number(event.entryFee || 0),
+      registration_capacity: event.registrationCapacity || 2000,
+      approval_mode: event.approvalMode || 'AUTO',
       custom_questions: event.customQuestions || [],
-      registration_count: 0,
     };
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('events')
       .insert(insertPayload)
       .select('*')
       .single();
+
+    // Resilient fallback: If database constraint 'events_status_check' fails because migration is pending
+    if (error && error.code === '23514' && sanitizedStatus === 'PENDING_APPROVAL') {
+      console.warn('DB check constraint rejected PENDING_APPROVAL, retrying with DRAFT status fallback');
+      insertPayload.status = 'DRAFT';
+      if (!insertPayload.tags.includes('PENDING_APPROVAL')) {
+        insertPayload.tags.push('PENDING_APPROVAL');
+      }
+      const retry = await supabase.from('events').insert(insertPayload).select('*').single();
+      data = retry.data;
+      error = retry.error;
+    }
 
     if (error) {
       console.warn('Supabase event creation error:', error.message);
@@ -491,20 +516,21 @@ export async function createEventInSupabase(
     } catch (e) {
       console.warn('Broadcast send error:', e);
     }
-
-    // Automatically broadcast notification for new hackathon
-    createNotification(
-      {
-        title: `🚀 New Hackathon Live: ${createdEvent.title}`,
-        message: `${createdEvent.title} is now open for registration! Check rules and form your squad.`,
-        type: NotificationDbType.EVENT,
-        icon: '🚀',
-        eventId: createdEvent.id,
-        targetType: NotificationTargetType.ALL,
-        actionUrl: `/hackathons/${createdEvent.slug}`,
-      },
-      event.organizerId || 'usr_organizer'
-    ).catch((e) => console.warn('Auto notification error on event create:', e));
+    // Automatically broadcast notification ONLY when event is approved/live, not while pending
+    if (createdEvent.status === EventStatus.PUBLISHED || (createdEvent.status as any) === 'REGISTRATION_OPEN') {
+      createNotification(
+        {
+          title: `🚀 New Hackathon Live: ${createdEvent.title}`,
+          message: `${createdEvent.title} is now open for registration! Check rules and form your squad.`,
+          type: NotificationDbType.EVENT,
+          icon: '🚀',
+          eventId: createdEvent.id,
+          targetType: NotificationTargetType.ALL,
+          actionUrl: `/hackathons/${createdEvent.slug}`,
+        },
+        event.organizerId || 'usr_organizer'
+      ).catch((e) => console.warn('Auto notification error on event create:', e));
+    }
 
     saveHostedEvent(createdEvent);
     return { success: true, data: createdEvent };

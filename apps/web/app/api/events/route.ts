@@ -63,7 +63,7 @@ export async function POST(req: Request) {
     const serverSupabase = createAdminClient();
     const finalSlug = event.slug || (await generateUniqueSlug(event.title));
 
-    const VALID_STATUSES = ['DRAFT', 'PENDING_APPROVAL', 'PUBLISHED', 'REGISTRATION_OPEN', 'LIVE', 'JUDGING', 'COMPLETED', 'ARCHIVED'];
+    const VALID_STATUSES = ['DRAFT', 'PENDING_APPROVAL', 'PUBLISHED', 'REGISTRATION_OPEN', 'LIVE', 'JUDGING', 'COMPLETED', 'ARCHIVED', 'REJECTED'];
     const sanitizedStatus = VALID_STATUSES.includes(event.status) ? event.status : 'PENDING_APPROVAL';
 
     const insertPayload: any = {
@@ -203,7 +203,7 @@ export async function PATCH(req: Request) {
     if (updates.customQuestions !== undefined) updatePayload.custom_questions = updates.customQuestions;
     updatePayload.updated_at = new Date().toISOString();
 
-    const VALID_STATUSES = ['DRAFT', 'PENDING_APPROVAL', 'PUBLISHED', 'REGISTRATION_OPEN', 'LIVE', 'JUDGING', 'COMPLETED', 'ARCHIVED'];
+    const VALID_STATUSES = ['DRAFT', 'PENDING_APPROVAL', 'PUBLISHED', 'REGISTRATION_OPEN', 'LIVE', 'JUDGING', 'COMPLETED', 'ARCHIVED', 'REJECTED'];
     if (updates.status && VALID_STATUSES.includes(updates.status)) {
       updatePayload.status = updates.status;
     }
