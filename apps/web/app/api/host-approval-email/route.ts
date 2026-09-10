@@ -46,29 +46,29 @@ export async function POST(req: Request) {
 
     const formattedStartDate = event.startDate
       ? new Date(event.startDate).toLocaleDateString('en-IN', {
-          weekday: 'short',
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric',
-        })
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      })
       : 'TBD';
 
     const formattedEndDate = event.endDate
       ? new Date(event.endDate).toLocaleDateString('en-IN', {
-          weekday: 'short',
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric',
-        })
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      })
       : 'TBD';
 
     const formattedRegDeadline = event.registrationDeadline
       ? new Date(event.registrationDeadline).toLocaleDateString('en-IN', {
-          weekday: 'short',
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric',
-        })
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      })
       : 'TBD';
 
     const CURRENCY_SYMBOLS: Record<string, string> = {
@@ -298,21 +298,21 @@ export async function POST(req: Request) {
       try {
         const transportConfig: any = smtpHost
           ? {
-              host: smtpHost,
-              port: Number(process.env.SMTP_PORT) || 587,
-              secure: process.env.SMTP_SECURE === 'true',
-              auth: {
-                user: smtpUser,
-                pass: smtpPass,
-              },
-            }
+            host: smtpHost,
+            port: Number(process.env.SMTP_PORT) || 587,
+            secure: process.env.SMTP_SECURE === 'true',
+            auth: {
+              user: smtpUser,
+              pass: smtpPass,
+            },
+          }
           : {
-              service: 'gmail',
-              auth: {
-                user: process.env.GMAIL_USER,
-                pass: process.env.GMAIL_APP_PASS,
-              },
-            };
+            service: 'gmail',
+            auth: {
+              user: process.env.GMAIL_USER,
+              pass: process.env.GMAIL_APP_PASS,
+            },
+          };
 
         const transporter = nodemailer.createTransport(transportConfig);
         const info = await transporter.sendMail({
