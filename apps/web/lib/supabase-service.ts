@@ -2488,13 +2488,28 @@ export async function fetchAllSubmissionCounts(): Promise<Record<string, number>
     } catch {}
   }
 
-  // 2. Fetch all from Supabase directly
+  // 2. Fetch all from Supabase directly & map both UUID and slug
   try {
-    const { data } = await supabase.from('submissions').select('event_id');
-    if (data) {
-      data.forEach((row: any) => {
+    const { data: subRows } = await supabase.from('submissions').select('event_id');
+    const { data: eventRows } = await supabase.from('events').select('id, slug');
+
+    const idToSlug = new Map<string, string>();
+    const slugToId = new Map<string, string>();
+    eventRows?.forEach((e: any) => {
+      if (e.id && e.slug) {
+        idToSlug.set(e.id, e.slug);
+        slugToId.set(e.slug, e.id);
+      }
+    });
+
+    if (subRows) {
+      subRows.forEach((row: any) => {
         if (row.event_id) {
           counts[row.event_id] = (counts[row.event_id] || 0) + 1;
+          const slug = idToSlug.get(row.event_id);
+          if (slug) {
+            counts[slug] = (counts[slug] || 0) + 1;
+          }
         }
       });
     }

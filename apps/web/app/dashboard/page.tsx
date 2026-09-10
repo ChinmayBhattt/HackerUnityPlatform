@@ -1593,12 +1593,12 @@ export default function DashboardPage() {
                             >
                               <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                               {(() => {
-                                const subCount =
-                                  (evt.id && submissionCounts[evt.id] !== undefined ? submissionCounts[evt.id] : null) ??
-                                  (evt.slug && submissionCounts[evt.slug] !== undefined ? submissionCounts[evt.slug] : null) ??
-                                  (evt.id ? getEventSubmissionsCount(evt.id) : 0) ??
-                                  (evt.slug ? getEventSubmissionsCount(evt.slug) : 0) ??
-                                  0;
+                                const subCount = Math.max(
+                                  evt.id && submissionCounts[evt.id] ? submissionCounts[evt.id] : 0,
+                                  evt.slug && submissionCounts[evt.slug] ? submissionCounts[evt.slug] : 0,
+                                  evt.id ? getEventSubmissionsCount(evt.id) : 0,
+                                  evt.slug ? getEventSubmissionsCount(evt.slug) : 0
+                                );
                                 return <span>Submissions ({subCount})</span>;
                               })()}
                             </Link>
