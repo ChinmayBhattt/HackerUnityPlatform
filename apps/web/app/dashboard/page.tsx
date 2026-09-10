@@ -75,6 +75,8 @@ import {
   fetchUserRegistrations,
   fetchOrganizerEvents,
   fetchEventRegistrations,
+  fetchAllSubmissionCounts,
+  subscribeToAllSubmissions,
 } from '@/lib/supabase-service';
 import { supabase } from '@/lib/supabase';
 import { HackathonCard } from '@/components/hackathon-card';
@@ -128,6 +130,7 @@ export default function DashboardPage() {
   const [partSearch, setPartSearch] = useState('');
   const [hostFilter, setHostFilter] = useState<'ALL' | 'LIVE' | 'COMPLETED' | 'DRAFT'>('ALL');
   const [hostSearch, setHostSearch] = useState('');
+  const [submissionCounts, setSubmissionCounts] = useState<Record<string, number>>({});
 
   // Chart State
   const [activeChartPoint, setActiveChartPoint] = useState<number>(5);
@@ -212,6 +215,11 @@ export default function DashboardPage() {
           if (ids && ids.length > 0) setBookmarkedIds(ids);
         });
       }
+
+      // 5. Fetch Real-time Submission Counts across all events
+      fetchAllSubmissionCounts().then((counts) => {
+        setSubmissionCounts(counts);
+      }).catch(() => {});
     } catch (err) {
       console.warn('Dashboard data load warning:', err);
     } finally {
@@ -253,18 +261,32 @@ export default function DashboardPage() {
           loadDashboardData();
         }
       )
-
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'submissions' },
+        () => {
+          fetchAllSubmissionCounts().then((counts) => setSubmissionCounts(counts)).catch(() => {});
+        }
+      )
       .on('broadcast', { event: 'registration_created' }, () => {
         loadDashboardData();
       })
       .on('broadcast', { event: 'event_created' }, () => {
         loadDashboardData();
       })
+      .on('broadcast', { event: 'submission_created' }, () => {
+        fetchAllSubmissionCounts().then((counts) => setSubmissionCounts(counts)).catch(() => {});
+      })
       .subscribe();
+
+    const unsubAllSubs = subscribeToAllSubmissions(() => {
+      fetchAllSubmissionCounts().then((counts) => setSubmissionCounts(counts)).catch(() => {});
+    });
 
     return () => {
       window.removeEventListener('hackers_unity_storage_change', handleStorage);
       supabase.removeChannel(eventsChannel);
+      unsubAllSubs();
     };
   }, [loadDashboardData]);
 
@@ -1570,7 +1592,15 @@ export default function DashboardPage() {
                               title="View and Manage Submissions in Google Sheets Table"
                             >
                               <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                              <span>Submissions ({getEventSubmissionsCount(evt.id) || getEventSubmissionsCount(evt.slug)})</span>
+                              {(() => {
+                                const subCount =
+                                  (evt.id && submissionCounts[evt.id] !== undefined ? submissionCounts[evt.id] : undefined) ??
+                                  (evt.slug && submissionCounts[evt.slug] !== undefined ? submissionCounts[evt.slug] : undefined) ??
+                                  (evt.id ? getEventSubmissionsCount(evt.id) : 0) ||
+                                  (evt.slug ? getEventSubmissionsCount(evt.slug) : 0) ||
+                                  0;
+                                return <span>Submissions ({subCount})</span>;
+                              })()}
                             </Link>
 
                             {/* External Preview Link */}

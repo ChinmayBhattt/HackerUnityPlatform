@@ -2473,6 +2473,62 @@ export function subscribeToEventSubmissions(
   }
 }
 
+export async function fetchAllSubmissionCounts(): Promise<Record<string, number>> {
+  const counts: Record<string, number> = {};
+
+  // 1. Check local storage submissions
+  if (typeof window !== 'undefined') {
+    try {
+      const localSubs = getAllProjectSubmissions();
+      localSubs.forEach((s) => {
+        if (s.eventId) {
+          counts[s.eventId] = (counts[s.eventId] || 0) + 1;
+        }
+      });
+    } catch {}
+  }
+
+  // 2. Fetch all from Supabase directly
+  try {
+    const { data } = await supabase.from('submissions').select('event_id');
+    if (data) {
+      data.forEach((row: any) => {
+        if (row.event_id) {
+          counts[row.event_id] = (counts[row.event_id] || 0) + 1;
+        }
+      });
+    }
+  } catch (err) {
+    console.warn('Error fetching submission counts from Supabase:', err);
+  }
+
+  return counts;
+}
+
+export function subscribeToAllSubmissions(onUpdate: () => void): () => void {
+  if (typeof window === 'undefined') return () => {};
+
+  try {
+    const channel = supabase
+      .channel(`submissions_all_realtime_${Date.now()}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'submissions' },
+        () => onUpdate()
+      )
+      .on('broadcast', { event: 'submission_created' }, () => onUpdate())
+      .on('broadcast', { event: 'submission_updated' }, () => onUpdate())
+      .on('broadcast', { event: 'submission_deleted' }, () => onUpdate())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  } catch {
+    return () => {};
+  }
+}
+
 export interface ContactInquiryInput {
   name: string;
   email: string;
