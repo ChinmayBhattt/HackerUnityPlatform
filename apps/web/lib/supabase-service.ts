@@ -2190,15 +2190,38 @@ export async function saveSubmissionSupabase(
       created_at: submission.submittedAt || new Date().toISOString(),
     };
 
-    // 1. Direct Supabase Client Upsert
-    const { data, error } = await supabase
+    // 1. Direct Supabase Client Check & Upsert (without relying on onConflict constraints)
+    const { data: existingSub } = await supabase
       .from('submissions')
-      .upsert(payload, { onConflict: 'event_id,submitter_id' })
-      .select()
+      .select('id')
+      .eq('event_id', resolvedEventId)
+      .eq('submitter_id', resolvedSubmitterId)
       .maybeSingle();
 
-    // 2. Server-side API sync fallback (in case client RLS needs service role)
-    if (error) {
+    let data: any = null;
+    let error: any = null;
+
+    if (existingSub?.id) {
+      const updateRes = await supabase
+        .from('submissions')
+        .update(payload)
+        .eq('id', existingSub.id)
+        .select()
+        .maybeSingle();
+      data = updateRes.data;
+      error = updateRes.error;
+    } else {
+      const insertRes = await supabase
+        .from('submissions')
+        .insert(payload)
+        .select()
+        .maybeSingle();
+      data = insertRes.data;
+      error = insertRes.error;
+    }
+
+    // 2. Server-side API sync fallback (in case client RLS needs service role or to trigger server actions)
+    if (error || typeof window !== 'undefined') {
       try {
         await fetch('/api/submissions', {
           method: 'POST',
@@ -2292,12 +2315,25 @@ export async function fetchEventSubmissions(
       .eq('event_id', resolvedEventId)
       .order('created_at', { ascending: false });
 
-    if (error || !data || data.length === 0) {
+    let rows = data || [];
+    if (rows.length === 0 && typeof window !== 'undefined') {
+      try {
+        const apiRes = await fetch(`/api/submissions?eventId=${encodeURIComponent(resolvedEventId)}`);
+        if (apiRes.ok) {
+          const apiData = await apiRes.json();
+          if (Array.isArray(apiData.submissions) && apiData.submissions.length > 0) {
+            rows = apiData.submissions;
+          }
+        }
+      } catch (apiErr) {}
+    }
+
+    if (rows.length === 0) {
       return localList;
     }
 
     // Merge Supabase rows with local submissions
-    const remoteMapped: ProjectSubmission[] = data.map((row: any) => ({
+    const remoteMapped: ProjectSubmission[] = rows.map((row: any) => ({
       id: row.id,
       eventId: eventId,
       submittedBy: row.submitter_id,

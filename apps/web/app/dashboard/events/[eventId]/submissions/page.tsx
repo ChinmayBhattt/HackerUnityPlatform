@@ -42,7 +42,9 @@ import {
   updateSubmissionReviewSupabase,
   deleteSubmissionSupabase,
   subscribeToEventSubmissions,
+  mapDbEventToExtended,
 } from '@/lib/supabase-service';
+import { supabase } from '@/lib/supabase';
 import { ExtendedEvent } from '@/lib/mock-data';
 import { formatDate } from '@/lib/utils';
 
@@ -80,21 +82,38 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
   const loadData = async () => {
     setLoading(true);
     const all = getAllEvents();
-    const found = all.find(
+    let found = all.find(
       (e) => e.id === resolvedParams.eventId || e.slug === resolvedParams.eventId
     );
+
+    if (!found) {
+      try {
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(resolvedParams.eventId);
+        let query = supabase.from('events').select('*');
+        if (isUuid) {
+          query = query.eq('id', resolvedParams.eventId);
+        } else {
+          query = query.eq('slug', resolvedParams.eventId);
+        }
+        const { data: dbEvt } = await query.maybeSingle();
+        if (dbEvt) {
+          found = mapDbEventToExtended(dbEvt);
+        }
+      } catch (err) {
+        console.warn('Error fetching event from Supabase:', err);
+      }
+    }
+
+    const targetEventId = found ? found.id : resolvedParams.eventId;
     if (found) {
       setEvent(found);
-      const subs = await fetchEventSubmissions(found.id);
-      setSubmissions(subs);
-      const hook = getGoogleSheetsWebhook(found.id);
-      if (hook) setWebhookUrl(hook);
-    } else {
-      const subs = await fetchEventSubmissions(resolvedParams.eventId);
-      setSubmissions(subs);
-      const hook = getGoogleSheetsWebhook(resolvedParams.eventId);
-      if (hook) setWebhookUrl(hook);
     }
+
+    const subs = await fetchEventSubmissions(targetEventId);
+    setSubmissions(subs);
+    const hook = getGoogleSheetsWebhook(targetEventId);
+    if (hook) setWebhookUrl(hook);
+
     setLoading(false);
   };
 

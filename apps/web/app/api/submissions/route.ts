@@ -131,7 +131,7 @@ export async function POST(req: Request) {
         });
       }
 
-      const { data, error } = await serverSupabase.from('submissions').upsert({
+      const submissionPayload = {
         event_id: targetEventId,
         submitter_id: targetSubmitterId,
         project_name: submission.projectTitle,
@@ -144,9 +144,40 @@ export async function POST(req: Request) {
         status: submission.status || 'SUBMITTED',
         score: submission.score || 0,
         created_at: submission.submittedAt || new Date().toISOString(),
-      }, { onConflict: 'event_id,submitter_id' }).select().maybeSingle();
+      };
+
+      // Robust upsert without relying on non-existent unique constraints
+      const { data: existingSub } = await serverSupabase
+        .from('submissions')
+        .select('id')
+        .eq('event_id', targetEventId)
+        .eq('submitter_id', targetSubmitterId)
+        .maybeSingle();
+
+      let data: any = null;
+      let error: any = null;
+
+      if (existingSub?.id) {
+        const updateRes = await serverSupabase
+          .from('submissions')
+          .update(submissionPayload)
+          .eq('id', existingSub.id)
+          .select()
+          .maybeSingle();
+        data = updateRes.data;
+        error = updateRes.error;
+      } else {
+        const insertRes = await serverSupabase
+          .from('submissions')
+          .insert(submissionPayload)
+          .select()
+          .maybeSingle();
+        data = insertRes.data;
+        error = insertRes.error;
+      }
 
       if (error) {
+        console.error('Failed to save submission:', error.message);
         return NextResponse.json({ error: error.message }, { status: 400 });
       }
 
