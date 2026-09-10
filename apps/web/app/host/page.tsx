@@ -917,12 +917,22 @@ ${organizerName || 'Organizer'}`;
     const event: ExtendedEvent = { ...previewEvent, status: targetStatus };
     const organizerId = supabaseUser?.id || user?.id;
 
-    if (isEditMode && editingEventId) {
+    const isCustomLocal = Boolean(
+      editingEventId &&
+        (editingEventId.startsWith('evt_custom_') ||
+          editingEventId.startsWith('evt_local_') ||
+          editingEventId.startsWith('mock-'))
+    );
+
+    if (isEditMode && editingEventId && !isCustomLocal) {
       // 1. Update in local storage
       updateHostedEvent(event);
 
       // 2. Update in Supabase / Server API (upserts if not already in DB)
-      await updateEventInSupabase(editingEventId, event);
+      const res = await updateEventInSupabase(editingEventId, event);
+      if (!res.success) {
+        await createEventInSupabase(event, organizerId);
+      }
     } else {
       // 1. Persist to local storage immediately
       saveHostedEvent(event);

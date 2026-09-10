@@ -108,15 +108,26 @@ export async function POST(req: Request) {
 
     if (event.organizerName !== undefined) insertPayload.organizer_name = event.organizerName;
     if (event.organizerAvatar !== undefined) insertPayload.organizer_avatar = event.organizerAvatar;
-    if (event.currency !== undefined) insertPayload.currency = event.currency;
-    if (event.entryFee !== undefined) insertPayload.entry_fee = event.entryFee;
     if (event.bannerGradient !== undefined) insertPayload.banner_gradient = event.bannerGradient;
 
-    const { data, error } = await serverSupabase
+    let { data, error } = await serverSupabase
       .from('events')
       .insert(insertPayload)
       .select('*')
       .single();
+
+    // Resilient fallback: If database constraint 'events_status_check' fails because migration is pending
+    if (error && (error.code === '23514' || error.message?.includes('events_status_check'))) {
+      console.warn('DB check constraint rejected PENDING_APPROVAL, retrying with DRAFT status fallback');
+      insertPayload.status = 'DRAFT';
+      if (!Array.isArray(insertPayload.tags)) insertPayload.tags = [];
+      if (!insertPayload.tags.includes('PENDING_APPROVAL')) {
+        insertPayload.tags.push('PENDING_APPROVAL');
+      }
+      const retry = await serverSupabase.from('events').insert(insertPayload).select('*').single();
+      data = retry.data;
+      error = retry.error;
+    }
 
     if (error) {
       console.error('Server Supabase event insert error:', error.message);
@@ -196,8 +207,6 @@ export async function PATCH(req: Request) {
     if (updates.difficulty !== undefined) updatePayload.difficulty = updates.difficulty;
     if (updates.rulesText !== undefined) updatePayload.rules_text = updates.rulesText;
     if (updates.registrationType !== undefined) updatePayload.registration_type = updates.registrationType;
-    if (updates.entryFee !== undefined) updatePayload.entry_fee = updates.entryFee;
-    if (updates.currency !== undefined) updatePayload.currency = updates.currency;
     if (updates.registrationCapacity !== undefined) updatePayload.registration_capacity = updates.registrationCapacity;
     if (updates.approvalMode !== undefined) updatePayload.approval_mode = updates.approvalMode;
     if (updates.customQuestions !== undefined) updatePayload.custom_questions = updates.customQuestions;
@@ -226,6 +235,71 @@ export async function PATCH(req: Request) {
     if (updateResult?.error) {
       console.error('Server Supabase event update error:', updateResult.error.message);
       return NextResponse.json({ error: updateResult.error.message }, { status: 500 });
+    }
+
+    // If no row was updated (e.g. event was created locally and doesn't exist in Supabase yet), INSERT it!
+    if (!updateResult?.data || updateResult.data.length === 0) {
+      const finalSlug = updates.slug || (await generateUniqueSlug(updates.title || 'untitled-hackathon'));
+      const insertPayload: any = {
+        slug: finalSlug,
+        title: updates.title || 'Untitled Hackathon',
+        description: updates.description || '',
+        category: updates.category || 'HACKATHON',
+        event_type: updates.eventType || 'ONLINE',
+        location: updates.location || 'Online',
+        organizer_id: auth.userId,
+        organizer_name: updates.organizerName || auth.user.user_metadata?.name || 'Organizer',
+        organizer_avatar: updates.organizerAvatar || '⚡',
+        start_date: updates.startDate || new Date().toISOString(),
+        end_date: updates.endDate || new Date(Date.now() + 7 * 86400000).toISOString(),
+        registration_deadline: updates.registrationDeadline || new Date().toISOString(),
+        total_prize_value: Number(updates.totalPrizeValue || 0),
+        prizes: updates.prizes || [],
+        tracks: updates.tracks || [],
+        stages: updates.stages || [],
+        faqs: updates.faqs || [],
+        sponsors: updates.sponsors || [],
+        tags: updates.tags || [],
+        min_team_size: updates.minTeamSize || 1,
+        max_team_size: updates.maxTeamSize || 4,
+        is_team_event: updates.isTeamEvent ?? true,
+        featured: Boolean(updates.featured),
+        status: updates.status || 'PENDING_APPROVAL',
+        tagline: updates.tagline || '',
+        logo_url: updates.logoUrl || null,
+        banner_url: updates.bannerUrl || updates.image || null,
+        registration_start: updates.registrationStart || null,
+        timezone: updates.timezone || 'Asia/Kolkata',
+        eligibility: updates.eligibility || null,
+        difficulty: updates.difficulty || 'OPEN',
+        rules_text: updates.rulesText || null,
+        registration_type: updates.registrationType || 'FREE',
+        registration_capacity: updates.registrationCapacity || 2000,
+        approval_mode: updates.approvalMode || 'AUTO',
+        custom_questions: updates.customQuestions || [],
+      };
+
+      let { data: insertedData, error: insertErr } = await serverSupabase
+        .from('events')
+        .insert(insertPayload)
+        .select('*')
+        .single();
+
+      if (insertErr && (insertErr.code === '23514' || insertErr.message?.includes('events_status_check'))) {
+        insertPayload.status = 'DRAFT';
+        if (!insertPayload.tags.includes('PENDING_APPROVAL')) {
+          insertPayload.tags.push('PENDING_APPROVAL');
+        }
+        const retry = await serverSupabase.from('events').insert(insertPayload).select('*').single();
+        insertedData = retry.data;
+        insertErr = retry.error;
+      }
+
+      if (insertErr) {
+        return NextResponse.json({ error: insertErr.message }, { status: 500 });
+      }
+
+      return NextResponse.json({ success: true, data: insertedData });
     }
 
     return NextResponse.json({ success: true, data: updateResult?.data?.[0] });

@@ -470,8 +470,6 @@ export async function createEventInSupabase(
       difficulty: event.difficulty || 'OPEN',
       rules_text: event.rulesText || null,
       registration_type: event.registrationType || 'FREE',
-      currency: event.currency || 'INR',
-      entry_fee: Number(event.entryFee || 0),
       registration_capacity: event.registrationCapacity || 2000,
       approval_mode: event.approvalMode || 'AUTO',
       custom_questions: event.customQuestions || [],
@@ -592,8 +590,6 @@ export async function updateEventInSupabase(
     if (updates.organizerName !== undefined) updatePayload.organizer_name = updates.organizerName;
     if (updates.organizerAvatar !== undefined) updatePayload.organizer_avatar = updates.organizerAvatar;
     if (updates.organizerId !== undefined) updatePayload.organizer_id = updates.organizerId;
-    if (updates.currency !== undefined) updatePayload.currency = updates.currency;
-    if (updates.entryFee !== undefined) updatePayload.entry_fee = updates.entryFee;
     if (updates.registrationType !== undefined) updatePayload.registration_type = updates.registrationType;
     if (updates.registrationCapacity !== undefined) updatePayload.registration_capacity = updates.registrationCapacity;
     if (updates.approvalMode !== undefined) updatePayload.approval_mode = updates.approvalMode;
