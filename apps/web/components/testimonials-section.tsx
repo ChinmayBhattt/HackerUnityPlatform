@@ -182,14 +182,14 @@ export function TestimonialsSection() {
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 text-[#0099e6] text-xs font-bold uppercase tracking-wider mb-3">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Leader Endorsements</span>
+            <Sparkles className="w-3.5 h-3.5 text-[#0099e6]" />
+            <span>Industry Endorsements</span>
           </div>
           <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight">
-            Don&apos;t just take our word for it, take theirs
+            Backed by Builders, <span className="text-gradient-brand">Trusted by Leaders</span>
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 mt-3 font-medium">
-            Hear from industry leaders, senior engineering managers, and architects who mentor and evaluate builders on Hacker&apos;s Unity.
+            Real perspectives from senior engineering leaders, architects, and founders actively mentoring and backing talent on Hacker&apos;s Unity.
           </p>
         </div>
 
