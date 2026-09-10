@@ -862,11 +862,11 @@ ${organizerName || 'Organizer'}`;
   ]);
 
   const gmailDraftUrl = useMemo(() => {
-    return `https://mail.google.com/mail/?view=cm&fs=1&to=chinmaybhatt26@gmail.com&su=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBodyText)}`;
+    return `https://mail.google.com/mail/?view=cm&fs=1&to=hackerunity.community@gmail.com&su=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBodyText)}`;
   }, [emailSubject, emailBodyText]);
 
   const mailtoUrl = useMemo(() => {
-    return `mailto:chinmaybhatt26@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBodyText)}`;
+    return `mailto:hackerunity.community@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBodyText)}`;
   }, [emailSubject, emailBodyText]);
 
   const handleTriggerResend = async () => {
@@ -941,7 +941,7 @@ ${organizerName || 'Organizer'}`;
       await createEventInSupabase(event, organizerId);
     }
 
-    // 3. Dispatch approval request email to chinmaybhatt26@gmail.com
+    // 3. Dispatch approval request email to hackerunity.community@gmail.com
     try {
       fetch('/api/host-approval-email', {
         method: 'POST',
@@ -1079,7 +1079,7 @@ ${organizerName || 'Organizer'}`;
               Hackathon Appeal Submitted Successfully!
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 max-w-lg mx-auto leading-relaxed font-medium">
-              Your hackathon <strong className="text-slate-900">&quot;{submittedEvent?.title || previewEvent.title}&quot;</strong> has been submitted for review. An approval request has been sent to <strong className="text-[#0099e6]">chinmaybhatt26@gmail.com</strong>. Once approved by the admin, it will go live globally across the platform.
+              Your hackathon <strong className="text-slate-900">&quot;{submittedEvent?.title || previewEvent.title}&quot;</strong> has been submitted for review. An approval request has been sent to <strong className="text-[#0099e6]">hackerunity.community@gmail.com</strong>. Once approved by the admin, it will go live globally across the platform.
             </p>
           </div>
 
@@ -1160,12 +1160,12 @@ ${organizerName || 'Organizer'}`;
                 </div>
               </div>
               <span className="text-[11px] font-mono font-bold text-[#0099e6] bg-white px-3 py-1 rounded-full border border-sky-200 shadow-2xs">
-                chinmaybhatt26@gmail.com
+                hackerunity.community@gmail.com
               </span>
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed font-medium">
-              Click <strong className="text-slate-900">&quot;Open in Gmail Draft&quot;</strong> below to instantly open Gmail with a pre-filled draft containing all event specifications (prizes, dates, venue, rules, links) addressed to <strong className="text-slate-900">chinmaybhatt26@gmail.com</strong>:
+              Click <strong className="text-slate-900">&quot;Open in Gmail Draft&quot;</strong> below to instantly open Gmail with a pre-filled draft containing all event specifications (prizes, dates, venue, rules, links) addressed to <strong className="text-slate-900">hackerunity.community@gmail.com</strong>:
             </p>
 
             <div className="flex flex-wrap items-center gap-2.5 pt-1">
