@@ -490,11 +490,11 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
   };
 
   return (
-    <div className="flex-1 pb-20 bg-slate-50/60 min-h-screen">
+    <div className="flex-1 pb-20 bg-slate-50/60 dark:bg-[#080b11] min-h-screen">
       {/* ─── Hero / Header ────────────────────────────────────────────── */}
-      <div className="bg-gradient-to-r from-sky-50 via-white to-orange-50/60 border-b border-slate-200 py-8">
+      <div className="bg-gradient-to-r from-sky-50 via-white to-orange-50/60 dark:from-[#0c1017] dark:via-[#080b11] dark:to-[#0c1017] border-b border-slate-200 dark:border-white/[0.08] py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center gap-2 text-xs text-slate-500 mb-4 font-semibold">
+          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-4 font-semibold">
             <Link
               href={`/hackathons/${event.slug}`}
               className="flex items-center gap-1.5 hover:text-[#0099e6] transition-colors"
@@ -507,7 +507,7 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-start gap-4">
               {(event.logoUrl || event.organizerLogo) ? (
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl border border-slate-200/90 bg-white p-1.5 shadow-xs shrink-0 overflow-hidden flex items-center justify-center">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-white/[0.1] bg-white dark:bg-[#121824] p-1.5 shadow-xs shrink-0 overflow-hidden flex items-center justify-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={event.logoUrl || event.organizerLogo}
@@ -516,28 +516,28 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                   />
                 </div>
               ) : (
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl border border-sky-200/90 bg-gradient-to-br from-sky-50 to-sky-100 shadow-xs shrink-0 flex items-center justify-center text-2xl sm:text-3xl font-black text-[#0099e6]">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl border border-sky-200/90 dark:border-sky-800/50 bg-gradient-to-br from-sky-50 to-sky-100 dark:from-sky-950/40 dark:to-sky-900/20 shadow-xs shrink-0 flex items-center justify-center text-2xl sm:text-3xl font-black text-[#0099e6]">
                   {event.organizerAvatar || '⚡'}
                 </div>
               )}
 
               <div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white text-[#0099e6] border border-sky-200 text-xs font-bold mb-2 shadow-2xs">
+                <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white dark:bg-[#0c1017] text-[#0099e6] border border-sky-200 dark:border-sky-800/50 text-xs font-bold mb-2 shadow-2xs">
                   <Sparkles className="w-3.5 h-3.5 text-[#0099e6]" />
                   <span>Registration Portal</span>
                 </div>
-                <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+                <h1 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
                   Register for {event.title}
                 </h1>
-                <p className="text-xs sm:text-sm text-slate-600 mt-1 font-medium">
-                  Organized by <strong className="text-slate-900">{event.organizerName}</strong> • {event.location || 'Online Arena'}
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 font-medium">
+                  Organized by <strong className="text-slate-900 dark:text-white">{event.organizerName}</strong> • {event.location || 'Online Arena'}
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-white rounded-2xl border border-slate-200 shadow-2xs text-right">
-                <div className="text-[10px] uppercase font-bold text-slate-400">Prize Pool</div>
+              <div className="p-3 bg-white dark:bg-[#0c1017] rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-2xs text-right">
+                <div className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Prize Pool</div>
                 <div className="text-lg font-black text-[#ea580c] font-mono">
                   {event.prize || formatCurrency(event.totalPrizeValue)}
                 </div>
@@ -546,25 +546,25 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
           </div>
 
           {/* Stepper Progress */}
-          <div className="mt-8 pt-6 border-t border-slate-200/80 flex items-center justify-between max-w-xl mx-auto">
+          <div className="mt-8 pt-6 border-t border-slate-200/80 dark:border-white/[0.08] flex items-center justify-between max-w-xl mx-auto">
             <div className="flex items-center gap-3">
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-colors ${
                   currentStep === 1
-                    ? 'bg-[#0099e6] text-white ring-4 ring-sky-100'
+                    ? 'bg-[#0099e6] text-white ring-4 ring-sky-100 dark:ring-sky-950'
                     : currentStep > 1
                     ? 'bg-emerald-500 text-white'
-                    : 'bg-slate-200 text-slate-600'
+                    : 'bg-slate-200 dark:bg-white/[0.1] text-slate-600 dark:text-slate-400'
                 }`}
               >
                 {currentStep > 1 ? <Check className="w-4 h-4" /> : '1'}
               </div>
-              <span className={`text-xs font-bold ${currentStep === 1 ? 'text-slate-900' : 'text-slate-500'}`}>
+              <span className={`text-xs font-bold ${currentStep === 1 ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
                 1. Squad Mode
               </span>
             </div>
 
-            <div className="flex-1 h-0.5 mx-4 bg-slate-200">
+            <div className="flex-1 h-0.5 mx-4 bg-slate-200 dark:bg-white/[0.1]">
               <div
                 className="h-full bg-[#0099e6] transition-all duration-300"
                 style={{ width: currentStep === 1 ? '0%' : currentStep === 2 ? '50%' : '100%' }}
@@ -575,20 +575,20 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-colors ${
                   currentStep === 2
-                    ? 'bg-[#0099e6] text-white ring-4 ring-sky-100'
+                    ? 'bg-[#0099e6] text-white ring-4 ring-sky-100 dark:ring-sky-950'
                     : currentStep > 2
                     ? 'bg-emerald-500 text-white'
-                    : 'bg-slate-200 text-slate-600'
+                    : 'bg-slate-200 dark:bg-white/[0.1] text-slate-600 dark:text-slate-400'
                 }`}
               >
                 {currentStep > 2 ? <Check className="w-4 h-4" /> : '2'}
               </div>
-              <span className={`text-xs font-bold ${currentStep === 2 ? 'text-slate-900' : 'text-slate-500'}`}>
+              <span className={`text-xs font-bold ${currentStep === 2 ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
                 2. Builder Details
               </span>
             </div>
 
-            <div className="flex-1 h-0.5 mx-4 bg-slate-200">
+            <div className="flex-1 h-0.5 mx-4 bg-slate-200 dark:bg-white/[0.1]">
               <div
                 className="h-full bg-emerald-500 transition-all duration-300"
                 style={{ width: currentStep === 3 ? '100%' : '0%' }}
@@ -599,13 +599,13 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-colors ${
                   currentStep === 3
-                    ? 'bg-emerald-500 text-white ring-4 ring-emerald-100'
-                    : 'bg-slate-200 text-slate-600'
+                    ? 'bg-emerald-500 text-white ring-4 ring-emerald-100 dark:ring-emerald-950'
+                    : 'bg-slate-200 dark:bg-white/[0.1] text-slate-600 dark:text-slate-400'
                 }`}
               >
                 3
               </div>
-              <span className={`text-xs font-bold ${currentStep === 3 ? 'text-slate-900' : 'text-slate-500'}`}>
+              <span className={`text-xs font-bold ${currentStep === 3 ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
                 3. Confirmed
               </span>
             </div>
@@ -615,9 +615,9 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
 
       {/* ─── Form Container ────────────────────────────────────────────── */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-8">
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden">
+        <div className="bg-white dark:bg-[#0c1017] rounded-3xl border border-slate-200 dark:border-white/[0.08] shadow-xl overflow-hidden">
           {errorMsg && (
-            <div className="m-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-xs text-red-700 font-medium flex items-center gap-3">
+            <div className="m-6 p-4 rounded-2xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 text-xs text-red-700 dark:text-red-400 font-medium flex items-center gap-3">
               <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
               <span>{errorMsg}</span>
             </div>
@@ -627,8 +627,8 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
           {currentStep === 1 && (
             <form onSubmit={handleStep1Next} className="p-6 sm:p-8 space-y-6">
               <div>
-                <h2 className="text-xl font-black text-slate-900">Choose How You Want to Participate</h2>
-                <p className="text-xs text-slate-500 mt-1">
+                <h2 className="text-xl font-black text-slate-900 dark:text-white">Choose How You Want to Participate</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   Select whether you want to create a new squad as a team lead, join an open team, or hack solo.
                 </p>
               </div>
@@ -643,23 +643,23 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                     }}
                     className={`p-5 rounded-2xl border-2 transition-all cursor-pointer relative ${
                       mode === 'CREATE_TEAM'
-                        ? 'border-[#0099e6] bg-sky-50/50 shadow-md ring-2 ring-[#0099e6]/20'
-                        : 'border-slate-200 hover:border-slate-300 bg-white'
+                        ? 'border-[#0099e6] bg-sky-50/50 dark:bg-sky-950/30 shadow-md ring-2 ring-[#0099e6]/20'
+                        : 'border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.15] bg-white dark:bg-transparent'
                     }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-sky-100 border border-sky-200 text-[#0099e6] flex items-center justify-center shrink-0">
+                        <div className="w-12 h-12 rounded-2xl bg-sky-100 dark:bg-sky-900/50 border border-sky-200 dark:border-sky-800 text-[#0099e6] flex items-center justify-center shrink-0">
                           <PlusCircle className="w-6 h-6" />
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="text-base font-bold text-slate-900">Create a New Squad</h3>
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-100 text-[#0099e6]">
+                            <h3 className="text-base font-bold text-slate-900 dark:text-white">Create a New Squad</h3>
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-100 dark:bg-sky-950/50 text-[#0099e6]">
                               Team Leader
                             </span>
                           </div>
-                          <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
                             Form your team now. You can invite your friends or let other builders apply to join.
                             (Squad size: {minTeam}-{maxTeam} members).
                           </p>
@@ -676,26 +676,26 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                     </div>
 
                     {mode === 'CREATE_TEAM' && (
-                      <div className="mt-5 pt-4 border-t border-sky-100 space-y-3 animate-in fade-in" onClick={(e) => e.stopPropagation()}>
+                      <div className="mt-5 pt-4 border-t border-sky-100 dark:border-sky-900/40 space-y-3 animate-in fade-in" onClick={(e) => e.stopPropagation()}>
                         <div>
-                          <label className="block text-xs font-bold text-slate-700 mb-1">Squad Name *</label>
+                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Squad Name *</label>
                           <input
                             type="text"
                             required
                             placeholder="e.g. CyberVanguard, NeuralNodes, CodeCrafters"
                             value={teamName}
                             onChange={(e) => setTeamName(e.target.value)}
-                            className="w-full px-4 py-2.5 bg-white border border-slate-300 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors font-semibold"
+                            className="w-full px-4 py-2.5 bg-white dark:bg-[#121824] border border-slate-300 dark:border-white/[0.1] focus:border-[#0099e6] rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-colors font-semibold"
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-bold text-slate-700 mb-1">Squad Tagline / Focus (Optional)</label>
+                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Squad Tagline / Focus (Optional)</label>
                           <input
                             type="text"
                             placeholder="e.g. Building NextGen Autonomous AI Agents"
                             value={teamDescription}
                             onChange={(e) => setTeamDescription(e.target.value)}
-                            className="w-full px-4 py-2 bg-white border border-slate-300 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                            className="w-full px-4 py-2 bg-white dark:bg-[#121824] border border-slate-300 dark:border-white/[0.1] focus:border-[#0099e6] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-colors"
                           />
                         </div>
                       </div>
@@ -712,23 +712,23 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                     }}
                     className={`p-5 rounded-2xl border-2 transition-all cursor-pointer relative ${
                       mode === 'JOIN_TEAM'
-                        ? 'border-[#0099e6] bg-sky-50/50 shadow-md ring-2 ring-[#0099e6]/20'
-                        : 'border-slate-200 hover:border-slate-300 bg-white'
+                        ? 'border-[#0099e6] bg-sky-50/50 dark:bg-sky-950/30 shadow-md ring-2 ring-[#0099e6]/20'
+                        : 'border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.15] bg-white dark:bg-transparent'
                     }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-purple-100 border border-purple-200 text-purple-600 flex items-center justify-center shrink-0">
+                        <div className="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-800/40 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
                           <Users className="w-6 h-6" />
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="text-base font-bold text-slate-900">Join an Existing Squad</h3>
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-700">
+                            <h3 className="text-base font-bold text-slate-900 dark:text-white">Join an Existing Squad</h3>
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300">
                               {teams.length} Open Squads
                             </span>
                           </div>
-                          <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
                             Join an already created squad or connect with builders looking for teammates.
                           </p>
                         </div>
@@ -744,18 +744,18 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                     </div>
 
                     {mode === 'JOIN_TEAM' && (
-                      <div className="mt-5 pt-4 border-t border-purple-100 space-y-3 animate-in fade-in" onClick={(e) => e.stopPropagation()}>
-                        <label className="block text-xs font-bold text-slate-700">Select Squad to Join *</label>
+                      <div className="mt-5 pt-4 border-t border-purple-100 dark:border-purple-800/30 space-y-3 animate-in fade-in" onClick={(e) => e.stopPropagation()}>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">Select Squad to Join *</label>
                         {teamsLoading ? (
-                          <div className="py-6 text-center text-xs text-slate-400">Loading open squads...</div>
+                          <div className="py-6 text-center text-xs text-slate-400 dark:text-slate-500">Loading open squads...</div>
                         ) : teams.length === 0 ? (
-                          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-center">
-                            <p className="text-xs font-bold text-slate-700">No open squads created yet.</p>
-                            <p className="text-[11px] text-slate-500 mt-0.5">You can be the first to create one!</p>
+                          <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] text-center">
+                            <p className="text-xs font-bold text-slate-700 dark:text-slate-300">No open squads created yet.</p>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">You can be the first to create one!</p>
                             <button
                               type="button"
                               onClick={() => setMode('CREATE_TEAM')}
-                              className="mt-2.5 px-3.5 py-1.5 rounded-xl bg-[#0099e6] text-white text-xs font-bold"
+                              className="mt-2.5 px-3.5 py-1.5 rounded-xl bg-[#0099e6] text-white text-xs font-bold cursor-pointer"
                             >
                               Create Squad Instead
                             </button>
@@ -773,20 +773,20 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                                   onClick={() => !isFull && setSelectedTeamId(t.id)}
                                   className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
                                     isFull
-                                      ? 'bg-slate-50 border-slate-200 opacity-60 cursor-not-allowed'
+                                      ? 'bg-slate-50 dark:bg-white/[0.02] border-slate-200 dark:border-white/[0.06] opacity-60 cursor-not-allowed'
                                       : isSelected
-                                      ? 'bg-white border-[#0099e6] shadow-sm ring-1 ring-[#0099e6]'
-                                      : 'bg-white border-slate-200 hover:border-slate-300'
+                                      ? 'bg-white dark:bg-[#121824] border-[#0099e6] shadow-sm ring-1 ring-[#0099e6]'
+                                      : 'bg-white dark:bg-[#121824] border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.15]'
                                   }`}
                                 >
                                   <div>
                                     <div className="flex items-center gap-2">
-                                      <h4 className="text-xs font-bold text-slate-900">{t.name}</h4>
-                                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-semibold">
+                                      <h4 className="text-xs font-bold text-slate-900 dark:text-white">{t.name}</h4>
+                                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.08] text-slate-600 dark:text-slate-300 font-semibold">
                                         {memberCount}/{maxTeam} Members
                                       </span>
                                     </div>
-                                    <p className="text-[11px] text-slate-500 mt-0.5">
+                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                                       Leader: {t.profiles?.name || 'Builder'} {t.description && `• ${t.description}`}
                                     </p>
                                   </div>
@@ -822,10 +822,10 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                   }}
                   className={`p-5 rounded-2xl border-2 transition-all relative ${
                     !isSoloAllowed
-                      ? 'border-slate-200 bg-slate-50/80 opacity-60 cursor-not-allowed select-none'
+                      ? 'border-slate-200 dark:border-white/[0.08] bg-slate-50/80 dark:bg-white/[0.02] opacity-60 cursor-not-allowed select-none'
                       : mode === 'SOLO'
-                      ? 'border-[#0099e6] bg-sky-50/50 shadow-md ring-2 ring-[#0099e6]/20 cursor-pointer'
-                      : 'border-slate-200 hover:border-slate-300 bg-white cursor-pointer'
+                      ? 'border-[#0099e6] bg-sky-50/50 dark:bg-sky-950/30 shadow-md ring-2 ring-[#0099e6]/20 cursor-pointer'
+                      : 'border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.15] bg-white dark:bg-transparent cursor-pointer'
                   }`}
                 >
                   <div className="flex items-start justify-between">
@@ -833,27 +833,27 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                       <div
                         className={`w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 ${
                           !isSoloAllowed
-                            ? 'bg-slate-200/80 border-slate-300 text-slate-400'
-                            : 'bg-emerald-100 border border-emerald-200 text-emerald-600'
+                            ? 'bg-slate-200/80 dark:bg-white/[0.06] border-slate-300 dark:border-white/[0.1] text-slate-400 dark:text-slate-500'
+                            : 'bg-emerald-100 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/40 text-emerald-600 dark:text-emerald-400'
                         }`}
                       >
                         {!isSoloAllowed ? <Lock className="w-6 h-6" /> : <User className="w-6 h-6" />}
                       </div>
                       <div>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="text-base font-bold text-slate-900">Solo Participant / Individual Hacker</h3>
+                          <h3 className="text-base font-bold text-slate-900 dark:text-white">Solo Participant / Individual Hacker</h3>
                           {!isSoloAllowed ? (
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-700 flex items-center gap-1 border border-rose-200">
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 flex items-center gap-1 border border-rose-200 dark:border-rose-800/40">
                               <Lock className="w-3 h-3" />
                               <span>Locked (Min {minTeam} Builders)</span>
                             </span>
                           ) : (
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300">
                               Solo
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                        <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
                           {!isSoloAllowed
                             ? `This hackathon requires team participation (minimum ${minTeam} members). Solo submissions are not permitted by the organizer.`
                             : 'Participate on your own. You can build, ship, and submit your project independently.'}
@@ -874,10 +874,10 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
               </div>
 
               {/* Next CTA */}
-              <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+              <div className="pt-4 border-t border-slate-100 dark:border-white/[0.08] flex items-center justify-between">
                 <Link
                   href={`/hackathons/${event.slug}`}
-                  className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors"
+                  className="px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-300 text-xs font-bold transition-colors"
                 >
                   Cancel
                 </Link>
@@ -897,8 +897,8 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
             <form onSubmit={handleFinalSubmit} className="p-6 sm:p-8 space-y-6">
               <div>
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-black text-slate-900">Builder Profile & Required Details</h2>
-                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-sky-50 text-[#0099e6] border border-sky-200">
+                  <h2 className="text-xl font-black text-slate-900 dark:text-white">Builder Profile & Required Details</h2>
+                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-sky-50 dark:bg-sky-950/40 text-[#0099e6] border border-sky-200 dark:border-sky-800/50">
                     {mode === 'CREATE_TEAM'
                       ? `Squad Lead: ${teamName}`
                       : mode === 'JOIN_TEAM'
@@ -906,41 +906,41 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                       : 'Solo Builder'}
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   Fill in your required profile links and details to confirm your registration for {event.title}.
                 </p>
               </div>
 
                 {/* Mandatory Fields Group */}
                 <div className="space-y-4">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
-                    <Lock className="w-3.5 h-3.5 text-emerald-600" />
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800/50">
+                    <Lock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                     <span>Mandatory Required Fields</span>
                   </div>
 
                   {/* Name & Email */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Full Name *</label>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Full Name *</label>
                       <input
                         type="text"
                         required
                         placeholder="e.g. Chinmay Bhatt"
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none font-medium transition-colors"
+                        className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none font-medium transition-colors"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Email Address *</label>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Email Address *</label>
                       <input
                         type="email"
                         required
                         placeholder="you@domain.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none font-medium transition-colors"
+                        className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none font-medium transition-colors"
                       />
                     </div>
                   </div>
@@ -948,40 +948,40 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                   {/* Phone & City */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Phone Number (WhatsApp) *</label>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Phone Number (WhatsApp) *</label>
                       <input
                         type="tel"
                         required
                         placeholder="+91 99887 76655"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                        className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-colors"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">City / Country *</label>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">City / Country *</label>
                       <input
                         type="text"
                         required
                         placeholder="e.g. Bangalore, India"
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                        className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-colors"
                       />
                     </div>
                   </div>
 
                   {/* College / Organization */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">College / University / Organization *</label>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">College / University / Organization *</label>
                     <input
                       type="text"
                       required
                       placeholder="e.g. IIT Bombay / Freelance Developer"
                       value={college}
                       onChange={(e) => setCollege(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-colors"
                     />
                   </div>
                 </div>
@@ -997,8 +997,8 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                   isFieldEnabled('tshirt') ||
                   isFieldEnabled('dietary') ||
                   isFieldEnabled('experience')) && (
-                  <div className="space-y-4 pt-3 border-t border-slate-100">
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-sky-800 bg-sky-50 px-3 py-1.5 rounded-xl border border-sky-200">
+                  <div className="space-y-4 pt-3 border-t border-slate-100 dark:border-white/[0.08]">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-sky-800 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/40 px-3 py-1.5 rounded-xl border border-sky-200 dark:border-sky-800/50">
                       <Sparkles className="w-3.5 h-3.5 text-[#0099e6]" />
                       <span>Additional Event Requirements</span>
                     </div>
@@ -1008,8 +1008,8 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {isFieldEnabled('github') && (
                           <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
-                              <Github className="w-3.5 h-3.5 text-slate-900" />
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                              <Github className="w-3.5 h-3.5 text-slate-900 dark:text-white" />
                               <span>GitHub Profile URL</span>
                             </label>
                             <input
@@ -1017,14 +1017,14 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                               placeholder="https://github.com/your-username"
                               value={githubUrl}
                               onChange={(e) => setGithubUrl(e.target.value)}
-                              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none font-medium transition-colors"
+                              className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none font-medium transition-colors"
                             />
                           </div>
                         )}
 
                         {isFieldEnabled('linkedin') && (
                           <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
                               <Linkedin className="w-3.5 h-3.5 text-[#0077b5]" />
                               <span>LinkedIn Profile URL</span>
                             </label>
@@ -1033,7 +1033,7 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                               placeholder="https://linkedin.com/in/your-profile"
                               value={linkedinUrl}
                               onChange={(e) => setLinkedinUrl(e.target.value)}
-                              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none font-medium transition-colors"
+                              className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none font-medium transition-colors"
                             />
                           </div>
                         )}
@@ -1045,25 +1045,25 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {isFieldEnabled('portfolio') && (
                           <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">Portfolio / Website URL</label>
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Portfolio / Website URL</label>
                             <input
                               type="url"
                               placeholder="https://yourportfolio.dev"
                               value={portfolioUrl}
                               onChange={(e) => setPortfolioUrl(e.target.value)}
-                              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                              className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-colors"
                             />
                           </div>
                         )}
                         {isFieldEnabled('resume') && (
                           <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">Resume / CV Link (PDF/Drive)</label>
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Resume / CV Link (PDF/Drive)</label>
                             <input
                               type="url"
                               placeholder="https://drive.google.com/..."
                               value={resumeUrl}
                               onChange={(e) => setResumeUrl(e.target.value)}
-                              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                              className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-colors"
                             />
                           </div>
                         )}
@@ -1075,25 +1075,25 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {isFieldEnabled('discord') && (
                           <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">Discord Username</label>
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Discord Username</label>
                             <input
                               type="text"
                               placeholder="e.g. hacker#1234 or hacker_name"
                               value={discordHandle}
                               onChange={(e) => setDiscordHandle(e.target.value)}
-                              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                              className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-colors"
                             />
                           </div>
                         )}
                         {isFieldEnabled('twitter') && (
                           <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">Twitter / X Profile</label>
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Twitter / X Profile</label>
                             <input
                               type="text"
                               placeholder="https://x.com/username or @username"
                               value={twitterUrl}
                               onChange={(e) => setTwitterUrl(e.target.value)}
-                              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                              className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-colors"
                             />
                           </div>
                         )}
@@ -1105,11 +1105,11 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         {isFieldEnabled('tshirt') && (
                           <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">T-Shirt Size</label>
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">T-Shirt Size</label>
                             <select
                               value={tshirtSize}
                               onChange={(e) => setTshirtSize(e.target.value)}
-                              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 outline-none"
+                              className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] rounded-xl text-sm text-slate-900 dark:text-white outline-none"
                             >
                               <option value="S">S (Small)</option>
                               <option value="M">M (Medium)</option>
@@ -1122,11 +1122,11 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
 
                         {isFieldEnabled('dietary') && (
                           <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">Dietary Preference</label>
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Dietary Preference</label>
                             <select
                               value={dietaryPreference}
                               onChange={(e) => setDietaryPreference(e.target.value)}
-                              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 outline-none"
+                              className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] rounded-xl text-sm text-slate-900 dark:text-white outline-none"
                             >
                               <option value="Veg">Vegetarian</option>
                               <option value="Non-Veg">Non-Vegetarian</option>
@@ -1139,11 +1139,11 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
 
                         {isFieldEnabled('experience') && (
                           <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">Experience Level</label>
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Experience Level</label>
                             <select
                               value={experienceLevel}
                               onChange={(e) => setExperienceLevel(e.target.value)}
-                              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 outline-none"
+                              className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] rounded-xl text-sm text-slate-900 dark:text-white outline-none"
                             >
                               <option value="Beginner">Beginner / Student</option>
                               <option value="Intermediate">Intermediate Builder</option>
@@ -1157,13 +1157,13 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                     {/* Skills */}
                     {isFieldEnabled('skills') && (
                       <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">Skills & Tech Stack (comma separated)</label>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Skills & Tech Stack (comma separated)</label>
                         <input
                           type="text"
                           placeholder="Next.js 16, TypeScript, PyTorch, Supabase, Solidity"
                           value={skills}
                           onChange={(e) => setSkills(e.target.value)}
-                          className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                          className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-colors"
                         />
                       </div>
                     )}
@@ -1172,11 +1172,11 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
 
                 {/* Additional Event Custom Questions */}
                 {event.customQuestions && event.customQuestions.length > 0 && (
-                  <div className="space-y-3 pt-3 border-t border-slate-100">
-                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Organizer Questions</label>
+                  <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-white/[0.08]">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Organizer Questions</label>
                     {event.customQuestions.map((q) => (
                       <div key={q.id}>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                           {q.label} {q.required && '*'}
                         </label>
                         {q.type === 'textarea' ? (
@@ -1185,7 +1185,7 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                             required={q.required}
                             value={customAnswers[q.id] || ''}
                             onChange={(e) => setCustomAnswers({ ...customAnswers, [q.id]: e.target.value })}
-                            className="w-full px-4 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 outline-none resize-none"
+                            className="w-full px-4 py-2 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] rounded-xl text-xs text-slate-900 dark:text-white outline-none resize-none"
                           />
                         ) : (
                           <input
@@ -1193,7 +1193,7 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                             required={q.required}
                             value={customAnswers[q.id] || ''}
                             onChange={(e) => setCustomAnswers({ ...customAnswers, [q.id]: e.target.value })}
-                            className="w-full px-4 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 outline-none"
+                            className="w-full px-4 py-2 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] rounded-xl text-xs text-slate-900 dark:text-white outline-none"
                           />
                         )}
                       </div>
@@ -1202,7 +1202,7 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                 )}
 
                 {/* Code of Conduct Checkbox */}
-                <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
+                <div className="flex items-center gap-3 pt-3 border-t border-slate-100 dark:border-white/[0.08]">
                   <input
                     type="checkbox"
                     id="agree"
@@ -1211,25 +1211,25 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                     required
                     className="w-4 h-4 rounded text-[#0099e6] focus:ring-0 cursor-pointer"
                   />
-                  <label htmlFor="agree" className="text-xs text-slate-600 cursor-pointer">
-                    I agree to the <span className="text-slate-900 font-bold underline">Code of Conduct</span>, fair play guidelines, and event terms.
+                  <label htmlFor="agree" className="text-xs text-slate-600 dark:text-slate-400 cursor-pointer">
+                    I agree to the <span className="text-slate-900 dark:text-white font-bold underline">Code of Conduct</span>, fair play guidelines, and event terms.
                   </label>
                 </div>
 
                 {/* Inline Error Display if any */}
                 {errorMsg && (
-                  <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-xs text-red-700 font-medium flex items-center gap-3 animate-in fade-in">
+                  <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 text-xs text-red-700 dark:text-red-400 font-medium flex items-center gap-3 animate-in fade-in">
                     <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
                     <span>{errorMsg}</span>
                   </div>
                 )}
 
                 {/* Action Buttons */}
-                <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-4">
+                <div className="pt-4 border-t border-slate-100 dark:border-white/[0.08] flex items-center justify-between gap-4">
                 <button
                   type="button"
                   onClick={() => setCurrentStep(1)}
-                  className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-300 text-xs font-bold transition-colors cursor-pointer"
                 >
                   ← Back to Mode Selection
                 </button>
@@ -1255,41 +1255,41 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
           {/* ═════════ STEP 3: REGISTRATION CONFIRMED / TICKET ═════════ */}
           {currentStep === 3 && (
             <div className="p-8 sm:p-12 text-center space-y-6 animate-in zoom-in-95">
-              <div className="w-20 h-20 rounded-full bg-emerald-50 border-2 border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto shadow-sm">
+              <div className="w-20 h-20 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border-2 border-emerald-200 dark:border-emerald-800/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-sm">
                 <CheckCircle2 className="w-10 h-10" />
               </div>
 
               <div className="space-y-2">
-                <span className="inline-block px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-extrabold uppercase tracking-wider">
+                <span className="inline-block px-3.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-xs font-extrabold uppercase tracking-wider">
                   {isAlreadyRegistered ? 'Already Registered' : 'Registration Confirmed'}
                 </span>
-                <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
+                <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
                   {isAlreadyRegistered ? 'Your Registration & Squad' : 'You Are Officially In!'}
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto">
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-md mx-auto">
                   {isAlreadyRegistered
                     ? `You are currently registered for ${event.title}. Manage your squad and teammates below.`
                     : `You are registered for ${event.title} as `}
-                  {!isAlreadyRegistered && <strong className="text-slate-900">{registeredRole || 'Participant'}</strong>}
+                  {!isAlreadyRegistered && <strong className="text-slate-900 dark:text-white">{registeredRole || 'Participant'}</strong>}
                 </p>
               </div>
 
               {/* Squad Details Card (if part of a squad) */}
               {(createdTeamData || teamName) && (
-                <div className="max-w-md mx-auto p-5 rounded-2xl bg-white border-2 border-sky-200 shadow-sm text-left space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="max-w-md mx-auto p-5 rounded-2xl bg-white dark:bg-[#0c1017] border-2 border-sky-200 dark:border-sky-800/50 shadow-sm text-left space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/[0.08] pb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0099e6] to-sky-600 flex items-center justify-center text-white text-base font-black shadow-md shadow-sky-500/25">
                         {(createdTeamData?.name || teamName || 'S').charAt(0).toUpperCase()}
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5">
-                          <h4 className="text-sm font-black text-slate-900">{createdTeamData?.name || teamName}</h4>
-                          <span className="px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-700 text-[9px] font-extrabold uppercase">
+                          <h4 className="text-sm font-black text-slate-900 dark:text-white">{createdTeamData?.name || teamName}</h4>
+                          <span className="px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[9px] font-extrabold uppercase">
                             Squad
                           </span>
                         </div>
-                        <p className="text-[10px] text-slate-500 font-medium">
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
                           Leader: {createdTeamData?.profiles?.name || (mode === 'CREATE_TEAM' ? fullName : 'Squad Leader')}
                         </p>
                       </div>
@@ -1299,7 +1299,7 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                     {(mode === 'CREATE_TEAM' || createdTeamData?.leader_id === (supabaseUser?.id || user?.id)) && (
                       <button
                         onClick={() => setShowDeleteSquadModal(true)}
-                        className="px-2.5 py-1.5 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                        className="px-2.5 py-1.5 rounded-xl border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-900/60 text-red-600 dark:text-red-400 text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer"
                         title="Delete Squad"
                       >
                         <Trash2 className="w-3 h-3 text-red-500" />
@@ -1311,24 +1311,24 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                   {/* Member Roster */}
                   {createdTeamData?.team_members && createdTeamData.team_members.length > 0 && (
                     <div className="space-y-2">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                         Squad Members ({createdTeamData.team_members.length})
                       </p>
                       <div className="space-y-1.5">
                         {createdTeamData.team_members.map((m: any) => (
                           <div
                             key={m.id || m.user_id}
-                            className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 border border-slate-200/80 text-xs"
+                            className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#121824] border border-slate-200/80 dark:border-white/[0.08] text-xs"
                           >
                             <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 rounded-full bg-sky-100 text-[#0099e6] font-bold text-[10px] flex items-center justify-center">
+                              <div className="w-6 h-6 rounded-full bg-sky-100 dark:bg-sky-900/50 text-[#0099e6] font-bold text-[10px] flex items-center justify-center">
                                 {(m.profiles?.name || '?').charAt(0).toUpperCase()}
                               </div>
-                              <span className="font-bold text-slate-800">{m.profiles?.name || 'Teammate'}</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200">{m.profiles?.name || 'Teammate'}</span>
                             </div>
                             <span
                               className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md ${
-                                m.role === 'LEADER' ? 'bg-amber-100 text-amber-800' : 'bg-slate-200 text-slate-700'
+                                m.role === 'LEADER' ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300' : 'bg-slate-200 dark:bg-white/[0.08] text-slate-700 dark:text-slate-300'
                               }`}
                             >
                               {m.role || 'Member'}
@@ -1342,24 +1342,24 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
               )}
 
               {/* Ticket Card Summary */}
-              <div className="max-w-md mx-auto p-5 rounded-2xl bg-slate-50 border border-slate-200 text-left space-y-3 text-xs">
-                <div className="flex items-center justify-between border-b border-slate-200/80 pb-2">
-                  <span className="text-slate-500 font-medium">Participant Name</span>
-                  <span className="font-bold text-slate-900">{fullName}</span>
+              <div className="max-w-md mx-auto p-5 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] text-left space-y-3 text-xs">
+                <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-white/[0.08] pb-2">
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">Participant Name</span>
+                  <span className="font-bold text-slate-900 dark:text-white">{fullName}</span>
                 </div>
-                <div className="flex items-center justify-between border-b border-slate-200/80 pb-2">
-                  <span className="text-slate-500 font-medium">Role / Mode</span>
+                <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-white/[0.08] pb-2">
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">Role / Mode</span>
                   <span className="font-bold text-[#0099e6]">{registeredRole}</span>
                 </div>
-                <div className="flex items-center justify-between border-b border-slate-200/80 pb-2">
-                  <span className="text-slate-500 font-medium">Hackathon Dates</span>
-                  <span className="font-mono font-bold text-slate-900">
+                <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-white/[0.08] pb-2">
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">Hackathon Dates</span>
+                  <span className="font-mono font-bold text-slate-900 dark:text-white">
                     {formatDate(event.startDate)} - {formatDate(event.endDate)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-500 font-medium">Status</span>
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px]">
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">Status</span>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-bold text-[10px]">
                     {event.approvalMode === 'MANUAL' ? 'Pending Approval' : 'Confirmed Entry'}
                   </span>
                 </div>
@@ -1369,25 +1369,25 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
               {createdTeamId && (mode === 'CREATE_TEAM' || createdTeamData?.leader_id === (supabaseUser?.id || user?.id)) && (
                 <div className="max-w-md mx-auto w-full space-y-4 text-left">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-sky-50 border border-sky-200 text-[#0099e6] flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/50 text-[#0099e6] flex items-center justify-center">
                       <UserPlus className="w-4 h-4" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-slate-900">Invite Your Teammates</h3>
-                      <p className="text-[10px] text-slate-500">Send invite links via email or direct share — they'll join your squad instantly.</p>
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-white">Invite Your Teammates</h3>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400">Send invite links via email or direct share — they'll join your squad instantly.</p>
                     </div>
                   </div>
 
                   {/* Email Invite Form */}
                   <form onSubmit={handleSendInviteSubmit} className="flex gap-2">
                     <div className="flex-1 relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                       <input
                         type="email"
                         value={inviteEmail}
                         onChange={(e) => setInviteEmail(e.target.value)}
                         placeholder="teammate@email.com"
-                        className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-sky-200 focus:border-[#0099e6] outline-none transition-all"
+                        className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-white/[0.1] bg-slate-50 dark:bg-[#121824] text-xs font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-sky-200 dark:focus:ring-sky-800 focus:border-[#0099e6] outline-none transition-all"
                       />
                     </div>
                     <button
@@ -1412,12 +1412,12 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                         <button
                           type="button"
                           onClick={handleCopyLink}
-                          className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-700 transition-colors cursor-pointer"
+                          className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-white/[0.1] bg-slate-50 dark:bg-white/[0.04] hover:bg-slate-100 dark:hover:bg-white/[0.08] text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
                         >
                           {copiedInvite ? (
                             <>
                               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                              <span className="text-emerald-700">Copied!</span>
+                              <span className="text-emerald-700 dark:text-emerald-400">Copied!</span>
                             </>
                           ) : (
                             <>
@@ -1429,7 +1429,7 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
 
                         <a
                           href={`mailto:?subject=${mailtoSubject}&body=${mailtoBody}`}
-                          className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-700 transition-colors"
+                          className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-white/[0.1] bg-slate-50 dark:bg-white/[0.04] hover:bg-slate-100 dark:hover:bg-white/[0.08] text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors"
                         >
                           <Mail className="w-3.5 h-3.5 text-rose-500" />
                           <span>Email App</span>
@@ -1439,9 +1439,9 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                           href={`https://api.whatsapp.com/send?text=${whatsappText}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-700 transition-colors"
+                          className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-white/[0.1] bg-slate-50 dark:bg-white/[0.04] hover:bg-slate-100 dark:hover:bg-white/[0.08] text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors"
                         >
-                          <Share2 className="w-3.5 h-3.5 text-emerald-600" />
+                          <Share2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                           <span>WhatsApp</span>
                         </a>
                       </div>
@@ -1450,13 +1450,13 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
 
                   {/* Status Messages */}
                   {inviteSuccessMsg && (
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-700 font-medium">
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 text-xs text-emerald-700 dark:text-emerald-300 font-medium">
                       <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                       <span>{inviteSuccessMsg}</span>
                     </div>
                   )}
                   {inviteErrorMsg && (
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 font-medium">
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/40 text-xs text-red-700 dark:text-red-400 font-medium">
                       <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                       <span>{inviteErrorMsg}</span>
                     </div>
@@ -1465,23 +1465,23 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                   {/* Sent Invites List */}
                   {teamInvitesList.length > 0 && (
                     <div className="space-y-2">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Sent Invites</p>
+                      <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Sent Invites</p>
                       {teamInvitesList.map((inv: any) => (
                         <div
                           key={inv.id}
-                          className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs"
+                          className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.08] text-xs"
                         >
                           <div className="flex items-center gap-2">
-                            <Mail className="w-3.5 h-3.5 text-slate-400" />
-                            <span className="font-medium text-slate-700">{inv.invited_email}</span>
+                            <Mail className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                            <span className="font-medium text-slate-700 dark:text-slate-300">{inv.invited_email}</span>
                           </div>
                           <span
                             className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                               inv.status === 'ACCEPTED'
-                                ? 'bg-emerald-100 text-emerald-700'
+                                ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'
                                 : inv.status === 'DECLINED'
-                                ? 'bg-red-100 text-red-700'
-                                : 'bg-amber-100 text-amber-700'
+                                ? 'bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300'
+                                : 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300'
                             }`}
                           >
                             {inv.status === 'ACCEPTED' ? '✓ Joined' : inv.status === 'DECLINED' ? '✗ Declined' : '⏳ Pending'}
@@ -1503,7 +1503,7 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
                 </Link>
                 <Link
                   href="/dashboard"
-                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors"
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-300 font-bold text-xs transition-colors"
                 >
                   Go to My Dashboard
                 </Link>
@@ -1515,23 +1515,23 @@ export default function HackathonRegistrationPage({ params }: RegisterPageProps)
 
       {/* ─── MODAL: Delete Squad Confirmation ─── */}
       {showDeleteSquadModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 dark:bg-black/75 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-md bg-white dark:bg-[#0c1017] rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-white/[0.08] space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/40 text-rose-600 dark:text-rose-400 flex items-center justify-center">
               <Trash2 className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-slate-900">Delete Squad?</h3>
-              <p className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">
-                Are you sure you want to delete squad <strong className="text-slate-800">&quot;{createdTeamData?.name || teamName}&quot;</strong>? This will remove the squad, delete all member associations, and cancel pending invitations.
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">Delete Squad?</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium leading-relaxed">
+                Are you sure you want to delete squad <strong className="text-slate-800 dark:text-slate-200">&quot;{createdTeamData?.name || teamName}&quot;</strong>? This will remove the squad, delete all member associations, and cancel pending invitations.
               </p>
             </div>
-            <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
+            <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100 dark:border-white/[0.08]">
               <button
                 type="button"
                 onClick={() => setShowDeleteSquadModal(false)}
                 disabled={deletingSquad}
-                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
               >
                 Cancel
               </button>

@@ -138,7 +138,7 @@ const PODCAST_EPISODES: PodcastEpisode[] = [
 function CompanyBadge({ type, name }: { type: PodcastEpisode['companyType']; name: string }) {
   if (type === 'amazon') {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 font-bold text-[11px]">
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 font-bold text-[11px]">
         <FaAmazon className="w-3.5 h-3.5 text-[#ff9900]" />
         <span>{name}</span>
       </span>
@@ -147,7 +147,7 @@ function CompanyBadge({ type, name }: { type: PodcastEpisode['companyType']; nam
 
   if (type === 'microsoft') {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-700 font-bold text-[11px]">
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-700 dark:text-sky-300 font-bold text-[11px]">
         <span className="grid grid-cols-2 gap-0.5 w-3 h-3">
           <span className="bg-[#f25022] rounded-[1px]" />
           <span className="bg-[#7fba00] rounded-[1px]" />
@@ -161,7 +161,7 @@ function CompanyBadge({ type, name }: { type: PodcastEpisode['companyType']; nam
 
   if (type === 'ieee') {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-700 font-bold text-[11px]">
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-300 font-bold text-[11px]">
         <SiIeee className="w-4 h-4 text-[#00629b]" />
         <span>{name}</span>
       </span>
@@ -170,8 +170,8 @@ function CompanyBadge({ type, name }: { type: PodcastEpisode['companyType']; nam
 
   if (type === 'tcs') {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-700 font-bold text-[11px]">
-        <span className="w-2 h-2 rounded-full bg-indigo-600" />
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-700 dark:text-indigo-300 font-bold text-[11px]">
+        <span className="w-2 h-2 rounded-full bg-indigo-600 dark:bg-indigo-400" />
         <span>{name}</span>
       </span>
     );
@@ -179,8 +179,8 @@ function CompanyBadge({ type, name }: { type: PodcastEpisode['companyType']; nam
 
   if (type === 'macys') {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-700 font-bold text-[11px]">
-        <span className="text-rose-600 font-black text-xs leading-none">★</span>
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-300 font-bold text-[11px]">
+        <span className="text-rose-600 dark:text-rose-400 font-black text-xs leading-none">★</span>
         <span>{name}</span>
       </span>
     );
@@ -188,8 +188,8 @@ function CompanyBadge({ type, name }: { type: PodcastEpisode['companyType']; nam
 
   if (type === 'mphasis') {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-violet-500/10 border border-violet-500/20 text-violet-700 font-bold text-[11px]">
-        <span className="w-2 h-2 rounded-full bg-violet-600" />
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-violet-500/10 border border-violet-500/20 text-violet-700 dark:text-violet-300 font-bold text-[11px]">
+        <span className="w-2 h-2 rounded-full bg-violet-600 dark:bg-violet-400" />
         <span>{name}</span>
       </span>
     );
@@ -197,16 +197,16 @@ function CompanyBadge({ type, name }: { type: PodcastEpisode['companyType']; nam
 
   if (type === 'ssc') {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 font-bold text-[11px]">
-        <span className="w-2 h-2 rounded-full bg-emerald-600" />
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold text-[11px]">
+        <span className="w-2 h-2 rounded-full bg-emerald-600 dark:bg-emerald-400" />
         <span>{name}</span>
       </span>
     );
   }
 
   return (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-500/10 border border-slate-500/20 text-slate-700 font-bold text-[11px]">
-      <Sparkles className="w-3 h-3 text-[#0099e6]" />
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-500/10 border border-slate-500/20 text-slate-700 dark:text-slate-300 font-bold text-[11px]">
+      <Sparkles className="w-3 h-3 text-[#0099e6] dark:text-[#38bdf8]" />
       <span>{name}</span>
     </span>
   );
@@ -231,16 +231,16 @@ export function PodcastSection() {
       {/* ─── Header ────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-8">
         <div className="space-y-3 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 border border-red-200 text-red-600 text-xs font-bold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/40 text-red-600 dark:text-red-400 text-xs font-bold uppercase tracking-wider">
             <Radio className="w-3.5 h-3.5 animate-pulse" />
             <span>Beyond The Mic • Industry Insider</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
             Learn from Industry Leaders & Tech Insiders
           </h2>
-          <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
             Real-world career journeys, engineering leadership, and insider secrets from senior
-            engineers and leaders at <strong className="text-slate-900">Amazon, Microsoft, Macy&apos;s, TCS, and IEEE</strong>.
+            engineers and leaders at <strong className="text-slate-900 dark:text-white">Amazon, Microsoft, Macy&apos;s, TCS, and IEEE</strong>.
           </p>
         </div>
 
@@ -250,7 +250,7 @@ export function PodcastSection() {
             type="button"
             onClick={() => scroll('left')}
             aria-label="Previous podcast"
-            className="w-10 h-10 rounded-2xl bg-white border border-slate-200 hover:border-[#0099e6] hover:bg-slate-50 text-slate-700 hover:text-[#0099e6] shadow-xs flex items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95"
+            className="w-10 h-10 rounded-2xl bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-white/[0.08] hover:border-[#0099e6] dark:hover:border-[#0099e6]/50 hover:bg-slate-50 dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-300 hover:text-[#0099e6] shadow-xs flex items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
@@ -258,7 +258,7 @@ export function PodcastSection() {
             type="button"
             onClick={() => scroll('right')}
             aria-label="Next podcast"
-            className="w-10 h-10 rounded-2xl bg-white border border-slate-200 hover:border-[#0099e6] hover:bg-slate-50 text-slate-700 hover:text-[#0099e6] shadow-xs flex items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95"
+            className="w-10 h-10 rounded-2xl bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-white/[0.08] hover:border-[#0099e6] dark:hover:border-[#0099e6]/50 hover:bg-slate-50 dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-300 hover:text-[#0099e6] shadow-xs flex items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95"
           >
             <ChevronRight className="w-5 h-5" />
           </button>
@@ -274,7 +274,7 @@ export function PodcastSection() {
           {PODCAST_EPISODES.map((ep, idx) => (
             <div
               key={ep.id}
-              className="w-[310px] sm:w-[350px] shrink-0 snap-start group rounded-3xl bg-white border border-slate-200/90 hover:border-[#0099e6] shadow-xs hover:shadow-2xl hover:shadow-[#0099e6]/10 transition-all duration-300 flex flex-col overflow-hidden hover:-translate-y-2"
+              className="w-[310px] sm:w-[350px] shrink-0 snap-start group rounded-3xl bg-white dark:bg-[#0c1017] border border-slate-200/90 dark:border-white/[0.08] hover:border-[#0099e6] dark:hover:border-[#0099e6]/50 shadow-xs hover:shadow-2xl hover:shadow-[#0099e6]/10 transition-all duration-300 flex flex-col overflow-hidden hover:-translate-y-2"
               style={{
                 animationDelay: `${idx * 100}ms`,
               }}
@@ -311,16 +311,16 @@ export function PodcastSection() {
 
                   {/* Speaker Name & Designation */}
                   <div>
-                    <h3 className="text-base font-extrabold text-slate-900 group-hover:text-[#0099e6] transition-colors">
+                    <h3 className="text-base font-extrabold text-slate-900 dark:text-white group-hover:text-[#0099e6] dark:group-hover:text-[#38bdf8] transition-colors">
                       {ep.name}
                     </h3>
-                    <p className="text-xs font-semibold text-slate-500 mt-0.5">
+                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
                       {ep.designation}
                     </p>
                   </div>
 
                   {/* Episode Topic */}
-                  <p className="text-xs text-slate-600 font-medium leading-relaxed line-clamp-2">
+                  <p className="text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed line-clamp-2">
                     {ep.tagline}
                   </p>
 
@@ -329,7 +329,7 @@ export function PodcastSection() {
                     {ep.tags.slice(0, 2).map((tag) => (
                       <span
                         key={tag}
-                        className="px-2 py-0.5 bg-slate-100 rounded text-[10px] font-semibold text-slate-600 font-mono"
+                        className="px-2 py-0.5 bg-slate-100 dark:bg-white/[0.06] rounded text-[10px] font-semibold text-slate-600 dark:text-slate-300 font-mono"
                       >
                         #{tag}
                       </span>
@@ -338,11 +338,11 @@ export function PodcastSection() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                <div className="pt-3 border-t border-slate-100 dark:border-white/[0.08] flex items-center justify-between gap-2">
                   <button
                     type="button"
                     onClick={() => setActiveVideo(ep)}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0099e6] hover:text-[#0077b6] cursor-pointer group/btn"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0099e6] dark:text-[#38bdf8] hover:text-[#0077b6] cursor-pointer group/btn"
                   >
                     <Play className="w-3 h-3 fill-current group-hover/btn:scale-110 transition-transform" />
                     <span>Play Episode</span>
@@ -352,7 +352,7 @@ export function PodcastSection() {
                     href={ep.youtubeUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                    className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
                     title="Open on YouTube"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />

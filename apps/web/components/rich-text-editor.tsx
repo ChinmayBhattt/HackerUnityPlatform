@@ -511,15 +511,27 @@ export function RichTextEditor({
             .wysiwyg-surface s {
               text-decoration: line-through !important;
             }
+            .dark .wysiwyg-surface h1,
+            .dark .wysiwyg-surface h2 {
+              color: #f8fafc !important;
+            }
+            .dark .wysiwyg-surface h3,
+            .dark .wysiwyg-surface h4 {
+              color: #e2e8f0 !important;
+            }
+            .dark .wysiwyg-surface blockquote {
+              color: #cbd5e1 !important;
+              background-color: rgba(0, 153, 230, 0.15) !important;
+            }
           `,
         }}
       />
 
-      {label && <label className="block text-xs font-bold text-slate-700">{label}</label>}
+      {label && <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">{label}</label>}
 
-      <div className="rounded-2xl bg-white border border-slate-200 shadow-2xs overflow-hidden focus-within:ring-2 focus-within:ring-[#0099e6] focus-within:border-transparent transition-all">
+      <div className="rounded-2xl bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.08] shadow-2xs overflow-hidden focus-within:ring-2 focus-within:ring-[#0099e6] focus-within:border-transparent transition-all">
         {/* WYSIWYG Formatting Toolbar */}
-        <div className="flex flex-wrap items-center gap-1 p-2 bg-slate-50 border-b border-slate-200/90 text-slate-700 select-none">
+        <div className="flex flex-wrap items-center gap-1 p-2 bg-slate-50 dark:bg-[#0c1017] border-b border-slate-200/90 dark:border-white/[0.08] text-slate-700 dark:text-slate-300 select-none">
           {/* Bold */}
           <button
             type="button"
@@ -531,7 +543,7 @@ export function RichTextEditor({
             className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center ${
               activeFormats.bold
                 ? 'bg-[#0099e6] text-white shadow-2xs'
-                : 'hover:bg-slate-200 text-slate-700'
+                : 'hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-300'
             }`}
           >
             <Bold className="w-4 h-4 stroke-[2.5]" />
@@ -787,17 +799,17 @@ export function RichTextEditor({
               checkActiveFormats();
             }}
             style={{ minHeight: `${rows * 2}rem` }}
-            className="wysiwyg-surface p-4 text-xs text-slate-900 outline-none leading-relaxed font-sans"
+            className="wysiwyg-surface p-4 text-xs text-slate-900 dark:text-slate-100 outline-none leading-relaxed font-sans"
           />
         </div>
 
         {/* Footer info bar */}
-        <div className="px-3.5 py-1.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400 font-medium">
+        <div className="px-3.5 py-1.5 bg-slate-50 dark:bg-[#0c1017] border-t border-slate-100 dark:border-white/[0.08] flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 font-medium">
           <span className="flex items-center gap-1.5">
-            <Sparkles className="w-3 h-3 text-[#0099e6]" />
+            <Sparkles className="w-3 h-3 text-[#0099e6] dark:text-[#38bdf8]" />
             <span>WYSIWYG Direct Editor • Formatting applies instantly</span>
           </span>
-          <span className="font-semibold text-slate-500">Live Visual Format</span>
+          <span className="font-semibold text-slate-500 dark:text-slate-400">Live Visual Format</span>
         </div>
       </div>
 

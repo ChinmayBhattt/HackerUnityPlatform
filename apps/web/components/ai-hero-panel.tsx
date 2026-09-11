@@ -401,7 +401,7 @@ export function AiHeroPanel() {
     <div className="relative w-full max-w-3xl mb-6 z-30">
       {/* ─── COMMAND BAR CONTAINER (CLEAN ROUNDED-2XL CARD, NO BUBBLE/CIRCLE RING) ─── */}
       <div
-        className={`relative w-full bg-white transition-all duration-200 shadow-lg shadow-slate-200/60 border border-slate-200/90 rounded-2xl ${
+        className={`relative w-full bg-white dark:bg-[#0c1017]/90 transition-all duration-200 shadow-lg shadow-slate-200/60 dark:shadow-black/70 border border-slate-200/90 dark:border-white/[0.08] rounded-2xl ${
           isExpandedBuild ? 'p-3.5 sm:p-4' : 'p-2 flex flex-col sm:flex-row sm:items-center gap-2'
         }`}
       >
@@ -410,14 +410,14 @@ export function AiHeroPanel() {
           <div className="space-y-3">
             {/* Top Bar: Mode Toggle + Clear Button */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center bg-slate-100 p-1 rounded-xl shrink-0">
+              <div className="flex items-center bg-slate-100 dark:bg-white/[0.06] p-1 rounded-xl shrink-0">
                 <button
                   type="button"
                   onClick={() => {
                     setActiveTab('find');
                     setBuildError(null);
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer text-slate-500 hover:text-slate-900"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 >
                   <Search className="w-3.5 h-3.5" />
                   <span>Find</span>
@@ -429,7 +429,7 @@ export function AiHeroPanel() {
                     setActiveTab('build');
                     setHasSearched(false);
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer bg-white text-[#ea580c] shadow-xs"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer bg-white dark:bg-white/[0.12] text-[#ea580c] shadow-xs"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>Build</span>
@@ -439,7 +439,7 @@ export function AiHeroPanel() {
               <button
                 type="button"
                 onClick={() => setBuildPrompt('')}
-                className="flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors"
+                className="flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded-lg cursor-pointer transition-colors"
               >
                 <span>Clear</span>
                 <X className="w-3.5 h-3.5" />
@@ -452,7 +452,7 @@ export function AiHeroPanel() {
               value={buildPrompt}
               onChange={(e) => setBuildPrompt(e.target.value)}
               placeholder="Describe your hackathon to auto-create & review (e.g. 36h AI sprint in Bangalore, ₹2L prizes)..."
-              className="w-full bg-slate-50/70 hover:bg-slate-50 focus:bg-white p-3 rounded-xl border border-slate-200 focus:border-slate-400 text-xs sm:text-sm text-slate-900 placeholder-slate-400 outline-none font-medium resize-none transition-all leading-relaxed shadow-2xs"
+              className="w-full bg-slate-50/70 dark:bg-white/[0.04] hover:bg-slate-50 dark:hover:bg-white/[0.06] focus:bg-white dark:focus:bg-white/[0.08] p-3 rounded-xl border border-slate-200 dark:border-white/[0.08] focus:border-slate-400 dark:focus:border-white/[0.2] text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none font-medium resize-none transition-all leading-relaxed shadow-2xs"
             />
 
             {/* Loading Status Indicator (Doesn't distort the button) */}
@@ -464,7 +464,7 @@ export function AiHeroPanel() {
             )}
 
             {/* Bottom Actions Bar */}
-            <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 flex-wrap">
+            <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-white/[0.08] flex-wrap">
               <div className="flex items-center gap-2">
                 <input
                   ref={fileInputRef}
@@ -529,7 +529,7 @@ export function AiHeroPanel() {
           /* ─── SLEEK SINGLE LINE COMMAND BAR (CLEAN ROUNDED-2XL) ─── */
           <>
             {/* Mode Selector Pill (Find vs Build) */}
-            <div className="flex items-center bg-slate-100 p-1 rounded-xl shrink-0">
+            <div className="flex items-center bg-slate-100 dark:bg-white/[0.06] p-1 rounded-xl shrink-0">
               <button
                 type="button"
                 onClick={() => {
@@ -538,8 +538,8 @@ export function AiHeroPanel() {
                 }}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   activeTab === 'find'
-                    ? 'bg-white text-[#0099e6] shadow-xs'
-                    : 'text-slate-500 hover:text-slate-900'
+                    ? 'bg-white dark:bg-white/[0.12] text-[#0099e6] shadow-xs'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 <Search className="w-3.5 h-3.5" />
@@ -554,8 +554,8 @@ export function AiHeroPanel() {
                 }}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   activeTab === 'build'
-                    ? 'bg-white text-[#ea580c] shadow-xs'
-                    : 'text-slate-500 hover:text-slate-900'
+                    ? 'bg-white dark:bg-white/[0.12] text-[#ea580c] shadow-xs'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 <Sparkles className="w-3.5 h-3.5" />
@@ -572,7 +572,7 @@ export function AiHeroPanel() {
                     value={findQuery}
                     onChange={(e) => setFindQuery(e.target.value)}
                     placeholder='Ask AI: "Best Web3 hackathons", "AI in Bangalore", "#bounties"...'
-                    className="w-full bg-transparent px-2.5 py-1 text-xs sm:text-sm text-slate-900 placeholder-slate-400 outline-none font-medium"
+                    className="w-full bg-transparent px-2.5 py-1 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none font-medium"
                   />
                   {findQuery && (
                     <button
@@ -583,7 +583,7 @@ export function AiHeroPanel() {
                         setMatchedEvents([]);
                         setAiRationale('');
                       }}
-                      className="p-1 text-slate-400 hover:text-slate-600 rounded-lg mr-1 cursor-pointer"
+                      className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg mr-1 cursor-pointer"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -596,7 +596,7 @@ export function AiHeroPanel() {
                     value={buildPrompt}
                     onChange={(e) => setBuildPrompt(e.target.value)}
                     placeholder='Describe hackathon to auto-create (e.g. 36h AI sprint in Bangalore, ₹2L prizes)...'
-                    className="w-full bg-transparent px-2.5 py-1 text-xs sm:text-sm text-slate-900 placeholder-slate-400 outline-none font-medium"
+                    className="w-full bg-transparent px-2.5 py-1 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none font-medium"
                   />
                 </div>
               )}
@@ -617,7 +617,7 @@ export function AiHeroPanel() {
                   />
 
                   {attachedFile ? (
-                    <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-orange-50 border border-orange-200 text-[11px] text-[#ea580c] font-bold">
+                    <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800/40 text-[11px] text-[#ea580c] font-bold">
                       {attachedFile.isImage && attachedFile.dataUrl ? (
                         /* eslint-disable-next-line @next/next/no-img-element */
                         <img src={attachedFile.dataUrl} alt="Poster" className="w-3.5 h-3.5 rounded object-cover shadow-xs" />
@@ -628,7 +628,7 @@ export function AiHeroPanel() {
                       <button
                         type="button"
                         onClick={removeAttachedFile}
-                        className="p-0.5 hover:bg-orange-100 rounded text-orange-600 cursor-pointer"
+                        className="p-0.5 hover:bg-orange-100 dark:hover:bg-orange-900/50 rounded text-orange-600 dark:text-orange-400 cursor-pointer"
                       >
                         <X className="w-2.5 h-2.5" />
                       </button>
@@ -638,7 +638,7 @@ export function AiHeroPanel() {
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       title="Upload hackathon poster, image, or brochure"
-                      className="px-2.5 py-1.5 rounded-xl bg-slate-50 hover:bg-orange-50 border border-slate-200 hover:border-orange-300 text-slate-600 hover:text-[#ea580c] text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                      className="px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-white/[0.06] hover:bg-orange-50 dark:hover:bg-orange-950/40 border border-slate-200 dark:border-white/[0.1] hover:border-orange-300 dark:hover:border-orange-700/50 text-slate-600 dark:text-slate-300 hover:text-[#ea580c] dark:hover:text-[#ea580c] text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
                     >
                       <Paperclip className="w-3.5 h-3.5" />
                       <span className="hidden md:inline">Add Source</span>
@@ -707,7 +707,7 @@ export function AiHeroPanel() {
                   setFindQuery(tag.query);
                   handleFindSubmit(undefined, tag.query);
                 }}
-                className="px-2.5 py-0.5 rounded-full bg-white/80 hover:bg-sky-50 text-slate-600 hover:text-[#0099e6] border border-slate-200/80 hover:border-sky-300 text-[11px] font-bold transition-colors cursor-pointer shadow-2xs"
+                className="px-2.5 py-0.5 rounded-full bg-white/80 dark:bg-white/[0.06] hover:bg-sky-50 dark:hover:bg-sky-950/40 text-slate-600 dark:text-slate-300 hover:text-[#0099e6] dark:hover:text-[#0099e6] border border-slate-200/80 dark:border-white/[0.1] hover:border-sky-300 dark:hover:border-sky-700/50 text-[11px] font-bold transition-colors cursor-pointer shadow-2xs"
               >
                 {tag.label}
               </button>
@@ -723,7 +723,7 @@ export function AiHeroPanel() {
                 key={preset.label}
                 type="button"
                 onClick={() => setBuildPrompt(preset.prompt)}
-                className="px-2.5 py-0.5 rounded-full bg-white/80 hover:bg-orange-50 text-slate-600 hover:text-[#ea580c] border border-slate-200/80 hover:border-orange-300 text-[11px] font-bold transition-colors cursor-pointer shadow-2xs"
+                className="px-2.5 py-0.5 rounded-full bg-white/80 dark:bg-white/[0.06] hover:bg-orange-50 dark:hover:bg-orange-950/40 text-slate-600 dark:text-slate-300 hover:text-[#ea580c] dark:hover:text-[#ea580c] border border-slate-200/80 dark:border-white/[0.1] hover:border-orange-300 dark:hover:border-orange-700/50 text-[11px] font-bold transition-colors cursor-pointer shadow-2xs"
               >
                 {preset.label}
               </button>
@@ -759,9 +759,9 @@ export function AiHeroPanel() {
 
       {/* ─── FIND RESULTS POPUP / EXPANSION ─── */}
       {hasSearched && (
-        <div className="mt-3 bg-white rounded-2xl border border-slate-200 shadow-2xl p-4 text-left animate-in fade-in zoom-in-95 duration-150">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 mb-3">
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
+        <div className="mt-3 bg-white dark:bg-[#0c1017] rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-2xl dark:shadow-black/90 p-4 text-left animate-in fade-in zoom-in-95 duration-150">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/[0.08] pb-2.5 mb-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-white">
               <Sparkles className="w-4 h-4 text-[#0099e6]" />
               <span>{aiRationale || 'Matching Hackathons'}</span>
             </div>
@@ -771,7 +771,7 @@ export function AiHeroPanel() {
                 setHasSearched(false);
                 setMatchedEvents([]);
               }}
-              className="p-1 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer"
+              className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -779,8 +779,8 @@ export function AiHeroPanel() {
 
           {matchedEvents.length === 0 ? (
             <div className="py-4 text-center text-slate-400">
-              <p className="text-xs font-bold text-slate-700">No hackathons matched this specific query.</p>
-              <p className="text-[11px] text-slate-400 mt-0.5">Try searching with terms like Web3, AI, or Bangalore.</p>
+              <p className="text-xs font-bold text-slate-700 dark:text-slate-300">No hackathons matched this specific query.</p>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Try searching with terms like Web3, AI, or Bangalore.</p>
             </div>
           ) : (
             <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
@@ -792,7 +792,7 @@ export function AiHeroPanel() {
                   <Link
                     key={evt.id}
                     href={`/hackathons/${evt.slug}`}
-                    className="p-2.5 rounded-xl bg-slate-50/70 hover:bg-sky-50 border border-slate-100 hover:border-sky-200 transition-all flex items-center justify-between gap-3 group cursor-pointer"
+                    className="p-2.5 rounded-xl bg-slate-50/70 dark:bg-white/[0.04] hover:bg-sky-50 dark:hover:bg-sky-500/10 border border-slate-100 dark:border-white/[0.06] hover:border-sky-200 dark:hover:border-sky-500/30 transition-all flex items-center justify-between gap-3 group cursor-pointer"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#0099e6] to-[#0284c7] text-white flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
@@ -806,14 +806,14 @@ export function AiHeroPanel() {
 
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <h4 className="text-xs font-extrabold text-slate-900 group-hover:text-[#0099e6] truncate">
+                          <h4 className="text-xs font-extrabold text-slate-900 dark:text-white group-hover:text-[#0099e6] truncate">
                             {evt.title}
                           </h4>
-                          <span className="px-1.5 py-0.2 rounded bg-white text-slate-600 text-[9px] font-bold border border-slate-200">
+                          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-white/[0.08] text-slate-600 dark:text-slate-300 text-[9px] font-bold border border-slate-200 dark:border-white/[0.08]">
                             {evt.mode || 'Online'}
                           </span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-medium">
+                        <div className="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400 font-medium">
                           <span className="text-[#ea580c] font-bold">{prizeText}</span>
                           <span>•</span>
                           <span className="truncate">{evt.organizerName || "Hacker's Unity"}</span>

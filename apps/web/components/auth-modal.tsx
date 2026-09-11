@@ -111,40 +111,40 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'login' }:
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-200">
       <div
-        className="relative w-full max-w-md p-6 sm:p-7 overflow-hidden rounded-3xl bg-white border border-slate-200 shadow-2xl animate-in zoom-in-95"
+        className="relative w-full max-w-md p-6 sm:p-7 overflow-hidden rounded-3xl bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-white/[0.08] shadow-2xl animate-in zoom-in-95"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
+          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
         {isSuccess ? (
           <div className="py-12 flex flex-col items-center justify-center text-center space-y-4 animate-in zoom-in-95">
-            <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
+            <div className="w-16 h-16 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
               <CheckCircle2 className="w-8 h-8" />
             </div>
-            <h3 className="text-xl font-bold text-slate-900">{successText}</h3>
-            <p className="text-xs text-slate-500">Your session is authenticated with Supabase.</p>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white">{successText}</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Your session is authenticated with Supabase.</p>
           </div>
         ) : (
           <>
             <div className="text-center mb-5 flex flex-col items-center">
               <Logo size={52} showText={false} className="mb-2" />
-              <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                 {mode === 'login' ? 'Sign In to Hacker\'s Unity' : 'Create Builder Account'}
               </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 Join 50,000+ developers competing in premier hackathons.
               </p>
             </div>
 
             {/* Mode Switcher: Sign In vs Sign Up */}
-            <div className="flex gap-1.5 p-1 bg-slate-100 rounded-2xl mb-4 border border-slate-200 text-xs font-bold">
+            <div className="flex gap-1.5 p-1 bg-slate-100 dark:bg-white/[0.04] rounded-2xl mb-4 border border-slate-200 dark:border-white/[0.08] text-xs font-bold">
               <button
                 type="button"
                 onClick={() => {
@@ -153,7 +153,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'login' }:
                   setInfoMessage(null);
                 }}
                 className={`flex-1 py-2 rounded-xl transition-all cursor-pointer ${
-                  mode === 'login' ? 'bg-white text-[#0099e6] shadow-xs' : 'text-slate-500 hover:text-slate-900'
+                  mode === 'login' ? 'bg-white dark:bg-white/10 text-[#0099e6] dark:text-[#38bdf8] shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 Sign In
@@ -166,7 +166,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'login' }:
                   setInfoMessage(null);
                 }}
                 className={`flex-1 py-2 rounded-xl transition-all cursor-pointer ${
-                  mode === 'register' ? 'bg-white text-[#0099e6] shadow-xs' : 'text-slate-500 hover:text-slate-900'
+                  mode === 'register' ? 'bg-white dark:bg-white/10 text-[#0099e6] dark:text-[#38bdf8] shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 Create Account
@@ -175,7 +175,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'login' }:
 
             {/* Error Alert */}
             {errorMessage && (
-              <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2 animate-in fade-in">
+              <div className="mb-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/40 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2 animate-in fade-in">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                 <span>{errorMessage}</span>
               </div>
@@ -183,8 +183,8 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'login' }:
 
             {/* Info / Email Confirmation Alert */}
             {infoMessage && (
-              <div className="mb-4 p-3 rounded-xl bg-sky-50 border border-sky-200 text-sky-800 text-xs flex items-start gap-2 animate-in fade-in">
-                <Info className="w-4 h-4 shrink-0 mt-0.5 text-[#0099e6]" />
+              <div className="mb-4 p-3 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/40 text-sky-800 dark:text-sky-300 text-xs flex items-start gap-2 animate-in fade-in">
+                <Info className="w-4 h-4 shrink-0 mt-0.5 text-[#0099e6] dark:text-[#38bdf8]" />
                 <span>{infoMessage}</span>
               </div>
             )}
@@ -195,7 +195,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'login' }:
                 type="button"
                 onClick={() => handleOAuth('google')}
                 disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold transition-all shadow-2xs cursor-pointer disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-xl bg-white dark:bg-white/[0.04] hover:bg-slate-50 dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/[0.08] text-xs font-bold transition-all shadow-2xs cursor-pointer disabled:opacity-50"
               >
                 <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                   <path
@@ -221,38 +221,38 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'login' }:
 
             {/* Divider */}
             <div className="relative flex items-center justify-center mb-3">
-              <div className="border-t border-slate-100 w-full" />
-              <span className="bg-white px-2 text-[11px] text-slate-400 font-medium">or continue with email</span>
+              <div className="border-t border-slate-100 dark:border-white/[0.08] w-full" />
+              <span className="bg-white dark:bg-[#0c1017] px-2 text-[11px] text-slate-400 dark:text-slate-500 font-medium">or continue with email</span>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-3 text-left">
               {mode === 'register' && (
                 <>
                   <div>
-                    <label className="block text-left text-xs font-bold text-slate-700 mb-1">Full Name *</label>
+                    <label className="block text-left text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Full Name *</label>
                     <div className="relative">
-                      <User className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+                      <User className="absolute left-3 top-2.5 w-4 h-4 text-slate-400 dark:text-slate-500" />
                       <input
                         type="text"
                         required
                         placeholder="e.g. Satoshi Nakamoto"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                        className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] focus:border-[#0099e6] dark:focus:border-[#38bdf8] focus:bg-white dark:focus:bg-white/[0.06] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-colors"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-left text-xs font-bold text-slate-700 mb-1">Phone Number (Optional)</label>
+                    <label className="block text-left text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Phone Number (Optional)</label>
                     <div className="relative">
-                      <Phone className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+                      <Phone className="absolute left-3 top-2.5 w-4 h-4 text-slate-400 dark:text-slate-500" />
                       <input
                         type="tel"
                         placeholder="+91 98765 43210"
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                        className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] focus:border-[#0099e6] dark:focus:border-[#38bdf8] focus:bg-white dark:focus:bg-white/[0.06] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-colors"
                       />
                     </div>
                   </div>
@@ -260,31 +260,31 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'login' }:
               )}
 
               <div>
-                <label className="block text-left text-xs font-bold text-slate-700 mb-1">Email Address *</label>
+                <label className="block text-left text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Email Address *</label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+                  <Mail className="absolute left-3 top-2.5 w-4 h-4 text-slate-400 dark:text-slate-500" />
                   <input
                     type="email"
                     required
                     placeholder="builder@hackersunity.dev"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                    className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] focus:border-[#0099e6] dark:focus:border-[#38bdf8] focus:bg-white dark:focus:bg-white/[0.06] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-colors"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-left text-xs font-bold text-slate-700 mb-1">Password *</label>
+                <label className="block text-left text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Password *</label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+                  <Lock className="absolute left-3 top-2.5 w-4 h-4 text-slate-400 dark:text-slate-500" />
                   <input
                     type="password"
                     required
                     placeholder="••••••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                    className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] focus:border-[#0099e6] dark:focus:border-[#38bdf8] focus:bg-white dark:focus:bg-white/[0.06] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-colors"
                   />
                 </div>
               </div>

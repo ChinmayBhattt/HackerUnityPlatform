@@ -66,14 +66,14 @@ export default function EventsDirectoryPage() {
       {/* ─── Page Header ────────────────────────────────────────── */}
       <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 border border-orange-200 text-[#ea580c] text-xs font-bold uppercase tracking-wider mb-2">
-            <Radio className="w-3.5 h-3.5 animate-pulse text-[#ea580c]" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800/40 text-[#ea580c] dark:text-[#fb923c] text-xs font-bold uppercase tracking-wider mb-2">
+            <Radio className="w-3.5 h-3.5 animate-pulse text-[#ea580c] dark:text-[#fb923c]" />
             <span>Tech Events & Workshops</span>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
             Discover Tech Events & Meetups
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-2 max-w-2xl font-medium">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-2xl font-medium">
             Explore hands-on workshops, AI conferences, developer meetups, and keynote sessions hosted by top tech communities.
           </p>
         </div>
@@ -88,26 +88,26 @@ export default function EventsDirectoryPage() {
       </div>
 
       {/* ─── Search and Filters Bar ──────────────────────────────── */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm mb-8 space-y-4">
+      <div className="bg-white dark:bg-[#0c1017] p-4 rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-sm mb-8 space-y-4">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-2.5 w-4 h-4 text-[#0099e6]" />
+            <Search className="absolute left-3 top-2.5 w-4 h-4 text-[#0099e6] dark:text-[#38bdf8]" />
             <input
               type="text"
               placeholder="Search events by topic, technology (#AI, #Web3), or organizer..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 placeholder-slate-400 outline-none transition-colors font-medium"
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] focus:border-[#0099e6] dark:focus:border-[#38bdf8] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-colors font-medium"
             />
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold">
-              <SlidersHorizontal className="w-3.5 h-3.5 text-slate-500" />
+            <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-xl px-3 py-2 text-xs font-semibold">
+              <SlidersHorizontal className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="bg-transparent text-slate-800 outline-none text-xs cursor-pointer font-bold"
+                className="bg-transparent text-slate-800 dark:text-slate-200 outline-none text-xs cursor-pointer font-bold [&>option]:bg-slate-900 [&>option]:text-white"
               >
                 <option value="newest">Recently Added</option>
                 <option value="popular">Most Popular</option>
@@ -115,11 +115,11 @@ export default function EventsDirectoryPage() {
               </select>
             </div>
 
-            <div className="flex items-center p-1 bg-slate-50 border border-slate-200 rounded-xl">
+            <div className="flex items-center p-1 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-xl">
               <button
                 onClick={() => setViewMode('grid')}
                 className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                  viewMode === 'grid' ? 'bg-white text-[#0099e6] shadow-xs' : 'text-slate-400 hover:text-slate-700'
+                  viewMode === 'grid' ? 'bg-white dark:bg-white/10 text-[#0099e6] dark:text-[#38bdf8] shadow-xs' : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
                 title="Grid View"
               >
@@ -128,7 +128,7 @@ export default function EventsDirectoryPage() {
               <button
                 onClick={() => setViewMode('list')}
                 className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                  viewMode === 'list' ? 'bg-white text-[#0099e6] shadow-xs' : 'text-slate-400 hover:text-slate-700'
+                  viewMode === 'list' ? 'bg-white dark:bg-white/10 text-[#0099e6] dark:text-[#38bdf8] shadow-xs' : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
                 title="List View"
               >
@@ -139,7 +139,7 @@ export default function EventsDirectoryPage() {
         </div>
 
         {/* Category & Format Tabs */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100 dark:border-white/[0.06]">
           <div className="flex flex-wrap items-center gap-1.5">
             {[
               { label: 'All Events', val: 'ALL' },
@@ -155,7 +155,7 @@ export default function EventsDirectoryPage() {
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
                   selectedCategory === cat.val
                     ? 'bg-[#0099e6] text-white shadow-xs'
-                    : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    : 'bg-slate-50 dark:bg-white/[0.04] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.08]'
                 }`}
               >
                 {cat.label}
@@ -167,7 +167,7 @@ export default function EventsDirectoryPage() {
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none cursor-pointer"
+              className="px-3 py-1.5 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 outline-none cursor-pointer [&>option]:bg-slate-900 [&>option]:text-white"
             >
               <option value="ALL">All Formats</option>
               <option value={EventType.ONLINE}>Online Only</option>
@@ -178,7 +178,7 @@ export default function EventsDirectoryPage() {
             {hasActiveFilters && (
               <button
                 onClick={resetFilters}
-                className="flex items-center gap-1 px-3 py-1.5 text-xs text-rose-500 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer font-bold"
+                className="flex items-center gap-1 px-3 py-1.5 text-xs text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-colors cursor-pointer font-bold"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Reset</span>
@@ -192,23 +192,23 @@ export default function EventsDirectoryPage() {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="h-96 rounded-3xl bg-white border border-slate-200 p-6 animate-pulse space-y-4">
-              <div className="h-44 bg-slate-100 rounded-2xl" />
-              <div className="h-6 bg-slate-100 rounded-md w-3/4" />
-              <div className="h-4 bg-slate-100 rounded-md w-1/2" />
+            <div key={i} className="h-96 rounded-3xl bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-white/[0.08] p-6 animate-pulse space-y-4">
+              <div className="h-44 bg-slate-100 dark:bg-white/[0.06] rounded-2xl" />
+              <div className="h-6 bg-slate-100 dark:bg-white/[0.06] rounded-md w-3/4" />
+              <div className="h-4 bg-slate-100 dark:bg-white/[0.06] rounded-md w-1/2" />
             </div>
           ))}
         </div>
       ) : filteredEvents.length === 0 ? (
-        <div className="p-12 text-center bg-white rounded-3xl border border-slate-200 space-y-4">
-          <Calendar className="w-12 h-12 text-slate-300 mx-auto" />
-          <h3 className="text-xl font-bold text-slate-800">No events match your search</h3>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto font-medium">
+        <div className="p-12 text-center bg-white dark:bg-[#0c1017] rounded-3xl border border-slate-200 dark:border-white/[0.08] space-y-4">
+          <Calendar className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto" />
+          <h3 className="text-xl font-bold text-slate-800 dark:text-white">No events match your search</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto font-medium">
             Try adjusting your search keywords, event categories, or format filters.
           </p>
           <button
             onClick={resetFilters}
-            className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 transition-colors cursor-pointer"
+            className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-xs font-bold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
           >
             Clear All Filters
           </button>

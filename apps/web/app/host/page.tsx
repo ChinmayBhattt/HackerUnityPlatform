@@ -1030,17 +1030,17 @@ ${organizerName || 'Organizer'}`;
         <div>
           <div
             className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 ${isEditMode
-                ? 'bg-amber-50 border border-amber-200 text-amber-700'
-                : 'bg-orange-50 border border-orange-200 text-[#ea580c]'
+                ? 'bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/40 text-amber-700 dark:text-amber-400'
+                : 'bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800/40 text-[#ea580c] dark:text-orange-400'
               }`}
           >
             {isEditMode ? <Sparkles className="w-3.5 h-3.5 text-amber-600" /> : <PlusCircle className="w-3.5 h-3.5" />}
             <span>{isEditMode ? 'Editing Hackathon Studio' : 'Organizer Studio'}</span>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
             {isEditMode ? `Edit Hackathon: ${title || 'Hackathon'}` : "Host a Hackathon on Hacker's Unity"}
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-2 max-w-2xl font-medium">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-2xl font-medium">
             {isEditMode
               ? 'Update dates, prize pools, parameters, registration rules, and custom questions for your hackathon.'
               : 'Launch your hackathon in minutes. Tap into our 50,000+ developer ecosystem, automated submission portals, and instant registration workflows.'}
@@ -1051,72 +1051,72 @@ ${organizerName || 'Organizer'}`;
           <button
             type="button"
             onClick={() => router.push('/dashboard')}
-            className="px-4 py-2 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-bold text-xs flex items-center gap-2 shadow-2xs self-start md:self-auto cursor-pointer transition-colors"
+            className="px-4 py-2 rounded-2xl bg-white dark:bg-[#0c1017] hover:bg-slate-50 dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/[0.1] font-bold text-xs flex items-center gap-2 shadow-2xs self-start md:self-auto cursor-pointer transition-colors"
           >
-            <ArrowLeft className="w-4 h-4 text-slate-500" />
+            <ArrowLeft className="w-4 h-4 text-slate-500 dark:text-slate-400" />
             <span>Back to Dashboard</span>
           </button>
         )}
       </div>
 
       {isLoadingEditData ? (
-        <div className="py-24 bg-white rounded-3xl border border-slate-200 shadow-sm text-center flex flex-col items-center justify-center space-y-4">
+        <div className="py-24 bg-white dark:bg-[#0c1017] rounded-3xl border border-slate-200 dark:border-white/[0.08] shadow-sm text-center flex flex-col items-center justify-center space-y-4">
           <Loader2 className="w-8 h-8 text-[#0099e6] animate-spin" />
-          <p className="text-xs font-bold text-slate-600">Loading hackathon parameters for editing...</p>
+          <p className="text-xs font-bold text-slate-600 dark:text-slate-300">Loading hackathon parameters for editing...</p>
         </div>
       ) : isSuccess ? (
-        <div className="py-16 px-6 bg-white rounded-3xl border border-sky-200 shadow-xl text-center flex flex-col items-center justify-center space-y-6 animate-in zoom-in-95 max-w-2xl mx-auto">
-          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-sky-50 to-orange-50 border-2 border-[#0099e6]/30 flex items-center justify-center text-[#0099e6] shadow-sm">
+        <div className="py-16 px-6 bg-white dark:bg-[#0c1017] rounded-3xl border border-sky-200 dark:border-sky-800/40 shadow-xl text-center flex flex-col items-center justify-center space-y-6 animate-in zoom-in-95 max-w-2xl mx-auto">
+          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-sky-50 to-orange-50 dark:from-sky-950/40 dark:to-orange-950/40 border-2 border-[#0099e6]/30 flex items-center justify-center text-[#0099e6] shadow-sm">
             <CheckCircle2 className="w-10 h-10 text-[#0099e6]" />
           </div>
 
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold uppercase tracking-wider">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/40 text-amber-700 dark:text-amber-400 text-xs font-bold uppercase tracking-wider">
               <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
               <span>Appeal Submitted • Pending Review</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
               Hackathon Appeal Submitted Successfully!
             </h2>
-            <p className="text-xs sm:text-sm text-slate-600 max-w-lg mx-auto leading-relaxed font-medium">
-              Your hackathon <strong className="text-slate-900">&quot;{submittedEvent?.title || previewEvent.title}&quot;</strong> has been submitted for review. An approval request has been sent to <strong className="text-[#0099e6]">hackerunity.community@gmail.com</strong>. Once approved by the admin, it will go live globally across the platform.
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-lg mx-auto leading-relaxed font-medium">
+              Your hackathon <strong className="text-slate-900 dark:text-white">&quot;{submittedEvent?.title || previewEvent.title}&quot;</strong> has been submitted for review. An approval request has been sent to <strong className="text-[#0099e6] dark:text-[#38bdf8]">hackerunity.community@gmail.com</strong>. Once approved by the admin, it will go live globally across the platform.
             </p>
           </div>
 
           {/* ═══ PRIVATE SHAREABLE LINK CARD ═══════════════════ */}
-          <div className="w-full p-5 rounded-3xl bg-gradient-to-br from-amber-50/90 via-orange-50/40 to-amber-50/90 border-2 border-amber-300/80 text-left space-y-3.5 shadow-sm">
+          <div className="w-full p-5 rounded-3xl bg-gradient-to-br from-amber-50/90 via-orange-50/40 to-amber-50/90 dark:from-amber-950/30 dark:via-orange-950/20 dark:to-amber-950/30 border-2 border-amber-300/80 dark:border-amber-800/50 text-left space-y-3.5 shadow-sm">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-amber-500 to-[#ea580c] flex items-center justify-center text-white shadow-xs">
                   <Lock className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-2">
+                  <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
                     <span>Private Shareable Link</span>
-                    <span className="text-[10px] font-extrabold text-amber-800 bg-amber-200/80 px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-amber-300">
+                    <span className="text-[10px] font-extrabold text-amber-800 dark:text-amber-300 bg-amber-200/80 dark:bg-amber-900/50 px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-amber-300 dark:border-amber-700/50">
                       Private Access
                     </span>
                   </h4>
-                  <p className="text-[11px] text-slate-600 font-medium">
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
                     Anyone with this link can view the event specifications right now
                   </p>
                 </div>
               </div>
             </div>
 
-            <p className="text-xs text-slate-600 leading-relaxed font-medium">
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
               This hackathon is not publicly listed on the platform yet. However, <strong>anyone you share this private link with</strong> can open and preview all event details, prizes, timeline, and rules without restrictions:
             </p>
 
             {/* Input & Copy Row */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white p-2 rounded-2xl border border-amber-200 shadow-2xs">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white dark:bg-[#121824] p-2 rounded-2xl border border-amber-200 dark:border-amber-800/40 shadow-2xs">
               <div className="flex-1 flex items-center gap-2 px-2 overflow-hidden">
-                <Link2 className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                <Link2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                 <input
                   type="text"
                   readOnly
                   value={privateLink}
-                  className="w-full bg-transparent text-xs font-mono font-bold text-slate-800 outline-none truncate select-all"
+                  className="w-full bg-transparent text-xs font-mono font-bold text-slate-800 dark:text-slate-200 outline-none truncate select-all"
                   onClick={(e) => (e.target as HTMLInputElement).select()}
                 />
               </div>
@@ -1133,7 +1133,7 @@ ${organizerName || 'Organizer'}`;
                   href={privateLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                  className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
                 >
                   <Eye className="w-3.5 h-3.5" />
                   <span>Open Preview</span>
@@ -1144,28 +1144,28 @@ ${organizerName || 'Organizer'}`;
           </div>
 
           {/* Email Dispatch & Gmail Draft Action Box */}
-          <div className="w-full p-5 rounded-2xl bg-sky-50/80 border border-sky-200 text-left space-y-3.5 shadow-xs">
+          <div className="w-full p-5 rounded-2xl bg-sky-50/80 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800/40 text-left space-y-3.5 shadow-xs">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-[#0099e6] flex items-center justify-center text-white shadow-xs">
                   <Mail className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-slate-900">
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">
                     Send Details to hackerunity.community@gmail.com
                   </h4>
-                  <p className="text-[11px] text-slate-500 font-medium">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                     One-click draft creation with full hackathon specifications
                   </p>
                 </div>
               </div>
-              <span className="text-[11px] font-mono font-bold text-[#0099e6] bg-white px-3 py-1 rounded-full border border-sky-200 shadow-2xs">
+              <span className="text-[11px] font-mono font-bold text-[#0099e6] dark:text-[#38bdf8] bg-white dark:bg-[#121824] px-3 py-1 rounded-full border border-sky-200 dark:border-sky-800/40 shadow-2xs">
                 hackerunity.community@gmail.com
               </span>
             </div>
 
-            <p className="text-xs text-slate-600 leading-relaxed font-medium">
-              Click <strong className="text-slate-900">&quot;Open in Gmail Draft&quot;</strong> below to instantly open Gmail with a pre-filled draft containing all event specifications (prizes, dates, venue, rules, links) addressed to <strong className="text-slate-900">hackerunity.community@gmail.com</strong>:
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+              Click <strong className="text-slate-900 dark:text-white">&quot;Open in Gmail Draft&quot;</strong> below to instantly open Gmail with a pre-filled draft containing all event specifications (prizes, dates, venue, rules, links) addressed to <strong className="text-slate-900 dark:text-white">hackerunity.community@gmail.com</strong>:
             </p>
 
             <div className="flex flex-wrap items-center gap-2.5 pt-1">
@@ -1195,7 +1195,7 @@ ${organizerName || 'Organizer'}`;
               {/* Default Mail Client */}
               <a
                 href={mailtoUrl}
-                className="px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                className="px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] hover:bg-slate-50 dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
               >
                 <span>Default Mail App</span>
               </a>
@@ -1204,7 +1204,7 @@ ${organizerName || 'Organizer'}`;
               <button
                 type="button"
                 onClick={handleCopyAllInfo}
-                className="px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                className="px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] hover:bg-slate-50 dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
               >
                 {copiedDetails ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
                 <span>{copiedDetails ? 'Details Copied!' : 'Copy All Details'}</span>
@@ -1212,29 +1212,29 @@ ${organizerName || 'Organizer'}`;
             </div>
 
             {emailSentSuccess && (
-              <div className="p-3 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800 animate-in fade-in flex items-center gap-2">
+              <div className="p-3 rounded-xl bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.08] text-xs font-semibold text-slate-800 dark:text-slate-200 animate-in fade-in flex items-center gap-2">
                 <span>{emailSentSuccess}</span>
               </div>
             )}
           </div>
 
           {/* Quick Details Card */}
-          <div className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-200/80 text-left text-xs space-y-2.5">
-            <div className="flex justify-between items-center text-slate-500 font-medium">
+          <div className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-[#121824] border border-slate-200/80 dark:border-white/[0.08] text-left text-xs space-y-2.5">
+            <div className="flex justify-between items-center text-slate-500 dark:text-slate-400 font-medium">
               <span>Event Title:</span>
-              <strong className="text-slate-900 font-bold">{submittedEvent?.title || previewEvent.title}</strong>
+              <strong className="text-slate-900 dark:text-white font-bold">{submittedEvent?.title || previewEvent.title}</strong>
             </div>
-            <div className="flex justify-between items-center text-slate-500 font-medium">
+            <div className="flex justify-between items-center text-slate-500 dark:text-slate-400 font-medium">
               <span>Format &amp; Mode:</span>
-              <span className="text-slate-800 font-semibold">{previewEvent.eventType} • {previewEvent.location}</span>
+              <span className="text-slate-800 dark:text-slate-200 font-semibold">{previewEvent.eventType} • {previewEvent.location}</span>
             </div>
-            <div className="flex justify-between items-center text-slate-500 font-medium">
+            <div className="flex justify-between items-center text-slate-500 dark:text-slate-400 font-medium">
               <span>Entry Fee:</span>
-              <span className="text-slate-800 font-semibold">{previewEvent.registrationType === 'PAID' ? `${currencySymbol}${Number(previewEvent.entryFee || 0).toLocaleString('en-IN')} (${currency})` : 'Free Entry'}</span>
+              <span className="text-slate-800 dark:text-slate-200 font-semibold">{previewEvent.registrationType === 'PAID' ? `${currencySymbol}${Number(previewEvent.entryFee || 0).toLocaleString('en-IN')} (${currency})` : 'Free Entry'}</span>
             </div>
-            <div className="flex justify-between items-center text-slate-500 font-medium">
+            <div className="flex justify-between items-center text-slate-500 dark:text-slate-400 font-medium">
               <span>Review Status:</span>
-              <span className="text-amber-700 font-bold bg-amber-100 px-2.5 py-0.5 rounded-full text-[10px] border border-amber-200">
+              <span className="text-amber-700 dark:text-amber-300 font-bold bg-amber-100 dark:bg-amber-950/50 px-2.5 py-0.5 rounded-full text-[10px] border border-amber-200 dark:border-amber-800/40">
                 {isEditMode ? 'Saved' : '⏳ Pending Review'}
               </span>
             </div>
@@ -1257,7 +1257,7 @@ ${organizerName || 'Organizer'}`;
                 setTitle('');
                 setDescription('');
               }}
-              className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
+              className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-300 font-bold text-xs transition-colors cursor-pointer"
             >
               <span>Host Another Hackathon</span>
             </button>
@@ -1268,7 +1268,7 @@ ${organizerName || 'Organizer'}`;
           {/* Left Form (7 cols) */}
           <div className="lg:col-span-7 space-y-6">
             {/* Step Wizard indicator */}
-            <div className="flex items-center gap-1 p-1.5 bg-white rounded-2xl border border-slate-200 shadow-xs text-xs font-bold overflow-x-auto scrollbar-none">
+            <div className="flex items-center gap-1 p-1.5 bg-white dark:bg-[#0c1017] rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-xs text-xs font-bold overflow-x-auto scrollbar-none">
               {stepLabels.map((s) => (
                 <button
                   key={s.num}
@@ -1277,8 +1277,8 @@ ${organizerName || 'Organizer'}`;
                   className={`flex-1 py-2 px-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap ${step === s.num
                       ? 'bg-[#0099e6] text-white shadow-2xs'
                       : s.num < step
-                        ? 'text-emerald-600 bg-emerald-50'
-                        : 'text-slate-500 hover:text-slate-900'
+                        ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                 >
                   {s.num < step ? (
@@ -1292,49 +1292,49 @@ ${organizerName || 'Organizer'}`;
               ))}
             </div>
 
-            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-5">
+            <div className="bg-white dark:bg-[#0c1017] p-6 rounded-3xl border border-slate-200 dark:border-white/[0.08] shadow-sm space-y-5">
               {/* ═══ STEP 1: Basic Info ═══════════════════════════════ */}
               {step === 1 && (
                 <div className="space-y-4 animate-in fade-in">
-                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-[#0099e6]" />
                     <span>General Information</span>
                   </h3>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Hackathon Name *</label>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Hackathon Name *</label>
                     <input
                       type="text"
                       required
                       placeholder="e.g. NextGen Autonomous Agents Hackathon 2026"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] dark:focus:border-[#0099e6] rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-colors"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Short Tagline</label>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Short Tagline</label>
                     <input
                       type="text"
                       placeholder="e.g. Build the future of AI in 48 hours"
                       value={tagline}
                       onChange={(e) => setTagline(e.target.value)}
                       maxLength={100}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] dark:focus:border-[#0099e6] rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-colors"
                     />
-                    <p className="text-[10px] text-slate-400 mt-0.5 text-right">{tagline.length}/100</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 text-right">{tagline.length}/100</p>
                   </div>
 
                   {/* Logo & Banner Upload */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Hackathon Logo</label>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Hackathon Logo</label>
                       <input ref={logoInputRef} type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
                       <button
                         type="button"
                         onClick={() => logoInputRef.current?.click()}
-                        className="w-full h-24 rounded-xl border-2 border-dashed border-slate-200 hover:border-[#0099e6] bg-slate-50 flex flex-col items-center justify-center gap-1 text-slate-500 hover:text-[#0099e6] transition-all cursor-pointer overflow-hidden"
+                        className="w-full h-24 rounded-xl border-2 border-dashed border-slate-200 dark:border-white/[0.1] hover:border-[#0099e6] dark:hover:border-[#0099e6] bg-slate-50 dark:bg-[#121824] flex flex-col items-center justify-center gap-1 text-slate-500 dark:text-slate-400 hover:text-[#0099e6] transition-all cursor-pointer overflow-hidden"
                       >
                         {logoPreview ? (
                           /* eslint-disable-next-line @next/next/no-img-element */
@@ -1351,12 +1351,12 @@ ${organizerName || 'Organizer'}`;
                       )}
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Banner / Cover Image</label>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Banner / Cover Image</label>
                       <input ref={bannerInputRef} type="file" accept="image/*" onChange={handleBannerUpload} className="hidden" />
                       <button
                         type="button"
                         onClick={() => bannerInputRef.current?.click()}
-                        className="w-full h-24 rounded-xl border-2 border-dashed border-slate-200 hover:border-[#0099e6] bg-slate-50 flex flex-col items-center justify-center gap-1 text-slate-500 hover:text-[#0099e6] transition-all cursor-pointer overflow-hidden"
+                        className="w-full h-24 rounded-xl border-2 border-dashed border-slate-200 dark:border-white/[0.1] hover:border-[#0099e6] dark:hover:border-[#0099e6] bg-slate-50 dark:bg-[#121824] flex flex-col items-center justify-center gap-1 text-slate-500 dark:text-slate-400 hover:text-[#0099e6] transition-all cursor-pointer overflow-hidden"
                       >
                         {bannerPreview ? (
                           /* eslint-disable-next-line @next/next/no-img-element */
@@ -1376,7 +1376,7 @@ ${organizerName || 'Organizer'}`;
 
                   {/* Organizing Entity Type: College vs Organization/Community */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-2">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
                       Who is organizing this hackathon? *
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1384,16 +1384,16 @@ ${organizerName || 'Organizer'}`;
                         type="button"
                         onClick={() => setHostType('COLLEGE')}
                         className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-3 ${hostType === 'COLLEGE'
-                            ? 'bg-sky-50/90 border-[#0099e6] text-[#0099e6] shadow-xs ring-2 ring-[#0099e6]/20'
-                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300'
+                            ? 'bg-sky-50/90 dark:bg-sky-950/30 border-[#0099e6] text-[#0099e6] shadow-xs ring-2 ring-[#0099e6]/20'
+                            : 'bg-slate-50 dark:bg-white/[0.03] border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-white/[0.15]'
                           }`}
                       >
-                        <div className={`p-2.5 rounded-xl ${hostType === 'COLLEGE' ? 'bg-[#0099e6] text-white shadow-2xs' : 'bg-white text-slate-500 border border-slate-200'}`}>
+                        <div className={`p-2.5 rounded-xl ${hostType === 'COLLEGE' ? 'bg-[#0099e6] text-white shadow-2xs' : 'bg-white dark:bg-[#121824] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/[0.08]'}`}>
                           <GraduationCap className="w-4 h-4" />
                         </div>
                         <div>
-                          <div className="text-xs font-bold text-slate-900">College / University</div>
-                          <div className="text-[10px] text-slate-500">Student club, campus chapter, department</div>
+                          <div className="text-xs font-bold text-slate-900 dark:text-white">College / University</div>
+                          <div className="text-[10px] text-slate-500 dark:text-slate-400">Student club, campus chapter, department</div>
                         </div>
                       </button>
 
@@ -1401,16 +1401,16 @@ ${organizerName || 'Organizer'}`;
                         type="button"
                         onClick={() => setHostType('ORGANIZATION')}
                         className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-3 ${hostType === 'ORGANIZATION'
-                            ? 'bg-orange-50/90 border-[#f97316] text-[#ea580c] shadow-xs ring-2 ring-[#f97316]/20'
-                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300'
+                            ? 'bg-orange-50/90 dark:bg-orange-950/30 border-[#f97316] text-[#ea580c] shadow-xs ring-2 ring-[#f97316]/20'
+                            : 'bg-slate-50 dark:bg-white/[0.03] border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-white/[0.15]'
                           }`}
                       >
-                        <div className={`p-2.5 rounded-xl ${hostType === 'ORGANIZATION' ? 'bg-[#f97316] text-white shadow-2xs' : 'bg-white text-slate-500 border border-slate-200'}`}>
+                        <div className={`p-2.5 rounded-xl ${hostType === 'ORGANIZATION' ? 'bg-[#f97316] text-white shadow-2xs' : 'bg-white dark:bg-[#121824] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/[0.08]'}`}>
                           <Building2 className="w-4 h-4" />
                         </div>
                         <div>
-                          <div className="text-xs font-bold text-slate-900">Organization / Community</div>
-                          <div className="text-[10px] text-slate-500">Tech community, startup, enterprise, DAO</div>
+                          <div className="text-xs font-bold text-slate-900 dark:text-white">Organization / Community</div>
+                          <div className="text-[10px] text-slate-500 dark:text-slate-400">Tech community, startup, enterprise, DAO</div>
                         </div>
                       </button>
                     </div>
@@ -1419,7 +1419,7 @@ ${organizerName || 'Organizer'}`;
                   {/* College / Organization Name & Organizer Lead Name */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                         {hostType === 'COLLEGE' ? 'College / University / Club Name *' : 'Organization / Community Name *'}
                       </label>
                       <div className="relative">
@@ -1429,7 +1429,7 @@ ${organizerName || 'Organizer'}`;
                           placeholder={hostType === 'COLLEGE' ? 'e.g. University / Campus Club' : 'e.g. Organization / Community Name'}
                           value={institutionName}
                           onChange={(e) => setInstitutionName(e.target.value)}
-                          className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                          className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] dark:focus:border-[#0099e6] rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-colors"
                         />
                         <div className="absolute left-3 top-3 pointer-events-none">
                           {hostType === 'COLLEGE' ? (
@@ -1442,7 +1442,7 @@ ${organizerName || 'Organizer'}`;
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                         Organizer / Lead Name *
                       </label>
                       <div className="relative">
@@ -1452,9 +1452,9 @@ ${organizerName || 'Organizer'}`;
                           placeholder="e.g. Organizer / Lead Name"
                           value={organizerLeadName}
                           onChange={(e) => setOrganizerLeadName(e.target.value)}
-                          className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+                          className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] dark:focus:border-[#0099e6] rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-colors"
                         />
-                        <div className="absolute left-3 top-3 pointer-events-none text-slate-400">
+                        <div className="absolute left-3 top-3 pointer-events-none text-slate-400 dark:text-slate-500">
                           <User className="w-4 h-4" />
                         </div>
                       </div>
@@ -1475,11 +1475,11 @@ ${organizerName || 'Organizer'}`;
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Event Category</label>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Event Category</label>
                       <select
                         value={category}
                         onChange={(e) => setCategory(e.target.value as EventCategory)}
-                        className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 outline-none focus:border-[#0099e6]"
+                        className="w-full px-3 py-2.5 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-[#0099e6]"
                       >
                         <option value={EventCategory.HACKATHON}>Hackathon</option>
                         <option value={EventCategory.COMPETITION}>Competition</option>
@@ -1489,7 +1489,7 @@ ${organizerName || 'Organizer'}`;
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Format</label>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Format</label>
                       <select
                         value={eventType}
                         onChange={(e) => {
@@ -1497,7 +1497,7 @@ ${organizerName || 'Organizer'}`;
                           setEventType(val);
                           if (val === EventType.ONLINE) setLocation('Online / Discord');
                         }}
-                        className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 outline-none focus:border-[#0099e6]"
+                        className="w-full px-3 py-2.5 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-[#0099e6]"
                       >
                         <option value={EventType.ONLINE}>Virtual / Online</option>
                         <option value={EventType.OFFLINE}>In-Person</option>
@@ -1532,29 +1532,29 @@ ${organizerName || 'Organizer'}`;
               {/* ═══ STEP 2: Dates & Schedule ═══════════════════════ */}
               {step === 2 && (
                 <div className="space-y-4 animate-in fade-in">
-                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-[#0099e6]" />
                     <span>Dates & Schedule</span>
                   </h3>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Registration Opens</label>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Registration Opens</label>
                       <input
                         type="date"
                         value={registrationStart}
                         onChange={(e) => setRegistrationStart(e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 outline-none focus:border-[#0099e6]"
+                        className="w-full px-3 py-2 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-[#0099e6]"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Registration Deadline *</label>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Registration Deadline *</label>
                       <input
                         type="date"
                         required
                         value={registrationDeadline}
                         onChange={(e) => setRegistrationDeadline(e.target.value)}
-                        className={`w-full px-3 py-2 bg-slate-50 border rounded-xl text-xs text-slate-900 outline-none focus:border-[#0099e6] ${dateErrors.registrationDeadline ? 'border-red-400' : 'border-slate-200'}`}
+                        className={`w-full px-3 py-2 bg-slate-50 dark:bg-[#121824] border rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-[#0099e6] ${dateErrors.registrationDeadline ? 'border-red-400' : 'border-slate-200 dark:border-white/[0.1]'}`}
                       />
                       {dateErrors.registrationDeadline && (
                         <p className="text-[10px] text-red-500 mt-0.5">{dateErrors.registrationDeadline}</p>
@@ -1564,26 +1564,26 @@ ${organizerName || 'Organizer'}`;
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Hackathon Start *</label>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Hackathon Start *</label>
                       <input
                         type="date"
                         required
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
-                        className={`w-full px-3 py-2 bg-slate-50 border rounded-xl text-xs text-slate-900 outline-none focus:border-[#0099e6] ${dateErrors.startDate ? 'border-red-400' : 'border-slate-200'}`}
+                        className={`w-full px-3 py-2 bg-slate-50 dark:bg-[#121824] border rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-[#0099e6] ${dateErrors.startDate ? 'border-red-400' : 'border-slate-200 dark:border-white/[0.1]'}`}
                       />
                       {dateErrors.startDate && (
                         <p className="text-[10px] text-red-500 mt-0.5">{dateErrors.startDate}</p>
                       )}
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Hackathon End *</label>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Hackathon End *</label>
                       <input
                         type="date"
                         required
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
-                        className={`w-full px-3 py-2 bg-slate-50 border rounded-xl text-xs text-slate-900 outline-none focus:border-[#0099e6] ${dateErrors.endDate ? 'border-red-400' : 'border-slate-200'}`}
+                        className={`w-full px-3 py-2 bg-slate-50 dark:bg-[#121824] border rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-[#0099e6] ${dateErrors.endDate ? 'border-red-400' : 'border-slate-200 dark:border-white/[0.1]'}`}
                       />
                       {dateErrors.endDate && (
                         <p className="text-[10px] text-red-500 mt-0.5">{dateErrors.endDate}</p>
@@ -1592,11 +1592,11 @@ ${organizerName || 'Organizer'}`;
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Timezone</label>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Timezone</label>
                     <select
                       value={timezone}
                       onChange={(e) => setTimezone(e.target.value)}
-                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 outline-none focus:border-[#0099e6]"
+                      className="w-full px-3 py-2.5 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-[#0099e6]"
                     >
                       {TIMEZONES.map((tz) => (
                         <option key={tz} value={tz}>{tz}</option>
@@ -1605,7 +1605,7 @@ ${organizerName || 'Organizer'}`;
                   </div>
 
                   <div className="pt-2 flex justify-between">
-                    <button type="button" onClick={goBack} className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer">
+                    <button type="button" onClick={goBack} className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors">
                       <ArrowLeft className="w-3.5 h-3.5" /> <span>Back</span>
                     </button>
                     <button type="button" onClick={goNext} disabled={!canGoNext()} className="px-5 py-2 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs disabled:opacity-50 disabled:cursor-not-allowed">
@@ -1618,30 +1618,30 @@ ${organizerName || 'Organizer'}`;
               {/* ═══ STEP 3: Hackathon Details ═══════════════════════ */}
               {step === 3 && (
                 <div className="space-y-4 animate-in fade-in">
-                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <FileText className="w-4 h-4 text-[#0099e6]" />
                     <span>Hackathon Details</span>
                   </h3>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Min Team Size</label>
-                      <input type="number" min={1} max={10} value={minTeamSize} onChange={(e) => setMinTeamSize(Number(e.target.value))} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 outline-none focus:border-[#0099e6]" />
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Min Team Size</label>
+                      <input type="number" min={1} max={10} value={minTeamSize} onChange={(e) => setMinTeamSize(Number(e.target.value))} className="w-full px-3 py-2 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-[#0099e6]" />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Max Team Size</label>
-                      <input type="number" min={1} max={10} value={maxTeamSize} onChange={(e) => setMaxTeamSize(Number(e.target.value))} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 outline-none focus:border-[#0099e6]" />
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Max Team Size</label>
+                      <input type="number" min={1} max={10} value={maxTeamSize} onChange={(e) => setMaxTeamSize(Number(e.target.value))} className="w-full px-3 py-2 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-[#0099e6]" />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Eligibility</label>
-                    <textarea rows={2} placeholder="e.g. Open to all college students and independent builders across India" value={eligibility} onChange={(e) => setEligibility(e.target.value)} className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 placeholder-slate-400 outline-none resize-none" />
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Eligibility</label>
+                    <textarea rows={2} placeholder="e.g. Open to all college students and independent builders across India" value={eligibility} onChange={(e) => setEligibility(e.target.value)} className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] dark:focus:border-[#0099e6] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none resize-none" />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Difficulty Level</label>
-                    <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)} className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 outline-none focus:border-[#0099e6]">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Difficulty Level</label>
+                    <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)} className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-[#0099e6]">
                       {DIFFICULTY_LEVELS.map((d) => (
                         <option key={d.value} value={d.value}>{d.label}</option>
                       ))}
@@ -1649,11 +1649,11 @@ ${organizerName || 'Organizer'}`;
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Domains / Tech Tags (comma separated)</label>
-                    <input type="text" placeholder="GenAI, Python, Agents, Next.js" value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 placeholder-slate-400 outline-none" />
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Domains / Tech Tags (comma separated)</label>
+                    <input type="text" placeholder="GenAI, Python, Agents, Next.js" value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] dark:focus:border-[#0099e6] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none" />
                     <div className="flex flex-wrap gap-1 mt-2">
                       {tagsInput.split(',').map((t) => t.trim()).filter(Boolean).map((tag) => (
-                        <span key={tag} className="px-2 py-0.5 rounded-lg bg-sky-50 border border-sky-100 text-[10px] font-mono font-semibold text-[#0099e6]">#{tag}</span>
+                        <span key={tag} className="px-2 py-0.5 rounded-lg bg-sky-50 dark:bg-sky-950/40 border border-sky-100 dark:border-sky-800/50 text-[10px] font-mono font-semibold text-[#0099e6]">#{tag}</span>
                       ))}
                     </div>
                   </div>
@@ -1670,7 +1670,7 @@ ${organizerName || 'Organizer'}`;
                   </div>
 
                   <div className="pt-2 flex justify-between">
-                    <button type="button" onClick={goBack} className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer">
+                    <button type="button" onClick={goBack} className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors">
                       <ArrowLeft className="w-3.5 h-3.5" /> <span>Back</span>
                     </button>
                     <button type="button" onClick={goNext} className="px-5 py-2 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs">
@@ -1683,7 +1683,7 @@ ${organizerName || 'Organizer'}`;
               {/* ═══ STEP 4: Prizes & Tracks ═══════════════════════ */}
               {step === 4 && (
                 <div className="space-y-4 animate-in fade-in">
-                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <Trophy className="w-4 h-4 text-[#ea580c]" />
                     <span>Prizes & Tracks</span>
                   </h3>
@@ -1691,14 +1691,14 @@ ${organizerName || 'Organizer'}`;
                   {/* Prizes */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between flex-wrap gap-2">
-                      <label className="text-xs font-bold text-slate-700">Prize Distribution</label>
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Prize Distribution</label>
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1.5 text-xs">
-                          <span className="text-[11px] font-bold text-slate-500">Currency:</span>
+                          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Currency:</span>
                           <select
                             value={currency}
                             onChange={(e) => setCurrency(e.target.value)}
-                            className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-800 outline-none focus:border-[#0099e6] cursor-pointer"
+                            className="px-2.5 py-1 bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] rounded-lg text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:border-[#0099e6] cursor-pointer"
                           >
                             {CURRENCIES.map((c) => (
                               <option key={c.code} value={c.code}>{c.label}</option>
@@ -1711,16 +1711,16 @@ ${organizerName || 'Organizer'}`;
                       </div>
                     </div>
                     {prizes.map((prize, idx) => (
-                      <div key={idx} className="flex gap-2 items-start p-3 rounded-xl bg-slate-50 border border-slate-200">
+                      <div key={idx} className="flex gap-2 items-start p-3 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08]">
                         <div className="flex-1 space-y-2">
-                          <input type="text" placeholder="e.g. 🥇 1st Prize" value={prize.position} onChange={(e) => updatePrize(idx, 'position', e.target.value)} className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 outline-none focus:border-[#0099e6]" />
+                          <input type="text" placeholder="e.g. 🥇 1st Prize" value={prize.position} onChange={(e) => updatePrize(idx, 'position', e.target.value)} className="w-full px-2.5 py-1.5 bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] rounded-lg text-xs text-slate-900 dark:text-white outline-none focus:border-[#0099e6]" />
                           <div className="grid grid-cols-2 gap-2">
-                            <input type="number" placeholder={`Amount (${currencySymbol})`} value={prize.amount} onChange={(e) => updatePrize(idx, 'amount', Number(e.target.value))} className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 outline-none focus:border-[#0099e6] font-mono" />
-                            <input type="text" placeholder="Description" value={prize.description} onChange={(e) => updatePrize(idx, 'description', e.target.value)} className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 outline-none focus:border-[#0099e6]" />
+                            <input type="number" placeholder={`Amount (${currencySymbol})`} value={prize.amount} onChange={(e) => updatePrize(idx, 'amount', Number(e.target.value))} className="w-full px-2.5 py-1.5 bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] rounded-lg text-xs text-slate-900 dark:text-white outline-none focus:border-[#0099e6] font-mono" />
+                            <input type="text" placeholder="Description" value={prize.description} onChange={(e) => updatePrize(idx, 'description', e.target.value)} className="w-full px-2.5 py-1.5 bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] rounded-lg text-xs text-slate-900 dark:text-white outline-none focus:border-[#0099e6]" />
                           </div>
                         </div>
                         {prizes.length > 1 && (
-                          <button type="button" onClick={() => removePrize(idx)} className="p-1 text-slate-400 hover:text-red-500 cursor-pointer mt-1">
+                          <button type="button" onClick={() => removePrize(idx)} className="p-1 text-slate-400 dark:text-slate-500 hover:text-red-500 cursor-pointer mt-1">
                             <X className="w-4 h-4" />
                           </button>
                         )}
@@ -1728,7 +1728,7 @@ ${organizerName || 'Organizer'}`;
                     ))}
                   </div>
 
-                  <div className="p-3.5 rounded-2xl bg-orange-50 border border-orange-200 text-xs text-[#ea580c] flex items-center justify-between font-mono font-black">
+                  <div className="p-3.5 rounded-2xl bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800/40 text-xs text-[#ea580c] flex items-center justify-between font-mono font-black">
                     <span>Total Prize Pool:</span>
                     <span className="text-base font-extrabold">{currencySymbol}{totalPrize.toLocaleString('en-IN')}</span>
                   </div>
@@ -1736,7 +1736,7 @@ ${organizerName || 'Organizer'}`;
                   {/* Tracks */}
                   <div className="space-y-3 pt-2">
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                         <Layers className="w-3.5 h-3.5 text-[#0099e6]" /> Hackathon Tracks
                       </label>
                       <button type="button" onClick={addTrack} className="text-xs text-[#0099e6] font-bold flex items-center gap-1 cursor-pointer hover:underline">
@@ -1744,23 +1744,23 @@ ${organizerName || 'Organizer'}`;
                       </button>
                     </div>
                     {tracks.map((track, idx) => (
-                      <div key={idx} className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                      <div key={idx} className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] space-y-2">
                         <div className="flex gap-2">
-                          <input type="text" placeholder="Track Name" value={track.title} onChange={(e) => updateTrack(idx, 'title', e.target.value)} className="flex-1 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 outline-none focus:border-[#0099e6]" />
-                          <input type="text" placeholder={`Prize (e.g. ${currencySymbol}50,000)`} value={track.prize} onChange={(e) => updateTrack(idx, 'prize', e.target.value)} className="w-32 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 outline-none focus:border-[#0099e6]" />
+                          <input type="text" placeholder="Track Name" value={track.title} onChange={(e) => updateTrack(idx, 'title', e.target.value)} className="flex-1 px-2.5 py-1.5 bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] rounded-lg text-xs text-slate-900 dark:text-white outline-none focus:border-[#0099e6]" />
+                          <input type="text" placeholder={`Prize (e.g. ${currencySymbol}50,000)`} value={track.prize} onChange={(e) => updateTrack(idx, 'prize', e.target.value)} className="w-32 px-2.5 py-1.5 bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] rounded-lg text-xs text-slate-900 dark:text-white outline-none focus:border-[#0099e6]" />
                           {tracks.length > 1 && (
-                            <button type="button" onClick={() => removeTrack(idx)} className="p-1 text-slate-400 hover:text-red-500 cursor-pointer">
+                            <button type="button" onClick={() => removeTrack(idx)} className="p-1 text-slate-400 dark:text-slate-500 hover:text-red-500 cursor-pointer">
                               <X className="w-4 h-4" />
                             </button>
                           )}
                         </div>
-                        <input type="text" placeholder="Track description" value={track.description} onChange={(e) => updateTrack(idx, 'description', e.target.value)} className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 outline-none focus:border-[#0099e6]" />
+                        <input type="text" placeholder="Track description" value={track.description} onChange={(e) => updateTrack(idx, 'description', e.target.value)} className="w-full px-2.5 py-1.5 bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] rounded-lg text-xs text-slate-900 dark:text-white outline-none focus:border-[#0099e6]" />
                       </div>
                     ))}
                   </div>
 
                   <div className="pt-2 flex justify-between">
-                    <button type="button" onClick={goBack} className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer">
+                    <button type="button" onClick={goBack} className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors">
                       <ArrowLeft className="w-3.5 h-3.5" /> <span>Back</span>
                     </button>
                     <button type="button" onClick={goNext} className="px-5 py-2 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs">
@@ -1773,46 +1773,46 @@ ${organizerName || 'Organizer'}`;
               {/* ═══ STEP 5: Registration Settings ═══════════════════ */}
               {step === 5 && (
                 <div className="space-y-4 animate-in fade-in">
-                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <Settings className="w-4 h-4 text-[#0099e6]" />
                     <span>Registration Settings</span>
                   </h3>
 
                   {/* Free/Paid toggle */}
                   <div className="grid grid-cols-2 gap-3">
-                    <button type="button" onClick={() => setRegistrationType('FREE')} className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${registrationType === 'FREE' ? 'bg-emerald-50/80 border-emerald-400 shadow-xs' : 'bg-slate-50 border-slate-200 hover:border-slate-300'}`}>
-                      <Globe className="w-5 h-5 mb-1.5 text-emerald-600" />
-                      <div className="text-sm font-bold text-slate-900">Free Entry</div>
-                      <div className="text-[11px] text-slate-500">No registration fee</div>
+                    <button type="button" onClick={() => setRegistrationType('FREE')} className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${registrationType === 'FREE' ? 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-400 dark:border-emerald-600/50 shadow-xs' : 'bg-slate-50 dark:bg-white/[0.03] border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.15]'}`}>
+                      <Globe className="w-5 h-5 mb-1.5 text-emerald-600 dark:text-emerald-400" />
+                      <div className="text-sm font-bold text-slate-900 dark:text-white">Free Entry</div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">No registration fee</div>
                     </button>
-                    <button type="button" onClick={() => setRegistrationType('PAID')} className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${registrationType === 'PAID' ? 'bg-orange-50/80 border-[#f97316] shadow-xs ring-2 ring-[#f97316]/20' : 'bg-slate-50 border-slate-200 hover:border-slate-300'}`}>
+                    <button type="button" onClick={() => setRegistrationType('PAID')} className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${registrationType === 'PAID' ? 'bg-orange-50/80 dark:bg-orange-950/30 border-[#f97316] dark:border-orange-500/50 shadow-xs ring-2 ring-[#f97316]/20' : 'bg-slate-50 dark:bg-white/[0.03] border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.15]'}`}>
                       <Trophy className="w-5 h-5 mb-1.5 text-[#f97316]" />
-                      <div className="text-sm font-bold text-slate-900">Paid Entry</div>
-                      <div className="text-[11px] text-slate-500">Charge a registration fee</div>
+                      <div className="text-sm font-bold text-slate-900 dark:text-white">Paid Entry</div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">Charge a registration fee</div>
                     </button>
                   </div>
 
                   {/* Amount Input Box when Paid Entry is chosen */}
                   {registrationType === 'PAID' && (
-                    <div className="p-4 sm:p-5 rounded-2xl bg-orange-50/70 border border-orange-200 shadow-xs space-y-3.5 animate-in fade-in zoom-in-95 duration-200">
+                    <div className="p-4 sm:p-5 rounded-2xl bg-orange-50/70 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-900/40 shadow-xs space-y-3.5 animate-in fade-in zoom-in-95 duration-200">
                       <div className="flex items-center justify-between">
-                        <label className="block text-xs font-bold text-slate-800">
+                        <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
                           Registration Fee / Entry Amount *
                         </label>
-                        <span className="text-[10px] font-extrabold text-[#ea580c] bg-orange-100 px-2.5 py-0.5 rounded-full uppercase border border-orange-200">
+                        <span className="text-[10px] font-extrabold text-[#ea580c] bg-orange-100 dark:bg-orange-900/50 px-2.5 py-0.5 rounded-full uppercase border border-orange-200 dark:border-orange-800/40">
                           Paid Hackathon
                         </span>
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
-                          <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                          <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
                             Currency
                           </label>
                           <select
                             value={currency}
                             onChange={(e) => setCurrency(e.target.value)}
-                            className="w-full px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#f97316] cursor-pointer"
+                            className="w-full px-3 py-2.5 rounded-xl bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#f97316] cursor-pointer"
                           >
                             {CURRENCIES.map((c) => (
                               <option key={c.code} value={c.code}>
@@ -1823,11 +1823,11 @@ ${organizerName || 'Organizer'}`;
                         </div>
 
                         <div className="sm:col-span-2">
-                          <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                          <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
                             Fee Amount ({currencySymbol})
                           </label>
                           <div className="relative">
-                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-black text-slate-400 text-xs">
+                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-black text-slate-400 dark:text-slate-500 text-xs">
                               {currencySymbol}
                             </span>
                             <input
@@ -1840,13 +1840,13 @@ ${organizerName || 'Organizer'}`;
                               }}
                               placeholder="e.g. 250"
                               required={registrationType === 'PAID'}
-                              className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#f97316]"
+                              className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#f97316]"
                             />
                           </div>
                         </div>
                       </div>
 
-                      <p className="text-[11px] text-slate-500 font-medium">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                         Participants will pay {currencySymbol}{Number(entryFee || 0).toLocaleString('en-IN')} as entry fee when registering for this hackathon.
                       </p>
                     </div>
@@ -1855,7 +1855,7 @@ ${organizerName || 'Organizer'}`;
                   <div className="grid grid-cols-1 gap-4">
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <label className="block text-xs font-bold text-slate-700">Registration Capacity</label>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">Registration Capacity</label>
                         <button
                           type="button"
                           onClick={() => {
@@ -1867,8 +1867,8 @@ ${organizerName || 'Organizer'}`;
                             }
                           }}
                           className={`text-[10px] font-bold px-2 py-0.5 rounded-md cursor-pointer transition-colors ${isUnlimitedCapacity
-                              ? 'bg-sky-100 text-[#0099e6]'
-                              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                              ? 'bg-sky-100 dark:bg-sky-950/50 text-[#0099e6]'
+                              : 'bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/[0.1]'
                             }`}
                         >
                           {isUnlimitedCapacity ? 'Unlimited Capacity' : 'Set to Unlimited'}
@@ -1876,7 +1876,7 @@ ${organizerName || 'Organizer'}`;
                       </div>
 
                       {isUnlimitedCapacity ? (
-                        <div className="w-full px-3.5 py-2.5 bg-sky-50/80 border border-sky-200 rounded-xl text-xs font-bold text-[#0099e6] flex items-center justify-between animate-in fade-in">
+                        <div className="w-full px-3.5 py-2.5 bg-sky-50/80 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800/50 rounded-xl text-xs font-bold text-[#0099e6] flex items-center justify-between animate-in fade-in">
                           <span className="flex items-center gap-2">
                             <InfinityIcon className="w-4 h-4 text-[#0099e6]" />
                             <span>Unlimited Registrations (Default)</span>
@@ -1887,7 +1887,7 @@ ${organizerName || 'Organizer'}`;
                               setIsUnlimitedCapacity(false);
                               setRegistrationCapacity(500);
                             }}
-                            className="text-[10px] text-slate-500 hover:text-slate-800 underline font-semibold cursor-pointer"
+                            className="text-[10px] text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white underline font-semibold cursor-pointer"
                           >
                             Set capacity limit
                           </button>
@@ -1903,7 +1903,7 @@ ${organizerName || 'Organizer'}`;
                               const val = e.target.value === '' ? null : Number(e.target.value);
                               setRegistrationCapacity(val);
                             }}
-                            className="w-full pr-16 pl-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 outline-none focus:border-[#0099e6]"
+                            className="w-full pr-16 pl-3 py-2.5 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-[#0099e6]"
                           />
                           <button
                             type="button"
@@ -1921,14 +1921,14 @@ ${organizerName || 'Organizer'}`;
                   </div>
 
                   {/* Registration Fields Selection */}
-                  <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
+                  <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] space-y-4">
                     <div>
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
                         <div>
-                          <label className="text-xs font-bold text-slate-800 block">
+                          <label className="text-xs font-bold text-slate-800 dark:text-white block">
                             Registration Form Fields Setup
                           </label>
-                          <p className="text-[11px] text-slate-500 font-medium">
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                             Mandatory fields are locked by default. Choose which optional fields hackers must provide.
                           </p>
                         </div>
@@ -1936,14 +1936,14 @@ ${organizerName || 'Organizer'}`;
                           <button
                             type="button"
                             onClick={() => setSelectedOptionalFields(AVAILABLE_OPTIONAL_FIELDS.map((f) => f.id))}
-                            className="text-[10px] font-bold px-2 py-1 rounded-lg bg-sky-50 text-[#0099e6] hover:bg-sky-100 border border-sky-200 cursor-pointer transition-colors"
+                            className="text-[10px] font-bold px-2 py-1 rounded-lg bg-sky-50 dark:bg-sky-950/40 text-[#0099e6] hover:bg-sky-100 dark:hover:bg-sky-900/50 border border-sky-200 dark:border-sky-800/50 cursor-pointer transition-colors"
                           >
                             Select All
                           </button>
                           <button
                             type="button"
                             onClick={() => setSelectedOptionalFields([])}
-                            className="text-[10px] font-bold px-2 py-1 rounded-lg bg-white text-slate-500 hover:text-slate-800 border border-slate-200 cursor-pointer transition-colors"
+                            className="text-[10px] font-bold px-2 py-1 rounded-lg bg-white dark:bg-[#121824] text-slate-500 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white border border-slate-200 dark:border-white/[0.1] cursor-pointer transition-colors"
                           >
                             Clear Optional
                           </button>
@@ -1952,8 +1952,8 @@ ${organizerName || 'Organizer'}`;
 
                       {/* 1. Mandatory Fields (Locked) */}
                       <div className="space-y-2 mb-5">
-                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-800 uppercase tracking-wider">
-                          <Lock className="w-3.5 h-3.5 text-emerald-600" />
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider">
+                          <Lock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                           <span>Mandatory Core Fields (Always Required)</span>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2.5">
@@ -1962,18 +1962,18 @@ ${organizerName || 'Organizer'}`;
                             return (
                               <div
                                 key={field.id}
-                                className="p-3 rounded-2xl bg-white border border-emerald-200/90 shadow-2xs flex items-center justify-between gap-2.5 select-none"
+                                className="p-3 rounded-2xl bg-white dark:bg-[#121824] border border-emerald-200/90 dark:border-emerald-800/40 shadow-2xs flex items-center justify-between gap-2.5 select-none"
                               >
                                 <div className="flex items-center gap-2.5 min-w-0">
-                                  <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-100">
+                                  <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-100 dark:border-emerald-800/40">
                                     <IconComponent className="w-4 h-4" />
                                   </div>
                                   <div className="min-w-0">
-                                    <span className="text-xs font-bold text-slate-800 block truncate">{field.label}</span>
-                                    <span className="text-[10px] text-slate-400 font-medium block truncate">{field.description}</span>
+                                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block truncate">{field.label}</span>
+                                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium block truncate">{field.description}</span>
                                   </div>
                                 </div>
-                                <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 uppercase shrink-0">
+                                <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 uppercase shrink-0">
                                   Req *
                                 </span>
                               </div>
@@ -1984,7 +1984,7 @@ ${organizerName || 'Organizer'}`;
 
                       {/* 2. Optional Fields (Toggleable) */}
                       <div className="space-y-2">
-                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                           <Sparkles className="w-3.5 h-3.5 text-[#0099e6]" />
                           <span>Optional Additional Fields (Click to Enable / Disable)</span>
                         </div>
@@ -2004,30 +2004,30 @@ ${organizerName || 'Organizer'}`;
                                   );
                                 }}
                                 className={`p-3 rounded-2xl border text-left transition-all flex items-center justify-between gap-3 cursor-pointer ${isSelected
-                                    ? 'bg-sky-50/70 border-[#0099e6] shadow-2xs ring-1 ring-[#0099e6]/20'
-                                    : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
+                                    ? 'bg-sky-50/70 dark:bg-sky-950/30 border-[#0099e6] shadow-2xs ring-1 ring-[#0099e6]/20'
+                                    : 'bg-white dark:bg-[#121824] border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.15] hover:bg-slate-50/50 dark:hover:bg-white/[0.04]'
                                   }`}
                               >
                                 <div className="flex items-center gap-3 min-w-0">
                                   <div
                                     className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border transition-colors ${isSelected
-                                        ? 'bg-sky-100 text-[#0099e6] border-sky-200'
-                                        : 'bg-slate-100 text-slate-500 border-slate-200'
+                                        ? 'bg-sky-100 dark:bg-sky-900/50 text-[#0099e6] border-sky-200 dark:border-sky-800'
+                                        : 'bg-slate-100 dark:bg-white/[0.06] text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/[0.08]'
                                       }`}
                                   >
                                     <IconComponent className="w-4 h-4" />
                                   </div>
                                   <div className="min-w-0">
-                                    <div className="text-xs font-bold text-slate-900 truncate">
+                                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
                                       {field.label}
                                     </div>
-                                    <div className="text-[10px] text-slate-400 truncate">{field.hint}</div>
+                                    <div className="text-[10px] text-slate-400 dark:text-slate-500 truncate">{field.hint}</div>
                                   </div>
                                 </div>
                                 <div
                                   className={`w-5 h-5 rounded-lg flex items-center justify-center shrink-0 border transition-all ${isSelected
                                       ? 'bg-[#0099e6] border-[#0099e6] text-white shadow-2xs'
-                                      : 'border-slate-300 bg-slate-50'
+                                      : 'border-slate-300 dark:border-white/[0.15] bg-slate-50 dark:bg-white/[0.04]'
                                     }`}
                                 >
                                   {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
@@ -2042,23 +2042,23 @@ ${organizerName || 'Organizer'}`;
 
                   {/* Custom Questions */}
                   <div className="space-y-3">
-                    <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                       <HelpCircle className="w-3.5 h-3.5 text-[#0099e6]" /> Custom Questions (Optional)
                     </label>
 
                     {customQuestions.map((q) => (
-                      <div key={q.id} className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-200">
-                        <span className="flex-1 text-xs text-slate-700 font-medium">{q.label}</span>
-                        <span className="text-[10px] text-slate-400 font-mono">{q.type}</span>
-                        <button type="button" onClick={() => removeCustomQuestion(q.id)} className="p-1 text-slate-400 hover:text-red-500 cursor-pointer">
+                      <div key={q.id} className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08]">
+                        <span className="flex-1 text-xs text-slate-700 dark:text-slate-300 font-medium">{q.label}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{q.type}</span>
+                        <button type="button" onClick={() => removeCustomQuestion(q.id)} className="p-1 text-slate-400 dark:text-slate-500 hover:text-red-500 cursor-pointer">
                           <X className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     ))}
 
                     <div className="flex gap-2">
-                      <input type="text" placeholder="Question label" value={newQuestionLabel} onChange={(e) => setNewQuestionLabel(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomQuestion())} className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 outline-none focus:border-[#0099e6]" />
-                      <select value={newQuestionType} onChange={(e) => setNewQuestionType(e.target.value as any)} className="px-2 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 outline-none">
+                      <input type="text" placeholder="Question label" value={newQuestionLabel} onChange={(e) => setNewQuestionLabel(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomQuestion())} className="flex-1 px-3 py-2 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-[#0099e6]" />
+                      <select value={newQuestionType} onChange={(e) => setNewQuestionType(e.target.value as any)} className="px-2 py-2 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] rounded-xl text-xs text-slate-900 dark:text-white outline-none">
                         <option value="text">Text</option>
                         <option value="textarea">Long Text</option>
                         <option value="select">Select</option>
@@ -2070,7 +2070,7 @@ ${organizerName || 'Organizer'}`;
                   </div>
 
                   <div className="pt-2 flex justify-between">
-                    <button type="button" onClick={goBack} className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer">
+                    <button type="button" onClick={goBack} className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors">
                       <ArrowLeft className="w-3.5 h-3.5" /> <span>Back</span>
                     </button>
                     <button type="button" onClick={goNext} className="px-5 py-2 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs">
@@ -2083,33 +2083,33 @@ ${organizerName || 'Organizer'}`;
               {/* ═══ STEP 6: Submission Settings ══════════ */}
               {step === 6 && (
                 <div className="space-y-5 animate-in fade-in">
-                  <div className="border-b border-slate-200 pb-3">
-                    <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <div className="border-b border-slate-200 dark:border-white/[0.08] pb-3">
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                       <Rocket className="w-4 h-4 text-[#0099e6]" />
                       <span>Submission Setup</span>
                     </h3>
-                    <p className="text-xs text-slate-500 mt-0.5">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                       Configure the project submission portal where participants will submit their final builds.
                     </p>
                   </div>
 
                   {/* Section 1: Required Submission Fields (Locked) */}
-                  <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                  <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] space-y-3">
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="flex items-center gap-2">
-                          <label className="text-xs font-bold text-slate-800">
+                          <label className="text-xs font-bold text-slate-800 dark:text-white">
                             Mandatory Submission Fields
                           </label>
-                          <span className="px-2 py-0.5 rounded-md bg-rose-100 text-rose-700 text-[10px] font-black uppercase">
+                          <span className="px-2 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 text-[10px] font-black uppercase">
                             Required *
                           </span>
                         </div>
-                        <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                           These fields are strictly mandatory for all submitting builders and squads.
                         </p>
                       </div>
-                      <span className="text-[10px] font-bold text-slate-400 bg-white border border-slate-200 px-2 py-1 rounded-lg">
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-300 bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.08] px-2 py-1 rounded-lg">
                         3 Fields Locked
                       </span>
                     </div>
@@ -2120,19 +2120,19 @@ ${organizerName || 'Organizer'}`;
                         return (
                           <div
                             key={field.id}
-                            className="p-3.5 rounded-xl bg-white border border-slate-200 flex flex-col justify-between space-y-2 shadow-2xs"
+                            className="p-3.5 rounded-xl bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.08] flex flex-col justify-between space-y-2 shadow-2xs"
                           >
                             <div className="flex items-center justify-between">
-                              <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
+                              <div className="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center">
                                 <Icon className="w-4 h-4" />
                               </div>
-                              <span className="px-1.5 py-0.5 rounded bg-rose-50 text-rose-600 text-[9px] font-black uppercase border border-rose-200">
+                              <span className="px-1.5 py-0.5 rounded bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 text-[9px] font-black uppercase border border-rose-200 dark:border-rose-800/40">
                                 Required *
                               </span>
                             </div>
                             <div>
-                              <div className="text-xs font-bold text-slate-900">{field.label}</div>
-                              <div className="text-[10px] text-slate-400 mt-0.5 leading-snug">{field.description}</div>
+                              <div className="text-xs font-bold text-slate-900 dark:text-white">{field.label}</div>
+                              <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 leading-snug">{field.description}</div>
                             </div>
                           </div>
                         );
@@ -2141,18 +2141,18 @@ ${organizerName || 'Organizer'}`;
                   </div>
 
                   {/* Section 2: Optional Submission Fields (Customizable) */}
-                  <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                  <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] space-y-3">
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="flex items-center gap-2">
-                          <label className="text-xs font-bold text-slate-800">
+                          <label className="text-xs font-bold text-slate-800 dark:text-white">
                             Optional Submission Fields
                           </label>
-                          <span className="px-2 py-0.5 rounded-md bg-slate-200 text-slate-700 text-[10px] font-bold uppercase">
+                          <span className="px-2 py-0.5 rounded-md bg-slate-200 dark:bg-white/[0.08] text-slate-700 dark:text-slate-300 text-[10px] font-bold uppercase">
                             Optional
                           </span>
                         </div>
-                        <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                           Toggle which optional materials participants can submit to support their projects.
                         </p>
                       </div>
@@ -2161,14 +2161,14 @@ ${organizerName || 'Organizer'}`;
                         <button
                           type="button"
                           onClick={() => setEnabledSubmissionFields(OPTIONAL_SUBMISSION_FIELDS.map((f) => f.id))}
-                          className="text-[10px] font-bold px-2 py-1 rounded-lg bg-sky-50 text-[#0099e6] hover:bg-sky-100 border border-sky-200 cursor-pointer"
+                          className="text-[10px] font-bold px-2 py-1 rounded-lg bg-sky-50 dark:bg-sky-950/40 text-[#0099e6] hover:bg-sky-100 dark:hover:bg-sky-900/50 border border-sky-200 dark:border-sky-800/50 cursor-pointer transition-colors"
                         >
                           Select All
                         </button>
                         <button
                           type="button"
                           onClick={() => setEnabledSubmissionFields([])}
-                          className="text-[10px] font-bold px-2 py-1 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer"
+                          className="text-[10px] font-bold px-2 py-1 rounded-lg bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/[0.1] cursor-pointer transition-colors"
                         >
                           Deselect All
                         </button>
@@ -2185,32 +2185,32 @@ ${organizerName || 'Organizer'}`;
                             type="button"
                             onClick={() => toggleSubmissionField(field.id)}
                             className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-3 ${isEnabled
-                                ? 'bg-white border-[#0099e6] shadow-xs ring-1 ring-[#0099e6]/20'
-                                : 'bg-slate-100/60 border-slate-200 hover:border-slate-300 opacity-60'
+                                ? 'bg-white dark:bg-[#121824] border-[#0099e6] shadow-xs ring-1 ring-[#0099e6]/20'
+                                : 'bg-slate-100/60 dark:bg-white/[0.02] border-slate-200 dark:border-white/[0.06] hover:border-slate-300 dark:hover:border-white/[0.12] opacity-60'
                               }`}
                           >
                             <div className="flex items-center gap-3 min-w-0">
                               <div
-                                className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isEnabled ? 'bg-sky-50 text-[#0099e6]' : 'bg-slate-200 text-slate-500'
+                                className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isEnabled ? 'bg-sky-50 dark:bg-sky-950/50 text-[#0099e6]' : 'bg-slate-200 dark:bg-white/[0.08] text-slate-500 dark:text-slate-400'
                                   }`}
                               >
                                 <Icon className="w-4 h-4" />
                               </div>
                               <div className="min-w-0">
                                 <div className="flex items-center gap-2">
-                                  <span className="text-xs font-bold text-slate-900 truncate">{field.label}</span>
-                                  <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 text-[9px] font-bold uppercase border border-slate-200">
+                                  <span className="text-xs font-bold text-slate-900 dark:text-white truncate">{field.label}</span>
+                                  <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/[0.06] text-slate-500 dark:text-slate-400 text-[9px] font-bold uppercase border border-slate-200 dark:border-white/[0.08]">
                                     Optional
                                   </span>
                                 </div>
-                                <div className="text-[10px] text-slate-400 truncate mt-0.5">{field.hint}</div>
+                                <div className="text-[10px] text-slate-400 dark:text-slate-500 truncate mt-0.5">{field.hint}</div>
                               </div>
                             </div>
 
                             <div
                               className={`w-5 h-5 rounded-lg flex items-center justify-center shrink-0 border transition-all ${isEnabled
                                   ? 'bg-[#0099e6] border-[#0099e6] text-white shadow-2xs'
-                                  : 'border-slate-300 bg-white'
+                                  : 'border-slate-300 dark:border-white/[0.15] bg-white dark:bg-transparent'
                                 }`}
                             >
                               {isEnabled && <Check className="w-3.5 h-3.5 stroke-[3]" />}
@@ -2223,7 +2223,7 @@ ${organizerName || 'Organizer'}`;
 
                   {/* Section 3: Submission Guidelines */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                       <FileText className="w-3.5 h-3.5 text-[#0099e6]" />
                       <span>Submission Guidelines & Judging Criteria for Participants</span>
                     </label>
@@ -2232,9 +2232,9 @@ ${organizerName || 'Organizer'}`;
                       value={submissionGuidelines}
                       onChange={(e) => setSubmissionGuidelines(e.target.value)}
                       placeholder="e.g. Ensure all GitHub repositories are public during judging. Video walkthroughs must be within 3 minutes..."
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 outline-none resize-none leading-relaxed"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] dark:focus:border-[#0099e6] rounded-xl text-xs text-slate-900 dark:text-white outline-none resize-none leading-relaxed"
                     />
-                    <p className="text-[10px] text-slate-400">
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500">
                       These instructions will be displayed at the top of the participant project submission modal.
                     </p>
                   </div>
@@ -2244,7 +2244,7 @@ ${organizerName || 'Organizer'}`;
                     <button
                       type="button"
                       onClick={goBack}
-                      className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                      className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
                     >
                       <ArrowLeft className="w-3.5 h-3.5" /> <span>Back</span>
                     </button>
@@ -2262,7 +2262,7 @@ ${organizerName || 'Organizer'}`;
               {/* ═══ STEP 7: Review & Publish ═══════════════════════ */}
               {step === 7 && (
                 <div className="space-y-4 animate-in fade-in">
-                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <Eye className="w-4 h-4 text-[#0099e6]" />
                     <span>Review & Publish</span>
                   </h3>
@@ -2270,50 +2270,50 @@ ${organizerName || 'Organizer'}`;
                   {/* Summary Sections */}
                   <div className="space-y-3">
                     {/* Basic Info Summary */}
-                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-700">Basic Info</span>
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Basic Info</span>
                         <button type="button" onClick={() => setStep(1)} className="text-[10px] text-[#0099e6] font-bold cursor-pointer hover:underline">Edit</button>
                       </div>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                        <div><span className="text-slate-500">Name:</span> <span className="font-semibold text-slate-900">{title || '—'}</span></div>
-                        <div><span className="text-slate-500">Organizer:</span> <span className="font-semibold text-slate-900">{hostType === 'COLLEGE' ? '🎓 ' : '🏢 '}{organizerName || '—'}</span></div>
-                        <div><span className="text-slate-500">Format:</span> <span className="font-semibold text-slate-900">{eventType}</span></div>
-                        <div><span className="text-slate-500">Category:</span> <span className="font-semibold text-slate-900">{category}</span></div>
-                        {tagline && <div className="col-span-2"><span className="text-slate-500">Tagline:</span> <span className="font-semibold text-slate-900">{tagline}</span></div>}
+                        <div><span className="text-slate-500 dark:text-slate-400">Name:</span> <span className="font-semibold text-slate-900 dark:text-white">{title || '—'}</span></div>
+                        <div><span className="text-slate-500 dark:text-slate-400">Organizer:</span> <span className="font-semibold text-slate-900 dark:text-white">{hostType === 'COLLEGE' ? '🎓 ' : '🏢 '}{organizerName || '—'}</span></div>
+                        <div><span className="text-slate-500 dark:text-slate-400">Format:</span> <span className="font-semibold text-slate-900 dark:text-white">{eventType}</span></div>
+                        <div><span className="text-slate-500 dark:text-slate-400">Category:</span> <span className="font-semibold text-slate-900 dark:text-white">{category}</span></div>
+                        {tagline && <div className="col-span-2"><span className="text-slate-500 dark:text-slate-400">Tagline:</span> <span className="font-semibold text-slate-900 dark:text-white">{tagline}</span></div>}
                       </div>
                     </div>
 
                     {/* Dates Summary */}
-                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-700">Dates & Schedule</span>
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Dates & Schedule</span>
                         <button type="button" onClick={() => setStep(2)} className="text-[10px] text-[#0099e6] font-bold cursor-pointer hover:underline">Edit</button>
                       </div>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                        <div><span className="text-slate-500">Reg. Opens:</span> <span className="font-semibold text-slate-900">{registrationStart || '—'}</span></div>
-                        <div><span className="text-slate-500">Reg. Deadline:</span> <span className="font-semibold text-slate-900">{registrationDeadline || '—'}</span></div>
-                        <div><span className="text-slate-500">Hack Start:</span> <span className="font-semibold text-slate-900">{startDate || '—'}</span></div>
-                        <div><span className="text-slate-500">Hack End:</span> <span className="font-semibold text-slate-900">{endDate || '—'}</span></div>
-                        <div><span className="text-slate-500">Timezone:</span> <span className="font-semibold text-slate-900">{timezone}</span></div>
+                        <div><span className="text-slate-500 dark:text-slate-400">Reg. Opens:</span> <span className="font-semibold text-slate-900 dark:text-white">{registrationStart || '—'}</span></div>
+                        <div><span className="text-slate-500 dark:text-slate-400">Reg. Deadline:</span> <span className="font-semibold text-slate-900 dark:text-white">{registrationDeadline || '—'}</span></div>
+                        <div><span className="text-slate-500 dark:text-slate-400">Hack Start:</span> <span className="font-semibold text-slate-900 dark:text-white">{startDate || '—'}</span></div>
+                        <div><span className="text-slate-500 dark:text-slate-400">Hack End:</span> <span className="font-semibold text-slate-900 dark:text-white">{endDate || '—'}</span></div>
+                        <div><span className="text-slate-500 dark:text-slate-400">Timezone:</span> <span className="font-semibold text-slate-900 dark:text-white">{timezone}</span></div>
                       </div>
                     </div>
 
                     {/* Details Summary */}
-                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-700">Details</span>
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Details</span>
                         <button type="button" onClick={() => setStep(3)} className="text-[10px] text-[#0099e6] font-bold cursor-pointer hover:underline">Edit</button>
                       </div>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                        <div><span className="text-slate-500">Team Size:</span> <span className="font-semibold text-slate-900">{minTeamSize}–{maxTeamSize}</span></div>
-                        <div><span className="text-slate-500">Difficulty:</span> <span className="font-semibold text-slate-900">{DIFFICULTY_LEVELS.find((d) => d.value === difficulty)?.label || difficulty}</span></div>
-                        <div className="col-span-2"><span className="text-slate-500">Tags:</span> <span className="font-semibold text-slate-900">{tagsInput || '—'}</span></div>
+                        <div><span className="text-slate-500 dark:text-slate-400">Team Size:</span> <span className="font-semibold text-slate-900 dark:text-white">{minTeamSize}–{maxTeamSize}</span></div>
+                        <div><span className="text-slate-500 dark:text-slate-400">Difficulty:</span> <span className="font-semibold text-slate-900 dark:text-white">{DIFFICULTY_LEVELS.find((d) => d.value === difficulty)?.label || difficulty}</span></div>
+                        <div className="col-span-2"><span className="text-slate-500 dark:text-slate-400">Tags:</span> <span className="font-semibold text-slate-900 dark:text-white">{tagsInput || '—'}</span></div>
                       </div>
                     </div>
 
                     {/* Prizes Summary */}
-                    <div className="p-4 rounded-2xl bg-orange-50 border border-orange-200 space-y-2">
+                    <div className="p-4 rounded-2xl bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800/40 space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-[#ea580c]">Prizes — {currencySymbol}{totalPrize.toLocaleString('en-IN')} Total ({currency})</span>
                         <button type="button" onClick={() => setStep(4)} className="text-[10px] text-[#0099e6] font-bold cursor-pointer hover:underline">Edit</button>
@@ -2321,7 +2321,7 @@ ${organizerName || 'Organizer'}`;
                       <div className="space-y-1">
                         {prizes.map((p, i) => (
                           <div key={i} className="text-xs flex justify-between">
-                            <span className="text-slate-700 font-medium">{p.position}</span>
+                            <span className="text-slate-700 dark:text-slate-300 font-medium">{p.position}</span>
                             <span className="font-mono font-bold text-[#ea580c]">{currencySymbol}{Number(p.amount).toLocaleString('en-IN')}</span>
                           </div>
                         ))}
@@ -2329,23 +2329,23 @@ ${organizerName || 'Organizer'}`;
                     </div>
 
                     {/* Registration Settings Summary */}
-                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-700">Registration Settings</span>
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Registration Settings</span>
                         <button type="button" onClick={() => setStep(5)} className="text-[10px] text-[#0099e6] font-bold cursor-pointer hover:underline">Edit</button>
                       </div>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                        <div><span className="text-slate-500">Type:</span> <span className={`font-semibold ${registrationType === 'PAID' ? 'text-[#ea580c]' : 'text-slate-900'}`}>{registrationType === 'PAID' ? `Paid Entry (${currencySymbol}${Number(entryFee || 0).toLocaleString('en-IN')} ${currency})` : 'Free Entry'}</span></div>
-                        <div><span className="text-slate-500">Capacity:</span> <span className="font-semibold text-slate-900">{isUnlimitedCapacity || !registrationCapacity ? '♾️ Unlimited' : `${registrationCapacity} Participants`}</span></div>
-                        <div><span className="text-slate-500">Approval:</span> <span className="font-semibold text-slate-900">🔒 Manual (Default)</span></div>
-                        <div><span className="text-slate-500">Custom Q&apos;s:</span> <span className="font-semibold text-slate-900">{customQuestions.length}</span></div>
+                        <div><span className="text-slate-500 dark:text-slate-400">Type:</span> <span className={`font-semibold ${registrationType === 'PAID' ? 'text-[#ea580c]' : 'text-slate-900 dark:text-white'}`}>{registrationType === 'PAID' ? `Paid Entry (${currencySymbol}${Number(entryFee || 0).toLocaleString('en-IN')} ${currency})` : 'Free Entry'}</span></div>
+                        <div><span className="text-slate-500 dark:text-slate-400">Capacity:</span> <span className="font-semibold text-slate-900 dark:text-white">{isUnlimitedCapacity || !registrationCapacity ? '♾️ Unlimited' : `${registrationCapacity} Participants`}</span></div>
+                        <div><span className="text-slate-500 dark:text-slate-400">Approval:</span> <span className="font-semibold text-slate-900 dark:text-white">🔒 Manual (Default)</span></div>
+                        <div><span className="text-slate-500 dark:text-slate-400">Custom Q&apos;s:</span> <span className="font-semibold text-slate-900 dark:text-white">{customQuestions.length}</span></div>
                       </div>
                     </div>
 
                     {/* Project Submission Requirements Summary */}
-                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                           <Rocket className="w-3.5 h-3.5 text-[#0099e6]" />
                           <span>Submission Requirements</span>
                         </span>
@@ -2353,24 +2353,24 @@ ${organizerName || 'Organizer'}`;
                       </div>
                       <div className="space-y-1.5 text-xs">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-[10px] font-bold text-slate-500 uppercase">Required:</span>
-                          <span className="px-2 py-0.5 rounded-md bg-rose-50 border border-rose-200 text-rose-600 font-bold text-[10px]">Project Title *</span>
-                          <span className="px-2 py-0.5 rounded-md bg-rose-50 border border-rose-200 text-rose-600 font-bold text-[10px]">Project Description *</span>
-                          <span className="px-2 py-0.5 rounded-md bg-rose-50 border border-rose-200 text-rose-600 font-bold text-[10px]">Project / GitHub Link *</span>
+                          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Required:</span>
+                          <span className="px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/40 text-rose-600 dark:text-rose-400 font-bold text-[10px]">Project Title *</span>
+                          <span className="px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/40 text-rose-600 dark:text-rose-400 font-bold text-[10px]">Project Description *</span>
+                          <span className="px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/40 text-rose-600 dark:text-rose-400 font-bold text-[10px]">Project / GitHub Link *</span>
                         </div>
                         <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                          <span className="text-[10px] font-bold text-slate-500 uppercase">Optional:</span>
+                          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Optional:</span>
                           {enabledSubmissionFields.length > 0 ? (
                             enabledSubmissionFields.map((fId) => {
                               const field = OPTIONAL_SUBMISSION_FIELDS.find((f) => f.id === fId);
                               return field ? (
-                                <span key={fId} className="px-2 py-0.5 rounded-md bg-slate-200 text-slate-700 font-bold text-[10px]">
+                                <span key={fId} className="px-2 py-0.5 rounded-md bg-slate-200 dark:bg-white/[0.08] text-slate-700 dark:text-slate-300 font-bold text-[10px]">
                                   {field.label}
                                 </span>
                               ) : null;
                             })
                           ) : (
-                            <span className="text-[10px] text-slate-400 italic">None enabled</span>
+                            <span className="text-[10px] text-slate-400 dark:text-slate-500 italic">None enabled</span>
                           )}
                         </div>
                       </div>
@@ -2378,18 +2378,18 @@ ${organizerName || 'Organizer'}`;
                   </div>
 
                   {/* Approval Notice & Email Draft Preview */}
-                  <div className="p-3.5 rounded-2xl bg-sky-50/70 border border-sky-200/80 flex items-center justify-between flex-wrap gap-2 text-xs">
-                    <div className="flex items-center gap-2 text-slate-700">
+                  <div className="p-3.5 rounded-2xl bg-sky-50/70 dark:bg-sky-950/30 border border-sky-200/80 dark:border-sky-800/40 flex items-center justify-between flex-wrap gap-2 text-xs">
+                    <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
                       <Mail className="w-4 h-4 text-[#0099e6] shrink-0" />
                       <span className="font-medium">
-                        On submit, an approval request is dispatched to <strong className="text-slate-900">hackerunity.community@gmail.com</strong>
+                        On submit, an approval request is dispatched to <strong className="text-slate-900 dark:text-white">hackerunity.community@gmail.com</strong>
                       </span>
                     </div>
                     <a
                       href={gmailDraftUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-3 py-1.5 rounded-xl bg-white border border-sky-200 hover:bg-sky-50 text-[#0099e6] text-[11px] font-bold flex items-center gap-1.5 shadow-2xs cursor-pointer transition-colors"
+                      className="px-3 py-1.5 rounded-xl bg-white dark:bg-[#121824] border border-sky-200 dark:border-sky-800/50 hover:bg-sky-50 dark:hover:bg-sky-950/40 text-[#0099e6] text-[11px] font-bold flex items-center gap-1.5 shadow-2xs cursor-pointer transition-colors"
                     >
                       <Mail className="w-3.5 h-3.5 text-red-600" />
                       <span>Preview Gmail Draft</span>
@@ -2399,13 +2399,13 @@ ${organizerName || 'Organizer'}`;
 
                   {/* Action Buttons */}
                   <div className="pt-4 flex flex-wrap gap-3">
-                    <button type="button" onClick={goBack} className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer">
+                    <button type="button" onClick={goBack} className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors">
                       <ArrowLeft className="w-3.5 h-3.5" /> <span>Back</span>
                     </button>
-                    <button type="button" onClick={handleSaveDraft} className="px-4 py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs">
+                    <button type="button" onClick={handleSaveDraft} className="px-4 py-2.5 rounded-xl bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] hover:bg-slate-50 dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors">
                       <Save className="w-3.5 h-3.5" /> <span>Save Draft</span>
                     </button>
-                    <button type="button" onClick={handlePreview} className="px-4 py-2.5 rounded-xl bg-white border border-[#0099e6] hover:bg-sky-50 text-[#0099e6] text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs">
+                    <button type="button" onClick={handlePreview} className="px-4 py-2.5 rounded-xl bg-white dark:bg-[#121824] border border-[#0099e6] hover:bg-sky-50 dark:hover:bg-sky-950/30 text-[#0099e6] text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors">
                       <Eye className="w-3.5 h-3.5" /> <span>Preview</span>
                     </button>
                     <button
@@ -2433,13 +2433,13 @@ ${organizerName || 'Organizer'}`;
 
           {/* Right Live Preview (5 cols) */}
           <div className="lg:col-span-5 space-y-4 lg:sticky lg:top-24">
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               <Eye className="w-4 h-4 text-[#0099e6]" />
               <span>Live Card Preview</span>
             </div>
 
             <HackathonCard event={previewEvent} />
-            <p className="text-[11px] text-slate-400 text-center font-medium">
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 text-center font-medium">
               This is how your hackathon will appear to 50,000+ builders worldwide.
             </p>
           </div>

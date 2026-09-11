@@ -549,11 +549,11 @@ export default function DashboardPage() {
   if (!loading && !user) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-20 text-center flex-1 flex flex-col items-center justify-center">
-        <div className="w-20 h-20 rounded-3xl bg-sky-50 border border-sky-200 flex items-center justify-center text-[#0099e6] mb-6 shadow-sm">
+        <div className="w-20 h-20 rounded-3xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/50 flex items-center justify-center text-[#0099e6] mb-6 shadow-sm">
           <Shield className="w-10 h-10" />
         </div>
-        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Hacker Dashboard</h1>
-        <p className="text-sm text-slate-500 mt-2 max-w-md">
+        <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Hacker Dashboard</h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-md">
           Sign in or create an account to view your hackathons, hosted events, and analytics.
         </p>
         <div className="mt-8 flex items-center gap-4">
@@ -565,7 +565,7 @@ export default function DashboardPage() {
           </button>
           <Link
             href="/"
-            className="px-6 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors"
+            className="px-6 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors"
           >
             Back to Home
           </Link>
@@ -588,14 +588,14 @@ export default function DashboardPage() {
       {/* ─── Top Dashboard Header ────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 text-[#0099e6] text-[11px] font-bold uppercase tracking-wider mb-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/50 text-[#0099e6] text-[11px] font-bold uppercase tracking-wider mb-2">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Realtime Builder Dashboard</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             My Dashboard & Workspaces
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">
             Monitor real-time participation velocity, manage registrations, and inspect hosted hackathons.
           </p>
         </div>
@@ -604,7 +604,7 @@ export default function DashboardPage() {
           <button
             type="button"
             onClick={() => setShowPublicProfileModal(true)}
-            className="px-4 py-2.5 rounded-2xl bg-sky-50 hover:bg-sky-100 text-[#0099e6] border border-sky-200 text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+            className="px-4 py-2.5 rounded-2xl bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/40 dark:hover:bg-sky-900/50 text-[#0099e6] border border-sky-200 dark:border-sky-800/50 text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
           >
             <Eye className="w-4 h-4" />
             <span>Public Profile</span>
@@ -612,7 +612,7 @@ export default function DashboardPage() {
           <Link
             href="/settings"
             prefetch={false}
-            className="px-4 py-2.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all"
+            className="px-4 py-2.5 rounded-2xl bg-white hover:bg-slate-50 dark:bg-[#0c1017] dark:hover:bg-white/[0.04] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/[0.08] text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all"
           >
             <Settings className="w-4 h-4 text-[#0099e6]" />
             <span>Settings</span>
@@ -631,9 +631,9 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* ═══ LEFT SIDEBAR (4 cols) ═══ */}
         <aside className="lg:col-span-4 space-y-4">
-          <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-2 sticky top-24">
+          <div className="p-5 rounded-3xl bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-white/[0.08] shadow-sm space-y-2 sticky top-24">
             {/* User Mini Profile Badge */}
-            <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-sky-50/70 border border-sky-100 mb-4">
+            <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-sky-50/70 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-800/30 mb-4">
               <div className="w-12 h-12 rounded-2xl bg-[#0099e6] text-white flex items-center justify-center font-black text-lg shadow-sm shrink-0 overflow-hidden">
                 {user?.avatarUrl && user.avatarUrl.startsWith('http') ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
@@ -643,8 +643,8 @@ export default function DashboardPage() {
                 )}
               </div>
               <div className="overflow-hidden flex-1">
-                <div className="font-extrabold text-sm text-slate-900 truncate">{user?.name || 'Hacker'}</div>
-                <div className="text-[11px] text-slate-500 font-mono truncate">{user?.email}</div>
+                <div className="font-extrabold text-sm text-slate-900 dark:text-white truncate">{user?.name || 'Hacker'}</div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono truncate">{user?.email}</div>
               </div>
             </div>
 
@@ -653,7 +653,7 @@ export default function DashboardPage() {
               onClick={() => setActiveTab('overview')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${activeTab === 'overview'
                   ? 'bg-[#0099e6] text-white shadow-xs'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/[0.04] hover:text-slate-900 dark:hover:text-white'
                 }`}
             >
               <BarChart3 className="w-4 h-4 shrink-0" />
@@ -670,7 +670,7 @@ export default function DashboardPage() {
               onClick={() => setActiveTab('participations')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${activeTab === 'participations'
                   ? 'bg-[#0099e6] text-white shadow-xs'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/[0.04] hover:text-slate-900 dark:hover:text-white'
                 }`}
             >
               <Trophy className="w-4 h-4 shrink-0" />
@@ -680,7 +680,7 @@ export default function DashboardPage() {
                   <span
                     className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${activeTab === 'participations'
                         ? 'bg-white text-[#0099e6]'
-                        : 'bg-sky-50 text-[#0099e6] border border-sky-200'
+                        : 'bg-sky-50 dark:bg-sky-950/40 text-[#0099e6] border border-sky-200 dark:border-sky-800/40'
                       }`}
                   >
                     {registrations.length}
@@ -697,7 +697,7 @@ export default function DashboardPage() {
               onClick={() => setActiveTab('organizing')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${activeTab === 'organizing'
                   ? 'bg-[#0099e6] text-white shadow-xs'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/[0.04] hover:text-slate-900 dark:hover:text-white'
                 }`}
             >
               <Layers className="w-4 h-4 shrink-0" />
@@ -707,7 +707,7 @@ export default function DashboardPage() {
                   <span
                     className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${activeTab === 'organizing'
                         ? 'bg-white text-[#0099e6]'
-                        : 'bg-orange-50 text-[#ea580c] border border-orange-200'
+                        : 'bg-orange-50 dark:bg-orange-950/40 text-[#ea580c] border border-orange-200 dark:border-orange-800/40'
                       }`}
                   >
                     {myHostedEvents.length}
@@ -724,7 +724,7 @@ export default function DashboardPage() {
               onClick={() => setActiveTab('bookmarks')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${activeTab === 'bookmarks'
                   ? 'bg-[#0099e6] text-white shadow-xs'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/[0.04] hover:text-slate-900 dark:hover:text-white'
                 }`}
             >
               <Bookmark className="w-4 h-4 shrink-0" />
@@ -734,7 +734,7 @@ export default function DashboardPage() {
                   <span
                     className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${activeTab === 'bookmarks'
                         ? 'bg-white text-[#0099e6]'
-                        : 'bg-slate-100 text-slate-600'
+                        : 'bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-slate-300'
                       }`}
                   >
                     {bookmarkedEvents.length}
@@ -746,16 +746,14 @@ export default function DashboardPage() {
               </div>
             </button>
 
-
-
             {/* Admin Broadcast Studio Quick Link (for Admins & Organizers) */}
             {(user?.role === UserRole.ADMIN ||
               user?.role === UserRole.SUPER_ADMIN ||
               user?.role === UserRole.ORGANIZER) && (
-                <div className="pt-2 border-t border-slate-100 mt-2">
+                <div className="pt-2 border-t border-slate-100 dark:border-white/[0.08] mt-2">
                   <Link
                     href="/admin/notifications"
-                    className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-2xl text-xs font-bold text-[#0099e6] bg-sky-50/70 hover:bg-sky-100 transition-colors"
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-2xl text-xs font-bold text-[#0099e6] bg-sky-50/70 hover:bg-sky-100 dark:bg-sky-950/30 dark:hover:bg-sky-900/40 transition-colors"
                   >
                     <Megaphone className="w-4 h-4 text-[#0099e6]" />
                     <span>Broadcast & News Studio</span>
@@ -775,23 +773,23 @@ export default function DashboardPage() {
               {/* Analytics KPI Strip */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {/* Total Builders */}
-                <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+                <div className="p-5 rounded-3xl bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-white/[0.08] shadow-sm relative overflow-hidden flex flex-col justify-between">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Builders</span>
-                    <div className="w-8 h-8 rounded-xl bg-sky-50 text-[#0099e6] flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-xl bg-sky-50 dark:bg-sky-950/40 text-[#0099e6] flex items-center justify-center">
                       <Users className="w-4 h-4" />
                     </div>
                   </div>
                   <div className="mt-3">
                     <div className="text-2xl sm:text-3xl font-black text-[#0099e6] font-mono">
                       {statsLoading ? (
-                        <span className="inline-block w-20 h-8 rounded-lg bg-sky-50 animate-pulse" />
+                        <span className="inline-block w-20 h-8 rounded-lg bg-sky-50 dark:bg-sky-950/40 animate-pulse" />
                       ) : statsError ? (
-                        <span className="text-slate-300">—</span>
+                        <span className="text-slate-300 dark:text-slate-600">—</span>
                       ) : (
                         <>{(dashStats?.totalBuilders ?? 0).toLocaleString()}</>)}
                     </div>
-                    <div className="flex items-center gap-1 mt-1 text-[10px] font-bold text-emerald-600">
+                    <div className="flex items-center gap-1 mt-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
                       <TrendingUp className="w-3 h-3" />
                       <span>Live Synced</span>
                     </div>
@@ -799,72 +797,72 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Live Arenas */}
-                <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+                <div className="p-5 rounded-3xl bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-white/[0.08] shadow-sm relative overflow-hidden flex flex-col justify-between">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Live Arenas</span>
-                    <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                       <Zap className="w-4 h-4" />
                     </div>
                   </div>
                   <div className="mt-3">
-                    <div className="text-2xl sm:text-3xl font-black text-emerald-600 font-mono">
+                    <div className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
                       {statsLoading ? (
-                        <span className="inline-block w-12 h-8 rounded-lg bg-emerald-50 animate-pulse" />
+                        <span className="inline-block w-12 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 animate-pulse" />
                       ) : statsError ? (
-                        <span className="text-slate-300">—</span>
+                        <span className="text-slate-300 dark:text-slate-600">—</span>
                       ) : (
                         <>{dashStats?.liveArenas ?? 0}</>
                       )}
                     </div>
-                    <div className="flex items-center gap-1 mt-1 text-[10px] font-bold text-slate-500">
+                    <div className="flex items-center gap-1 mt-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
                       <span>Open for registration</span>
                     </div>
                   </div>
                 </div>
 
                 {/* My Registered */}
-                <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+                <div className="p-5 rounded-3xl bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-white/[0.08] shadow-sm relative overflow-hidden flex flex-col justify-between">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">My Registered</span>
-                    <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center">
                       <Trophy className="w-4 h-4" />
                     </div>
                   </div>
                   <div className="mt-3">
-                    <div className="text-2xl sm:text-3xl font-black text-purple-600 font-mono">
+                    <div className="text-2xl sm:text-3xl font-black text-purple-600 dark:text-purple-400 font-mono">
                       {statsLoading ? (
-                        <span className="inline-block w-12 h-8 rounded-lg bg-purple-50 animate-pulse" />
+                        <span className="inline-block w-12 h-8 rounded-lg bg-purple-50 dark:bg-purple-950/40 animate-pulse" />
                       ) : statsError ? (
-                        <span className="text-slate-300">—</span>
+                        <span className="text-slate-300 dark:text-slate-600">—</span>
                       ) : (
                         <>{dashStats?.myRegistered ?? 0}</>
                       )}
                     </div>
-                    <div className="flex items-center gap-1 mt-1 text-[10px] font-bold text-purple-700">
+                    <div className="flex items-center gap-1 mt-1 text-[10px] font-bold text-purple-700 dark:text-purple-300">
                       <span>Active events</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Prize Pool */}
-                <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+                <div className="p-5 rounded-3xl bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-white/[0.08] shadow-sm relative overflow-hidden flex flex-col justify-between">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Prize Pool</span>
-                    <div className="w-8 h-8 rounded-xl bg-orange-50 text-[#ea580c] flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-xl bg-orange-50 dark:bg-orange-950/40 text-[#ea580c] flex items-center justify-center">
                       <Trophy className="w-4 h-4" />
                     </div>
                   </div>
                   <div className="mt-3">
                     <div className="text-2xl sm:text-3xl font-black text-[#ea580c] font-mono truncate" title={statsLoading ? '' : formatCurrency(dashStats?.totalPrizePool ?? 0)}>
                       {statsLoading ? (
-                        <span className="inline-block w-24 h-8 rounded-lg bg-orange-50 animate-pulse" />
+                        <span className="inline-block w-24 h-8 rounded-lg bg-orange-50 dark:bg-orange-950/40 animate-pulse" />
                       ) : statsError ? (
-                        <span className="text-slate-300">—</span>
+                        <span className="text-slate-300 dark:text-slate-600">—</span>
                       ) : (
                         <>{formatCurrency(dashStats?.totalPrizePool ?? 0)}</>
                       )}
                     </div>
-                    <div className="flex items-center gap-1 mt-1 text-[10px] font-bold text-orange-600">
+                    <div className="flex items-center gap-1 mt-1 text-[10px] font-bold text-orange-600 dark:text-orange-400">
                       <span>Verified Bounties</span>
                     </div>
                   </div>
@@ -874,25 +872,25 @@ export default function DashboardPage() {
               {/* Trajectory & Domain Deep-Dive */}
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                 {/* Chart: Growth Curve */}
-                <div className="md:col-span-7 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between">
+                <div className="md:col-span-7 bg-white dark:bg-[#0c1017] p-6 rounded-3xl border border-slate-200 dark:border-white/[0.08] shadow-sm space-y-4 flex flex-col justify-between">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <div>
                       <div className="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#0099e6] uppercase tracking-wider">
                         <TrendingUp className="w-3 h-3" />
                         <span>Registration Velocity</span>
                       </div>
-                      <h3 className="text-base font-black text-slate-900 mt-0.5">Platform Trajectory</h3>
+                      <h3 className="text-base font-black text-slate-900 dark:text-white mt-0.5">Platform Trajectory</h3>
                     </div>
                     <div className="flex items-center gap-2">
                       {/* Time Range Selector */}
-                      <div className="flex items-center gap-1 bg-slate-50 rounded-xl p-0.5 border border-slate-200">
+                      <div className="flex items-center gap-1 bg-slate-50 dark:bg-white/[0.03] rounded-xl p-0.5 border border-slate-200 dark:border-white/[0.08]">
                         {rangeOptions.map((opt) => (
                           <button
                             key={opt.days}
                             onClick={() => setTrajectoryRange(opt.days)}
                             className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${trajectoryRange === opt.days
                                 ? 'bg-[#0099e6] text-white shadow-xs'
-                                : 'text-slate-500 hover:text-slate-800 hover:bg-white'
+                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-white dark:hover:bg-white/[0.06]'
                               }`}
                           >
                             {opt.label}
@@ -901,16 +899,16 @@ export default function DashboardPage() {
                       </div>
                       {/* Growth Badge */}
                       {statsLoading ? (
-                        <span className="inline-block w-20 h-6 rounded-full bg-slate-50 animate-pulse" />
+                        <span className="inline-block w-20 h-6 rounded-full bg-slate-50 dark:bg-white/[0.03] animate-pulse" />
                       ) : dashStats?.trajectory?.growthPercent != null ? (
                         <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${dashStats.trajectory.growthPercent >= 0
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                            : 'bg-rose-50 text-rose-700 border-rose-200'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/40'
+                            : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/40'
                           }`}>
                           {dashStats.trajectory.growthPercent >= 0 ? '+' : ''}{dashStats.trajectory.growthPercent}% Growth
                         </span>
                       ) : (
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-50 text-slate-400 border border-slate-200">
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-50 dark:bg-white/[0.03] text-slate-400 border border-slate-200 dark:border-white/[0.08]">
                           Not enough data
                         </span>
                       )}
@@ -919,7 +917,7 @@ export default function DashboardPage() {
 
                   <div className="h-36 w-full relative">
                     {statsLoading ? (
-                      <div className="w-full h-full rounded-2xl bg-slate-50 animate-pulse" />
+                      <div className="w-full h-full rounded-2xl bg-slate-50 dark:bg-white/[0.03] animate-pulse" />
                     ) : trajectoryPoints.length > 1 ? (
                       <svg className="w-full h-full overflow-visible" viewBox="0 0 540 160" preserveAspectRatio="none">
                         <defs>
@@ -956,12 +954,12 @@ export default function DashboardPage() {
                   </div>
 
                   {trajectoryPoints.length > 0 && (
-                    <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 border-t border-slate-100 pt-2">
+                    <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 border-t border-slate-100 dark:border-white/[0.08] pt-2">
                       {trajectoryPoints.map((pt, i) => (
                         <button
                           key={i}
                           onClick={() => setActiveChartPoint(i)}
-                          className={`transition-colors cursor-pointer flex flex-col items-center gap-0.5 ${activeChartPoint === i ? 'text-[#0099e6] font-extrabold' : 'hover:text-slate-700'
+                          className={`transition-colors cursor-pointer flex flex-col items-center gap-0.5 ${activeChartPoint === i ? 'text-[#0099e6] font-extrabold' : 'hover:text-slate-700 dark:hover:text-slate-200'
                             }`}
                         >
                           <span>{pt.label}</span>
@@ -975,10 +973,10 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Domain Distribution */}
-                <div className="md:col-span-5 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between">
+                <div className="md:col-span-5 bg-white dark:bg-[#0c1017] p-6 rounded-3xl border border-slate-200 dark:border-white/[0.08] shadow-sm space-y-4 flex flex-col justify-between">
                   <div>
                     <span className="text-[10px] font-bold text-[#0099e6] uppercase tracking-wider">Event Categories</span>
-                    <h3 className="text-base font-black text-slate-900 mt-0.5">Builder Domain Breakdown</h3>
+                    <h3 className="text-base font-black text-slate-900 dark:text-white mt-0.5">Builder Domain Breakdown</h3>
                   </div>
 
                   {statsLoading ? (
@@ -986,23 +984,23 @@ export default function DashboardPage() {
                       {[1, 2, 3, 4].map((i) => (
                         <div key={i} className="space-y-1.5">
                           <div className="flex items-center justify-between">
-                            <span className="inline-block w-28 h-3 rounded bg-slate-100 animate-pulse" />
-                            <span className="inline-block w-8 h-3 rounded bg-slate-100 animate-pulse" />
+                            <span className="inline-block w-28 h-3 rounded bg-slate-100 dark:bg-white/[0.06] animate-pulse" />
+                            <span className="inline-block w-8 h-3 rounded bg-slate-100 dark:bg-white/[0.06] animate-pulse" />
                           </div>
-                          <div className="h-2 w-full bg-slate-100 rounded-full" />
+                          <div className="h-2 w-full bg-slate-100 dark:bg-white/[0.06] rounded-full" />
                         </div>
                       ))}
                     </div>
                   ) : (dashStats?.domainBreakdown ?? []).length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-6 text-center">
-                      <Activity className="w-8 h-8 text-slate-300 mb-2" />
+                      <Activity className="w-8 h-8 text-slate-300 dark:text-slate-600 mb-2" />
                       <p className="text-xs text-slate-400 font-medium">No category data available yet</p>
                     </div>
                   ) : (
                     <div className="space-y-3">
                       {(dashStats?.domainBreakdown ?? []).map((item, idx) => (
                         <div key={item.category}>
-                          <div className="flex items-center justify-between text-xs font-bold text-slate-800 mb-1">
+                          <div className="flex items-center justify-between text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
                             <span className="flex items-center gap-1.5">
                               <span
                                 className="w-2 h-2 rounded-full"
@@ -1015,7 +1013,7 @@ export default function DashboardPage() {
                               <span>{item.percentage}%</span>
                             </span>
                           </div>
-                          <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                          <div className="h-2 w-full bg-slate-100 dark:bg-white/[0.06] rounded-full overflow-hidden">
                             <div
                               className="h-full rounded-full transition-all duration-500"
                               style={{ width: `${item.percentage}%`, backgroundColor: domainColors[idx % domainColors.length] }}
@@ -1026,7 +1024,7 @@ export default function DashboardPage() {
                     </div>
                   )}
 
-                  <div className="text-[11px] text-slate-400 font-medium text-center pt-2 border-t border-slate-100">
+                  <div className="text-[11px] text-slate-400 dark:text-slate-500 font-medium text-center pt-2 border-t border-slate-100 dark:border-white/[0.08]">
                     Realtime breakdown from database registrations
                   </div>
                 </div>
@@ -1036,17 +1034,17 @@ export default function DashboardPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div
                   onClick={() => setActiveTab('participations')}
-                  className="p-5 rounded-3xl bg-gradient-to-r from-sky-50 to-white border border-sky-200/80 shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center justify-between group"
+                  className="p-5 rounded-3xl bg-gradient-to-r from-sky-50 to-white dark:from-sky-950/20 dark:to-[#0c1017] border border-sky-200/80 dark:border-sky-800/30 shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center justify-between group"
                 >
                   <div className="flex items-center gap-3.5">
                     <div className="w-10 h-10 rounded-2xl bg-[#0099e6] text-white flex items-center justify-center shadow-xs">
                       <Trophy className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-black text-slate-900 group-hover:text-[#0099e6] transition-colors">
+                      <h4 className="text-sm font-black text-slate-900 dark:text-white group-hover:text-[#0099e6] transition-colors">
                         My Participations
                       </h4>
-                      <p className="text-[11px] text-slate-500 font-medium">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                         {dashStats?.participationSummary?.total ?? registrations.length} registered arena{(dashStats?.participationSummary?.total ?? registrations.length) !== 1 ? 's' : ''}
                       </p>
                     </div>
@@ -1056,17 +1054,17 @@ export default function DashboardPage() {
 
                 <div
                   onClick={() => setActiveTab('organizing')}
-                  className="p-5 rounded-3xl bg-gradient-to-r from-orange-50 to-white border border-orange-200/80 shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center justify-between group"
+                  className="p-5 rounded-3xl bg-gradient-to-r from-orange-50 to-white dark:from-orange-950/20 dark:to-[#0c1017] border border-orange-200/80 dark:border-orange-800/30 shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center justify-between group"
                 >
                   <div className="flex items-center gap-3.5">
                     <div className="w-10 h-10 rounded-2xl bg-[#ea580c] text-white flex items-center justify-center shadow-xs">
                       <Layers className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-black text-slate-900 group-hover:text-[#ea580c] transition-colors">
+                      <h4 className="text-sm font-black text-slate-900 dark:text-white group-hover:text-[#ea580c] transition-colors">
                         My Hosted Events
                       </h4>
-                      <p className="text-[11px] text-slate-500 font-medium">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                         {myHostedEvents.length} managed hackathon{myHostedEvents.length !== 1 ? 's' : ''}
                       </p>
                     </div>
@@ -1081,21 +1079,21 @@ export default function DashboardPage() {
               2. SECTION: MY PARTICIPATIONS (Registered Events)
              ───────────────────────────────────────────────────────────── */}
           {activeTab === 'participations' && (
-            <div className="p-7 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6 animate-in fade-in duration-150">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div className="p-7 rounded-3xl bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-white/[0.08] shadow-sm space-y-6 animate-in fade-in duration-150">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-white/[0.08] pb-4">
                 <div>
-                  <h2 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                  <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
                     <Trophy className="w-5 h-5 text-[#0099e6]" />
                     <span>My Participations & Registrations</span>
                   </h2>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     All hackathons, coding tournaments, and arenas where you are participating.
                   </p>
                 </div>
 
                 <Link
                   href="/hackathons"
-                  className="px-4 py-2 rounded-2xl bg-sky-50 hover:bg-sky-100 text-[#0099e6] border border-sky-200 text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs shrink-0"
+                  className="px-4 py-2 rounded-2xl bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/40 dark:hover:bg-sky-900/50 text-[#0099e6] border border-sky-200 dark:border-sky-800/40 text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs shrink-0"
                 >
                   <Search className="w-3.5 h-3.5" />
                   <span>Find More Arenas</span>
@@ -1105,20 +1103,20 @@ export default function DashboardPage() {
               {/* Participation Summary Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
-                  { label: 'Total', value: dashStats?.participationSummary?.total ?? registrations.length, color: 'text-[#0099e6]', bg: 'bg-sky-50', border: 'border-sky-200' },
-                  { label: 'Upcoming', value: dashStats?.participationSummary?.upcoming ?? 0, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-200' },
-                  { label: 'Active', value: dashStats?.participationSummary?.active ?? 0, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' },
-                  { label: 'Completed', value: dashStats?.participationSummary?.completed ?? 0, color: 'text-slate-600', bg: 'bg-slate-50', border: 'border-slate-200' },
+                  { label: 'Total', value: dashStats?.participationSummary?.total ?? registrations.length, color: 'text-[#0099e6]', bg: 'bg-sky-50 dark:bg-sky-950/40', border: 'border-sky-200 dark:border-sky-800/40' },
+                  { label: 'Upcoming', value: dashStats?.participationSummary?.upcoming ?? 0, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-950/40', border: 'border-purple-200 dark:border-purple-800/40' },
+                  { label: 'Active', value: dashStats?.participationSummary?.active ?? 0, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/40', border: 'border-emerald-200 dark:border-emerald-800/40' },
+                  { label: 'Completed', value: dashStats?.participationSummary?.completed ?? 0, color: 'text-slate-600 dark:text-slate-300', bg: 'bg-slate-50 dark:bg-white/[0.03]', border: 'border-slate-200 dark:border-white/[0.08]' },
                 ].map((stat) => (
                   <div key={stat.label} className={`p-3.5 rounded-2xl ${stat.bg} border ${stat.border} flex flex-col items-center justify-center text-center`}>
                     <div className={`text-xl font-black font-mono ${stat.color}`}>
                       {statsLoading ? (
-                        <span className="inline-block w-8 h-6 rounded bg-white/60 animate-pulse" />
+                        <span className="inline-block w-8 h-6 rounded bg-white/60 dark:bg-white/20 animate-pulse" />
                       ) : (
                         stat.value
                       )}
                     </div>
-                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">{stat.label}</div>
+                    <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">{stat.label}</div>
                   </div>
                 ))}
               </div>
@@ -1132,7 +1130,7 @@ export default function DashboardPage() {
                       onClick={() => setPartFilter(filter)}
                       className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${partFilter === filter
                           ? 'bg-[#0099e6] text-white shadow-2xs'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          : 'bg-slate-100 dark:bg-white/[0.05] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/[0.1]'
                         }`}
                     >
                       {filter === 'ALL' ? 'All Participations' : filter === 'ACTIVE' ? 'Live / Upcoming' : 'Completed'}
@@ -1147,19 +1145,19 @@ export default function DashboardPage() {
                     value={partSearch}
                     onChange={(e) => setPartSearch(e.target.value)}
                     placeholder="Search registered events..."
-                    className="pl-8 pr-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0099e6] w-full sm:w-56"
+                    className="pl-8 pr-3 py-1.5 rounded-xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] text-xs font-medium text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#0099e6] w-full sm:w-56"
                   />
                 </div>
               </div>
 
               {/* Registrations List */}
               {filteredParticipations.length === 0 ? (
-                <div className="p-12 rounded-3xl bg-slate-50 border border-slate-200/80 text-center space-y-3">
-                  <div className="w-14 h-14 rounded-2xl bg-sky-50 text-[#0099e6] border border-sky-200 flex items-center justify-center mx-auto">
+                <div className="p-12 rounded-3xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.06] text-center space-y-3">
+                  <div className="w-14 h-14 rounded-2xl bg-sky-50 dark:bg-sky-950/40 text-[#0099e6] border border-sky-200 dark:border-sky-800/40 flex items-center justify-center mx-auto">
                     <Trophy className="w-7 h-7" />
                   </div>
-                  <h4 className="text-base font-black text-slate-900">No Registrations Found</h4>
-                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                  <h4 className="text-base font-black text-slate-900 dark:text-white">No Registrations Found</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
                     You haven&apos;t registered for any hackathons under this filter. Explore upcoming competitions to start building!
                   </p>
                   <Link
@@ -1176,38 +1174,38 @@ export default function DashboardPage() {
                     return (
                       <div
                         key={reg.eventId}
-                        className="p-5 rounded-3xl bg-white border border-slate-200 hover:border-[#0099e6]/40 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-4"
+                        className="p-5 rounded-3xl bg-white dark:bg-[#07090e] border border-slate-200 dark:border-white/[0.08] hover:border-[#0099e6]/40 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-4"
                       >
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
                               ✓ {reg.status || 'CONFIRMED'}
                             </span>
-                            <span className="text-[11px] text-slate-400 font-medium">
+                            <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
                               Registered: {formatDate(reg.registeredAt)}
                             </span>
                           </div>
 
                           <div>
-                            <h4 className="text-base font-black text-slate-900 line-clamp-1">
+                            <h4 className="text-base font-black text-slate-900 dark:text-white line-clamp-1">
                               {reg.eventName || matchedEvent?.title || 'Hackathon Arena'}
                             </h4>
                             {matchedEvent && (
-                              <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
                                 {matchedEvent.description}
                               </p>
                             )}
                           </div>
 
                           {/* Squad / Team Details */}
-                          <div className="p-3 rounded-2xl bg-sky-50/60 border border-sky-100 flex items-center justify-between">
+                          <div className="p-3 rounded-2xl bg-sky-50/60 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-800/30 flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <Users className="w-4 h-4 text-[#0099e6]" />
-                              <span className="text-xs font-bold text-slate-800">
+                              <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                                 {reg.teamName ? `Team: ${reg.teamName}` : 'Solo Builder'}
                               </span>
                             </div>
-                            <span className="text-[10px] text-slate-500 font-semibold">{reg.role}</span>
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">{reg.role}</span>
                           </div>
 
                           {/* Project Deliverable Status */}
@@ -1215,9 +1213,9 @@ export default function DashboardPage() {
                             const currentUid = supabaseUser?.id || user?.id;
                             const projectSub = getProjectSubmission(reg.eventId, currentUid);
                             return (
-                              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2.5">
+                              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] space-y-2.5">
                                 <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
                                     <Rocket className="w-3.5 h-3.5 text-[#0099e6]" />
                                     <span>Project Deliverable</span>
                                   </div>
@@ -1233,7 +1231,7 @@ export default function DashboardPage() {
                                       ✓ {projectSub.status || 'Submitted'}
                                     </span>
                                   ) : (
-                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40">
                                       Pending Submission
                                     </span>
                                   )}
@@ -1241,7 +1239,7 @@ export default function DashboardPage() {
 
                                 {projectSub ? (
                                   <div className="space-y-1.5">
-                                    <div className="text-xs font-black text-slate-900 line-clamp-1">
+                                    <div className="text-xs font-black text-slate-900 dark:text-white line-clamp-1">
                                       {projectSub.projectTitle}
                                     </div>
                                     {projectSub.tagline && (
@@ -1249,7 +1247,7 @@ export default function DashboardPage() {
                                         {projectSub.tagline}
                                       </p>
                                     )}
-                                    <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-200/60">
+                                    <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-200/60 dark:border-white/[0.06]">
                                       <div className="flex items-center gap-2 truncate text-[11px]">
                                         <a
                                           href={projectSub.projectLink}
@@ -1283,7 +1281,7 @@ export default function DashboardPage() {
                                           } as any;
                                           setSubmissionModalEvent(targetEvt);
                                         }}
-                                        className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-[11px] font-bold transition-colors cursor-pointer"
+                                        className="px-2.5 py-1 rounded-lg bg-white dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.1] hover:bg-slate-100 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-200 text-[11px] font-bold transition-colors cursor-pointer"
                                       >
                                         Edit Project
                                       </button>
@@ -1291,7 +1289,7 @@ export default function DashboardPage() {
                                   </div>
                                 ) : (
                                   <div className="flex items-center justify-between gap-2 pt-0.5">
-                                    <span className="text-[11px] text-slate-500 font-medium truncate">
+                                    <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
                                       Submit repo link, demo & video
                                     </span>
                                     <button
@@ -1316,7 +1314,7 @@ export default function DashboardPage() {
                           })()}
                         </div>
 
-                        <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                        <div className="pt-3 border-t border-slate-100 dark:border-white/[0.08] flex items-center justify-between">
                           <Link
                             href={matchedEvent ? `/hackathons/${matchedEvent.slug}` : '/hackathons'}
                             className="text-xs font-black text-[#0099e6] flex items-center gap-1 hover:translate-x-0.5 transition-transform"
@@ -1337,14 +1335,14 @@ export default function DashboardPage() {
               3. SECTION: MY EVENTS / ORGANIZING (Hosted Hackathons)
              ───────────────────────────────────────────────────────────── */}
           {activeTab === 'organizing' && (
-            <div className="p-7 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6 animate-in fade-in duration-150">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div className="p-7 rounded-3xl bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-white/[0.08] shadow-sm space-y-6 animate-in fade-in duration-150">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-white/[0.08] pb-4">
                 <div>
-                  <h2 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                  <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
                     <Layers className="w-5 h-5 text-[#ea580c]" />
                     <span>My Events & Organizer Operations</span>
                   </h2>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     Manage your hosted hackathons, update parameters, inspect attendee rosters, and export submissions.
                   </p>
                 </div>
@@ -1367,7 +1365,7 @@ export default function DashboardPage() {
                       onClick={() => setHostFilter(filter)}
                       className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${hostFilter === filter
                           ? 'bg-[#0099e6] text-white shadow-2xs'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          : 'bg-slate-100 dark:bg-white/[0.05] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/[0.1]'
                         }`}
                     >
                       {filter === 'ALL'
@@ -1388,19 +1386,19 @@ export default function DashboardPage() {
                     value={hostSearch}
                     onChange={(e) => setHostSearch(e.target.value)}
                     placeholder="Search hosted events..."
-                    className="pl-8 pr-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0099e6] w-full sm:w-56"
+                    className="pl-8 pr-3 py-1.5 rounded-xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] text-xs font-medium text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#0099e6] w-full sm:w-56"
                   />
                 </div>
               </div>
 
               {/* Hosted Events List */}
               {filteredHostedEvents.length === 0 ? (
-                <div className="p-12 rounded-3xl bg-slate-50 border border-slate-200/80 text-center space-y-3">
-                  <div className="w-14 h-14 rounded-2xl bg-orange-50 text-[#ea580c] border border-orange-200 flex items-center justify-center mx-auto">
+                <div className="p-12 rounded-3xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.06] text-center space-y-3">
+                  <div className="w-14 h-14 rounded-2xl bg-orange-50 dark:bg-orange-950/40 text-[#ea580c] border border-orange-200 dark:border-orange-800/40 flex items-center justify-center mx-auto">
                     <Layers className="w-7 h-7" />
                   </div>
-                  <h4 className="text-base font-black text-slate-900">No Hosted Hackathons Found</h4>
-                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                  <h4 className="text-base font-black text-slate-900 dark:text-white">No Hosted Hackathons Found</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
                     You haven&apos;t created any hackathons yet. Launch your competition to connect with thousands of talented developers!
                   </p>
                   <Link
@@ -1426,7 +1424,7 @@ export default function DashboardPage() {
                     return (
                       <div
                         key={evt.id}
-                        className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 hover:border-[#0099e6]/50 shadow-xs hover:shadow-md transition-all flex flex-col gap-3.5"
+                        className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#07090e] border border-slate-200 dark:border-white/[0.08] hover:border-[#0099e6]/50 shadow-xs hover:shadow-md transition-all flex flex-col gap-3.5"
                       >
                         {/* 1. TOP ROW: Status Badge & Dates */}
                         <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -1434,12 +1432,12 @@ export default function DashboardPage() {
                             <span
                               className={`px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wide border whitespace-nowrap shrink-0 inline-flex items-center gap-1.5 ${
                                 evt.status === 'COMPLETED'
-                                  ? 'bg-slate-100 text-slate-700 border-slate-200'
+                                  ? 'bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-white/[0.08]'
                                   : isPending
-                                    ? 'bg-amber-50 text-amber-800 border-amber-300 shadow-2xs'
+                                    ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800/40 shadow-2xs'
                                     : evt.status === 'DRAFT'
-                                      ? 'bg-slate-100 text-slate-600 border-slate-200'
-                                      : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                      ? 'bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/[0.08]'
+                                      : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/40'
                               }`}
                             >
                               {evt.status === 'COMPLETED'
@@ -1451,13 +1449,13 @@ export default function DashboardPage() {
                                     : 'Live / Active'}
                             </span>
 
-                            <span className="text-xs text-slate-500 font-medium whitespace-nowrap shrink-0 flex items-center gap-1">
+                            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap shrink-0 flex items-center gap-1">
                               <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                               <span>Starts: {formatDate(evt.startDate)}</span>
                             </span>
 
                             {evt.endDate && (
-                              <span className="text-xs text-slate-400 font-medium whitespace-nowrap shrink-0 hidden sm:inline">
+                              <span className="text-xs text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap shrink-0 hidden sm:inline">
                                 • Ends: {formatDate(evt.endDate)}
                               </span>
                             )}
@@ -1465,7 +1463,7 @@ export default function DashboardPage() {
 
                           {/* Review badge for pending approval */}
                           {isPending && (
-                            <span className="text-[11px] font-semibold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200/80 flex items-center gap-1 shrink-0">
+                            <span className="text-[11px] font-semibold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-2.5 py-0.5 rounded-full border border-amber-200/80 dark:border-amber-800/40 flex items-center gap-1 shrink-0">
                               <Clock className="w-3 h-3 text-amber-600 shrink-0" />
                               <span>Pending Admin Review</span>
                             </span>
@@ -1474,7 +1472,7 @@ export default function DashboardPage() {
 
                         {/* 2. MIDDLE ROW: Title & Admin 1-Click Approve */}
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                          <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight line-clamp-1 break-words">
+                          <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight line-clamp-1 break-words">
                             {eventTitle}
                           </h3>
 
@@ -1504,9 +1502,9 @@ export default function DashboardPage() {
                         </div>
 
                         {/* 3. BOTTOM ROW: Metadata Badges & Actions Toolbar */}
-                        <div className="pt-3 border-t border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                        <div className="pt-3 border-t border-slate-100 dark:border-white/[0.08] flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                           {/* Metadata Pills */}
-                          <div className="flex items-center gap-2.5 text-xs text-slate-600 font-medium flex-wrap">
+                          <div className="flex items-center gap-2.5 text-xs text-slate-600 dark:text-slate-300 font-medium flex-wrap">
                             {(() => {
                               const localRegCount =
                                 (evt.id ? getEventRegistrationsCount(evt.id) : 0) +
@@ -1516,19 +1514,19 @@ export default function DashboardPage() {
                                 : evt.participantsDisplay || `${evt.participantsCount || 500}+ Builders`;
 
                               return (
-                                <span className="flex items-center gap-1 text-[#0099e6] font-bold whitespace-nowrap shrink-0 bg-sky-50 px-2.5 py-1 rounded-lg border border-sky-100">
+                                <span className="flex items-center gap-1 text-[#0099e6] font-bold whitespace-nowrap shrink-0 bg-sky-50 dark:bg-sky-950/40 px-2.5 py-1 rounded-lg border border-sky-100 dark:border-sky-800/40">
                                   <Users className="w-3.5 h-3.5 shrink-0" />
                                   <span>{displayBuilders}</span>
                                 </span>
                               );
                             })()}
 
-                            <span className="flex items-center gap-1 text-[#ea580c] font-bold whitespace-nowrap shrink-0 bg-orange-50 px-2.5 py-1 rounded-lg border border-orange-100">
+                            <span className="flex items-center gap-1 text-[#ea580c] font-bold whitespace-nowrap shrink-0 bg-orange-50 dark:bg-orange-950/40 px-2.5 py-1 rounded-lg border border-orange-100 dark:border-orange-800/40">
                               <Trophy className="w-3.5 h-3.5 shrink-0" />
                               <span>Prize: {prizeString}</span>
                             </span>
 
-                            <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 border border-slate-200/80 whitespace-nowrap shrink-0 font-medium">
+                            <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-white/[0.08] whitespace-nowrap shrink-0 font-medium">
                               {evt.mode || 'Online'}
                             </span>
                           </div>
@@ -1545,7 +1543,7 @@ export default function DashboardPage() {
                                   setCopiedEventId(evt.id);
                                   setTimeout(() => setCopiedEventId(null), 2500);
                                 }}
-                                className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
+                                className="px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
                                 title="Copy Private Shareable Link (allows anyone with the link to preview)"
                               >
                                 <Lock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
@@ -1563,7 +1561,7 @@ export default function DashboardPage() {
                                 }
                                 window.location.href = `/host?edit=${encodeURIComponent(evt.id || evt.slug)}`;
                               }}
-                              className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
+                              className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
                             >
                               <Edit3 className="w-3.5 h-3.5 text-[#0099e6] shrink-0" />
                               <span>Edit</span>
@@ -1577,7 +1575,7 @@ export default function DashboardPage() {
                               return (
                                 <button
                                   onClick={() => setViewingHackersEvent(evt)}
-                                  className="px-3 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 text-[#0099e6] border border-sky-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
+                                  className="px-3 py-1.5 rounded-xl bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-900/50 text-[#0099e6] border border-sky-200 dark:border-sky-800/40 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
                                 >
                                   <Users className="w-3.5 h-3.5 shrink-0" />
                                   <span>Registrations ({localRegCount || (isPending ? 0 : evt.registrationCount || 0)})</span>
@@ -1588,7 +1586,7 @@ export default function DashboardPage() {
                             {/* Submissions Button */}
                             <Link
                               href={`/dashboard/events/${evt.id || evt.slug}/submissions`}
-                              className="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
+                              className="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
                               title="View and Manage Submissions in Google Sheets Table"
                             >
                               <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
@@ -1608,7 +1606,7 @@ export default function DashboardPage() {
                               href={getEventPrivateLink(evt, typeof window !== 'undefined' ? window.location.origin : '')}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors shrink-0"
+                              className="p-1.5 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0"
                               title="View Event Preview"
                             >
                               <ExternalLink className="w-4 h-4" />
@@ -1617,7 +1615,7 @@ export default function DashboardPage() {
                             {/* Delete Button */}
                             <button
                               onClick={() => setDeleteConfirmEvent(evt)}
-                              className="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors cursor-pointer shrink-0"
+                              className="p-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 text-rose-600 dark:text-rose-400 transition-colors cursor-pointer shrink-0"
                               title="Delete Event"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -1636,27 +1634,27 @@ export default function DashboardPage() {
               4. SECTION: SAVED BOOKMARKS
              ───────────────────────────────────────────────────────────── */}
           {activeTab === 'bookmarks' && (
-            <div className="p-7 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6 animate-in fade-in duration-150">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div className="p-7 rounded-3xl bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-white/[0.08] shadow-sm space-y-6 animate-in fade-in duration-150">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/[0.08] pb-4">
                 <div>
-                  <h2 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                  <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
                     <Bookmark className="w-5 h-5 text-[#0099e6]" />
                     <span>Saved & Bookmarked Hackathons</span>
                   </h2>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     Your personal wishlist of hackathons to track and register.
                   </p>
                 </div>
-                <span className="text-xs text-slate-500 font-bold">{bookmarkedEvents.length} Saved</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-bold">{bookmarkedEvents.length} Saved</span>
               </div>
 
               {bookmarkedEvents.length === 0 ? (
-                <div className="p-12 rounded-3xl bg-slate-50 border border-slate-200/80 text-center space-y-3">
-                  <div className="w-14 h-14 rounded-2xl bg-sky-50 text-[#0099e6] border border-sky-200 flex items-center justify-center mx-auto">
+                <div className="p-12 rounded-3xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.06] text-center space-y-3">
+                  <div className="w-14 h-14 rounded-2xl bg-sky-50 dark:bg-sky-950/40 text-[#0099e6] border border-sky-200 dark:border-sky-800/40 flex items-center justify-center mx-auto">
                     <Bookmark className="w-7 h-7" />
                   </div>
-                  <h4 className="text-base font-black text-slate-900">No Bookmarks Saved Yet</h4>
-                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                  <h4 className="text-base font-black text-slate-900 dark:text-white">No Bookmarks Saved Yet</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
                     Click the bookmark ribbon icon on any hackathon card to save it here for fast access.
                   </p>
                   <Link
@@ -1697,20 +1695,20 @@ export default function DashboardPage() {
       {/* Delete Event Confirmation Modal */}
       {deleteConfirmEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center">
+          <div className="w-full max-w-md bg-white dark:bg-[#0c1017] rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-white/[0.08] space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/40 text-rose-600 dark:text-rose-400 flex items-center justify-center">
               <Trash2 className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-slate-900">Delete Hackathon Event?</h3>
-              <p className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">
-                Are you sure you want to delete <strong className="text-slate-800">&quot;{deleteConfirmEvent.title}&quot;</strong>? This will remove the event from the directory and leaderboard.
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">Delete Hackathon Event?</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium leading-relaxed">
+                Are you sure you want to delete <strong className="text-slate-800 dark:text-slate-200">&quot;{deleteConfirmEvent.title}&quot;</strong>? This will remove the event from the directory and leaderboard.
               </p>
             </div>
-            <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
+            <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100 dark:border-white/[0.08]">
               <button
                 onClick={() => setDeleteConfirmEvent(null)}
-                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
               >
                 Cancel
               </button>
@@ -1730,20 +1728,20 @@ export default function DashboardPage() {
       {/* View Registered Hackers / Realtime Registrations Modal */}
       {viewingHackersEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-3xl max-h-[85vh] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+          <div className="w-full max-w-3xl max-h-[85vh] bg-white dark:bg-[#0c1017] rounded-3xl shadow-2xl border border-slate-200 dark:border-white/[0.08] flex flex-col overflow-hidden">
+            <div className="p-6 border-b border-slate-100 dark:border-white/[0.08] flex items-center justify-between bg-slate-50/80 dark:bg-white/[0.02]">
               <div>
                 <div className="flex items-center gap-2 mb-0.5">
                   <span className="text-[10px] font-bold text-[#0099e6] uppercase tracking-wider">Attendee Registrations</span>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     Realtime Live
                   </span>
                 </div>
-                <h3 className="text-lg font-black text-slate-900 line-clamp-1">
+                <h3 className="text-lg font-black text-slate-900 dark:text-white line-clamp-1">
                   {viewingHackersEvent.title?.trim() || viewingHackersEvent.name?.trim() || viewingHackersEvent.tagline?.trim() || 'Hackathon'}
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5 font-medium">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
                   {eventRegistrations.length} {eventRegistrations.length === 1 ? 'builder registered' : 'builders registered'}
                 </p>
               </div>
@@ -1751,7 +1749,7 @@ export default function DashboardPage() {
               <div className="flex items-center gap-2">
                 <Link
                   href={`/dashboard/events/${viewingHackersEvent.id || viewingHackersEvent.slug}/registrations`}
-                  className="px-3.5 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-[#0099e6] border border-sky-200 text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                  className="px-3.5 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/40 dark:hover:bg-sky-900/50 text-[#0099e6] border border-sky-200 dark:border-sky-800/40 text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
                   title="Manage attendees in full-page table"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -1761,7 +1759,7 @@ export default function DashboardPage() {
                 <button
                   onClick={() => handleExportCSV(viewingHackersEvent)}
                   disabled={eventRegistrations.length === 0}
-                  className="px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-slate-700 text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3.5 py-2 rounded-xl bg-white dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.15] text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Download className="w-3.5 h-3.5 text-[#0099e6]" />
                   <span>Export CSV</span>
@@ -1769,7 +1767,7 @@ export default function DashboardPage() {
 
                 <button
                   onClick={() => setViewingHackersEvent(null)}
-                  className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
+                  className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-white/[0.06] transition-colors cursor-pointer"
                 >
                   <XIcon className="w-5 h-5" />
                 </button>
@@ -1780,17 +1778,17 @@ export default function DashboardPage() {
               {loadingRegistrations ? (
                 <div className="py-16 text-center flex flex-col items-center justify-center space-y-3">
                   <Loader2 className="w-7 h-7 text-[#0099e6] animate-spin" />
-                  <p className="text-xs font-bold text-slate-600">Fetching verified hacker registrations...</p>
+                  <p className="text-xs font-bold text-slate-600 dark:text-slate-300">Fetching verified hacker registrations...</p>
                 </div>
               ) : eventRegistrations.length === 0 ? (
                 <div className="py-14 text-center space-y-3">
-                  <div className="w-14 h-14 rounded-2xl bg-sky-50 text-[#0099e6] border border-sky-200 flex items-center justify-center mx-auto">
+                  <div className="w-14 h-14 rounded-2xl bg-sky-50 dark:bg-sky-950/40 text-[#0099e6] border border-sky-200 dark:border-sky-800/40 flex items-center justify-center mx-auto">
                     <Users className="w-7 h-7" />
                   </div>
-                  <h4 className="text-base font-black text-slate-900">No Registrations Yet</h4>
-                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                  <h4 className="text-base font-black text-slate-900 dark:text-white">No Registrations Yet</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
                     No participants have registered for{' '}
-                    <strong className="text-slate-800">
+                    <strong className="text-slate-800 dark:text-slate-200">
                       {viewingHackersEvent.title?.trim() || viewingHackersEvent.name?.trim() || viewingHackersEvent.tagline?.trim() || 'this hackathon'}
                     </strong>{' '}
                     yet. Share your event link to start receiving builder signups!
@@ -1819,7 +1817,7 @@ export default function DashboardPage() {
                       }
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors"
+                      className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 transition-colors"
                     >
                       <span>Preview Event Page</span>
                       <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
@@ -1827,9 +1825,9 @@ export default function DashboardPage() {
                   </div>
                 </div>
               ) : (
-                <div className="overflow-x-auto rounded-2xl border border-slate-200">
+                <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-white/[0.08]">
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50 text-slate-500 border-b border-slate-200 text-[10px] font-bold uppercase tracking-wider">
+                    <thead className="bg-slate-50 dark:bg-white/[0.03] text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-white/[0.08] text-[10px] font-bold uppercase tracking-wider">
                       <tr>
                         <th className="py-3 px-4">Hacker Name</th>
                         <th className="py-3 px-4">Contact Email</th>
@@ -1838,7 +1836,7 @@ export default function DashboardPage() {
                         <th className="py-3 px-4 text-right">Registered</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
+                    <tbody className="divide-y divide-slate-100 dark:divide-white/[0.06] text-slate-700 dark:text-slate-300 font-medium">
                       {eventRegistrations.map((hacker, idx) => {
                         const name = hacker.user_name || hacker.userName || hacker.name || 'Anonymous Hacker';
                         const email = hacker.user_email || hacker.userEmail || hacker.email || '—';
@@ -1848,33 +1846,33 @@ export default function DashboardPage() {
                         const formattedDate = rawDate ? formatDate(rawDate) : 'Recently';
 
                         return (
-                          <tr key={hacker.id || idx} className="hover:bg-slate-50 transition-colors">
-                            <td className="py-3 px-4 font-bold text-slate-900 flex items-center gap-2">
-                              <div className="w-6 h-6 rounded-full bg-sky-100 text-[#0099e6] font-bold flex items-center justify-center text-[10px] uppercase">
+                          <tr key={hacker.id || idx} className="hover:bg-slate-50 dark:hover:bg-white/[0.03] transition-colors">
+                            <td className="py-3 px-4 font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-full bg-sky-100 dark:bg-sky-950 text-[#0099e6] font-bold flex items-center justify-center text-[10px] uppercase">
                                 {name.charAt(0)}
                               </div>
                               <div className="min-w-0">
                                 <div className="truncate">{name}</div>
-                                {hacker.phone && <div className="text-[10px] text-slate-400 font-normal">{hacker.phone}</div>}
+                                {hacker.phone && <div className="text-[10px] text-slate-400 dark:text-slate-500 font-normal">{hacker.phone}</div>}
                               </div>
                             </td>
-                            <td className="py-3 px-4 text-slate-500 font-mono text-[11px]">{email}</td>
+                            <td className="py-3 px-4 text-slate-500 dark:text-slate-400 font-mono text-[11px]">{email}</td>
                             <td className="py-3 px-4">
-                              <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[10px] font-semibold">
+                              <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 text-[10px] font-semibold">
                                 {role}
                               </span>
                             </td>
                             <td className="py-3 px-4">
                               <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${status === 'CONFIRMED' || status === 'APPROVED'
-                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/40'
                                   : status === 'REJECTED'
-                                    ? 'bg-red-50 text-red-700 border-red-200'
-                                    : 'bg-amber-50 text-amber-700 border-amber-200'
+                                    ? 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800/40'
+                                    : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/40'
                                 }`}>
                                 {status}
                               </span>
                             </td>
-                            <td className="py-3 px-4 text-right text-slate-500 text-[11px] font-mono">{formattedDate}</td>
+                            <td className="py-3 px-4 text-right text-slate-500 dark:text-slate-400 text-[11px] font-mono">{formattedDate}</td>
                           </tr>
                         );
                       })}
@@ -1884,11 +1882,11 @@ export default function DashboardPage() {
               )}
             </div>
 
-            <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between text-xs text-slate-500 font-medium">
+            <div className="p-4 border-t border-slate-100 dark:border-white/[0.08] bg-slate-50 dark:bg-white/[0.02] flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
               <span>{eventRegistrations.length} live participant{eventRegistrations.length === 1 ? '' : 's'}</span>
               <button
                 onClick={() => setViewingHackersEvent(null)}
-                className="px-4 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold transition-colors cursor-pointer"
+                className="px-4 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-white/[0.1] dark:hover:bg-white/[0.15] text-slate-800 dark:text-white font-bold transition-colors cursor-pointer"
               >
                 Close
               </button>

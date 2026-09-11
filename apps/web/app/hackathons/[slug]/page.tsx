@@ -191,18 +191,18 @@ function HackathonDetailContent({ params }: PageProps) {
             <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
             <span>Private Event • Under Review</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             This Hackathon is Not Public Yet
           </h2>
-          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium max-w-md mx-auto">
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-medium max-w-md mx-auto">
             This event has been submitted and is currently awaiting organization review. It is not publicly discoverable or live on Hacker&apos;s Unity.
           </p>
-          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-left text-xs space-y-2 max-w-md mx-auto">
-            <div className="flex items-center gap-2 font-bold text-slate-800">
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#0c1017] border border-slate-200 dark:border-white/[0.08] text-left text-xs space-y-2 max-w-md mx-auto">
+            <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200">
               <ShieldCheck className="w-4 h-4 text-[#0099e6]" />
               <span>Have a Private Link?</span>
             </div>
-            <p className="text-slate-500 text-[11px] leading-relaxed">
+            <p className="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">
               If you are a reviewer, mentor, or collaborator, please open this event using the <strong>Private Shareable Link</strong> provided directly by the organizer.
             </p>
           </div>
@@ -287,36 +287,36 @@ function HackathonDetailContent({ params }: PageProps) {
       )}
 
       {/* ─── Top Banner Hero ────────────────────────────────────── */}
-      <div className="relative bg-gradient-to-r from-sky-50 via-white to-orange-50/60 border-b border-slate-200 pt-8 pb-12">
+      <div className="relative bg-gradient-to-r from-sky-50 via-white to-orange-50/60 dark:from-[#0c1017] dark:via-[#080b11] dark:to-[#0c1017] border-b border-slate-200 dark:border-white/[0.08] pt-8 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-xs text-slate-500 mb-6 font-semibold">
-            <Link href="/hackathons" className="flex items-center gap-1 hover:text-[#0099e6] transition-colors">
+          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-6 font-semibold">
+            <Link href="/hackathons" className="flex items-center gap-1 hover:text-[#0099e6] dark:hover:text-[#38bdf8] transition-colors">
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back to Hackathons</span>
             </Link>
             <span>/</span>
-            <span className="text-slate-800 truncate max-w-xs">{event.title}</span>
+            <span className="text-slate-800 dark:text-slate-200 truncate max-w-xs">{event.title}</span>
           </div>
 
           {/* Badges */}
           <div className="flex flex-wrap items-center gap-2 mb-4">
-            <span className="px-3 py-1 rounded-full text-xs font-bold bg-white text-[#0099e6] border border-[#0099e6]/20 shadow-2xs">
+            <span className="px-3 py-1 rounded-full text-xs font-bold bg-white dark:bg-white/[0.06] text-[#0099e6] dark:text-[#38bdf8] border border-[#0099e6]/20 dark:border-sky-800/40 shadow-2xs">
               {categoryInfo.label}
             </span>
             <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${statusInfo.color}`}>
               {statusInfo.label}
             </span>
-            <span className="px-3 py-1 rounded-full text-xs font-medium bg-white text-slate-700 border border-slate-200">
+            <span className="px-3 py-1 rounded-full text-xs font-medium bg-white dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/[0.1]">
               {eventTypeInfo.icon} {eventTypeInfo.label}
             </span>
             {event.featured && (
-              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-orange-100 text-[#ea580c] border border-orange-200 flex items-center gap-1">
+              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-orange-100 dark:bg-orange-950/40 text-[#ea580c] dark:text-orange-400 border border-orange-200 dark:border-orange-800/40 flex items-center gap-1">
                 <Sparkles className="w-3.5 h-3.5" /> Featured Flagship
               </span>
             )}
             {isRegistered && (
-              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
+              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800/40 flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5" /> Registered
               </span>
             )}
@@ -326,7 +326,7 @@ function HackathonDetailContent({ params }: PageProps) {
             <div className="flex items-center gap-4 sm:gap-6 max-w-3xl">
               {/* Event / Hackathon Logo */}
               {(event.logoUrl || event.organizerLogo) ? (
-                <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-3xl border border-slate-200/90 bg-white p-2 shadow-sm shrink-0 overflow-hidden flex items-center justify-center">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-3xl border border-slate-200/90 dark:border-white/[0.1] bg-white dark:bg-[#121824] p-2 shadow-sm shrink-0 overflow-hidden flex items-center justify-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={event.logoUrl || event.organizerLogo}
@@ -335,33 +335,33 @@ function HackathonDetailContent({ params }: PageProps) {
                   />
                 </div>
               ) : (
-                <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-3xl border border-sky-200/90 bg-gradient-to-br from-sky-50 to-sky-100 shadow-sm shrink-0 flex items-center justify-center text-3xl sm:text-4xl md:text-5xl font-black text-[#0099e6]">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-3xl border border-sky-200/90 dark:border-sky-800/50 bg-gradient-to-br from-sky-50 to-sky-100 dark:from-sky-950/40 dark:to-sky-900/30 shadow-sm shrink-0 flex items-center justify-center text-3xl sm:text-4xl md:text-5xl font-black text-[#0099e6] dark:text-[#38bdf8]">
                   {event.organizerAvatar || '⚡'}
                 </div>
               )}
 
               <div className="space-y-1 sm:space-y-1.5 flex-1 min-w-0">
                 {/* Title */}
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
                   {event.title}
                 </h1>
 
                 {/* Tagline if available */}
                 {event.tagline && (
-                  <p className="text-sm sm:text-base font-medium text-slate-600">
+                  <p className="text-sm sm:text-base font-medium text-slate-600 dark:text-slate-400">
                     {event.tagline}
                   </p>
                 )}
 
                 {/* Organizer & Location */}
-                <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-slate-600 font-medium pt-0.5">
+                <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium pt-0.5">
                   <div className="flex items-center gap-1.5">
                     <span className="text-base">{event.organizerAvatar}</span>
-                    <span>Organized by <strong className="text-slate-900">{event.organizerName}</strong></span>
+                    <span>Organized by <strong className="text-slate-900 dark:text-white">{event.organizerName}</strong></span>
                   </div>
                   <span>•</span>
-                  <div className="flex items-center gap-1 text-slate-500">
-                    <MapPin className="w-3.5 h-3.5 text-[#0099e6]" />
+                  <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                    <MapPin className="w-3.5 h-3.5 text-[#0099e6] dark:text-[#38bdf8]" />
                     <span>{event.location || 'Virtual / Online'}</span>
                   </div>
                 </div>
@@ -375,7 +375,7 @@ function HackathonDetailContent({ params }: PageProps) {
                 className={`p-3 rounded-2xl border transition-all flex items-center gap-2 text-xs font-bold cursor-pointer ${
                   isBookmarked
                     ? 'bg-[#0099e6] text-white border-[#0099e6] shadow-sm'
-                    : 'bg-white text-slate-700 hover:text-slate-900 border-slate-200 shadow-2xs hover:border-slate-300'
+                    : 'bg-white dark:bg-[#0c1017] text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white border-slate-200 dark:border-white/[0.1] shadow-2xs hover:border-slate-300 dark:hover:border-white/[0.2]'
                 }`}
               >
                 <Bookmark className="w-4 h-4 fill-current" />
@@ -387,8 +387,8 @@ function HackathonDetailContent({ params }: PageProps) {
                 onClick={handleShare}
                 className={`p-3 rounded-2xl border transition-all flex items-center gap-2 text-xs font-bold cursor-pointer shadow-2xs ${
                   isUnpublished
-                    ? 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300 hover:border-amber-400'
-                    : 'bg-white text-slate-700 hover:text-slate-900 border-slate-200 hover:border-slate-300'
+                    ? 'bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-700/50 hover:border-amber-400'
+                    : 'bg-white dark:bg-[#0c1017] text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white border-slate-200 dark:border-white/[0.1] hover:border-slate-300 dark:hover:border-white/[0.2]'
                 }`}
                 title={isUnpublished ? 'Copy Private Link (accessible before public approval)' : 'Share Event Link'}
               >
@@ -414,7 +414,7 @@ function HackathonDetailContent({ params }: PageProps) {
           {/* Left Column: Tabs & Content (2 cols) */}
           <div className="lg:col-span-2 space-y-6">
             {/* Tabs Navigation */}
-            <div className="bg-white p-1.5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-1 overflow-x-auto scrollbar-none">
+            <div className="bg-white dark:bg-[#0c1017] p-1.5 rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-xs flex items-center gap-1 overflow-x-auto scrollbar-none">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
@@ -422,7 +422,7 @@ function HackathonDetailContent({ params }: PageProps) {
                   className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                     activeTab === tab.id
                       ? 'bg-[#0099e6] text-white shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06]'
                   }`}
                 >
                   {tab.label}
@@ -435,21 +435,21 @@ function HackathonDetailContent({ params }: PageProps) {
               <div className="space-y-6 animate-in fade-in">
                 {/* ─── Your Registered Squad Card (if registered in a team) ─── */}
                 {userSquad && (
-                  <div className="bg-gradient-to-br from-sky-50/80 via-white to-orange-50/50 p-6 rounded-3xl border-2 border-sky-200 shadow-md space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-sky-100 pb-4">
+                  <div className="bg-gradient-to-br from-sky-50/80 via-white to-orange-50/50 dark:from-sky-950/20 dark:via-[#0c1017] dark:to-orange-950/20 p-6 rounded-3xl border-2 border-sky-200 dark:border-sky-800/40 shadow-md space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-sky-100 dark:border-white/[0.08] pb-4">
                       <div className="flex items-center gap-3.5">
                         <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#0099e6] to-sky-600 flex items-center justify-center text-white text-lg font-black shadow-md shadow-sky-500/25">
                           {userSquad.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="text-base font-black text-slate-900">{userSquad.name}</h3>
-                            <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-extrabold uppercase">
+                            <h3 className="text-base font-black text-slate-900 dark:text-white">{userSquad.name}</h3>
+                            <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-400 text-[10px] font-extrabold uppercase">
                               Your Squad
                             </span>
                           </div>
-                          <p className="text-xs text-slate-500 font-medium mt-0.5">
-                            Leader: <strong className="text-slate-700">{userSquad.profiles?.name || 'Squad Lead'}</strong>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                            Leader: <strong className="text-slate-700 dark:text-slate-300">{userSquad.profiles?.name || 'Squad Lead'}</strong>
                           </p>
                         </div>
                       </div>
@@ -473,9 +473,9 @@ function HackathonDetailContent({ params }: PageProps) {
                           {userSquad.team_members.map((m: any) => (
                             <div
                               key={m.id}
-                              className="px-3 py-1.5 rounded-xl bg-white border border-sky-100 shadow-2xs flex items-center gap-2 text-xs font-medium text-slate-800"
+                              className="px-3 py-1.5 rounded-xl bg-white dark:bg-[#121824] border border-sky-100 dark:border-white/[0.08] shadow-2xs flex items-center gap-2 text-xs font-medium text-slate-800 dark:text-slate-200"
                             >
-                              <div className="w-6 h-6 rounded-lg bg-sky-100 text-[#0099e6] flex items-center justify-center font-black text-[10px]">
+                              <div className="w-6 h-6 rounded-lg bg-sky-100 dark:bg-sky-950 text-[#0099e6] dark:text-[#38bdf8] flex items-center justify-center font-black text-[10px]">
                                 {m.profiles?.name?.charAt(0) || 'B'}
                               </div>
                               <span>{m.profiles?.name || 'Member'}</span>
@@ -490,7 +490,7 @@ function HackathonDetailContent({ params }: PageProps) {
 
                 {/* Event Photo / Poster */}
                 {(event.image || event.bannerUrl) && (
-                  <div className="w-full h-64 sm:h-80 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-sm relative">
+                  <div className="w-full h-64 sm:h-80 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 dark:border-white/[0.08] shadow-sm relative">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={event.image || event.bannerUrl || ''}
@@ -501,16 +501,16 @@ function HackathonDetailContent({ params }: PageProps) {
                 )}
 
                 {/* Description */}
-                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                  <h3 className="text-lg font-bold text-slate-900">About the Hackathon</h3>
-                  <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line font-medium">
+                <div className="bg-white dark:bg-[#0c1017] p-6 rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-sm space-y-4">
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">About the Hackathon</h3>
+                  <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line font-medium">
                     {event.description}
                   </p>
                   <div className="flex flex-wrap gap-2 pt-2">
                     {event.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="px-3 py-1 rounded-lg bg-sky-50 border border-sky-100 text-xs font-mono font-semibold text-[#0099e6]"
+                        className="px-3 py-1 rounded-lg bg-sky-50 dark:bg-sky-950/40 border border-sky-100 dark:border-sky-800/40 text-xs font-mono font-semibold text-[#0099e6] dark:text-[#38bdf8]"
                       >
                         #{tag}
                       </span>
@@ -520,26 +520,26 @@ function HackathonDetailContent({ params }: PageProps) {
 
                 {/* Tracks */}
                 {event.tracks && event.tracks.length > 0 && (
-                  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                    <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                      <Layers className="w-5 h-5 text-[#0099e6]" />
+                  <div className="bg-white dark:bg-[#0c1017] p-6 rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-sm space-y-4">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <Layers className="w-5 h-5 text-[#0099e6] dark:text-[#38bdf8]" />
                       <span>Challenge Tracks & Problem Statements</span>
                     </h3>
                     <div className="grid grid-cols-1 gap-4">
                       {event.tracks.map((track) => (
                         <div
                           key={track.title}
-                          className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5"
+                          className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] space-y-1.5"
                         >
                           <div className="flex items-center justify-between">
-                            <h4 className="text-sm font-bold text-slate-900">{track.title}</h4>
+                            <h4 className="text-sm font-bold text-slate-900 dark:text-white">{track.title}</h4>
                             {track.prize && (
-                              <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-orange-100 text-[#ea580c] border border-orange-200">
+                              <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-orange-100 dark:bg-orange-950/40 text-[#ea580c] dark:text-orange-400 border border-orange-200 dark:border-orange-800/40">
                                 {track.prize}
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-slate-600 leading-relaxed font-medium">{track.description}</p>
+                          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">{track.description}</p>
                         </div>
                       ))}
                     </div>
@@ -548,10 +548,10 @@ function HackathonDetailContent({ params }: PageProps) {
 
                 {/* Squad Callout for Team Events */}
                 {event.isTeamEvent && (
-                  <div className="p-6 rounded-2xl bg-gradient-to-r from-sky-50 via-white to-orange-50 border border-sky-200 flex items-center justify-between gap-4 shadow-sm">
+                  <div className="p-6 rounded-2xl bg-gradient-to-r from-sky-50 via-white to-orange-50 dark:from-sky-950/20 dark:via-[#0c1017] dark:to-orange-950/20 border border-sky-200 dark:border-sky-800/40 flex items-center justify-between gap-4 shadow-sm">
                     <div>
-                      <h4 className="text-sm font-bold text-slate-900">Form or Join a Squad</h4>
-                      <p className="text-xs text-slate-600 mt-0.5">
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-white">Form or Join a Squad</h4>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                         This event allows squads of {event.minTeamSize}-{event.maxTeamSize} builders.
                       </p>
                     </div>
@@ -568,40 +568,40 @@ function HackathonDetailContent({ params }: PageProps) {
 
             {/* TAB CONTENT: Timeline */}
             {activeTab === 'timeline' && (
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6 animate-in fade-in">
-                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-[#0099e6]" />
+              <div className="bg-white dark:bg-[#0c1017] p-6 rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-sm space-y-6 animate-in fade-in">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-[#0099e6] dark:text-[#38bdf8]" />
                   <span>Stages & Timeline</span>
                 </h3>
-                <div className="relative pl-6 space-y-8 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-sky-200">
+                <div className="relative pl-6 space-y-8 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-sky-200 dark:before:bg-sky-800/40">
                   {event.stages && event.stages.length > 0 ? (
                     event.stages.map((stage) => (
                       <div key={stage.id} className="relative space-y-1">
-                        <div className="absolute -left-6 top-1 w-5 h-5 rounded-full bg-[#0099e6] border-4 border-white flex items-center justify-center text-[10px] font-bold text-white shadow-xs" />
+                        <div className="absolute -left-6 top-1 w-5 h-5 rounded-full bg-[#0099e6] border-4 border-white dark:border-[#0c1017] flex items-center justify-center text-[10px] font-bold text-white shadow-xs" />
                         <div className="flex items-center justify-between">
-                          <h4 className="text-sm font-bold text-slate-900">
+                          <h4 className="text-sm font-bold text-slate-900 dark:text-white">
                             Stage {stage.stageOrder}: {stage.stageName}
                           </h4>
-                          <span className="text-xs text-[#0099e6] font-mono font-bold">
+                          <span className="text-xs text-[#0099e6] dark:text-[#38bdf8] font-mono font-bold">
                             {formatDate(stage.startDate || event.startDate)} - {formatDate(stage.endDate || event.endDate)}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-600 leading-relaxed font-medium">{stage.description}</p>
+                        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">{stage.description}</p>
                       </div>
                     ))
                   ) : (
                     <div className="space-y-4">
                       <div className="relative space-y-1">
-                        <div className="absolute -left-6 top-1 w-5 h-5 rounded-full bg-[#0099e6] border-4 border-white shadow-xs" />
-                        <h4 className="text-sm font-bold text-slate-900">Registration Phase</h4>
-                        <span className="text-xs text-[#0099e6] font-mono font-bold">
+                        <div className="absolute -left-6 top-1 w-5 h-5 rounded-full bg-[#0099e6] border-4 border-white dark:border-[#0c1017] shadow-xs" />
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-white">Registration Phase</h4>
+                        <span className="text-xs text-[#0099e6] dark:text-[#38bdf8] font-mono font-bold">
                           Deadline: {formatDate(event.registrationDeadline)}
                         </span>
                       </div>
                       <div className="relative space-y-1">
-                        <div className="absolute -left-6 top-1 w-5 h-5 rounded-full bg-[#ea580c] border-4 border-white shadow-xs" />
-                        <h4 className="text-sm font-bold text-slate-900">Hacking Sprint</h4>
-                        <span className="text-xs text-[#ea580c] font-mono font-bold">
+                        <div className="absolute -left-6 top-1 w-5 h-5 rounded-full bg-[#ea580c] border-4 border-white dark:border-[#0c1017] shadow-xs" />
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-white">Hacking Sprint</h4>
+                        <span className="text-xs text-[#ea580c] dark:text-orange-400 font-mono font-bold">
                           {formatDate(event.startDate)} - {formatDate(event.endDate)}
                         </span>
                       </div>
@@ -613,14 +613,14 @@ function HackathonDetailContent({ params }: PageProps) {
 
             {/* TAB CONTENT: Project Submission */}
             {activeTab === 'submission' && (
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6 animate-in fade-in">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+              <div className="bg-white dark:bg-[#0c1017] p-6 rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-sm space-y-6 animate-in fade-in">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-white/[0.08] pb-4">
                   <div>
-                    <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                      <Rocket className="w-5 h-5 text-[#0099e6]" />
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <Rocket className="w-5 h-5 text-[#0099e6] dark:text-[#38bdf8]" />
                       <span>Submission Portal</span>
                     </h3>
-                    <p className="text-xs text-slate-500 mt-0.5">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                       Submit your completed build, source code, and demo video for judge evaluation.
                     </p>
                   </div>
@@ -636,43 +636,43 @@ function HackathonDetailContent({ params }: PageProps) {
 
                 {/* Submission Status Alert */}
                 {userSubmission ? (
-                  <div className="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-slate-800 space-y-4">
+                  <div className="p-5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40 text-slate-800 dark:text-slate-200 space-y-4">
                     <div className="flex items-center justify-between flex-wrap gap-2">
-                      <div className="flex items-center gap-2 font-bold text-sm text-emerald-800">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                      <div className="flex items-center gap-2 font-bold text-sm text-emerald-800 dark:text-emerald-400">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                         <span>Project Successfully Submitted!</span>
                       </div>
-                      <span className="px-3 py-1 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-800 text-xs font-black uppercase">
+                      <span className="px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 border border-emerald-300 dark:border-emerald-700/50 text-emerald-800 dark:text-emerald-300 text-xs font-black uppercase">
                         Status: {userSubmission.status || 'Under Review'}
                       </span>
                     </div>
 
-                    <div className="bg-white p-4 rounded-xl border border-emerald-200/80 space-y-2.5">
+                    <div className="bg-white dark:bg-[#121824] p-4 rounded-xl border border-emerald-200/80 dark:border-emerald-800/30 space-y-2.5">
                       <div>
-                        <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Project Title</div>
-                        <div className="text-base font-black text-slate-900">{userSubmission.projectTitle}</div>
+                        <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Project Title</div>
+                        <div className="text-base font-black text-slate-900 dark:text-white">{userSubmission.projectTitle}</div>
                         {userSubmission.tagline && (
-                          <div className="text-xs text-[#0099e6] font-semibold">{userSubmission.tagline}</div>
+                          <div className="text-xs text-[#0099e6] dark:text-[#38bdf8] font-semibold">{userSubmission.tagline}</div>
                         )}
                       </div>
 
                       {userSubmission.track && (
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-50 text-[#0099e6] text-xs font-bold">
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-50 dark:bg-sky-950/40 text-[#0099e6] dark:text-[#38bdf8] text-xs font-bold">
                           <Layers className="w-3.5 h-3.5" />
                           <span>Track: {userSubmission.track}</span>
                         </div>
                       )}
 
-                      <p className="text-xs text-slate-600 leading-relaxed line-clamp-3">
+                      <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-3">
                         {userSubmission.projectDescription}
                       </p>
 
-                      <div className="flex items-center gap-3 flex-wrap pt-2 border-t border-slate-100 text-xs">
+                      <div className="flex items-center gap-3 flex-wrap pt-2 border-t border-slate-100 dark:border-white/[0.08] text-xs">
                         <a
                           href={userSubmission.projectLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="font-bold text-[#0099e6] hover:underline flex items-center gap-1"
+                          className="font-bold text-[#0099e6] dark:text-[#38bdf8] hover:underline flex items-center gap-1"
                         >
                           <Github className="w-3.5 h-3.5" />
                           <span>Repository Link ↗</span>
@@ -682,7 +682,7 @@ function HackathonDetailContent({ params }: PageProps) {
                             href={userSubmission.demoVideoUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="font-bold text-[#ea580c] hover:underline flex items-center gap-1"
+                            className="font-bold text-[#ea580c] dark:text-orange-400 hover:underline flex items-center gap-1"
                           >
                             <Video className="w-3.5 h-3.5" />
                             <span>Demo Video ↗</span>
@@ -693,7 +693,7 @@ function HackathonDetailContent({ params }: PageProps) {
                             href={userSubmission.presentationUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="font-bold text-emerald-600 hover:underline flex items-center gap-1"
+                            className="font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
                           >
                             <Presentation className="w-3.5 h-3.5" />
                             <span>Slide Deck ↗</span>
@@ -702,27 +702,27 @@ function HackathonDetailContent({ params }: PageProps) {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between text-xs text-emerald-800 font-medium">
+                    <div className="flex items-center justify-between text-xs text-emerald-800 dark:text-emerald-400 font-medium">
                       <span>
                         Last updated on {new Date(userSubmission.updatedAt || userSubmission.submittedAt).toLocaleDateString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
                       </span>
                       <button
                         type="button"
                         onClick={() => setShowSubmissionModal(true)}
-                        className="px-3.5 py-1.5 rounded-xl bg-white border border-emerald-300 hover:bg-emerald-100/60 font-bold text-xs text-emerald-800 transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                        className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-[#121824] border border-emerald-300 dark:border-emerald-700/50 hover:bg-emerald-100/60 dark:hover:bg-emerald-900/30 font-bold text-xs text-emerald-800 dark:text-emerald-300 transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs"
                       >
-                        <Rocket className="w-3.5 h-3.5 text-[#0099e6]" />
+                        <Rocket className="w-3.5 h-3.5 text-[#0099e6] dark:text-[#38bdf8]" />
                         <span>Edit / Manage Deliverables</span>
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div className="p-4 rounded-2xl bg-sky-50 border border-sky-200 text-sky-800 flex items-center justify-between gap-3 text-xs">
+                  <div className="p-4 rounded-2xl bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800/40 text-sky-800 dark:text-sky-300 flex items-center justify-between gap-3 text-xs">
                     <div className="flex items-center gap-2 font-medium">
-                      <Sparkles className="w-4 h-4 text-[#0099e6] shrink-0" />
+                      <Sparkles className="w-4 h-4 text-[#0099e6] dark:text-[#38bdf8] shrink-0" />
                       <span>Submissions are currently open for all registered participants.</span>
                     </div>
-                    <span className="px-2.5 py-1 rounded-full bg-sky-100 text-[#0099e6] font-bold text-[10px] uppercase">
+                    <span className="px-2.5 py-1 rounded-full bg-sky-100 dark:bg-sky-900/50 text-[#0099e6] dark:text-[#38bdf8] font-bold text-[10px] uppercase">
                       Open
                     </span>
                   </div>
@@ -730,81 +730,81 @@ function HackathonDetailContent({ params }: PageProps) {
 
                 {/* Breakdown of Submission Fields */}
                 <div className="space-y-4">
-                  <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
                     Submission Requirements Breakdown
                   </h4>
 
                   {/* Required Fields Card */}
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                         <FileCheck className="w-4 h-4 text-rose-500" />
                         <span>Mandatory Fields (Must be provided to qualify)</span>
                       </span>
-                      <span className="px-2 py-0.5 rounded-md bg-rose-100 text-rose-700 text-[10px] font-black uppercase">
+                      <span className="px-2 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 text-[10px] font-black uppercase">
                         Required *
                       </span>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-                      <div className="p-3 bg-white rounded-xl border border-slate-200">
-                        <div className="text-xs font-bold text-slate-900">Project Title *</div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">Name of prototype / solution</div>
+                      <div className="p-3 bg-white dark:bg-[#121824] rounded-xl border border-slate-200 dark:border-white/[0.08]">
+                        <div className="text-xs font-bold text-slate-900 dark:text-white">Project Title *</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Name of prototype / solution</div>
                       </div>
-                      <div className="p-3 bg-white rounded-xl border border-slate-200">
-                        <div className="text-xs font-bold text-slate-900">Project Description *</div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">Problem statement, tech stack & features (min 20 chars)</div>
+                      <div className="p-3 bg-white dark:bg-[#121824] rounded-xl border border-slate-200 dark:border-white/[0.08]">
+                        <div className="text-xs font-bold text-slate-900 dark:text-white">Project Description *</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Problem statement, tech stack & features (min 20 chars)</div>
                       </div>
-                      <div className="p-3 bg-white rounded-xl border border-slate-200">
-                        <div className="text-xs font-bold text-slate-900">Repository / Live Link *</div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">Public GitHub / GitLab repo or deployed application</div>
+                      <div className="p-3 bg-white dark:bg-[#121824] rounded-xl border border-slate-200 dark:border-white/[0.08]">
+                        <div className="text-xs font-bold text-slate-900 dark:text-white">Repository / Live Link *</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Public GitHub / GitLab repo or deployed application</div>
                       </div>
                     </div>
                   </div>
 
                   {/* Optional Fields Card */}
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                         <Sparkles className="w-4 h-4 text-amber-500" />
                         <span>Optional Fields (Enhance evaluation & score)</span>
                       </span>
-                      <span className="px-2 py-0.5 rounded-md bg-slate-200 text-slate-700 text-[10px] font-bold uppercase">
+                      <span className="px-2 py-0.5 rounded-md bg-slate-200 dark:bg-white/[0.08] text-slate-700 dark:text-slate-300 text-[10px] font-bold uppercase">
                         Optional
                       </span>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                      <div className="p-3 bg-white rounded-xl border border-slate-200">
-                        <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                      <div className="p-3 bg-white dark:bg-[#121824] rounded-xl border border-slate-200 dark:border-white/[0.08]">
+                        <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                           <Video className="w-3.5 h-3.5 text-[#ea580c]" />
                           <span>Project Demo Video</span>
                         </div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">Loom, YouTube, or Google Drive walkthrough link</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Loom, YouTube, or Google Drive walkthrough link</div>
                       </div>
 
-                      <div className="p-3 bg-white rounded-xl border border-slate-200">
-                        <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                      <div className="p-3 bg-white dark:bg-[#121824] rounded-xl border border-slate-200 dark:border-white/[0.08]">
+                        <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                           <Archive className="w-3.5 h-3.5 text-indigo-500" />
                           <span>ZIP File Upload</span>
                         </div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">Direct source code or offline build archive (up to 50MB)</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Direct source code or offline build archive (up to 50MB)</div>
                       </div>
 
-                      <div className="p-3 bg-white rounded-xl border border-slate-200">
-                        <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                      <div className="p-3 bg-white dark:bg-[#121824] rounded-xl border border-slate-200 dark:border-white/[0.08]">
+                        <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                           <Presentation className="w-3.5 h-3.5 text-emerald-600" />
                           <span>Presentation / PPT</span>
                         </div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">Google Slides, Pitch deck, Canva or PDF link</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Google Slides, Pitch deck, Canva or PDF link</div>
                       </div>
 
-                      <div className="p-3 bg-white rounded-xl border border-slate-200">
-                        <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                      <div className="p-3 bg-white dark:bg-[#121824] rounded-xl border border-slate-200 dark:border-white/[0.08]">
+                        <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                           <Link2 className="w-3.5 h-3.5 text-purple-600" />
                           <span>Additional Resources or Links</span>
                         </div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">Figma designs, smart contracts, API docs, or research</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Figma designs, smart contracts, API docs, or research</div>
                       </div>
                     </div>
                   </div>
@@ -833,9 +833,9 @@ function HackathonDetailContent({ params }: PageProps) {
 
             {/* TAB CONTENT: Prizes */}
             {activeTab === 'prizes' && (
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6 animate-in fade-in">
+              <div className="bg-white dark:bg-[#0c1017] p-6 rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-sm space-y-6 animate-in fade-in">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <Trophy className="w-5 h-5 text-[#ea580c]" />
                     <span>Prizes & Perks Breakdown</span>
                   </h3>
@@ -849,23 +849,23 @@ function HackathonDetailContent({ params }: PageProps) {
                     event.prizes.map((prize) => (
                       <div
                         key={prize.position}
-                        className="p-4 rounded-xl bg-orange-50/50 border border-orange-100 space-y-2 relative overflow-hidden"
+                        className="p-4 rounded-xl bg-orange-50/50 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900/30 space-y-2 relative overflow-hidden"
                       >
-                        <div className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                        <div className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                           {prize.position}
                         </div>
                         <div className="text-2xl font-black text-[#ea580c] font-mono">
                           {formatCurrency(prize.amount)}
                         </div>
-                        <p className="text-xs text-slate-600 font-medium">{prize.description}</p>
+                        <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">{prize.description}</p>
                       </div>
                     ))
                   ) : (
-                    <div className="p-4 rounded-xl bg-orange-50/50 border border-orange-100">
+                    <div className="p-4 rounded-xl bg-orange-50/50 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900/30">
                       <div className="text-2xl font-black text-[#ea580c] font-mono">
                         {formatCurrency(event.totalPrizeValue)}
                       </div>
-                      <p className="text-xs text-slate-600 font-medium mt-1">Cash prizes, grants, and exclusive swags.</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-300 font-medium mt-1">Cash prizes, grants, and exclusive swags.</p>
                     </div>
                   )}
                 </div>
@@ -874,14 +874,14 @@ function HackathonDetailContent({ params }: PageProps) {
 
             {/* TAB CONTENT: Rules */}
             {activeTab === 'rules' && (
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4 animate-in fade-in">
-                <h3 className="text-lg font-bold text-slate-900">Rules & Guidelines</h3>
+              <div className="bg-white dark:bg-[#0c1017] p-6 rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-sm space-y-4 animate-in fade-in">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Rules & Guidelines</h3>
                 {event.rulesText ? (
-                  <p className="text-xs text-slate-700 font-medium whitespace-pre-line leading-relaxed">
+                  <p className="text-xs text-slate-700 dark:text-slate-300 font-medium whitespace-pre-line leading-relaxed">
                     {event.rulesText}
                   </p>
                 ) : (
-                  <ul className="space-y-3 text-xs text-slate-700 font-medium">
+                  <ul className="space-y-3 text-xs text-slate-700 dark:text-slate-300 font-medium">
                     <li className="flex items-start gap-2.5">
                       <CheckCircle2 className="w-4 h-4 text-[#0099e6] shrink-0 mt-0.5" />
                       <span>All code must be newly written during the official hackathon sprint duration.</span>
@@ -905,8 +905,8 @@ function HackathonDetailContent({ params }: PageProps) {
 
             {/* TAB CONTENT: Sponsors */}
             {activeTab === 'sponsors' && (
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6 animate-in fade-in">
-                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <div className="bg-white dark:bg-[#0c1017] p-6 rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-sm space-y-6 animate-in fade-in">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <Award className="w-5 h-5 text-[#f97316]" />
                   <span>Sponsors & Partners</span>
                 </h3>
@@ -915,19 +915,19 @@ function HackathonDetailContent({ params }: PageProps) {
                     event.sponsors.map((sponsor) => (
                       <div
                         key={sponsor.name}
-                        className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 text-center flex flex-col items-center justify-center space-y-2"
+                        className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] text-center flex flex-col items-center justify-center space-y-2"
                       >
-                        <div className="w-12 h-12 rounded-xl bg-sky-100 border border-sky-200 flex items-center justify-center font-mono font-bold text-xs text-[#0099e6]">
+                        <div className="w-12 h-12 rounded-xl bg-sky-100 dark:bg-sky-950/60 border border-sky-200 dark:border-sky-800/40 flex items-center justify-center font-mono font-bold text-xs text-[#0099e6] dark:text-[#38bdf8]">
                           {sponsor.logoText || 'PARTNER'}
                         </div>
-                        <div className="text-xs font-bold text-slate-900">{sponsor.name}</div>
-                        <div className="text-[10px] text-slate-500 uppercase font-semibold">{sponsor.tier}</div>
+                        <div className="text-xs font-bold text-slate-900 dark:text-white">{sponsor.name}</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold">{sponsor.tier}</div>
                       </div>
                     ))
                   ) : (
-                    <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-center col-span-2">
-                      <div className="text-xs font-bold text-slate-900">{event.organizerName}</div>
-                      <div className="text-[10px] text-slate-500 uppercase">Lead Organizer</div>
+                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] text-center col-span-2">
+                      <div className="text-xs font-bold text-slate-900 dark:text-white">{event.organizerName}</div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase">Lead Organizer</div>
                     </div>
                   )}
                 </div>
@@ -936,9 +936,9 @@ function HackathonDetailContent({ params }: PageProps) {
 
             {/* TAB CONTENT: FAQs */}
             {activeTab === 'faqs' && (
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4 animate-in fade-in">
-                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                  <HelpCircle className="w-5 h-5 text-[#0099e6]" />
+              <div className="bg-white dark:bg-[#0c1017] p-6 rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-sm space-y-4 animate-in fade-in">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <HelpCircle className="w-5 h-5 text-[#0099e6] dark:text-[#38bdf8]" />
                   <span>Frequently Asked Questions</span>
                 </h3>
                 <div className="space-y-3">
@@ -948,17 +948,17 @@ function HackathonDetailContent({ params }: PageProps) {
                       return (
                         <div
                           key={faq.id}
-                          className="rounded-xl bg-slate-50 border border-slate-200/80 overflow-hidden"
+                          className="rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] overflow-hidden"
                         >
                           <button
                             onClick={() => setExpandedFaq(isOpen ? null : faq.id)}
-                            className="w-full p-4 flex items-center justify-between text-left text-xs font-bold text-slate-900 hover:text-[#0099e6] transition-colors cursor-pointer"
+                            className="w-full p-4 flex items-center justify-between text-left text-xs font-bold text-slate-900 dark:text-slate-200 hover:text-[#0099e6] dark:hover:text-[#38bdf8] transition-colors cursor-pointer"
                           >
                             <span>{faq.question}</span>
-                            <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                            <ChevronDown className={`w-4 h-4 text-slate-500 dark:text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                           </button>
                           {isOpen && (
-                            <div className="px-4 pb-4 text-xs text-slate-600 leading-relaxed border-t border-slate-200/60 pt-3 font-medium">
+                            <div className="px-4 pb-4 text-xs text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-200/60 dark:border-white/[0.08] pt-3 font-medium">
                               {faq.answer}
                             </div>
                           )}
@@ -966,7 +966,7 @@ function HackathonDetailContent({ params }: PageProps) {
                       );
                     })
                   ) : (
-                    <p className="text-xs text-slate-500">No FAQs available for this event yet.</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">No FAQs available for this event yet.</p>
                   )}
                 </div>
               </div>
@@ -975,7 +975,7 @@ function HackathonDetailContent({ params }: PageProps) {
 
           {/* Right Column: Sticky Action Box (1 col) */}
           <div className="space-y-6 lg:sticky lg:top-24">
-            <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-xl space-y-5">
+            <div className="p-6 rounded-3xl bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-white/[0.08] shadow-xl space-y-5">
               {/* Prize Pool Highlight */}
               <div>
                 <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Prize Pool</div>
@@ -985,12 +985,12 @@ function HackathonDetailContent({ params }: PageProps) {
               </div>
 
               {/* Deadline & Countdown */}
-              <div className="p-3.5 rounded-2xl bg-sky-50 border border-sky-100 space-y-1">
+              <div className="p-3.5 rounded-2xl bg-sky-50 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-800/40 space-y-1">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-600 font-medium">Registration Closes:</span>
+                  <span className="text-slate-600 dark:text-slate-300 font-medium">Registration Closes:</span>
                   <span className="text-[#ea580c] font-black">{deadlineInfo.text}</span>
                 </div>
-                <div className="text-xs font-mono text-[#0099e6] font-bold">
+                <div className="text-xs font-mono text-[#0099e6] dark:text-[#38bdf8] font-bold">
                   {formatDateTime(event.registrationDeadline)}
                 </div>
               </div>
@@ -1000,9 +1000,9 @@ function HackathonDetailContent({ params }: PageProps) {
                 <div className="space-y-2.5">
                   <Link
                     href={`/hackathons/${event.slug}/register`}
-                    className="w-full py-3 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 font-extrabold text-xs text-center flex items-center justify-center gap-2 transition-all cursor-pointer"
+                    className="w-full py-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-400 font-extrabold text-xs text-center flex items-center justify-center gap-2 transition-all cursor-pointer"
                   >
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     <span>You Are Registered • View Squad →</span>
                   </Link>
 
@@ -1026,25 +1026,25 @@ function HackathonDetailContent({ params }: PageProps) {
                     Register on External Portal ↗
                   </a>
                   {userSubmission ? (
-                    <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200/90 text-left space-y-1.5 animate-in fade-in">
+                    <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/90 dark:border-emerald-800/40 text-left space-y-1.5 animate-in fade-in">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-black text-emerald-800 flex items-center gap-1.5">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        <span className="text-[11px] font-black text-emerald-800 dark:text-emerald-400 flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                           <span>Project Submitted</span>
                         </span>
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase">
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 text-[10px] font-black uppercase">
                           {userSubmission.status || 'Submitted'}
                         </span>
                       </div>
-                      <div className="text-xs font-black text-slate-900 line-clamp-1">
+                      <div className="text-xs font-black text-slate-900 dark:text-white line-clamp-1">
                         {userSubmission.projectTitle}
                       </div>
                       <button
                         type="button"
                         onClick={() => setShowSubmissionModal(true)}
-                        className="w-full py-1.5 rounded-xl bg-white border border-emerald-300 hover:bg-emerald-100/50 text-emerald-800 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                        className="w-full py-1.5 rounded-xl bg-white dark:bg-[#121824] border border-emerald-300 dark:border-emerald-700/50 hover:bg-emerald-100/50 dark:hover:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                       >
-                        <Rocket className="w-3 h-3 text-[#0099e6]" />
+                        <Rocket className="w-3 h-3 text-[#0099e6] dark:text-[#38bdf8]" />
                         <span>Manage Submission</span>
                       </button>
                     </div>
@@ -1052,9 +1052,9 @@ function HackathonDetailContent({ params }: PageProps) {
                     <button
                       type="button"
                       onClick={() => setShowSubmissionModal(true)}
-                      className="w-full py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs text-center flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                      className="w-full py-2.5 rounded-xl border border-slate-200 dark:border-white/[0.1] hover:bg-slate-50 dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-300 font-bold text-xs text-center flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                     >
-                      <Rocket className="w-3.5 h-3.5 text-[#0099e6]" />
+                      <Rocket className="w-3.5 h-3.5 text-[#0099e6] dark:text-[#38bdf8]" />
                       <span>Submission Portal</span>
                     </button>
                   )}
@@ -1069,25 +1069,25 @@ function HackathonDetailContent({ params }: PageProps) {
                     <span>Register for Hackathon</span>
                   </Link>
                   {userSubmission ? (
-                    <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200/90 text-left space-y-1.5 animate-in fade-in">
+                    <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/90 dark:border-emerald-800/40 text-left space-y-1.5 animate-in fade-in">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-black text-emerald-800 flex items-center gap-1.5">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        <span className="text-[11px] font-black text-emerald-800 dark:text-emerald-400 flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                           <span>Project Submitted</span>
                         </span>
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase">
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 text-[10px] font-black uppercase">
                           {userSubmission.status || 'Submitted'}
                         </span>
                       </div>
-                      <div className="text-xs font-black text-slate-900 line-clamp-1">
+                      <div className="text-xs font-black text-slate-900 dark:text-white line-clamp-1">
                         {userSubmission.projectTitle}
                       </div>
                       <button
                         type="button"
                         onClick={() => setShowSubmissionModal(true)}
-                        className="w-full py-1.5 rounded-xl bg-white border border-emerald-300 hover:bg-emerald-100/50 text-emerald-800 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                        className="w-full py-1.5 rounded-xl bg-white dark:bg-[#121824] border border-emerald-300 dark:border-emerald-700/50 hover:bg-emerald-100/50 dark:hover:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                       >
-                        <Rocket className="w-3 h-3 text-[#0099e6]" />
+                        <Rocket className="w-3 h-3 text-[#0099e6] dark:text-[#38bdf8]" />
                         <span>Manage Submission</span>
                       </button>
                     </div>
@@ -1095,9 +1095,9 @@ function HackathonDetailContent({ params }: PageProps) {
                     <button
                       type="button"
                       onClick={() => setShowSubmissionModal(true)}
-                      className="w-full py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs text-center flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                      className="w-full py-2.5 rounded-xl border border-slate-200 dark:border-white/[0.1] hover:bg-slate-50 dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-300 font-bold text-xs text-center flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                     >
-                      <Rocket className="w-3.5 h-3.5 text-[#0099e6]" />
+                      <Rocket className="w-3.5 h-3.5 text-[#0099e6] dark:text-[#38bdf8]" />
                       <span>Submission Portal</span>
                     </button>
                   )}
@@ -1105,33 +1105,33 @@ function HackathonDetailContent({ params }: PageProps) {
               )}
 
               {/* Quick Info Grid */}
-              <div className="space-y-3 pt-3 border-t border-slate-100 text-xs">
-                <div className="flex items-center justify-between text-slate-600">
+              <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-white/[0.08] text-xs">
+                <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
                   <span className="font-medium">Team Size</span>
-                  <span className="font-bold text-slate-900">
+                  <span className="font-bold text-slate-900 dark:text-white">
                     {event.minTeamSize === event.maxTeamSize
                       ? `${event.minTeamSize} Members`
                       : `${event.minTeamSize} - ${event.maxTeamSize} Members`}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-slate-600">
+                <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
                   <span className="font-medium">Starts</span>
-                  <span className="font-bold text-slate-900">{formatDate(event.startDate)}</span>
+                  <span className="font-bold text-slate-900 dark:text-white">{formatDate(event.startDate)}</span>
                 </div>
-                <div className="flex items-center justify-between text-slate-600">
+                <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
                   <span className="font-medium">Ends</span>
-                  <span className="font-bold text-slate-900">{formatDate(event.endDate)}</span>
+                  <span className="font-bold text-slate-900 dark:text-white">{formatDate(event.endDate)}</span>
                 </div>
-                <div className="flex items-center justify-between text-slate-600">
+                <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
                   <span className="font-medium">Live Participants</span>
-                  <span className="font-bold text-[#0099e6] font-mono">
+                  <span className="font-bold text-[#0099e6] dark:text-[#38bdf8] font-mono">
                     {event.participantsCount || 1}+ Builders
                   </span>
                 </div>
               </div>
 
               {/* Verified Badge */}
-              <div className="pt-3 border-t border-slate-100 flex items-center gap-2 text-[11px] text-emerald-600 font-bold">
+              <div className="pt-3 border-t border-slate-100 dark:border-white/[0.08] flex items-center gap-2 text-[11px] text-emerald-600 dark:text-emerald-400 font-bold">
                 <ShieldCheck className="w-4 h-4" />
                 <span>Verified Realtime Event Arena</span>
               </div>

@@ -224,7 +224,7 @@ export function VenuePicker({
             onChange(e.target.value);
             setShowDropdown(true);
           }}
-          className="w-full pl-9 pr-10 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-colors"
+          className="w-full pl-9 pr-10 py-2.5 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] dark:focus:border-[#0099e6] rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-colors"
         />
         <div className="absolute left-3 top-3 pointer-events-none text-slate-400">
           <MapPin className="w-4 h-4 text-[#0099e6]" />
@@ -237,7 +237,7 @@ export function VenuePicker({
               setQuery('');
               onChange('');
             }}
-            className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 cursor-pointer"
+            className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -245,17 +245,17 @@ export function VenuePicker({
 
         {/* Suggestions Dropdown */}
         {showDropdown && (
-          <div className="absolute z-50 left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95">
+          <div className="absolute z-50 left-0 right-0 mt-1.5 bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-white/[0.08] rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95">
             {isLoading && (
-              <div className="p-3 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
+              <div className="p-3 text-center text-xs text-slate-500 dark:text-slate-400 flex items-center justify-center gap-2">
                 <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0099e6]" />
                 <span>Searching places & colleges...</span>
               </div>
             )}
 
             {!isLoading && suggestions.length > 0 && (
-              <div className="max-h-60 overflow-y-auto divide-y divide-slate-100">
-                <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50">
+              <div className="max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-white/[0.06]">
+                <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50 dark:bg-white/[0.03]">
                   Search Results
                 </div>
                 {suggestions.map((s, idx) => (
@@ -263,7 +263,7 @@ export function VenuePicker({
                     key={idx}
                     type="button"
                     onClick={() => handleSelectSuggestion(s.displayName)}
-                    className="w-full p-2.5 px-3.5 text-left text-xs text-slate-800 hover:bg-sky-50 hover:text-[#0099e6] flex items-start gap-2.5 transition-colors cursor-pointer"
+                    className="w-full p-2.5 px-3.5 text-left text-xs text-slate-800 dark:text-slate-200 hover:bg-sky-50 dark:hover:bg-white/[0.06] hover:text-[#0099e6] dark:hover:text-[#38bdf8] flex items-start gap-2.5 transition-colors cursor-pointer"
                   >
                     <MapPin className="w-3.5 h-3.5 mt-0.5 shrink-0 text-[#0099e6]" />
                     <span className="line-clamp-2 leading-relaxed">{s.displayName}</span>
@@ -285,13 +285,13 @@ export function VenuePicker({
                       key={i}
                       type="button"
                       onClick={() => handleSelectSuggestion(v.name)}
-                      className="text-left p-2 rounded-xl text-xs text-slate-700 hover:bg-sky-50 hover:text-[#0099e6] flex items-center justify-between transition-colors cursor-pointer"
+                      className="text-left p-2 rounded-xl text-xs text-slate-700 dark:text-slate-300 hover:bg-sky-50 dark:hover:bg-white/[0.06] hover:text-[#0099e6] dark:hover:text-[#38bdf8] flex items-center justify-between transition-colors cursor-pointer"
                     >
                       <div className="flex items-center gap-2">
                         <Building className="w-3.5 h-3.5 text-slate-400" />
                         <span className="font-medium">{v.name}</span>
                       </div>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-semibold">
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/[0.08] text-slate-500 dark:text-slate-400 font-semibold">
                         {v.type}
                       </span>
                     </button>

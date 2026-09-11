@@ -120,8 +120,8 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-3 sm:p-6 lg:p-10">
-      <div className="w-full max-w-6xl bg-white rounded-[32px] shadow-2xl border border-slate-200/80 overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[720px]">
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#05070c] flex items-center justify-center p-3 sm:p-6 lg:p-10">
+      <div className="w-full max-w-6xl bg-white dark:bg-[#0c1017] rounded-[32px] shadow-2xl border border-slate-200/80 dark:border-white/[0.08] overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[720px]">
         {/* ─── Left Column: Dark Branded Hero Card ─────────────────── */}
         <div className="lg:col-span-5 m-3 sm:m-4 rounded-[28px] bg-gradient-to-br from-[#080d1e] via-[#0d142b] to-[#050814] text-white p-7 sm:p-10 flex flex-col justify-between relative overflow-hidden border border-slate-800/80">
           {/* Ambient Lighting Gradients */}
@@ -237,15 +237,15 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
           </div>
         </div>
 
-        {/* ─── Right Column: Clean White Form ───────────────────────── */}
+        {/* ─── Right Column: Clean Form ───────────────────────────── */}
         <div className="lg:col-span-7 p-6 sm:p-10 lg:p-14 flex flex-col justify-center">
           <div className="max-w-md w-full mx-auto space-y-6">
             {/* Form Header */}
             <div>
-              <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+              <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
                 {mode === 'register' ? 'Hi there,' : 'Welcome back,'}
               </h2>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">
                 {mode === 'register'
                   ? "Welcome to Hacker's Unity — it's free, always."
                   : "Sign in to access your hackathons, teams & dashboard."}
@@ -254,14 +254,14 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
 
             {/* Error / Success Feedback */}
             {errorMessage && (
-              <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2.5 animate-in fade-in">
+              <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/40 text-rose-700 dark:text-rose-300 text-xs font-semibold flex items-center gap-2.5 animate-in fade-in">
                 <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
                 <span>{errorMessage}</span>
               </div>
             )}
 
             {successMessage && (
-              <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold flex items-center gap-2.5 animate-in fade-in">
+              <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-300 text-xs font-semibold flex items-center gap-2.5 animate-in fade-in">
                 <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
                 <span>{successMessage}</span>
               </div>
@@ -279,7 +279,7 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
                         placeholder="Full Name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:border-[#0099e6] focus:bg-white text-xs font-medium text-slate-900 placeholder-slate-400 outline-none transition-all"
+                        className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] focus:border-[#0099e6] dark:focus:border-[#38bdf8] focus:bg-white dark:focus:bg-white/[0.06] text-xs font-medium text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-all"
                       />
                     </div>
                   )}
@@ -291,7 +291,7 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
                       placeholder="Email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:border-[#0099e6] focus:bg-white text-xs font-medium text-slate-900 placeholder-slate-400 outline-none transition-all"
+                      className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] focus:border-[#0099e6] dark:focus:border-[#38bdf8] focus:bg-white dark:focus:bg-white/[0.06] text-xs font-medium text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-all"
                     />
                   </div>
 
@@ -302,12 +302,12 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
                       placeholder="Password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-4 pr-10 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:border-[#0099e6] focus:bg-white text-xs font-medium text-slate-900 placeholder-slate-400 outline-none transition-all"
+                      className="w-full pl-4 pr-10 py-3 rounded-2xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] focus:border-[#0099e6] dark:focus:border-[#38bdf8] focus:bg-white dark:focus:bg-white/[0.06] text-xs font-medium text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-all"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-3 text-slate-400 hover:text-slate-700 cursor-pointer"
+                      className="absolute right-3 top-3 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -317,7 +317,7 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
                     <div className="flex justify-end -mt-1 pb-1">
                       <Link
                         href="/forgot-password"
-                        className="text-[11px] font-semibold text-[#0099e6] hover:underline"
+                        className="text-[11px] font-semibold text-[#0099e6] dark:text-[#38bdf8] hover:underline"
                       >
                         Forgot password?
                       </Link>
@@ -329,12 +329,12 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
                     return (
                       <div className="space-y-1.5 px-1 py-0.5">
                         <div className="flex items-center justify-between text-[11px] font-semibold">
-                          <span className="text-slate-500">Password Strength:</span>
+                          <span className="text-slate-500 dark:text-slate-400">Password Strength:</span>
                           <span style={{ color: PASSWORD_STRENGTH_COLORS[strengthRes.strength] }}>
                             {PASSWORD_STRENGTH_LABELS[strengthRes.strength]}
                           </span>
                         </div>
-                        <div className="flex gap-1 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div className="flex gap-1 h-1.5 w-full bg-slate-100 dark:bg-white/[0.08] rounded-full overflow-hidden">
                           {[0, 1, 2, 3].map((step) => (
                             <div
                               key={step}
@@ -343,12 +343,12 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
                                 backgroundColor:
                                   step < strengthRes.strength
                                     ? PASSWORD_STRENGTH_COLORS[strengthRes.strength]
-                                    : '#e2e8f0',
+                                    : 'rgba(255,255,255,0.1)',
                               }}
                             />
                           ))}
                         </div>
-                        <p className="text-[10px] text-slate-400">
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500">
                           Requires 8+ characters, uppercase, lowercase, and a number.
                         </p>
                       </div>
@@ -363,12 +363,12 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
                         placeholder="Confirm Password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="w-full pl-4 pr-10 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:border-[#0099e6] focus:bg-white text-xs font-medium text-slate-900 placeholder-slate-400 outline-none transition-all"
+                        className="w-full pl-4 pr-10 py-3 rounded-2xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] focus:border-[#0099e6] dark:focus:border-[#38bdf8] focus:bg-white dark:focus:bg-white/[0.06] text-xs font-medium text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-all"
                       />
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-3 text-slate-400 hover:text-slate-700 cursor-pointer"
+                        className="absolute right-3 top-3 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer"
                       >
                         {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -377,7 +377,7 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
 
                   {mode === 'register' && (
                     <div className="flex gap-2">
-                      <div className="px-3.5 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 flex items-center">
+                      <div className="px-3.5 py-3 rounded-2xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center">
                         +91
                       </div>
                       <input
@@ -385,12 +385,12 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
                         placeholder="Mobile Number"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                        className="flex-1 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:border-[#0099e6] focus:bg-white text-xs font-medium text-slate-900 placeholder-slate-400 outline-none transition-all"
+                        className="flex-1 px-4 py-3 rounded-2xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] focus:border-[#0099e6] dark:focus:border-[#38bdf8] focus:bg-white dark:focus:bg-white/[0.06] text-xs font-medium text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-all"
                       />
                     </div>
                   )}
 
-                  {/* Primary Submit Button (Coral Red like Shekunj, or brand accent) */}
+                  {/* Primary Submit Button */}
                   <button
                     type="submit"
                     disabled={submitting}
@@ -411,7 +411,7 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
                   <button
                     type="button"
                     onClick={() => signInWithOAuth('google')}
-                    className="w-full py-3 px-4 rounded-2xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center justify-center gap-3 transition-all cursor-pointer shadow-2xs"
+                    className="w-full py-3 px-4 rounded-2xl border border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.2] hover:bg-slate-50 dark:hover:bg-white/[0.04] text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-3 transition-all cursor-pointer shadow-2xs"
                   >
                     {/* Google G SVG */}
                     <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
@@ -437,7 +437,7 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
                 </div>
 
                 {/* Footer Switcher */}
-                <div className="pt-2 text-center text-xs text-slate-500 font-medium">
+                <div className="pt-2 text-center text-xs text-slate-500 dark:text-slate-400 font-medium">
                   {mode === 'register' ? (
                     <p>
                       Already have an account?{' '}
@@ -447,7 +447,7 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
                           setMode('login');
                           setErrorMessage(null);
                         }}
-                        className="font-bold text-slate-900 hover:underline cursor-pointer"
+                        className="font-bold text-slate-900 dark:text-white hover:underline cursor-pointer"
                       >
                         Sign in
                       </button>
@@ -461,7 +461,7 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
                           setMode('register');
                           setErrorMessage(null);
                         }}
-                        className="font-bold text-slate-900 hover:underline cursor-pointer"
+                        className="font-bold text-slate-900 dark:text-white hover:underline cursor-pointer"
                       >
                         Create Account
                       </button>
@@ -480,7 +480,7 @@ export default function SignupPage({ initialMode }: { initialMode?: 'login' | 'r
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
+        <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] dark:bg-[#05070c]">
           <Loader2 className="w-8 h-8 animate-spin text-[#0099e6]" />
         </div>
       }

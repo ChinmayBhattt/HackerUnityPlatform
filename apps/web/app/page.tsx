@@ -219,14 +219,14 @@ export default function HomePage() {
   return (
     <div className="flex flex-col flex-1">
       {/* ─── Hero Section ────────────────────────────────────────── */}
-      <section className="relative overflow-hidden pt-12 pb-20 md:pt-20 md:pb-28 border-b border-slate-200/80 bg-grid-pattern">
+      <section className="relative overflow-hidden pt-12 pb-20 md:pt-20 md:pb-28 border-b border-slate-200/80 dark:border-white/[0.08] bg-grid-pattern">
         {/* Soft Ambient Brand Mesh */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#0099e6]/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-1/3 left-1/3 w-80 h-80 bg-[#f97316]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#0099e6]/10 dark:bg-[#0099e6]/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/3 left-1/3 w-80 h-80 bg-[#f97316]/10 dark:bg-[#f97316]/15 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center">
           {/* Top Pill */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 text-slate-800 text-xs font-bold mb-6 shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-white/[0.08] text-slate-800 dark:text-slate-200 text-xs font-bold mb-6 shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
             <span className="flex h-2 w-2 relative">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#0099e6] opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-[#0099e6]" />
@@ -237,13 +237,13 @@ export default function HomePage() {
           </div>
 
           {/* Main Title */}
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-slate-900 tracking-tight max-w-5xl leading-[1.1] mb-6">
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-slate-900 dark:text-white tracking-tight max-w-5xl leading-[1.1] mb-6">
             Where Student Talent Finds a {' '}
             <span className="text-gradient-brand">Platform & Ideas</span> Become Impact.
           </h1>
 
           {/* Subtitle */}
-          <p className="text-base sm:text-lg text-slate-600 max-w-2xl leading-relaxed mb-8 font-medium">
+          <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed mb-8 font-medium">
             Discover premier hackathons across AI Agents, Web3, and DeepTech. Match with world-class teammates, build high-impact prototypes, and win verified payouts on Hacker&apos;s Unity.
           </p>
 
@@ -253,55 +253,55 @@ export default function HomePage() {
 
 
           {/* Metrics Ticker */}
-          <div className="w-full max-w-5xl grid grid-cols-2 md:grid-cols-4 gap-3.5 sm:gap-5 pt-8 border-t border-slate-200/80">
+          <div className="w-full max-w-5xl grid grid-cols-2 md:grid-cols-4 gap-3.5 sm:gap-5 pt-8 border-t border-slate-200/80 dark:border-white/[0.08]">
             {/* Stat 1: Hackathons */}
-            <div className="group relative p-4 sm:p-5 rounded-2xl bg-white/90 backdrop-blur-sm border border-slate-200/90 shadow-xs hover:shadow-lg hover:border-slate-300 hover:-translate-y-0.5 transition-all duration-300 flex flex-col items-center justify-center text-center">
-              <div className="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-800 mb-2 group-hover:scale-110 transition-transform">
+            <div className="group relative p-4 sm:p-5 rounded-2xl bg-white/90 dark:bg-[#0c1017]/90 backdrop-blur-sm border border-slate-200/90 dark:border-white/[0.08] shadow-xs hover:shadow-lg dark:hover:shadow-black/70 hover:border-slate-300 dark:hover:border-white/[0.18] hover:-translate-y-0.5 transition-all duration-300 flex flex-col items-center justify-center text-center">
+              <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08] flex items-center justify-center text-slate-800 dark:text-slate-200 mb-2 group-hover:scale-110 transition-transform">
                 <Trophy className="w-4 h-4" />
               </div>
-              <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight whitespace-nowrap">
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight whitespace-nowrap">
                 10+
               </div>
-              <div className="text-[11px] text-slate-500 mt-1 uppercase tracking-wider font-bold whitespace-nowrap">
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider font-bold whitespace-nowrap">
                 Hackathons Hosted
               </div>
             </div>
 
             {/* Stat 2: Events */}
-            <div className="group relative p-4 sm:p-5 rounded-2xl bg-white/90 backdrop-blur-sm border border-slate-200/90 shadow-xs hover:shadow-lg hover:border-orange-200 hover:-translate-y-0.5 transition-all duration-300 flex flex-col items-center justify-center text-center">
-              <div className="w-8 h-8 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center text-[#ea580c] mb-2 group-hover:scale-110 transition-transform">
+            <div className="group relative p-4 sm:p-5 rounded-2xl bg-white/90 dark:bg-[#0c1017]/90 backdrop-blur-sm border border-slate-200/90 dark:border-white/[0.08] shadow-xs hover:shadow-lg dark:hover:shadow-black/70 hover:border-orange-200 dark:hover:border-orange-500/30 hover:-translate-y-0.5 transition-all duration-300 flex flex-col items-center justify-center text-center">
+              <div className="w-8 h-8 rounded-xl bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20 flex items-center justify-center text-[#ea580c] mb-2 group-hover:scale-110 transition-transform">
                 <Flame className="w-4 h-4" />
               </div>
               <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#ea580c] tracking-tight whitespace-nowrap">
                 30+
               </div>
-              <div className="text-[11px] text-slate-500 mt-1 uppercase tracking-wider font-bold whitespace-nowrap">
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider font-bold whitespace-nowrap">
                 Events Conducted
               </div>
             </div>
 
             {/* Stat 3: Impressions */}
-            <div className="group relative p-4 sm:p-5 rounded-2xl bg-white/90 backdrop-blur-sm border border-slate-200/90 shadow-xs hover:shadow-lg hover:border-sky-200 hover:-translate-y-0.5 transition-all duration-300 flex flex-col items-center justify-center text-center">
-              <div className="w-8 h-8 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center text-[#0099e6] mb-2 group-hover:scale-110 transition-transform">
+            <div className="group relative p-4 sm:p-5 rounded-2xl bg-white/90 dark:bg-[#0c1017]/90 backdrop-blur-sm border border-slate-200/90 dark:border-white/[0.08] shadow-xs hover:shadow-lg dark:hover:shadow-black/70 hover:border-sky-200 dark:hover:border-sky-500/30 hover:-translate-y-0.5 transition-all duration-300 flex flex-col items-center justify-center text-center">
+              <div className="w-8 h-8 rounded-xl bg-sky-50 dark:bg-sky-500/10 border border-sky-200 dark:border-sky-500/20 flex items-center justify-center text-[#0099e6] mb-2 group-hover:scale-110 transition-transform">
                 <Zap className="w-4 h-4" />
               </div>
               <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#0099e6] tracking-tight whitespace-nowrap">
                 5M+
               </div>
-              <div className="text-[11px] text-slate-500 mt-1 uppercase tracking-wider font-bold whitespace-nowrap">
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider font-bold whitespace-nowrap">
                 Impressions
               </div>
             </div>
 
             {/* Stat 4: Community Members */}
-            <div className="group relative p-4 sm:p-5 rounded-2xl bg-white/90 backdrop-blur-sm border border-slate-200/90 shadow-xs hover:shadow-lg hover:border-emerald-200 hover:-translate-y-0.5 transition-all duration-300 flex flex-col items-center justify-center text-center">
-              <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 mb-2 group-hover:scale-110 transition-transform">
+            <div className="group relative p-4 sm:p-5 rounded-2xl bg-white/90 dark:bg-[#0c1017]/90 backdrop-blur-sm border border-slate-200/90 dark:border-white/[0.08] shadow-xs hover:shadow-lg dark:hover:shadow-black/70 hover:border-emerald-200 dark:hover:border-emerald-500/30 hover:-translate-y-0.5 transition-all duration-300 flex flex-col items-center justify-center text-center">
+              <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 flex items-center justify-center text-emerald-600 mb-2 group-hover:scale-110 transition-transform">
                 <Users className="w-4 h-4" />
               </div>
               <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-emerald-600 tracking-tight whitespace-nowrap">
                 50,000+
               </div>
-              <div className="text-[11px] text-slate-500 mt-1 uppercase tracking-wider font-bold whitespace-nowrap">
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider font-bold whitespace-nowrap">
                 Community Members
               </div>
             </div>
@@ -310,7 +310,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── Partners Marquee ─────────────────────────────────────── */}
-      <section className="py-10 border-b border-slate-200/80 bg-white overflow-hidden">
+      <section className="py-10 border-b border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-[#05070c] overflow-hidden">
         <div className="text-center mb-6">
           <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
             Trusted by builders from leading organizations worldwide
@@ -320,14 +320,14 @@ export default function HomePage() {
         {/* Marquee wrapper — CSS animation scrolls right-to-left */}
         <div className="relative w-full overflow-hidden">
           {/* Fade edges */}
-          <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
-          <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+          <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-white dark:from-[#05070c] to-transparent z-10 pointer-events-none" />
+          <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-white dark:from-[#05070c] to-transparent z-10 pointer-events-none" />
 
           <div className="flex animate-marquee-reverse whitespace-nowrap gap-16 items-center">
             {/* First set */}
             {[
               { name: 'OpenAI', style: 'font-extrabold text-2xl tracking-tighter' },
-              { name: 'Trainzex AI', href: 'https://trainzexai.in', style: 'font-extrabold text-2xl tracking-tight text-slate-700 hover:text-[#0099e6]' },
+              { name: 'Trainzex AI', href: 'https://trainzexai.in', style: 'font-extrabold text-2xl tracking-tight text-slate-700 dark:text-slate-300 hover:text-[#0099e6]' },
               { name: 'Google', style: 'font-bold text-2xl tracking-tight' },
               { name: 'Microsoft', style: 'font-semibold text-2xl tracking-tight' },
               { name: 'amazon', style: 'font-extrabold text-2xl lowercase tracking-tight' },
@@ -344,14 +344,14 @@ export default function HomePage() {
                   href={partner.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="shrink-0 flex items-center text-slate-400 hover:text-slate-900 transition-colors px-3 cursor-pointer"
+                  className="shrink-0 flex items-center text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors px-3 cursor-pointer"
                 >
                   <span className={partner.style}>{partner.name}</span>
                 </a>
               ) : (
                 <div
                   key={partner.name}
-                  className="shrink-0 flex items-center text-slate-400 hover:text-slate-900 transition-colors px-3 cursor-pointer"
+                  className="shrink-0 flex items-center text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors px-3 cursor-pointer"
                 >
                   <span className={partner.style}>{partner.name}</span>
                 </div>
@@ -361,7 +361,7 @@ export default function HomePage() {
             {/* Duplicate set for seamless continuous loop */}
             {[
               { name: 'OpenAI-2', label: 'OpenAI', style: 'font-extrabold text-2xl tracking-tighter' },
-              { name: 'Trainzex-2', label: 'Trainzex AI', href: 'https://trainzexai.in', style: 'font-extrabold text-2xl tracking-tight text-slate-700 hover:text-[#0099e6]' },
+              { name: 'Trainzex-2', label: 'Trainzex AI', href: 'https://trainzexai.in', style: 'font-extrabold text-2xl tracking-tight text-slate-700 dark:text-slate-300 hover:text-[#0099e6]' },
               { name: 'Google-2', label: 'Google', style: 'font-bold text-2xl tracking-tight' },
               { name: 'Microsoft-2', label: 'Microsoft', style: 'font-semibold text-2xl tracking-tight' },
               { name: 'amazon-2', label: 'amazon', style: 'font-extrabold text-2xl lowercase tracking-tight' },
@@ -378,14 +378,14 @@ export default function HomePage() {
                   href={partner.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="shrink-0 flex items-center text-slate-400 hover:text-slate-900 transition-colors px-3 cursor-pointer"
+                  className="shrink-0 flex items-center text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors px-3 cursor-pointer"
                 >
                   <span className={partner.style}>{partner.label}</span>
                 </a>
               ) : (
                 <div
                   key={partner.name}
-                  className="shrink-0 flex items-center text-slate-400 hover:text-slate-900 transition-colors px-3 cursor-pointer"
+                  className="shrink-0 flex items-center text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors px-3 cursor-pointer"
                 >
                   <span className={partner.style}>{partner.label}</span>
                 </div>
@@ -400,14 +400,14 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 border border-orange-200 text-[#ea580c] text-xs font-bold uppercase tracking-wider mb-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20 text-[#ea580c] text-xs font-bold uppercase tracking-wider mb-2">
                 <Flame className="w-3.5 h-3.5 text-[#f97316]" />
                 <span>Flagship Arenas</span>
               </div>
-              <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+              <h2 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
                 Featured & Trending Hackathons
               </h2>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">
                 Top prize pools, venture-backed sponsors, and global recognition.
               </p>
             </div>
@@ -426,7 +426,7 @@ export default function HomePage() {
                   onClick={() => scrollEvents('left')}
                   disabled={!canScrollLeft}
                   aria-label="Previous events"
-                  className="w-10 h-10 rounded-2xl bg-white border border-slate-200 hover:border-[#0099e6] hover:bg-slate-50 text-slate-700 hover:text-[#0099e6] shadow-xs flex items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95 disabled:opacity-30 disabled:pointer-events-none"
+                  className="w-10 h-10 rounded-2xl bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-white/[0.08] hover:border-[#0099e6] hover:bg-slate-50 dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-300 hover:text-[#0099e6] shadow-xs flex items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95 disabled:opacity-30 disabled:pointer-events-none"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
@@ -435,7 +435,7 @@ export default function HomePage() {
                   onClick={() => scrollEvents('right')}
                   disabled={!canScrollRight}
                   aria-label="Next events"
-                  className="w-10 h-10 rounded-2xl bg-white border border-slate-200 hover:border-[#0099e6] hover:bg-slate-50 text-slate-700 hover:text-[#0099e6] shadow-xs flex items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95 disabled:opacity-30 disabled:pointer-events-none"
+                  className="w-10 h-10 rounded-2xl bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-white/[0.08] hover:border-[#0099e6] hover:bg-slate-50 dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-300 hover:text-[#0099e6] shadow-xs flex items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95 disabled:opacity-30 disabled:pointer-events-none"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
@@ -453,9 +453,9 @@ export default function HomePage() {
                 type="button"
                 onClick={() => scrollEvents('left')}
                 aria-label="Scroll left"
-                className="hidden md:flex absolute left-6 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/95 hover:bg-white text-slate-800 shadow-xl border border-slate-200/90 items-center justify-center transition-all cursor-pointer hover:scale-110 active:scale-95 backdrop-blur-sm"
+                className="hidden md:flex absolute left-6 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/95 dark:bg-[#0c1017]/95 hover:bg-white dark:hover:bg-[#151c28] text-slate-800 dark:text-slate-200 shadow-xl border border-slate-200/90 dark:border-white/[0.1] items-center justify-center transition-all cursor-pointer hover:scale-110 active:scale-95 backdrop-blur-sm"
               >
-                <ChevronLeft className="w-6 h-6 text-slate-700" />
+                <ChevronLeft className="w-6 h-6 text-slate-700 dark:text-slate-200" />
               </button>
             )}
 
@@ -465,18 +465,18 @@ export default function HomePage() {
                 type="button"
                 onClick={() => scrollEvents('right')}
                 aria-label="Scroll right"
-                className="hidden md:flex absolute right-6 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/95 hover:bg-white text-slate-800 shadow-xl border border-slate-200/90 items-center justify-center transition-all cursor-pointer hover:scale-110 active:scale-95 backdrop-blur-sm"
+                className="hidden md:flex absolute right-6 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/95 dark:bg-[#0c1017]/95 hover:bg-white dark:hover:bg-[#151c28] text-slate-800 dark:text-slate-200 shadow-xl border border-slate-200/90 dark:border-white/[0.1] items-center justify-center transition-all cursor-pointer hover:scale-110 active:scale-95 backdrop-blur-sm"
               >
-                <ChevronRight className="w-6 h-6 text-slate-700" />
+                <ChevronRight className="w-6 h-6 text-slate-700 dark:text-slate-200" />
               </button>
             )}
 
             {/* Soft Edge Gradient Fades */}
             {canScrollLeft && (
-              <div className="absolute inset-y-0 left-4 sm:left-6 lg:left-8 w-12 bg-gradient-to-r from-[#f8fafc] to-transparent z-10 pointer-events-none" />
+              <div className="absolute inset-y-0 left-4 sm:left-6 lg:left-8 w-12 bg-gradient-to-r from-[#f8fafc] dark:from-[#05070c] to-transparent z-10 pointer-events-none" />
             )}
             {canScrollRight && (
-              <div className="absolute inset-y-0 right-4 sm:right-6 lg:right-8 w-12 bg-gradient-to-l from-[#f8fafc] to-transparent z-10 pointer-events-none" />
+              <div className="absolute inset-y-0 right-4 sm:right-6 lg:right-8 w-12 bg-gradient-to-l from-[#f8fafc] dark:from-[#05070c] to-transparent z-10 pointer-events-none" />
             )}
 
             <div
@@ -656,45 +656,45 @@ export default function HomePage() {
       {/* ─── Why Hacker's Unity Matrix ─────────────────────────────── */}
       <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="text-center max-w-2xl mx-auto mb-14">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold uppercase tracking-wider mb-3">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider mb-3">
             <ShieldCheck className="w-3.5 h-3.5" />
             <span>The Builder Standard</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
             Why Hackers & Organizers Choose Hacker&apos;s Unity
           </h2>
-          <p className="text-xs sm:text-sm text-slate-500 mt-2 font-medium">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2 font-medium">
             Engineered from the ground up for maximum fairness, transparency, and developer speed.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center text-[#0099e6]">
+          <div className="p-6 rounded-2xl bg-white dark:bg-[#0c1017] border border-slate-200/90 dark:border-white/[0.08] shadow-sm space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-500/10 border border-sky-200 dark:border-sky-500/20 flex items-center justify-center text-[#0099e6]">
               <ShieldCheck className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold text-slate-900">A Platform to Showcase Your Talent</h3>
-            <p className="text-xs text-slate-600 leading-relaxed font-medium">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">A Platform to Showcase Your Talent</h3>
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
               Hacker’s Unity gives students the right platform to showcase their skills, ideas, creativity, and technical talent to a wider community and industry.
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center text-[#ea580c]">
+          <div className="p-6 rounded-2xl bg-white dark:bg-[#0c1017] border border-slate-200/90 dark:border-white/[0.08] shadow-sm space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20 flex items-center justify-center text-[#ea580c]">
               <Zap className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold text-slate-900">Don’t Just Build Projects. Build Products.</h3>
-            <p className="text-xs text-slate-600 leading-relaxed font-medium">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">Don’t Just Build Projects. Build Products.</h3>
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
               We believe hackathons should go beyond temporary projects. Build solutions that solve real-world problems and have the potential to become real products and startups.
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
+          <div className="p-6 rounded-2xl bg-white dark:bg-[#0c1017] border border-slate-200/90 dark:border-white/[0.08] shadow-sm space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 flex items-center justify-center text-emerald-600">
               <Trophy className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold text-slate-900">Turn Your Idea Into a Startup</h3>
-            <p className="text-xs text-slate-600 leading-relaxed font-medium">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">Turn Your Idea Into a Startup</h3>
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
              The journey doesn't end when the hackathon does. We aim to help promising builders take their ideas forward, validate them, and grow them into impactful startups.
             </p>
           </div>

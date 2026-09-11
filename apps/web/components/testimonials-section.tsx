@@ -79,22 +79,22 @@ function CompanyLogo({ type }: { type: TestimonialItem['companyLogo'] }) {
             <span className="bg-[#00a4ef] rounded-[0.5px] w-[7px] h-[7px]" />
             <span className="bg-[#ffb900] rounded-[0.5px] w-[7px] h-[7px]" />
           </div>
-          <span className="text-base font-semibold text-slate-800 tracking-tight font-sans">
+          <span className="text-base font-semibold text-slate-800 dark:text-slate-200 tracking-tight font-sans">
             Microsoft
           </span>
         </div>
       );
     case 'amazon':
       return (
-        <div className="flex items-center gap-1.5 text-slate-900">
-          <FaAmazon className="w-5 h-5 text-slate-900" />
+        <div className="flex items-center gap-1.5 text-slate-900 dark:text-slate-200">
+          <FaAmazon className="w-5 h-5 text-slate-900 dark:text-slate-200" />
           <span className="text-base font-black tracking-tight">amazon</span>
         </div>
       );
     case 'covlant':
       return (
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-md overflow-hidden relative border border-slate-200 shrink-0">
+          <div className="w-6 h-6 rounded-md overflow-hidden relative border border-slate-200 dark:border-white/[0.1] shrink-0">
             <Image
               src="/testimonials/covlant-logo.jpeg"
               alt="Covlant AI"
@@ -102,7 +102,7 @@ function CompanyLogo({ type }: { type: TestimonialItem['companyLogo'] }) {
               className="object-cover"
             />
           </div>
-          <span className="text-sm font-black text-slate-900 tracking-tight">
+          <span className="text-sm font-black text-slate-900 dark:text-slate-200 tracking-tight">
             Covlant AI
           </span>
         </div>
@@ -110,10 +110,10 @@ function CompanyLogo({ type }: { type: TestimonialItem['companyLogo'] }) {
     case 'tiktok':
       return (
         <div className="flex items-center gap-1.5">
-          <svg className="w-4 h-4 fill-slate-900" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 fill-slate-900 dark:fill-slate-200" viewBox="0 0 24 24">
             <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.298-.002.595.042.88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 3 15.68 6.34 6.34 0 0 0 9.34 22a6.34 6.34 0 0 0 6.34-6.32V9.32a8.32 8.32 0 0 0 3.91 1.25V7.12a4.88 4.88 0 0 1 0-.43z" />
           </svg>
-          <span className="text-base font-black text-slate-900 tracking-tight">
+          <span className="text-base font-black text-slate-900 dark:text-white tracking-tight">
             TikTok
           </span>
         </div>
@@ -121,10 +121,10 @@ function CompanyLogo({ type }: { type: TestimonialItem['companyLogo'] }) {
     case 'tcs':
       return (
         <div className="flex items-center gap-2">
-          <div className="px-1.5 py-0.5 rounded bg-slate-900 text-white font-black text-[11px] tracking-wider">
+          <div className="px-1.5 py-0.5 rounded bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-[11px] tracking-wider">
             TCS
           </div>
-          <span className="text-xs font-bold text-slate-800 leading-tight">
+          <span className="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight">
             Tata Consultancy Services
           </span>
         </div>
@@ -173,22 +173,22 @@ export function TestimonialsSection() {
   };
 
   return (
-    <section className="relative py-16 md:py-24 w-full overflow-hidden bg-gradient-to-b from-[#f8fafc]/60 via-white to-[#f8fafc]/40 border-t border-slate-100">
+    <section className="relative py-16 md:py-24 w-full overflow-hidden bg-gradient-to-b from-[#f8fafc]/60 via-white to-[#f8fafc]/40 dark:from-[#05070c] dark:via-[#080b11] dark:to-[#05070c] border-t border-slate-100 dark:border-white/[0.08]">
       {/* Ambient background glows (matching H2S subtle bubbles) */}
-      <div className="absolute top-1/2 left-8 -translate-y-1/2 w-72 h-72 bg-sky-100/50 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-1/3 right-8 w-80 h-80 bg-blue-100/40 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 left-8 -translate-y-1/2 w-72 h-72 bg-sky-100/50 dark:bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/3 right-8 w-80 h-80 bg-blue-100/40 dark:bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 text-[#0099e6] text-xs font-bold uppercase tracking-wider mb-3">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 dark:bg-sky-500/10 border border-sky-200 dark:border-sky-500/20 text-[#0099e6] text-xs font-bold uppercase tracking-wider mb-3">
             <Sparkles className="w-3.5 h-3.5 text-[#0099e6]" />
             <span>Industry Endorsements</span>
           </div>
-          <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight">
+          <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
             Backed by Builders, <span className="text-gradient-brand">Trusted by Leaders</span>
           </h2>
-          <p className="text-xs sm:text-sm text-slate-500 mt-3 font-medium">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-3 font-medium">
             Real perspectives from senior engineering leaders, architects, and founders actively mentoring and backing talent on Hacker&apos;s Unity.
           </p>
         </div>
@@ -201,7 +201,7 @@ export function TestimonialsSection() {
             onClick={() => scroll('left')}
             disabled={!canScrollLeft}
             aria-label="Previous testimonial"
-            className="absolute -left-3 sm:-left-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white hover:bg-slate-50 text-slate-700 hover:text-[#0099e6] shadow-xl border border-slate-200/80 flex items-center justify-center transition-all cursor-pointer hover:scale-110 active:scale-95 disabled:opacity-0 disabled:pointer-events-none"
+            className="absolute -left-3 sm:-left-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white dark:bg-[#0c1017] hover:bg-slate-50 dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-300 hover:text-[#0099e6] shadow-xl border border-slate-200/80 dark:border-white/[0.08] flex items-center justify-center transition-all cursor-pointer hover:scale-110 active:scale-95 disabled:opacity-0 disabled:pointer-events-none"
           >
             <ChevronLeft className="w-6 h-6" />
           </button>
@@ -212,7 +212,7 @@ export function TestimonialsSection() {
             onClick={() => scroll('right')}
             disabled={!canScrollRight}
             aria-label="Next testimonial"
-            className="absolute -right-3 sm:-right-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white hover:bg-slate-50 text-slate-700 hover:text-[#0099e6] shadow-xl border border-slate-200/80 flex items-center justify-center transition-all cursor-pointer hover:scale-110 active:scale-95 disabled:opacity-0 disabled:pointer-events-none"
+            className="absolute -right-3 sm:-right-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white dark:bg-[#0c1017] hover:bg-slate-50 dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-300 hover:text-[#0099e6] shadow-xl border border-slate-200/80 dark:border-white/[0.08] flex items-center justify-center transition-all cursor-pointer hover:scale-110 active:scale-95 disabled:opacity-0 disabled:pointer-events-none"
           >
             <ChevronRight className="w-6 h-6" />
           </button>
@@ -227,11 +227,11 @@ export function TestimonialsSection() {
                 key={item.id}
                 className="w-[320px] sm:w-[370px] md:w-[380px] shrink-0 snap-start flex flex-col"
               >
-                <div className="bg-white rounded-3xl p-7 sm:p-8 shadow-[0_4px_24px_rgba(0,0,0,0.05)] border border-slate-100 hover:border-slate-200 hover:shadow-xl transition-all duration-300 flex flex-col justify-between h-full min-h-[300px]">
+                <div className="bg-white dark:bg-[#0c1017] rounded-3xl p-7 sm:p-8 shadow-[0_4px_24px_rgba(0,0,0,0.05)] dark:shadow-black/70 border border-slate-100 dark:border-white/[0.08] hover:border-slate-200 dark:hover:border-white/[0.16] hover:shadow-xl transition-all duration-300 flex flex-col justify-between h-full min-h-[300px]">
                   {/* Top: Avatar + Name + Designation */}
                   <div>
                     <div className="flex items-center gap-4 mb-5">
-                      <div className="w-14 h-14 rounded-full overflow-hidden shrink-0 border-2 border-slate-100 shadow-xs relative">
+                      <div className="w-14 h-14 rounded-full overflow-hidden shrink-0 border-2 border-slate-100 dark:border-white/[0.1] shadow-xs relative">
                         <Image
                           src={item.avatar}
                           alt={item.name}
@@ -240,25 +240,25 @@ export function TestimonialsSection() {
                         />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-bold text-slate-900 text-base sm:text-lg leading-tight truncate">
+                        <h3 className="font-bold text-slate-900 dark:text-white text-base sm:text-lg leading-tight truncate">
                           {item.name}
                         </h3>
-                        <p className="text-xs sm:text-[13px] text-slate-500 font-medium italic mt-1 leading-snug line-clamp-2">
+                        <p className="text-xs sm:text-[13px] text-slate-500 dark:text-slate-400 font-medium italic mt-1 leading-snug line-clamp-2">
                           {item.designation}
                         </p>
                       </div>
                     </div>
 
                     {/* Middle: Quote */}
-                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
+                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
                       {item.quote}
                     </p>
                   </div>
 
                   {/* Bottom: Company Logo */}
-                  <div className="pt-6 mt-6 border-t border-slate-100/90 flex items-center justify-between">
+                  <div className="pt-6 mt-6 border-t border-slate-100/90 dark:border-white/[0.08] flex items-center justify-between">
                     <CompanyLogo type={item.companyLogo} />
-                    <Quote className="w-5 h-5 text-slate-300" />
+                    <Quote className="w-5 h-5 text-slate-300 dark:text-slate-600" />
                   </div>
                 </div>
               </div>

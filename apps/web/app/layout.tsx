@@ -8,6 +8,7 @@ import { AuthProvider } from '@/lib/auth-context';
 import { NotificationProvider } from '@/lib/notification-context';
 import { NotificationToast } from '@/components/notification-toast';
 import { CookieConsent } from '@/components/cookie-consent';
+import { ThemeProvider } from '@/lib/theme-context';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -181,20 +182,27 @@ export default function RootLayout({
             });
           `}
         </Script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('hu_theme');var d=document.documentElement;var m=window.matchMedia('(prefers-color-scheme: dark)').matches;if(t==='dark'||(t==='system'&&m)){d.classList.add('dark');d.style.colorScheme='dark';}else{d.classList.remove('dark');d.style.colorScheme='light';}}catch(e){}})();`,
+          }}
+        />
       </head>
       <body
         suppressHydrationWarning
-        className="min-h-full flex flex-col bg-[#f8fafc] text-slate-900 selection:bg-[#0099e6]/20 selection:text-[#0099e6]"
+        className="min-h-full flex flex-col bg-[#f8fafc] dark:bg-[#05070c] text-slate-900 dark:text-[#f8fafc] selection:bg-[#0099e6]/20 selection:text-[#0099e6] transition-colors duration-200"
       >
-        <AuthProvider>
-          <NotificationProvider>
-            <Navbar />
-            <NotificationToast />
-            <main className="flex-1 flex flex-col">{children}</main>
-            <Footer />
-          </NotificationProvider>
-        </AuthProvider>
-        <CookieConsent />
+        <ThemeProvider>
+          <AuthProvider>
+            <NotificationProvider>
+              <Navbar />
+              <NotificationToast />
+              <main className="flex-1 flex flex-col">{children}</main>
+              <Footer />
+            </NotificationProvider>
+          </AuthProvider>
+          <CookieConsent />
+        </ThemeProvider>
       </body>
     </html>
   );

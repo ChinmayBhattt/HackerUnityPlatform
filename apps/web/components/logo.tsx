@@ -14,29 +14,34 @@ export function Logo({
   size = 72,
   showText = false,
 }: LogoProps) {
-  const [errorCount, setErrorCount] = useState(0);
-
-  // Fallback cascade: /logo-black.png -> /logo.png -> /logo.svg
-  const logoSources = ['/logo-black.png', '/logo.png', '/logo.svg'];
-  const currentSrc = logoSources[Math.min(errorCount, logoSources.length - 1)];
+  const [lightError, setLightError] = useState(false);
+  const [darkError, setDarkError] = useState(false);
 
   return (
     <div className={`flex items-center ${className}`}>
       <div className="relative shrink-0 flex items-center justify-center">
+        {/* Light Mode Logo (Visible in Light theme) */}
         <Image
-          key={currentSrc}
-          src={currentSrc}
+          src={lightError ? '/logo.png' : '/logo-black.png'}
           alt="Hacker's Unity Logo"
           width={size}
           height={size}
           unoptimized
-          className="object-contain w-auto h-14 sm:h-16 lg:h-[68px] transition-transform duration-200 group-hover:scale-105"
+          className="dark:hidden object-contain w-auto h-14 sm:h-16 lg:h-[68px] transition-transform duration-200 group-hover:scale-105"
           priority
-          onError={() => {
-            if (errorCount < logoSources.length - 1) {
-              setErrorCount((prev) => prev + 1);
-            }
-          }}
+          onError={() => setLightError(true)}
+        />
+
+        {/* Dark Mode Logo (Visible in Dark theme - white logo) */}
+        <Image
+          src={darkError ? '/logo-transparent.png' : '/logo-main.png'}
+          alt="Hacker's Unity Logo"
+          width={size}
+          height={size}
+          unoptimized
+          className="hidden dark:block object-contain w-auto h-14 sm:h-16 lg:h-[68px] transition-transform duration-200 group-hover:scale-105"
+          priority
+          onError={() => setDarkError(true)}
         />
       </div>
 

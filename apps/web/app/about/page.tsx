@@ -175,24 +175,24 @@ export default function AboutPage() {
   return (
     <div className="flex flex-col flex-1 pb-20">
       {/* ─── Hero Section ────────────────────────────────────────── */}
-      <section className="relative overflow-hidden pt-16 pb-20 md:pt-24 md:pb-28 border-b border-slate-200/80 bg-grid-pattern">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#0099e6]/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-1/3 left-1/3 w-80 h-80 bg-[#f97316]/10 rounded-full blur-3xl pointer-events-none" />
+      <section className="relative overflow-hidden pt-16 pb-20 md:pt-24 md:pb-28 border-b border-slate-200/80 dark:border-white/[0.08] bg-grid-pattern">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#0099e6]/10 dark:bg-[#0099e6]/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/3 left-1/3 w-80 h-80 bg-[#f97316]/10 dark:bg-[#f97316]/12 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 text-slate-800 text-xs font-bold mb-6 shadow-sm">
-            <Sparkles className="w-3.5 h-3.5 text-[#0099e6]" />
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-white/[0.08] text-slate-800 dark:text-slate-200 text-xs font-bold mb-6 shadow-sm">
+            <Sparkles className="w-3.5 h-3.5 text-[#0099e6] dark:text-[#38bdf8]" />
             <span className="font-mono uppercase tracking-wider text-xs">
               Empowering The Next Wave of Innovators
             </span>
           </div>
 
-          <h1 className="text-4xl sm:text-6xl font-black text-slate-900 tracking-tight leading-[1.15] mb-6">
+          <h1 className="text-4xl sm:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.15] mb-6">
             Where Ambition Meets Opportunity, &{' '}
             <span className="text-gradient-brand">Builders Unite</span>.
           </h1>
 
-          <p className="text-base sm:text-lg text-slate-600 max-w-3xl leading-relaxed font-medium">
+          <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-3xl leading-relaxed font-medium">
             Hacker&apos;s Unity is India&apos;s fastest-growing developer ecosystem. Founded in 2022 by Jha Suraj Kumar and Chinmay Bhatt, we bring together developers, designers, product managers, and founders to collaborate on live hackathons, discover curated tech events, and build impact-driven technology.
           </p>
         </div>
@@ -206,15 +206,15 @@ export default function AboutPage() {
             return (
               <div
                 key={stat.label}
-                className="p-6 rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200 shadow-sm flex flex-col items-center text-center hover:-translate-y-1 transition-transform"
+                className="p-6 rounded-2xl bg-white/95 dark:bg-[#0c1017]/95 backdrop-blur-md border border-slate-200 dark:border-white/[0.08] shadow-sm flex flex-col items-center text-center hover:-translate-y-1 transition-transform"
               >
-                <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center mb-3 shadow-2xs">
+                <div className="w-12 h-12 rounded-xl bg-slate-50 dark:bg-white/[0.04] border border-slate-100 dark:border-white/[0.08] flex items-center justify-center mb-3 shadow-2xs">
                   <Icon className={`w-6 h-6 ${stat.color}`} />
                 </div>
-                <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                   {stat.value}
                 </div>
-                <div className="text-xs sm:text-sm font-semibold text-slate-500 mt-1">
+                <div className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1">
                   {stat.label}
                 </div>
               </div>
@@ -225,16 +225,16 @@ export default function AboutPage() {
 
       {/* ─── Story & Vision ──────────────────────────────────────── */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
-        <div className="bg-white rounded-3xl border border-slate-200/90 p-8 sm:p-12 shadow-sm space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 text-[#0099e6] text-xs font-bold uppercase tracking-wider">
+        <div className="bg-white dark:bg-[#0c1017] rounded-3xl border border-slate-200/90 dark:border-white/[0.08] p-8 sm:p-12 shadow-sm space-y-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 dark:bg-sky-950/40 text-[#0099e6] dark:text-[#38bdf8] text-xs font-bold uppercase tracking-wider">
             Our Story
           </div>
-          <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+          <h2 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
             Founded in 2022 by Jha Suraj Kumar & Chinmay Bhatt.
           </h2>
-          <div className="space-y-4 text-slate-600 text-sm sm:text-base leading-relaxed font-medium">
+          <div className="space-y-4 text-slate-600 dark:text-slate-400 text-sm sm:text-base leading-relaxed font-medium">
             <p>
-              Hacker&apos;s Unity was founded in 2022 by <strong className="text-slate-900 font-bold">Jha Suraj Kumar</strong> and <strong className="text-slate-900 font-bold">Chinmay Bhatt</strong> with a singular mission: to solve the fragmented hackathon experience in India and bridge the gap between raw student talent and real industry opportunities. Too often, aspiring builders struggle to find like-minded teammates, encounter opaque prize payouts, or miss out on premier technical challenges.
+              Hacker&apos;s Unity was founded in 2022 by <strong className="text-slate-900 dark:text-white font-bold">Jha Suraj Kumar</strong> and <strong className="text-slate-900 dark:text-white font-bold">Chinmay Bhatt</strong> with a singular mission: to solve the fragmented hackathon experience in India and bridge the gap between raw student talent and real industry opportunities. Too often, aspiring builders struggle to find like-minded teammates, encounter opaque prize payouts, or miss out on premier technical challenges.
             </p>
             <p>
               We set out to build an all-in-one platform where developers can discover verified hackathons, organize college and enterprise competitions with automated registration workflows, and collaborate seamlessly across tech stacks including AI, Web3, Cloud, and Systems programming.
@@ -246,14 +246,14 @@ export default function AboutPage() {
       {/* ─── Founders & Leadership Team ───────────────────────────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
         <div className="text-center max-w-2xl mx-auto mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 text-[#ea580c] text-xs font-bold uppercase tracking-wider mb-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 dark:bg-orange-950/40 text-[#ea580c] dark:text-[#fb923c] text-xs font-bold uppercase tracking-wider mb-3">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Founders & Leadership</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
             Meet The Minds Behind Hacker&apos;s Unity
           </h2>
-          <p className="text-slate-600 text-sm sm:text-base mt-2 font-medium">
+          <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base mt-2 font-medium">
             Founded in 2022 by Jha Suraj Kumar and Chinmay Bhatt, led by technologists and community architects dedicated to student builders.
           </p>
         </div>
@@ -262,14 +262,14 @@ export default function AboutPage() {
           {team.map((member) => (
             <div
               key={member.name}
-              className="group relative bg-white rounded-3xl border border-slate-200/90 hover:border-slate-300 p-6 sm:p-8 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col items-center text-center overflow-hidden"
+              className="group relative bg-white dark:bg-[#0c1017] rounded-3xl border border-slate-200/90 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.2] p-6 sm:p-8 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col items-center text-center overflow-hidden"
             >
               {/* Accent Gradient Bar on Hover */}
               <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-[#0099e6] via-[#ea580c] to-[#0099e6] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
               {/* Profile Image with subtle ring */}
               <div className="relative mb-5">
-                <div className="w-32 h-32 sm:w-36 sm:h-36 rounded-2xl overflow-hidden p-1 bg-gradient-to-br from-slate-100 to-slate-200 group-hover:from-[#0099e6]/20 group-hover:to-[#ea580c]/20 transition-colors shadow-sm">
+                <div className="w-32 h-32 sm:w-36 sm:h-36 rounded-2xl overflow-hidden p-1 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-white/[0.04] dark:to-white/[0.08] group-hover:from-[#0099e6]/20 group-hover:to-[#ea580c]/20 transition-colors shadow-sm">
                   <Image
                     src={member.image}
                     alt={member.name}
@@ -288,17 +288,17 @@ export default function AboutPage() {
               </div>
 
               {/* Name */}
-              <h3 className="text-xl font-black text-slate-900 tracking-tight group-hover:text-[#0099e6] transition-colors">
+              <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight group-hover:text-[#0099e6] dark:group-hover:text-[#38bdf8] transition-colors">
                 {member.name}
               </h3>
 
               {/* Bio */}
-              <p className="text-xs sm:text-sm text-slate-600 mt-3 leading-relaxed font-medium flex-1">
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-3 leading-relaxed font-medium flex-1">
                 {member.bio}
               </p>
 
               {/* Social Links */}
-              <div className="flex items-center justify-center gap-2.5 pt-5 mt-5 border-t border-slate-100 w-full">
+              <div className="flex items-center justify-center gap-2.5 pt-5 mt-5 border-t border-slate-100 dark:border-white/[0.08] w-full">
                 {member.socials.map((social) => {
                   const Icon = social.icon;
                   return (
@@ -308,7 +308,7 @@ export default function AboutPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       title={`${member.name} on ${social.label}`}
-                      className={`w-9 h-9 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center text-slate-500 transition-all cursor-pointer shadow-2xs ${social.color}`}
+                      className={`w-9 h-9 rounded-xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/[0.08] flex items-center justify-center text-slate-500 dark:text-slate-400 transition-all cursor-pointer shadow-2xs ${social.color}`}
                     >
                       <Icon className="w-4 h-4" />
                     </a>
@@ -323,10 +323,10 @@ export default function AboutPage() {
       {/* ─── Core Pillars ────────────────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
         <div className="text-center max-w-2xl mx-auto mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 text-[#ea580c] text-xs font-bold uppercase tracking-wider mb-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 dark:bg-orange-950/40 text-[#ea580c] dark:text-[#fb923c] text-xs font-bold uppercase tracking-wider mb-3">
             What Drives Us
           </div>
-          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
             The Pillars of Hacker&apos;s Unity
           </h2>
         </div>
@@ -337,14 +337,14 @@ export default function AboutPage() {
             return (
               <div
                 key={pillar.title}
-                className="p-8 rounded-3xl bg-white border border-slate-200/90 shadow-sm hover:border-[#0099e6]/40 hover:shadow-md transition-all flex flex-col justify-between"
+                className="p-8 rounded-3xl bg-white dark:bg-[#0c1017] border border-slate-200/90 dark:border-white/[0.08] shadow-sm hover:border-[#0099e6]/40 dark:hover:border-[#0099e6]/50 hover:shadow-md transition-all flex flex-col justify-between"
               >
                 <div>
-                  <div className="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-100 flex items-center justify-center text-[#0099e6] mb-5">
+                  <div className="w-12 h-12 rounded-2xl bg-sky-50 dark:bg-sky-950/40 border border-sky-100 dark:border-sky-800/40 flex items-center justify-center text-[#0099e6] dark:text-[#38bdf8] mb-5">
                     <Icon className="w-6 h-6" />
                   </div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-3">{pillar.title}</h3>
-                  <p className="text-sm text-slate-600 leading-relaxed font-medium">
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">{pillar.title}</h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
                     {pillar.description}
                   </p>
                 </div>

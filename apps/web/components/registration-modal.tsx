@@ -246,16 +246,16 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
       <div
-        className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white border border-slate-200 shadow-2xl"
+        className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-white/[0.08] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 p-4 flex items-center justify-between rounded-t-3xl">
+        <div className="sticky top-0 z-10 bg-white dark:bg-[#0c1017] border-b border-slate-100 dark:border-white/[0.08] p-4 flex items-center justify-between rounded-t-3xl">
           <div className="flex items-center gap-3">
             {(event.logoUrl || event.organizerLogo) ? (
-              <div className="w-10 h-10 rounded-xl border border-slate-200/90 bg-white p-0.5 shadow-2xs shrink-0 overflow-hidden flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl border border-slate-200/90 dark:border-white/[0.1] bg-white dark:bg-[#121824] p-0.5 shadow-2xs shrink-0 overflow-hidden flex items-center justify-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={event.logoUrl || event.organizerLogo}
@@ -264,31 +264,31 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
                 />
               </div>
             ) : (
-              <div className="w-10 h-10 rounded-xl border border-sky-200/90 bg-gradient-to-br from-sky-50 to-sky-100 shadow-2xs shrink-0 flex items-center justify-center text-base font-black text-[#0099e6]">
+              <div className="w-10 h-10 rounded-xl border border-sky-200/90 dark:border-sky-800/40 bg-gradient-to-br from-sky-50 to-sky-100 dark:from-sky-950/40 dark:to-sky-900/20 shadow-2xs shrink-0 flex items-center justify-center text-base font-black text-[#0099e6]">
                 {event.organizerAvatar || '⚡'}
               </div>
             )}
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-sky-50 text-[#0099e6] border border-sky-200">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-sky-50 dark:bg-sky-950/50 text-[#0099e6] border border-sky-200 dark:border-sky-800/50">
                   {step === 'mode' ? 'Step 1: Choose Squad Mode' : step === 'details' ? 'Step 2: Builder Details' : 'Confirmed'}
                 </span>
                 <Link
                   href={`/hackathons/${event.slug}/register`}
                   onClick={onClose}
-                  className="text-[11px] font-bold text-slate-500 hover:text-[#0099e6] flex items-center gap-1"
+                  className="text-[11px] font-bold text-slate-500 dark:text-slate-400 hover:text-[#0099e6] flex items-center gap-1"
                   title="Open full dedicated page"
                 >
                   <span>Full Page</span>
                   <ExternalLink className="w-3 h-3" />
                 </Link>
               </div>
-              <h2 className="text-lg font-black text-slate-900 pr-6 leading-tight mt-0.5">{event.title}</h2>
+              <h2 className="text-lg font-black text-slate-900 dark:text-white pr-6 leading-tight mt-0.5">{event.title}</h2>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
+            className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -296,7 +296,7 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
 
         <div className="p-6">
           {errorMsg && (
-            <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-600 font-medium flex items-center gap-2">
+            <div className="mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{errorMsg}</span>
             </div>
@@ -305,17 +305,17 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
           {/* SUCCESS VIEW */}
           {step === 'success' && (
             <div className="py-8 flex flex-col items-center justify-center text-center space-y-4 animate-in zoom-in-95">
-              <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
+              <div className="w-16 h-16 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
               <div className="space-y-1">
-                <div className="inline-block px-3 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
+                <div className="inline-block px-3 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200 dark:border-emerald-800/40">
                   {event.approvalMode === 'MANUAL' ? 'REGISTRATION SUBMITTED' : 'REGISTRATION CONFIRMED'}
                 </div>
-                <h3 className="text-xl font-black text-slate-900">
+                <h3 className="text-xl font-black text-slate-900 dark:text-white">
                   {event.approvalMode === 'MANUAL' ? 'Application Submitted!' : 'You are in!'}
                 </h3>
-                <p className="text-sm text-slate-600 max-w-sm">
+                <p className="text-sm text-slate-600 dark:text-slate-400 max-w-sm">
                   You are officially registered for <span className="text-[#0099e6] font-bold">{event.title}</span>.
                 </p>
               </div>
@@ -337,33 +337,33 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
                     onClick={() => setMode('CREATE_TEAM')}
                     className={`p-4 rounded-2xl border-2 transition-all cursor-pointer ${
                       mode === 'CREATE_TEAM'
-                        ? 'border-[#0099e6] bg-sky-50/60 shadow-xs'
-                        : 'border-slate-200 hover:border-slate-300'
+                        ? 'border-[#0099e6] bg-sky-50/60 dark:bg-sky-950/30 shadow-xs'
+                        : 'border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.15]'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-sky-100 text-[#0099e6] flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-900/50 text-[#0099e6] flex items-center justify-center">
                           <PlusCircle className="w-5 h-5" />
                         </div>
                         <div>
-                          <h4 className="text-sm font-bold text-slate-900">Create a New Squad</h4>
-                          <p className="text-[11px] text-slate-500">You will be Squad Leader ({minTeam}-{maxTeam} members)</p>
+                          <h4 className="text-sm font-bold text-slate-900 dark:text-white">Create a New Squad</h4>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">You will be Squad Leader ({minTeam}-{maxTeam} members)</p>
                         </div>
                       </div>
                       <input type="radio" name="modal_mode" checked={mode === 'CREATE_TEAM'} onChange={() => setMode('CREATE_TEAM')} className="text-[#0099e6]" />
                     </div>
 
                     {mode === 'CREATE_TEAM' && (
-                      <div className="mt-3 pt-3 border-t border-sky-200 space-y-2 animate-in fade-in" onClick={(e) => e.stopPropagation()}>
-                        <label className="block text-xs font-bold text-slate-700">Squad Name *</label>
+                      <div className="mt-3 pt-3 border-t border-sky-200 dark:border-sky-800/40 space-y-2 animate-in fade-in" onClick={(e) => e.stopPropagation()}>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">Squad Name *</label>
                         <input
                           type="text"
                           required
                           placeholder="e.g. CodeWarriors"
                           value={teamName}
                           onChange={(e) => setTeamName(e.target.value)}
-                          className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs outline-none focus:border-[#0099e6]"
+                          className="w-full px-3 py-2 bg-white dark:bg-[#121824] border border-slate-300 dark:border-white/[0.1] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-[#0099e6]"
                         />
                       </div>
                     )}
@@ -375,30 +375,30 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
                     onClick={() => setMode('JOIN_TEAM')}
                     className={`p-4 rounded-2xl border-2 transition-all cursor-pointer ${
                       mode === 'JOIN_TEAM'
-                        ? 'border-[#0099e6] bg-sky-50/60 shadow-xs'
-                        : 'border-slate-200 hover:border-slate-300'
+                        ? 'border-[#0099e6] bg-sky-50/60 dark:bg-sky-950/30 shadow-xs'
+                        : 'border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.15]'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center">
                           <Users className="w-5 h-5" />
                         </div>
                         <div>
-                          <h4 className="text-sm font-bold text-slate-900">Join an Existing Squad</h4>
-                          <p className="text-[11px] text-slate-500">Join a team formed by other hackers ({teams.length} open)</p>
+                          <h4 className="text-sm font-bold text-slate-900 dark:text-white">Join an Existing Squad</h4>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">Join a team formed by other hackers ({teams.length} open)</p>
                         </div>
                       </div>
                       <input type="radio" name="modal_mode" checked={mode === 'JOIN_TEAM'} onChange={() => setMode('JOIN_TEAM')} className="text-[#0099e6]" />
                     </div>
 
                     {mode === 'JOIN_TEAM' && (
-                      <div className="mt-3 pt-3 border-t border-purple-200 space-y-2 animate-in fade-in" onClick={(e) => e.stopPropagation()}>
-                        <label className="block text-xs font-bold text-slate-700">Select Squad *</label>
+                      <div className="mt-3 pt-3 border-t border-purple-200 dark:border-purple-800/40 space-y-2 animate-in fade-in" onClick={(e) => e.stopPropagation()}>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">Select Squad *</label>
                         {teamsLoading ? (
-                          <div className="py-3 text-center text-xs text-slate-400">Loading squads...</div>
+                          <div className="py-3 text-center text-xs text-slate-400 dark:text-slate-500">Loading squads...</div>
                         ) : teams.length === 0 ? (
-                          <div className="p-3 text-center text-xs text-slate-500 bg-white rounded-xl border border-slate-200">
+                          <div className="p-3 text-center text-xs text-slate-500 dark:text-slate-400 bg-white dark:bg-[#121824] rounded-xl border border-slate-200 dark:border-white/[0.08]">
                             No open squads yet. Please create a new squad.
                           </div>
                         ) : (
@@ -408,7 +408,9 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
                                 key={t.id}
                                 onClick={() => setSelectedTeamId(t.id)}
                                 className={`p-2.5 rounded-xl border text-xs flex items-center justify-between cursor-pointer ${
-                                  selectedTeamId === t.id ? 'border-[#0099e6] bg-white font-bold' : 'border-slate-200 bg-white'
+                                  selectedTeamId === t.id
+                                    ? 'border-[#0099e6] bg-white dark:bg-[#121824] text-slate-900 dark:text-white font-bold'
+                                    : 'border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#121824] text-slate-700 dark:text-slate-300'
                                 }`}
                               >
                                 <span>{t.name}</span>
@@ -433,36 +435,38 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
                   }}
                   className={`p-4 rounded-2xl border-2 transition-all relative ${
                     !isSoloAllowed
-                      ? 'border-slate-200 bg-slate-50/80 opacity-60 cursor-not-allowed select-none'
+                      ? 'border-slate-200 dark:border-white/[0.08] bg-slate-50/80 dark:bg-white/[0.02] opacity-60 cursor-not-allowed select-none'
                       : mode === 'SOLO'
-                      ? 'border-[#0099e6] bg-sky-50/60 shadow-xs cursor-pointer'
-                      : 'border-slate-200 hover:border-slate-300 cursor-pointer'
+                      ? 'border-[#0099e6] bg-sky-50/60 dark:bg-sky-950/30 shadow-xs cursor-pointer'
+                      : 'border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.15] cursor-pointer'
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div
                         className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                          !isSoloAllowed ? 'bg-slate-200 text-slate-400' : 'bg-emerald-100 text-emerald-600'
+                          !isSoloAllowed
+                            ? 'bg-slate-200 dark:bg-white/[0.06] text-slate-400 dark:text-slate-500'
+                            : 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400'
                         }`}
                       >
                         {!isSoloAllowed ? <Lock className="w-5 h-5" /> : <User className="w-5 h-5" />}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h4 className="text-sm font-bold text-slate-900">Solo Participant</h4>
+                          <h4 className="text-sm font-bold text-slate-900 dark:text-white">Solo Participant</h4>
                           {!isSoloAllowed ? (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-700 flex items-center gap-0.5 border border-rose-200">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 flex items-center gap-0.5 border border-rose-200 dark:border-rose-800/40">
                               <Lock className="w-2.5 h-2.5" />
                               <span>Locked (Min {minTeam})</span>
                             </span>
                           ) : (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300">
                               Solo
                             </span>
                           )}
                         </div>
-                        <p className="text-[11px] text-slate-500">
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
                           {!isSoloAllowed
                             ? `Squad required (minimum ${minTeam} members)`
                             : 'Participate individually without a squad'}
@@ -485,7 +489,7 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+                  className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-300 text-xs font-bold transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -506,61 +510,61 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
               {/* Mandatory Fields */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Full Name *</label>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Full Name *</label>
                   <input
                     type="text"
                     required
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 outline-none"
+                    className="w-full px-3.5 py-2 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] rounded-xl text-xs text-slate-900 dark:text-white outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Email *</label>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Email *</label>
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 outline-none"
+                    className="w-full px-3.5 py-2 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] rounded-xl text-xs text-slate-900 dark:text-white outline-none"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Phone Number *</label>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Phone Number *</label>
                   <input
                     type="tel"
                     required
                     placeholder="+91 99887 76655"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 outline-none"
+                    className="w-full px-3.5 py-2 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] rounded-xl text-xs text-slate-900 dark:text-white outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">City / Country *</label>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">City / Country *</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Bangalore, India"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 outline-none"
+                    className="w-full px-3.5 py-2 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] rounded-xl text-xs text-slate-900 dark:text-white outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">College / Organization *</label>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">College / Organization *</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. IIT Delhi"
                   value={college}
                   onChange={(e) => setCollege(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 outline-none"
+                  className="w-full px-3.5 py-2 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] rounded-xl text-xs text-slate-900 dark:text-white outline-none"
                 />
               </div>
 
@@ -569,7 +573,7 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
                 <div className="grid grid-cols-2 gap-3">
                   {isFieldEnabled('github') && (
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
                         <Github className="w-3.5 h-3.5" />
                         <span>GitHub URL</span>
                       </label>
@@ -578,13 +582,13 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
                         placeholder="https://github.com/..."
                         value={githubUrl}
                         onChange={(e) => setGithubUrl(e.target.value)}
-                        className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 outline-none"
+                        className="w-full px-3.5 py-2 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] rounded-xl text-xs text-slate-900 dark:text-white outline-none"
                       />
                     </div>
                   )}
                   {isFieldEnabled('linkedin') && (
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
                         <Linkedin className="w-3.5 h-3.5 text-[#0077b5]" />
                         <span>LinkedIn URL</span>
                       </label>
@@ -593,7 +597,7 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
                         placeholder="https://linkedin.com/in/..."
                         value={linkedinUrl}
                         onChange={(e) => setLinkedinUrl(e.target.value)}
-                        className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 outline-none"
+                        className="w-full px-3.5 py-2 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] rounded-xl text-xs text-slate-900 dark:text-white outline-none"
                       />
                     </div>
                   )}
@@ -602,13 +606,13 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
 
               {isFieldEnabled('skills') && (
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Skills (comma separated)</label>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Skills (comma separated)</label>
                   <input
                     type="text"
                     placeholder="Next.js, Python, TypeScript"
                     value={skillsInput}
                     onChange={(e) => setSkillsInput(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-[#0099e6] rounded-xl text-xs text-slate-900 outline-none"
+                    className="w-full px-3.5 py-2 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] focus:border-[#0099e6] rounded-xl text-xs text-slate-900 dark:text-white outline-none"
                   />
                 </div>
               )}
@@ -620,10 +624,10 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
                   checked={agreeRules}
                   onChange={(e) => setAgreeRules(e.target.checked)}
                   required
-                  className="rounded border-slate-300 text-[#0099e6] focus:ring-0 cursor-pointer"
+                  className="rounded border-slate-300 dark:border-white/[0.2] text-[#0099e6] focus:ring-0 cursor-pointer"
                 />
-                <label htmlFor="agree_modal" className="text-xs text-slate-600 cursor-pointer">
-                  I agree to the <span className="text-slate-900 underline font-semibold">Code of Conduct</span> and event rules.
+                <label htmlFor="agree_modal" className="text-xs text-slate-600 dark:text-slate-400 cursor-pointer">
+                  I agree to the <span className="text-slate-900 dark:text-white underline font-semibold">Code of Conduct</span> and event rules.
                 </label>
               </div>
 
@@ -631,7 +635,7 @@ export function RegistrationModal({ event, isOpen, onClose, onSuccess }: Registr
                 <button
                   type="button"
                   onClick={() => setStep('mode')}
-                  className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+                  className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-300 text-xs font-bold transition-colors cursor-pointer"
                 >
                   ← Back
                 </button>
