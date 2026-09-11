@@ -4,7 +4,7 @@ const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 async function callGroqChat(messages: Array<{ role: string; content: string }>, jsonMode = true) {
-  const models = ['openai/gpt-oss-120b', 'qwen/qwen3.8-27b'];
+  const models = ['openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'openai/gpt-oss-20b', 'groq/compound'];
   let lastError = null;
 
   for (const model of models) {
@@ -227,6 +227,156 @@ ${sourceText ? `\n--- ATTACHED DOCUMENT CONTENT ---\n${sourceText}\n------------
         success: true,
         event: eventData,
         extractedPosterText: extractedPosterText || undefined,
+      });
+    }
+
+    if (action === 'evaluate_product') {
+      const { submission, eventTitle, eventDescription } = body;
+      if (!submission) {
+        return NextResponse.json({ error: 'Submission data is required' }, { status: 400 });
+      }
+
+      const systemPrompt = `You are an expert AI Product Analyst and Startup Evaluation Partner for Hacker's Unity hackathon platform.
+Your task is to evaluate a participant's hackathon submission as a REAL PRODUCT AND POTENTIAL BUSINESS, not merely as a technical project or hackathon demo.
+
+Analyze the submission across these 8 core dimensions:
+1. Problem Validation & Importance (15% weight)
+   - Is the problem clearly defined, real, and affecting actual users?
+   - Is it solving a real pain point or an imaginary problem?
+2. Product Value & Usefulness (15% weight)
+   - Does the product provide clear value? Would users realistically use it?
+   - Answer: "Why would someone actually use this product?"
+3. Innovation & Differentiation (10% weight)
+   - What makes it different? Does it introduce a meaningful improvement?
+   - CRITICAL: Do NOT give a high innovation score simply because the product uses AI or popular technologies alone.
+4. Product Experience & Usability (10% weight)
+   - Is the product easy to understand with a logical user flow?
+   - Focus on usability rather than visual beauty alone.
+5. Market Potential (15% weight)
+   - Who could use this product? Is there realistic demand? Startup / commercial potential?
+6. Scalability & Growth Potential (10% weight)
+   - Can this product grow beyond the hackathon? Can it support more users and become sustainable?
+7. Product Execution & Completeness (15% weight)
+   - Is the product actually functional? Is there a working prototype or MVP?
+   - Classify productStage as one of: "Idea Stage", "Concept Prototype", "Functional Prototype", "MVP", "Early Product"
+8. Business Model & Sustainability (10% weight)
+   - Realistic monetization possibilities (e.g. SaaS, Subscription, Freemium, B2B, Marketplace, Licensing, Transaction-based, Enterprise) without forcing an unnatural model.
+
+TECH STACK ASSESSMENT:
+- Identify detected frontend, backend, database, AI/ML, cloud/APIs.
+- Assess stack suitability, complexity, scalability, and recommended improvements.
+- A simple, well-chosen stack (e.g. Next.js + Supabase) is preferred over an unnecessarily complex architecture.
+
+EVALUATION CONFIDENCE:
+- Classify as: "High Confidence", "Medium Confidence", or "Low Confidence".
+- Explain if key data (e.g. pitch deck, live demo, monetization info) was missing.
+
+CRITICAL RULES:
+1. Only evaluate information available in the submission. Never invent features or make unsubstantiated claims.
+2. If critical information is missing, explicitly state: "Insufficient information available to evaluate this aspect accurately." in the reason and list in missingInformation.
+3. Treat AI APIs or AI integration alone as not automatically innovative.
+4. Provide constructive, specific, actionable feedback (avoid generic advice).
+5. Return scores for each of the 8 criteria as integers from 0 to 10 with clear, concise reasoning.
+6. DO NOT calculate the final weighted score — the backend calculates it deterministically.
+7. Return ONLY valid JSON strictly matching the following schema.
+
+REQUIRED JSON SCHEMA:
+{
+  "productSummary": "Concise summary explaining what it is, who it is for, problem it solves, and how it creates value.",
+  "productStage": "Idea Stage | Concept Prototype | Functional Prototype | MVP | Early Product",
+  "evaluationConfidence": "High Confidence | Medium Confidence | Low Confidence",
+  "scores": {
+    "problemValidation": { "score": 8, "reason": "..." },
+    "productValue": { "score": 7, "reason": "..." },
+    "innovation": { "score": 6, "reason": "..." },
+    "productExperience": { "score": 8, "reason": "..." },
+    "marketPotential": { "score": 7, "reason": "..." },
+    "scalability": { "score": 8, "reason": "..." },
+    "productExecution": { "score": 7, "reason": "..." },
+    "businessModel": { "score": 6, "reason": "..." }
+  },
+  "strengths": ["Strength 1", "Strength 2", "Strength 3"],
+  "weaknesses": ["Weakness 1", "Weakness 2", "Weakness 3"],
+  "targetUsers": ["Target User 1", "Target User 2"],
+  "marketOpportunity": "Description of the target market opportunity and size.",
+  "businessPotential": {
+    "level": "High Potential | Medium Potential | Early Stage Potential | Limited Potential",
+    "analysis": "Analysis of business potential and customer personas.",
+    "possibleModels": ["SaaS", "Freemium"]
+  },
+  "techStackAnalysis": {
+    "detectedStack": ["Next.js", "Tailwind CSS", "Supabase"],
+    "suitability": "...",
+    "complexity": "Appropriate / Minimal / Unnecessarily Complex",
+    "scalability": "...",
+    "recommendations": ["Recommendation 1"]
+  },
+  "productPotential": {
+    "level": "High Potential | Medium Potential | Early Stage Potential | Limited Potential",
+    "reason": "..."
+  },
+  "recommendations": [
+    "1. Validate the problem with actual target users.",
+    "2. Improve differentiation from existing solutions.",
+    "3. Define a clearer monetization strategy."
+  ],
+  "missingInformation": []
+}`;
+
+      const userPrompt = `Evaluate this hackathon submission:
+Event: ${eventTitle || 'Hackathon'}
+${eventDescription ? `Event Theme/Description: ${eventDescription}` : ''}
+
+Product Name: ${submission.projectTitle || 'Untitled'}
+Tagline: ${submission.tagline || 'None provided'}
+Track: ${submission.track || 'General'}
+Description: ${submission.projectDescription || 'No description provided'}
+Project Repository / Link: ${submission.projectLink || 'None'}
+Demo Video URL: ${submission.demoVideoUrl || 'None'}
+Presentation / Deck URL: ${submission.presentationUrl || 'None'}
+Additional Resources / Notes: ${submission.additionalResources || 'None'}
+Submitted By: ${submission.submittedByName || 'Builder'} (${submission.submittedByEmail || ''})`;
+
+      const responseText = await callGroqChat([
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ]);
+
+      const parsed = JSON.parse(responseText);
+
+      // Deterministic backend calculation of the final product score (Rule 9 from judging_evolution.md)
+      const scores = parsed.scores || {};
+      const pVal = Number(scores.problemValidation?.score ?? 0);
+      const prodVal = Number(scores.productValue?.score ?? 0);
+      const innov = Number(scores.innovation?.score ?? 0);
+      const exp = Number(scores.productExperience?.score ?? 0);
+      const market = Number(scores.marketPotential?.score ?? 0);
+      const scale = Number(scores.scalability?.score ?? 0);
+      const exec = Number(scores.productExecution?.score ?? 0);
+      const biz = Number(scores.businessModel?.score ?? 0);
+
+      const weightedOutOf10 = (
+        pVal * 0.15 +
+        prodVal * 0.15 +
+        innov * 0.10 +
+        exp * 0.10 +
+        market * 0.15 +
+        scale * 0.10 +
+        exec * 0.15 +
+        biz * 0.10
+      );
+
+      const finalScore = Math.min(100, Math.max(0, Math.round(weightedOutOf10 * 10)));
+
+      const evaluationReport = {
+        ...parsed,
+        finalScore,
+        evaluatedAt: new Date().toISOString(),
+      };
+
+      return NextResponse.json({
+        success: true,
+        evaluation: evaluationReport,
       });
     }
 

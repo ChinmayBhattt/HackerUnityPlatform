@@ -34,8 +34,11 @@ import {
 import {
   getAllEvents,
   ProjectSubmission,
+  ProductEvaluationReport,
   saveGoogleSheetsWebhook,
   getGoogleSheetsWebhook,
+  getSubmissionAiEvaluation,
+  saveSubmissionAiEvaluation,
 } from '@/lib/storage';
 import {
   fetchEventSubmissions,
@@ -47,6 +50,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { ExtendedEvent } from '@/lib/mock-data';
 import { formatDate } from '@/lib/utils';
+import { ProductIntelligenceModal } from '@/components/product-intelligence-modal';
 
 interface PageProps {
   params: Promise<{ eventId: string }>;
@@ -67,6 +71,11 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
   const [evalScore, setEvalScore] = useState<number>(85);
   const [evalNotes, setEvalNotes] = useState('');
   const [isSavingEval, setIsSavingEval] = useState(false);
+
+  // AI Product Intelligence Modal State
+  const [aiReportSubmission, setAiReportSubmission] = useState<ProjectSubmission | null>(null);
+  const [evaluatingSubmissionId, setEvaluatingSubmissionId] = useState<string | null>(null);
+  const [currentAiEvaluation, setCurrentAiEvaluation] = useState<ProductEvaluationReport | null>(null);
 
   // Google Sheets Live Sync Modal State
   const [showSyncModal, setShowSyncModal] = useState(false);
@@ -110,7 +119,11 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
     }
 
     const subs = await fetchEventSubmissions(targetEventId);
-    setSubmissions(subs);
+    const enrichedSubs = subs.map((s) => {
+      const savedEval = getSubmissionAiEvaluation(s.id);
+      return savedEval ? { ...s, aiEvaluation: savedEval, score: s.score || savedEval.finalScore } : s;
+    });
+    setSubmissions(enrichedSubs);
     const hook = getGoogleSheetsWebhook(targetEventId);
     if (hook) setWebhookUrl(hook);
 
@@ -174,6 +187,101 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
         return 'bg-sky-100 text-sky-800 border-sky-300';
       default:
         return 'bg-slate-100 text-slate-700 border-slate-300';
+    }
+  };
+
+  // ─── Automated AI Product Evaluation (Groq API) ─────────────
+  const handleEvaluateWithAi = async (sub: ProjectSubmission) => {
+    const existing = sub.aiEvaluation || getSubmissionAiEvaluation(sub.id);
+    if (existing) {
+      setCurrentAiEvaluation(existing);
+      setAiReportSubmission(sub);
+      return;
+    }
+    await runGroqEvaluation(sub);
+  };
+
+  const runGroqEvaluation = async (sub: ProjectSubmission) => {
+    setEvaluatingSubmissionId(sub.id);
+    setAiReportSubmission(sub);
+    setCurrentAiEvaluation(null);
+
+    try {
+      const res = await fetch('/api/ai/groq', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'evaluate_product',
+          eventTitle: event?.title || 'Hackathon',
+          eventDescription: event?.description || '',
+          submission: sub,
+        }),
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.error || 'Failed to evaluate product with Groq AI');
+      }
+
+      const data = await res.json();
+      const evaluation: ProductEvaluationReport = data.evaluation;
+
+      setCurrentAiEvaluation(evaluation);
+      saveSubmissionAiEvaluation(sub.id, evaluation);
+
+      // Also sync score to Supabase & local storage
+      const newStatus = sub.status && sub.status !== 'SUBMITTED' ? sub.status : 'UNDER_REVIEW';
+      await updateSubmissionReviewSupabase(
+        sub.id,
+        newStatus,
+        evaluation.finalScore,
+        evaluation.productSummary,
+        event?.id || resolvedParams.eventId
+      );
+
+      setSubmissions((prev) =>
+        prev.map((s) =>
+          s.id === sub.id
+            ? { ...s, score: evaluation.finalScore, aiEvaluation: evaluation, status: newStatus }
+            : s
+        )
+      );
+
+      setToastMessage(`⚡ AI evaluation complete for "${sub.projectTitle}"! Score: ${evaluation.finalScore}/100`);
+      setTimeout(() => setToastMessage(null), 5000);
+    } catch (err: any) {
+      console.error('Groq AI evaluation error:', err);
+      setToastMessage(`❌ AI evaluation error: ${err.message}`);
+      setTimeout(() => setToastMessage(null), 5000);
+    } finally {
+      setEvaluatingSubmissionId(null);
+    }
+  };
+
+  const handleApplyStatusAndScore = async (
+    subId: string,
+    status: 'SUBMITTED' | 'UNDER_REVIEW' | 'ACCEPTED' | 'WINNER' | 'REJECTED',
+    score: number
+  ) => {
+    try {
+      await updateSubmissionReviewSupabase(
+        subId,
+        status,
+        score,
+        currentAiEvaluation?.productSummary,
+        event?.id || resolvedParams.eventId
+      );
+      setSubmissions((prev) =>
+        prev.map((s) => (s.id === subId ? { ...s, status, score } : s))
+      );
+      setToastMessage(`⚡ Applied status "${status}" and AI score (${score}/100) successfully!`);
+      setTimeout(() => setToastMessage(null), 4000);
+      setAiReportSubmission(null);
+      setCurrentAiEvaluation(null);
+    } catch (err: any) {
+      console.error('Failed to apply AI evaluation score:', err);
+      setToastMessage(`❌ Failed to apply score: ${err.message}`);
+      setTimeout(() => setToastMessage(null), 4000);
     }
   };
 
@@ -716,7 +824,19 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
 
                     {/* Col I: Score */}
                     <td className="py-3 px-3 border-r border-slate-200 dark:border-white/[0.08] text-center font-mono font-bold text-slate-800 dark:text-slate-200">
-                      {sub.score || 0}
+                      {sub.aiEvaluation ? (
+                        <button
+                          type="button"
+                          onClick={() => handleEvaluateWithAi(sub)}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-black bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 cursor-pointer hover:scale-105 transition-transform"
+                          title="Click to view full AI Product Intelligence Report"
+                        >
+                          <Sparkles className="w-3 h-3 text-emerald-500" />
+                          <span>{sub.score || sub.aiEvaluation.finalScore}</span>
+                        </button>
+                      ) : (
+                        <span>{sub.score || 0}</span>
+                      )}
                     </td>
 
                     {/* Col J: Actions */}
@@ -724,20 +844,36 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                       <div className="flex items-center justify-center gap-1.5">
                         <button
                           type="button"
-                          onClick={() => {
-                            setSelectedSubmission(sub);
-                            setEvalStatus(sub.status || 'UNDER_REVIEW');
-                            setEvalScore(sub.score || 85);
-                            setEvalNotes(sub.reviewNotes || '');
-                          }}
-                          className="px-2.5 py-1 rounded-lg bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-900/50 text-[#0099e6] dark:text-sky-400 font-bold text-[11px] transition-colors cursor-pointer"
+                          onClick={() => handleEvaluateWithAi(sub)}
+                          disabled={evaluatingSubmissionId === sub.id}
+                          className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 ${
+                            sub.aiEvaluation
+                              ? 'bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 shadow-2xs'
+                              : 'bg-linear-to-r from-[#0099e6] to-[#0077b6] hover:from-[#0088cc] hover:to-[#00669e] text-white shadow-xs hover:shadow'
+                          }`}
+                          title={sub.aiEvaluation ? 'View or re-evaluate full AI Product Intelligence Report' : 'Evaluate submission as a real product using Groq AI'}
                         >
-                          Evaluate
+                          {evaluatingSubmissionId === sub.id ? (
+                            <>
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                              <span>Evaluating...</span>
+                            </>
+                          ) : sub.aiEvaluation ? (
+                            <>
+                              <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+                              <span>Evaluate ({sub.aiEvaluation.finalScore})</span>
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-3.5 h-3.5" />
+                              <span>Evaluate</span>
+                            </>
+                          )}
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDeleteSubmission(sub.id)}
-                          className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                           title="Delete submission"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -930,22 +1066,39 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
               </div>
             </div>
 
-            <div className="p-4 bg-slate-50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/[0.08] flex items-center justify-end gap-2">
+            <div className="p-4 bg-slate-50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/[0.08] flex items-center justify-between gap-2">
               <button
                 type="button"
-                onClick={() => setSelectedSubmission(null)}
-                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-200 font-bold text-xs cursor-pointer"
+                onClick={() => {
+                  if (selectedSubmission) {
+                    const sub = selectedSubmission;
+                    setSelectedSubmission(null);
+                    handleEvaluateWithAi(sub);
+                  }
+                }}
+                className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600/10 to-indigo-600/10 hover:from-blue-600/20 hover:to-indigo-600/20 border border-blue-500/20 text-blue-600 dark:text-blue-400 font-bold text-xs flex items-center gap-1.5 cursor-pointer"
               >
-                Cancel
+                <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+                <span>⚡ AI Product Intelligence</span>
               </button>
-              <button
-                type="button"
-                onClick={handleSaveEvaluation}
-                disabled={isSavingEval}
-                className="px-5 py-2 rounded-xl bg-[#0F9D58] hover:bg-[#0c8248] text-white font-extrabold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 cursor-pointer"
-              >
-                {isSavingEval ? 'Saving...' : 'Save Evaluation'}
-              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedSubmission(null)}
+                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-200 font-bold text-xs cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveEvaluation}
+                  disabled={isSavingEval}
+                  className="px-5 py-2 rounded-xl bg-[#0F9D58] hover:bg-[#0c8248] text-white font-extrabold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 cursor-pointer"
+                >
+                  {isSavingEval ? 'Saving...' : 'Save Evaluation'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1221,6 +1374,20 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
           </div>
         </div>
       )}
+
+      {/* ─── Modal 4: AI Product Intelligence Report Modal ─────────────── */}
+      <ProductIntelligenceModal
+        submission={aiReportSubmission}
+        evaluation={currentAiEvaluation}
+        isOpen={Boolean(aiReportSubmission)}
+        isEvaluating={evaluatingSubmissionId === aiReportSubmission?.id}
+        onClose={() => {
+          setAiReportSubmission(null);
+          setCurrentAiEvaluation(null);
+        }}
+        onReevaluate={(sub) => runGroqEvaluation(sub)}
+        onApplyStatusAndScore={handleApplyStatusAndScore}
+      />
     </div>
   );
 }

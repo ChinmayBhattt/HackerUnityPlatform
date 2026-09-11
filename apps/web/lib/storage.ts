@@ -529,7 +529,50 @@ export function saveDraftEvent(event: ExtendedEvent): void {
   }
 }
 
-// ─── Project Submissions ────────────────────────────────────
+export interface CriterionEvaluation {
+  score: number;
+  reason: string;
+}
+
+export interface ProductEvaluationReport {
+  productSummary: string;
+  productStage: 'Idea Stage' | 'Concept Prototype' | 'Functional Prototype' | 'MVP' | 'Early Product' | string;
+  evaluationConfidence: 'High Confidence' | 'Medium Confidence' | 'Low Confidence' | string;
+  scores: {
+    problemValidation: CriterionEvaluation;
+    productValue: CriterionEvaluation;
+    innovation: CriterionEvaluation;
+    productExperience: CriterionEvaluation;
+    marketPotential: CriterionEvaluation;
+    scalability: CriterionEvaluation;
+    productExecution: CriterionEvaluation;
+    businessModel: CriterionEvaluation;
+  };
+  finalScore: number;
+  strengths: string[];
+  weaknesses: string[];
+  targetUsers: string[];
+  marketOpportunity: string;
+  businessPotential: {
+    level: string;
+    analysis: string;
+    possibleModels: string[];
+  };
+  techStackAnalysis: {
+    detectedStack: string[];
+    suitability: string;
+    complexity: string;
+    scalability: string;
+    recommendations: string[];
+  };
+  productPotential: {
+    level: string;
+    reason: string;
+  };
+  recommendations: string[];
+  missingInformation: string[];
+  evaluatedAt: string;
+}
 
 export interface ProjectSubmission {
   id: string;
@@ -555,8 +598,10 @@ export interface ProjectSubmission {
   score?: number;
   reviewNotes?: string;
   status?: 'SUBMITTED' | 'UNDER_REVIEW' | 'ACCEPTED' | 'WINNER' | 'REJECTED';
+  aiEvaluation?: ProductEvaluationReport;
 }
 
+const AI_EVALUATION_PREFIX = 'hackers_unity_ai_eval_';
 const GOOGLE_SHEETS_WEBHOOK_PREFIX = 'hackers_unity_gsheet_webhook_';
 
 export function getAllProjectSubmissions(eventId?: string): ProjectSubmission[] {
@@ -630,7 +675,8 @@ export function updateProjectSubmissionStatus(
   submissionId: string,
   status: 'SUBMITTED' | 'UNDER_REVIEW' | 'ACCEPTED' | 'WINNER' | 'REJECTED',
   score?: number,
-  reviewNotes?: string
+  reviewNotes?: string,
+  aiEvaluation?: ProductEvaluationReport
 ): void {
   if (typeof window === 'undefined') return;
   try {
@@ -640,12 +686,48 @@ export function updateProjectSubmissionStatus(
       all[idx].status = status;
       if (score !== undefined) all[idx].score = score;
       if (reviewNotes !== undefined) all[idx].reviewNotes = reviewNotes;
+      if (aiEvaluation !== undefined) all[idx].aiEvaluation = aiEvaluation;
       all[idx].updatedAt = new Date().toISOString();
       localStorage.setItem(STORAGE_KEYS.SUBMISSIONS, JSON.stringify(all));
+      if (aiEvaluation) {
+        saveSubmissionAiEvaluation(submissionId, aiEvaluation);
+      }
       window.dispatchEvent(new Event('hackers_unity_storage_change'));
     }
   } catch (e) {
     console.error('Error updating submission status:', e);
+  }
+}
+
+export function saveSubmissionAiEvaluation(submissionId: string, evaluation: ProductEvaluationReport): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(`${AI_EVALUATION_PREFIX}${submissionId}`, JSON.stringify(evaluation));
+    const all = getAllProjectSubmissions();
+    const idx = all.findIndex((s) => s.id === submissionId);
+    if (idx >= 0) {
+      all[idx].aiEvaluation = evaluation;
+      if (evaluation.finalScore) {
+        all[idx].score = evaluation.finalScore;
+      }
+      localStorage.setItem(STORAGE_KEYS.SUBMISSIONS, JSON.stringify(all));
+    }
+    window.dispatchEvent(new Event('hackers_unity_storage_change'));
+  } catch (e) {
+    console.error('Error saving AI evaluation:', e);
+  }
+}
+
+export function getSubmissionAiEvaluation(submissionId: string): ProductEvaluationReport | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(`${AI_EVALUATION_PREFIX}${submissionId}`);
+    if (raw) return JSON.parse(raw);
+    const all = getAllProjectSubmissions();
+    const found = all.find((s) => s.id === submissionId);
+    return found?.aiEvaluation || null;
+  } catch {
+    return null;
   }
 }
 
@@ -655,6 +737,7 @@ export function deleteProjectSubmission(submissionId: string): void {
     const all = getAllProjectSubmissions();
     const updated = all.filter((s) => s.id !== submissionId);
     localStorage.setItem(STORAGE_KEYS.SUBMISSIONS, JSON.stringify(updated));
+    localStorage.removeItem(`${AI_EVALUATION_PREFIX}${submissionId}`);
     window.dispatchEvent(new Event('hackers_unity_storage_change'));
   } catch (e) {
     console.error('Error deleting project submission:', e);
