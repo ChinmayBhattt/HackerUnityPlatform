@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
+  ShieldAlert,
 } from 'lucide-react';
 import {
   getEventRegistrations,
@@ -28,11 +29,14 @@ import {
   deleteEventRegistration,
   deleteBulkEventRegistrations,
   clearAllEventRegistrations,
+  getCustomEvents,
 } from '@/lib/storage';
 import { ExtendedEvent } from '@/lib/mock-data';
 import { formatDate } from '@/lib/utils';
 import { BulkRegistrationModal } from '@/components/bulk-registration-modal';
 import { fetchEventBySlug } from '@/lib/supabase-service';
+import { useAuth } from '@/lib/auth-context';
+import { UserRole } from '@hackers-unity/shared-types';
 
 interface PageProps {
   params: Promise<{ eventId: string }>;
@@ -41,6 +45,7 @@ interface PageProps {
 export default function EventRegistrationsPage({ params }: PageProps) {
   const resolvedParams = use(params);
   const [event, setEvent] = useState<ExtendedEvent | null>(null);
+  const [loading, setLoading] = useState(true);
   const [registrations, setRegistrations] = useState<EventRegistration[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'>('ALL');
@@ -48,6 +53,49 @@ export default function EventRegistrationsPage({ params }: PageProps) {
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [showClearModal, setShowClearModal] = useState(false);
   const [notification, setNotification] = useState<{ text: string; type: 'success' | 'info' | 'error' } | null>(null);
+
+  // Auth context for authorization checks
+  const { user, supabaseUser, loading: authLoading } = useAuth();
+  const currentUserId = supabaseUser?.id || user?.id;
+
+  // Authorization check: only event host/organizer and admins can access
+  const isEventHost = useMemo(() => {
+    if (user?.role === UserRole.ADMIN || user?.role === UserRole.SUPER_ADMIN) return true;
+    if (!currentUserId || !event) return false;
+
+    if (
+      event.organizerId &&
+      event.organizerId !== 'usr_organizer' &&
+      (event.organizerId === currentUserId || event.organizerId === user?.id || event.organizerId === supabaseUser?.id)
+    ) {
+      return true;
+    }
+
+    if (
+      (event as any).organizer_id &&
+      ((event as any).organizer_id === currentUserId || (event as any).organizer_id === user?.id || (event as any).organizer_id === supabaseUser?.id)
+    ) {
+      return true;
+    }
+
+    if (
+      (event as any).created_by &&
+      ((event as any).created_by === currentUserId || (event as any).created_by === user?.id || (event as any).created_by === supabaseUser?.id)
+    ) {
+      return true;
+    }
+
+    const custom = getCustomEvents();
+    if (custom.some((ce) => ce.id === event.id || (event.slug && ce.slug === event.slug))) {
+      return true;
+    }
+
+    if (event.organizerId === 'usr_organizer' && user?.role === UserRole.ORGANIZER) {
+      return true;
+    }
+
+    return false;
+  }, [user?.role, currentUserId, event, user?.id, supabaseUser?.id]);
 
   // Selection state for bulk operations
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -79,6 +127,7 @@ export default function EventRegistrationsPage({ params }: PageProps) {
         rejected: combined.filter((r) => r.status === 'REJECTED').length,
       });
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -237,6 +286,48 @@ export default function EventRegistrationsPage({ params }: PageProps) {
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
   };
+
+  if (loading || authLoading) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-3">
+        <div className="w-7 h-7 border-2 border-[#0099e6] border-t-transparent rounded-full animate-spin" />
+        <p className="text-xs text-slate-400 font-mono tracking-wider uppercase">Loading Registrations...</p>
+      </div>
+    );
+  }
+
+  if (!isEventHost) {
+    return (
+      <div className="min-h-[75vh] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-[#0d121d] border border-rose-500/20 rounded-2xl p-8 text-center shadow-2xl relative overflow-hidden">
+          <div className="absolute -top-24 -left-24 w-48 h-48 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center mx-auto mb-5 text-rose-400 shadow-inner">
+            <ShieldAlert className="w-8 h-8" />
+          </div>
+          <h1 className="text-xl font-bold text-white mb-2">Organizer Access Only</h1>
+          <p className="text-sm text-slate-400 mb-6 leading-relaxed">
+            You do not have permission to view or manage participant registrations for{' '}
+            <span className="text-white font-medium">{event?.title || 'this event'}</span>.
+            This dashboard is strictly reserved for the event organizer and platform administrators.
+          </p>
+          <div className="flex flex-col gap-3">
+            <Link
+              href={event?.slug ? `/hackathons/${event.slug}` : `/hackathons/${resolvedParams.eventId}`}
+              className="w-full py-2.5 px-4 rounded-xl bg-[#0099e6] hover:bg-[#0088cc] text-white font-medium text-sm transition-colors flex items-center justify-center gap-2 shadow-lg shadow-[#0099e6]/20"
+            >
+              <ArrowLeft className="w-4 h-4" /> Go to Hackathon Overview
+            </Link>
+            <Link
+              href="/dashboard"
+              className="w-full py-2.5 px-4 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-medium text-sm transition-colors flex items-center justify-center"
+            >
+              Back to My Dashboard
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full flex-1 space-y-8">

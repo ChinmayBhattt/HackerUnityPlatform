@@ -698,15 +698,17 @@ export async function createNotification(
   senderId: string
 ): Promise<{ data?: { id: string }; error?: string }> {
   try {
-    // 1. Instant Realtime Broadcast to all connected clients immediately!
-    broadcastAnnouncement({
-      title: dto.title,
-      message: dto.message,
-      type: dto.type,
-      icon: dto.icon || getDefaultIcon(dto.type),
-      actionUrl: dto.actionUrl || undefined,
-      eventId: dto.eventId || undefined,
-    });
+    // 1. Instant Realtime Broadcast to all connected clients ONLY if target is ALL
+    if (dto.targetType === NotificationTargetType.ALL) {
+      broadcastAnnouncement({
+        title: dto.title,
+        message: dto.message,
+        type: dto.type,
+        icon: dto.icon || getDefaultIcon(dto.type),
+        actionUrl: dto.actionUrl || undefined,
+        eventId: dto.eventId || undefined,
+      });
+    }
 
     // 2. Insert master notification in Postgres (safely handles senderId)
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(senderId);

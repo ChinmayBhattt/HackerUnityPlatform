@@ -12,6 +12,7 @@ import {
 import { createNotification, sendNotificationToUser } from './notification-service';
 import {
   getCustomEvents,
+  getAllEvents,
   saveHostedEvent,
   ProjectSubmission,
   getAllProjectSubmissions,
@@ -46,7 +47,7 @@ export function mapDbEventToExtended(item: any): ExtendedEvent {
 
   return {
     id: item.id,
-    organizerId: item.organizer_id || 'usr_organizer',
+    organizerId: item.organizer_id || item.created_by || 'usr_organizer',
     organizerName: item.organizer_name || "Hacker's Unity",
     organizerAvatar: item.organizer_avatar || '⚡',
     organizerLogo: item.logo_url || '',
@@ -2348,17 +2349,32 @@ export async function saveSubmissionSupabase(
   saveProjectSubmission(submission);
 
   try {
-    // Resolve UUID for eventId if slug passed
+    // Resolve UUID for eventId if slug passed & fetch organizer info
     let resolvedEventId = submission.eventId;
+    let eventSlug = submission.eventId;
+    let eventOrganizerId: string | null = null;
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(submission.eventId);
-    if (!isUuid) {
-      const { data: eventRow } = await supabase
-        .from('events')
-        .select('id')
-        .eq('slug', submission.eventId)
-        .maybeSingle();
-      if (eventRow?.id) {
-        resolvedEventId = eventRow.id;
+
+    const { data: eventRow } = await supabase
+      .from('events')
+      .select('id, slug, organizer_id, created_by')
+      .or(isUuid ? `id.eq.${submission.eventId}` : `slug.eq.${submission.eventId}`)
+      .maybeSingle();
+
+    if (eventRow) {
+      resolvedEventId = eventRow.id;
+      if (eventRow.slug) eventSlug = eventRow.slug;
+      if (eventRow.organizer_id) eventOrganizerId = eventRow.organizer_id;
+      else if ((eventRow as any).created_by) eventOrganizerId = (eventRow as any).created_by;
+    }
+
+    if (!eventOrganizerId) {
+      const localEvt = getAllEvents().find((e) => e.id === resolvedEventId || e.slug === eventSlug || e.id === submission.eventId);
+      if (localEvt) {
+        if (localEvt.slug) eventSlug = localEvt.slug;
+        if (localEvt.organizerId && localEvt.organizerId !== 'usr_organizer') {
+          eventOrganizerId = localEvt.organizerId;
+        }
       }
     }
 
@@ -2458,20 +2474,41 @@ export async function saveSubmissionSupabase(
       console.warn('Realtime submission broadcast notice:', broadcastErr);
     }
 
-    // 4. Real-time platform notification for new project submission
+    // 4. Real-time platform notifications
     try {
-      createNotification(
-        {
-          title: `New Project Submitted: ${submission.projectTitle}`,
-          message: `${submission.submittedByName || 'A builder'} just submitted "${submission.projectTitle}" for review.`,
-          type: NotificationDbType.EVENT,
-          icon: 'rocket',
-          eventId: resolvedEventId,
-          targetType: NotificationTargetType.ALL,
-          actionUrl: `/dashboard/events/${resolvedEventId}/submissions`,
-        },
-        resolvedSubmitterId
-      ).catch(() => {});
+      // Send review notification ONLY to the event host/organizer
+      if (eventOrganizerId) {
+        createNotification(
+          {
+            title: `New Project Submitted: ${submission.projectTitle}`,
+            message: `${submission.submittedByName || 'A builder'} just submitted "${submission.projectTitle}" for review.`,
+            type: NotificationDbType.EVENT,
+            icon: 'rocket',
+            eventId: resolvedEventId,
+            targetType: NotificationTargetType.SPECIFIC_USER,
+            targetUserIds: [eventOrganizerId],
+            actionUrl: `/dashboard/events/${resolvedEventId}/submissions`,
+          },
+          resolvedSubmitterId
+        ).catch(() => {});
+      }
+
+      // Send confirmation to the submitter pointing to the public hackathon page (never the organizer dashboard)
+      if (resolvedSubmitterId && resolvedSubmitterId !== eventOrganizerId) {
+        createNotification(
+          {
+            title: `Submission Received: ${submission.projectTitle}`,
+            message: `Your project "${submission.projectTitle}" has been submitted successfully for review!`,
+            type: NotificationDbType.EVENT,
+            icon: 'rocket',
+            eventId: resolvedEventId,
+            targetType: NotificationTargetType.SPECIFIC_USER,
+            targetUserIds: [resolvedSubmitterId],
+            actionUrl: `/hackathons/${eventSlug}`,
+          },
+          resolvedSubmitterId
+        ).catch(() => {});
+      }
     } catch (notifErr) {}
 
     return { success: true, data: submission };

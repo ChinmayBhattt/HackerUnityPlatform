@@ -191,7 +191,25 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
       await markAsRead(notif.id);
     }
     if (notif.notification.actionUrl) {
-      router.push(notif.notification.actionUrl);
+      let targetUrl = notif.notification.actionUrl;
+
+      // Restrict access: normal users should never navigate to organizer submission or registration review pages
+      if (targetUrl.includes('/submissions') || targetUrl.includes('/registrations')) {
+        const isOrganizerOrAdmin =
+          user?.role === 'ORGANIZER' ||
+          user?.role === 'ADMIN' ||
+          user?.role === 'SUPER_ADMIN';
+
+        if (!isOrganizerOrAdmin) {
+          if (notif.notification.eventId) {
+            targetUrl = `/hackathons/${notif.notification.eventId}`;
+          } else {
+            targetUrl = '/dashboard';
+          }
+        }
+      }
+
+      router.push(targetUrl);
       onClose();
     }
   };
