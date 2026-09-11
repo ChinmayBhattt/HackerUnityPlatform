@@ -34,6 +34,8 @@ import {
   Trash2,
   Edit3,
   ShieldAlert,
+  Cpu,
+  Bot,
 } from 'lucide-react';
 import {
   getAllEvents,
@@ -149,8 +151,10 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
   }, [user?.role, currentUserId, event, user?.id, supabaseUser?.id]);
 
   // Load event and submissions data
-  const loadData = async () => {
-    setLoading(true);
+  const loadData = async (silent = false) => {
+    if (!silent) {
+      setLoading(true);
+    }
     const all = getAllEvents();
     let found = all.find(
       (e) => e.id === resolvedParams.eventId || e.slug === resolvedParams.eventId
@@ -188,13 +192,15 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
     const hook = getGoogleSheetsWebhook(targetEventId);
     if (hook) setWebhookUrl(hook);
 
-    setLoading(false);
+    if (!silent) {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    loadData();
+    loadData(false);
     const cleanup = subscribeToEventSubmissions(resolvedParams.eventId, () => {
-      loadData();
+      loadData(true);
     });
     return () => cleanup();
   }, [resolvedParams.eventId]);
@@ -755,7 +761,7 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
             type="button"
             onClick={handleEvaluateAll}
             disabled={isBatchEvaluating || submissions.length === 0}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-black flex items-center gap-2 transition-all cursor-pointer shadow-md shadow-indigo-600/20 disabled:opacity-50"
+            className="px-4 py-2.5 rounded-xl bg-[#0099e6] hover:bg-[#0088cc] text-white text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-md shadow-[#0099e6]/25 border border-sky-400/30 disabled:opacity-50"
             title="Automatically evaluate all submissions using Groq AI and Product Intelligence Criteria"
           >
             {isBatchEvaluating ? (
@@ -767,7 +773,7 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
               </>
             ) : (
               <>
-                <Sparkles className="w-4 h-4 text-amber-300" />
+                <Cpu className="w-4 h-4 text-cyan-200" />
                 <span>Evaluate All ({submissions.length})</span>
               </>
             )}
@@ -919,7 +925,7 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
 
           <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 font-medium">
             <button
-              onClick={loadData}
+              onClick={() => loadData(false)}
               className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-bold transition-colors cursor-pointer"
             >
               <RefreshCw className="w-3.5 h-3.5" />
@@ -1092,14 +1098,14 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                         <button
                           type="button"
                           onClick={() => handleEvaluateWithAi(sub)}
-                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-black bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 cursor-pointer hover:scale-105 transition-transform"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-[#0099e6]/10 hover:bg-[#0099e6]/20 text-[#0099e6] dark:text-cyan-300 border border-[#0099e6]/25 hover:border-[#0099e6]/60 cursor-pointer transition-all hover:scale-105"
                           title="Click to view full AI Product Intelligence Report"
                         >
-                          <Sparkles className="w-3 h-3 text-emerald-500" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#0099e6] dark:bg-cyan-400 animate-pulse" />
                           <span>{sub.score || sub.aiEvaluation.finalScore}</span>
                         </button>
                       ) : (
-                        <span>{sub.score || 0}</span>
+                        <span className="text-slate-400 dark:text-slate-500 font-mono text-xs">{sub.score || 0}</span>
                       )}
                     </td>
 
@@ -1112,24 +1118,27 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                           disabled={evaluatingSubmissionId === sub.id}
                           className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 ${
                             sub.aiEvaluation
-                              ? 'bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 shadow-2xs'
-                              : 'bg-linear-to-r from-[#0099e6] to-[#0077b6] hover:from-[#0088cc] hover:to-[#00669e] text-white shadow-xs hover:shadow'
+                              ? 'bg-slate-100 hover:bg-sky-50 dark:bg-[#0c1322] dark:hover:bg-[#0099e6]/10 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-[#0099e6]/30 hover:border-[#0099e6]/60 shadow-2xs'
+                              : 'bg-[#0099e6] hover:bg-[#0088cc] text-white shadow-xs shadow-[#0099e6]/20 border border-sky-400/20'
                           }`}
                           title={sub.aiEvaluation ? 'View or re-evaluate full AI Product Intelligence Report' : 'Evaluate submission as a real product using Groq AI'}
                         >
                           {evaluatingSubmissionId === sub.id ? (
                             <>
-                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#0099e6]" />
                               <span>Evaluating...</span>
                             </>
                           ) : sub.aiEvaluation ? (
                             <>
-                              <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
-                              <span>Evaluate ({sub.aiEvaluation.finalScore})</span>
+                              <Cpu className="w-3.5 h-3.5 text-[#0099e6] dark:text-cyan-400" />
+                              <span>Evaluate</span>
+                              <span className="ml-0.5 px-1.5 py-0.2 rounded font-mono font-black text-[11px] bg-[#0099e6]/15 text-[#0099e6] dark:text-cyan-300 border border-[#0099e6]/30">
+                                {sub.aiEvaluation.finalScore}
+                              </span>
                             </>
                           ) : (
                             <>
-                              <Sparkles className="w-3.5 h-3.5" />
+                              <Cpu className="w-3.5 h-3.5 text-white" />
                               <span>Evaluate</span>
                             </>
                           )}

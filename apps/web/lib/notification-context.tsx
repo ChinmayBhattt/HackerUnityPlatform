@@ -43,8 +43,10 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const activeSubKeyRef = useRef<string | null>(null);
 
   // Load notifications (works for both guests and logged-in users!)
-  const loadNotifications = useCallback(async (uid?: string, email?: string) => {
-    setLoading(true);
+  const loadNotifications = useCallback(async (uid?: string, email?: string, silent = false) => {
+    if (!silent) {
+      setLoading(true);
+    }
     try {
       const [notifResult, countResult] = await Promise.all([
         fetchUserNotifications(uid, email, 30),
@@ -114,7 +116,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
     // Also listen to local storage changes to reload notifications across tabs or local invite actions
     const handleStorageChange = () => {
-      loadNotifications(userId, userEmail);
+      loadNotifications(userId, userEmail, true);
     };
     window.addEventListener('hackers_unity_storage_change', handleStorageChange);
 

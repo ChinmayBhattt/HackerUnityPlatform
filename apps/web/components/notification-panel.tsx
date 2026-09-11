@@ -104,20 +104,33 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
 
   const userId = supabaseUser?.id || user?.id;
 
-  // Click outside to close
+  // Click outside to close & Escape key support
   useEffect(() => {
     if (!isOpen) return;
+
     const handleClickOutside = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+      const target = e.target as HTMLElement | null;
+      // If clicking inside the bell trigger button, ignore so button's onClick can toggle cleanly
+      if (target?.closest('[data-notification-trigger="true"]')) {
+        return;
+      }
+      if (panelRef.current && !panelRef.current.contains(target as Node)) {
         onClose();
       }
     };
-    const timer = setTimeout(() => {
-      document.addEventListener('mousedown', handleClickOutside);
-    }, 50);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+
     return () => {
-      clearTimeout(timer);
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, onClose]);
 

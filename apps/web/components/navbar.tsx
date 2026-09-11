@@ -231,7 +231,8 @@ export function Navbar() {
             {/* Notifications Menu Trigger */}
             <div className="relative">
               <button
-                onClick={() => setNotificationsOpen(!notificationsOpen)}
+                data-notification-trigger="true"
+                onClick={() => setNotificationsOpen((prev) => !prev)}
                 className="relative flex items-center justify-center w-9 h-9 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-white/[0.08] transition-colors cursor-pointer"
                 aria-label="Open notifications"
               >

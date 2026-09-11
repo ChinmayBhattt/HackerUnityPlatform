@@ -2595,12 +2595,11 @@ export async function fetchEventSubmissions(
       };
     });
 
-    // Deduplicate with local list & sync any un-synced participant submissions to Supabase
+    // Deduplicate with local list (read-only merge without triggering mutation broadcasts)
     const combined = [...remoteMapped];
     localList.forEach((local) => {
-      if (!combined.some((c) => c.submittedBy === local.submittedBy || c.id === local.id)) {
+      if (!combined.some((c) => (local.submittedBy && c.submittedBy === local.submittedBy) || c.id === local.id)) {
         combined.push(local);
-        saveSubmissionSupabase(local).catch(() => {});
       }
     });
 
@@ -2687,6 +2686,14 @@ export function subscribeToEventSubmissions(
   if (typeof window === 'undefined') return () => {};
 
   try {
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    const debouncedUpdate = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        onUpdate();
+      }, 400);
+    };
+
     const channelName = `submissions_stream_${eventId}_${Date.now()}`;
     const channel = supabase
       .channel(channelName)
@@ -2698,31 +2705,32 @@ export function subscribeToEventSubmissions(
           table: 'submissions',
         },
         () => {
-          onUpdate();
+          debouncedUpdate();
         }
       )
       .on('broadcast', { event: 'submission_created' }, () => {
-        onUpdate();
+        debouncedUpdate();
       })
       .on('broadcast', { event: 'submission_updated' }, () => {
-        onUpdate();
+        debouncedUpdate();
       })
       .on('broadcast', { event: 'submission_deleted' }, () => {
-        onUpdate();
+        debouncedUpdate();
       })
       .subscribe();
 
     const globalChannel = supabase
       .channel('public:submissions_realtime')
       .on('broadcast', { event: 'submission_created' }, () => {
-        onUpdate();
+        debouncedUpdate();
       })
       .subscribe();
 
-    const handleLocal = () => onUpdate();
+    const handleLocal = () => debouncedUpdate();
     window.addEventListener('hackers_unity_storage_change', handleLocal);
 
     return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
       supabase.removeChannel(channel);
       supabase.removeChannel(globalChannel);
       window.removeEventListener('hackers_unity_storage_change', handleLocal);
