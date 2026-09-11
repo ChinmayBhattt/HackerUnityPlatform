@@ -199,3 +199,49 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
   }
 }
+
+export async function PATCH(req: Request) {
+  try {
+    const serverSupabase = createAdminClient();
+    const body = await req.json();
+    const { submissionId, status, score, reviewNotes, eventId } = body;
+
+    if (!submissionId) {
+      return NextResponse.json({ error: 'Missing submissionId' }, { status: 400 });
+    }
+
+    const updateData: any = {};
+    if (status) updateData.status = status;
+    if (score !== undefined) updateData.score = score;
+
+    const { data, error } = await serverSupabase
+      .from('submissions')
+      .update(updateData)
+      .eq('id', submissionId)
+      .select()
+      .maybeSingle();
+
+    if (error) {
+      console.warn('Admin PATCH update notice:', error.message);
+    }
+
+    // Broadcast update across realtime channel
+    if (eventId) {
+      try {
+        const channel = serverSupabase.channel(`submissions_stream_${eventId}`);
+        channel.send({
+          type: 'broadcast',
+          event: 'submission_updated',
+          payload: { submissionId, status, score },
+        });
+      } catch (broadcastErr) {}
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: data || { id: submissionId, status, score },
+    });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+  }
+}

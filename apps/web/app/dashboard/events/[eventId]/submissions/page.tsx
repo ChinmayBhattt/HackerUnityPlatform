@@ -239,15 +239,15 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
   const getStatusBadge = (status?: string) => {
     switch (status) {
       case 'WINNER':
-        return 'bg-amber-100 text-amber-900 border-amber-300';
+        return 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 hover:border-amber-500/50';
       case 'ACCEPTED':
-        return 'bg-emerald-100 text-emerald-800 border-emerald-300';
+        return 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 hover:border-emerald-500/50';
       case 'REJECTED':
-        return 'bg-rose-100 text-rose-800 border-rose-300';
+        return 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30 hover:border-rose-500/50';
       case 'UNDER_REVIEW':
-        return 'bg-sky-100 text-sky-800 border-sky-300';
+        return 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30 hover:border-sky-500/50';
       default:
-        return 'bg-slate-100 text-slate-700 border-slate-300';
+        return 'bg-slate-500/15 text-slate-700 dark:text-slate-300 border-slate-500/30 hover:border-slate-500/50';
     }
   };
 
@@ -438,6 +438,15 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
     subId: string,
     newStatus: 'SUBMITTED' | 'UNDER_REVIEW' | 'ACCEPTED' | 'WINNER' | 'REJECTED'
   ) => {
+    // 1. Instant optimistic state update
+    setSubmissions((prev) =>
+      prev.map((s) => (s.id === subId ? { ...s, status: newStatus } : s))
+    );
+    if (selectedSubmission?.id === subId) {
+      setSelectedSubmission((prev) => (prev ? { ...prev, status: newStatus } : null));
+      setEvalStatus(newStatus);
+    }
+    // 2. Persist to server and database
     await updateSubmissionReviewSupabase(subId, newStatus, undefined, undefined, event?.id || resolvedParams.eventId);
     loadData();
   };
@@ -933,21 +942,21 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
         </div>
 
         {/* Spreadsheet Table */}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-white/[0.08]">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-slate-100/80 dark:bg-white/[0.04] border-b border-slate-200 dark:border-white/[0.08] text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                <th className="py-2.5 px-3 border-r border-slate-200 dark:border-white/[0.08] text-center w-10 font-mono text-slate-400 dark:text-slate-500">#</th>
-                <th className="py-2.5 px-4 border-r border-slate-200 dark:border-white/[0.08] font-mono">A • Submitted At</th>
-                <th className="py-2.5 px-4 border-r border-slate-200 dark:border-white/[0.08]">B • Project Title</th>
-                <th className="py-2.5 px-4 border-r border-slate-200 dark:border-white/[0.08]">C • Submitter</th>
-                <th className="py-2.5 px-4 border-r border-slate-200 dark:border-white/[0.08]">D • Track</th>
-                <th className="py-2.5 px-3 border-r border-slate-200 dark:border-white/[0.08] text-center">E • Repo</th>
-                <th className="py-2.5 px-3 border-r border-slate-200 dark:border-white/[0.08] text-center">F • Demo</th>
-                <th className="py-2.5 px-3 border-r border-slate-200 dark:border-white/[0.08] text-center">G • Deck</th>
-                <th className="py-2.5 px-4 border-r border-slate-200 dark:border-white/[0.08]">H • Review Status</th>
-                <th className="py-2.5 px-3 border-r border-slate-200 dark:border-white/[0.08] text-center">I • Score</th>
-                <th className="py-2.5 px-4 text-center">Actions</th>
+                <th className="py-3 px-3 border-r border-slate-200 dark:border-white/[0.08] text-center w-12 font-mono text-slate-400 dark:text-slate-500">#</th>
+                <th className="py-3 px-4 border-r border-slate-200 dark:border-white/[0.08] font-mono min-w-[130px] whitespace-nowrap">A • Submitted At</th>
+                <th className="py-3 px-4 border-r border-slate-200 dark:border-white/[0.08] min-w-[200px]">B • Project Title</th>
+                <th className="py-3 px-4 border-r border-slate-200 dark:border-white/[0.08] min-w-[180px]">C • Submitter</th>
+                <th className="py-3 px-4 border-r border-slate-200 dark:border-white/[0.08] min-w-[150px]">D • Track</th>
+                <th className="py-3 px-3 border-r border-slate-200 dark:border-white/[0.08] text-center w-14 whitespace-nowrap">E • Repo</th>
+                <th className="py-3 px-3 border-r border-slate-200 dark:border-white/[0.08] text-center w-14 whitespace-nowrap">F • Demo</th>
+                <th className="py-3 px-3 border-r border-slate-200 dark:border-white/[0.08] text-center w-14 whitespace-nowrap">G • Deck</th>
+                <th className="py-3 px-4 border-r border-slate-200 dark:border-white/[0.08] min-w-[160px] whitespace-nowrap">H • Review Status</th>
+                <th className="py-3 px-3 border-r border-slate-200 dark:border-white/[0.08] text-center w-20 whitespace-nowrap">I • Score</th>
+                <th className="py-3 px-4 text-center min-w-[140px] whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-white/[0.06]">
@@ -985,32 +994,32 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                     </td>
 
                     {/* Col B: Project Title & Tagline */}
-                    <td className="py-3 px-4 border-r border-slate-200 dark:border-white/[0.08] max-w-xs">
-                      <div className="font-extrabold text-slate-900 dark:text-white line-clamp-1">
+                    <td className="py-3 px-4 border-r border-slate-200 dark:border-white/[0.08] min-w-[200px] max-w-[260px]">
+                      <div className="font-extrabold text-slate-900 dark:text-white truncate" title={sub.projectTitle}>
                         {sub.projectTitle}
                       </div>
                       {sub.tagline && (
-                        <div className="text-[11px] text-[#0099e6] dark:text-[#38bdf8] font-medium line-clamp-1">
+                        <div className="text-[11px] text-[#0099e6] dark:text-[#38bdf8] font-medium truncate mt-0.5" title={sub.tagline}>
                           {sub.tagline}
                         </div>
                       )}
                     </td>
 
                     {/* Col C: Submitter */}
-                    <td className="py-3 px-4 border-r border-slate-200 dark:border-white/[0.08] whitespace-nowrap">
-                      <div className="font-bold text-slate-800 dark:text-slate-200">
+                    <td className="py-3 px-4 border-r border-slate-200 dark:border-white/[0.08] min-w-[180px] max-w-[220px]">
+                      <div className="font-bold text-slate-800 dark:text-slate-200 truncate" title={sub.submittedByName}>
                         {sub.submittedByName || 'Hacker Builder'}
                       </div>
                       {sub.submittedByEmail && (
-                        <div className="text-[10px] text-slate-400 dark:text-slate-500 font-mono truncate max-w-[160px]">
+                        <div className="text-[10px] text-slate-400 dark:text-slate-500 font-mono truncate mt-0.5" title={sub.submittedByEmail}>
                           {sub.submittedByEmail}
                         </div>
                       )}
                     </td>
 
                     {/* Col D: Track */}
-                    <td className="py-3 px-4 border-r border-slate-200 dark:border-white/[0.08]">
-                      <span className="inline-block px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 text-[10px] font-bold">
+                    <td className="py-3 px-4 border-r border-slate-200 dark:border-white/[0.08] min-w-[150px]">
+                      <span className="inline-block px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 text-[11px] font-semibold leading-tight max-w-[170px] truncate" title={sub.track}>
                         {sub.track || 'General'}
                       </span>
                     </td>
@@ -1063,17 +1072,17 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                     </td>
 
                     {/* Col H: Status Selector */}
-                    <td className="py-3 px-4 border-r border-slate-200 dark:border-white/[0.08]">
+                    <td className="py-3 px-4 border-r border-slate-200 dark:border-white/[0.08] min-w-[160px]">
                       <select
                         value={sub.status || 'SUBMITTED'}
                         onChange={(e) => handleQuickStatusChange(sub.id, e.target.value as any)}
-                        className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase border dark:bg-[#121824] dark:border-white/[0.1] outline-none cursor-pointer ${getStatusBadge(sub.status)}`}
+                        className={`w-full max-w-[145px] px-2.5 py-1.5 rounded-xl text-[11px] font-bold uppercase border outline-none cursor-pointer transition-colors shadow-2xs ${getStatusBadge(sub.status)}`}
                       >
-                        <option value="SUBMITTED">SUBMITTED</option>
-                        <option value="UNDER_REVIEW">UNDER REVIEW</option>
-                        <option value="ACCEPTED">ACCEPTED</option>
-                        <option value="WINNER">WINNER 🏆</option>
-                        <option value="REJECTED">REJECTED</option>
+                        <option value="SUBMITTED" className="bg-white dark:bg-[#121824] text-slate-800 dark:text-slate-200">SUBMITTED</option>
+                        <option value="UNDER_REVIEW" className="bg-white dark:bg-[#121824] text-sky-700 dark:text-sky-300">UNDER REVIEW</option>
+                        <option value="ACCEPTED" className="bg-white dark:bg-[#121824] text-emerald-700 dark:text-emerald-300">ACCEPTED</option>
+                        <option value="WINNER" className="bg-white dark:bg-[#121824] text-amber-700 dark:text-amber-300">WINNER 🏆</option>
+                        <option value="REJECTED" className="bg-white dark:bg-[#121824] text-rose-700 dark:text-rose-300">REJECTED</option>
                       </select>
                     </td>
 
@@ -1721,34 +1730,36 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                       {/* 2nd Place (Silver) */}
                       {filteredWinners.length > 1 && (
                         <div className="p-5 rounded-2xl bg-gradient-to-b from-slate-100/90 to-slate-200/50 dark:from-slate-800/40 dark:to-slate-900/60 border border-slate-300 dark:border-slate-700/60 shadow-md relative order-2 md:order-1">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-200 dark:bg-slate-700/70 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 text-xs font-black">
-                              <Medal className="w-3.5 h-3.5 text-slate-400" />
-                              <span>2nd Place • Silver</span>
+                          <div className="flex items-start justify-between gap-2 mb-3">
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-200 dark:bg-slate-700/70 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 text-[11px] font-black shrink-0">
+                              <Medal className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              <span>2nd • Silver</span>
                             </div>
-                            <div className="text-xl font-black font-mono text-slate-800 dark:text-slate-200">
-                              {filteredWinners[1].aiEvaluation?.finalScore ?? filteredWinners[1].score ?? 0}
-                              <span className="text-xs text-slate-400 font-sans font-normal ml-0.5">/100</span>
+                            <div className="text-right shrink-0">
+                              <span className="text-xl font-black font-mono text-slate-800 dark:text-slate-200">
+                                {filteredWinners[1].aiEvaluation?.finalScore ?? filteredWinners[1].score ?? 0}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-sans font-normal ml-0.5">/100</span>
                             </div>
                           </div>
 
-                          <h4 className="font-black text-slate-900 dark:text-white text-base truncate mb-1">
+                          <h4 className="font-black text-slate-900 dark:text-white text-base truncate mb-1" title={filteredWinners[1].projectTitle}>
                             {filteredWinners[1].projectTitle}
                           </h4>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-3">
+                          <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-3 min-h-[32px]">
                             {filteredWinners[1].tagline || filteredWinners[1].projectDescription || 'No description'}
                           </p>
 
-                          <div className="pt-2 border-t border-slate-200 dark:border-white/[0.08] flex items-center justify-between text-[11px]">
-                            <span className="font-bold text-slate-700 dark:text-slate-300 truncate max-w-[120px]">
-                              {filteredWinners[1].submittedByName || 'Builder'}
+                          <div className="pt-2.5 border-t border-slate-200 dark:border-white/[0.08] flex items-center justify-between gap-2 text-[11px]">
+                            <span className="font-bold text-slate-700 dark:text-slate-300 truncate min-w-0" title={filteredWinners[1].submittedByName}>
+                              By {filteredWinners[1].submittedByName || 'Builder'}
                             </span>
-                            <span className="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-white/[0.08] text-slate-700 dark:text-slate-300 text-[10px] font-bold">
+                            <span className="px-2 py-0.5 rounded-md bg-slate-200 dark:bg-white/[0.08] text-slate-700 dark:text-slate-300 text-[10px] font-bold shrink-0 max-w-[130px] truncate" title={filteredWinners[1].track}>
                               {filteredWinners[1].track || 'General'}
                             </span>
                           </div>
 
-                          <div className="mt-3 flex items-center gap-2">
+                          <div className="mt-3.5 flex items-center gap-2">
                             <button
                               type="button"
                               onClick={() => {
@@ -1779,29 +1790,31 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                       {/* 1st Place (Gold Winner - Elevated) */}
                       {filteredWinners.length > 0 && (
                         <div className="p-6 rounded-3xl bg-gradient-to-b from-amber-500/20 via-yellow-500/10 to-amber-500/5 dark:from-amber-500/25 dark:via-yellow-500/10 dark:to-transparent border-2 border-amber-400 dark:border-amber-500/60 shadow-xl shadow-amber-500/10 relative order-1 md:order-2 md:-translate-y-2">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-xs font-black shadow-sm">
-                              <Crown className="w-4 h-4" />
-                              <span>1st Place • Grand Champion</span>
+                          <div className="flex items-start justify-between gap-2 mb-3">
+                            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-[11px] font-black shadow-sm shrink-0">
+                              <Crown className="w-3.5 h-3.5 shrink-0" />
+                              <span>1st • Grand Champion</span>
                             </div>
-                            <div className="text-2xl font-black font-mono text-amber-600 dark:text-amber-400">
-                              {filteredWinners[0].aiEvaluation?.finalScore ?? filteredWinners[0].score ?? 0}
-                              <span className="text-xs text-slate-400 font-sans font-normal ml-0.5">/100</span>
+                            <div className="text-right shrink-0">
+                              <span className="text-2xl font-black font-mono text-amber-600 dark:text-amber-400">
+                                {filteredWinners[0].aiEvaluation?.finalScore ?? filteredWinners[0].score ?? 0}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-sans font-normal ml-0.5">/100</span>
                             </div>
                           </div>
 
-                          <h4 className="font-black text-slate-900 dark:text-white text-lg truncate mb-1">
+                          <h4 className="font-black text-slate-900 dark:text-white text-lg truncate mb-1" title={filteredWinners[0].projectTitle}>
                             {filteredWinners[0].projectTitle}
                           </h4>
-                          <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 mb-3 font-medium">
+                          <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 mb-3 font-medium min-h-[32px]">
                             {filteredWinners[0].tagline || filteredWinners[0].projectDescription || 'No description'}
                           </p>
 
-                          <div className="pt-2 border-t border-amber-300/40 dark:border-white/[0.1] flex items-center justify-between text-[11px]">
-                            <span className="font-black text-slate-800 dark:text-slate-200">
+                          <div className="pt-2.5 border-t border-amber-300/40 dark:border-white/[0.1] flex items-center justify-between gap-2 text-[11px]">
+                            <span className="font-black text-slate-800 dark:text-slate-200 truncate min-w-0" title={filteredWinners[0].submittedByName}>
                               By {filteredWinners[0].submittedByName || 'Builder'}
                             </span>
-                            <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 text-[10px] font-bold border border-amber-300 dark:border-amber-800/50">
+                            <span className="px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 text-[10px] font-bold border border-amber-300 dark:border-amber-800/50 shrink-0 max-w-[130px] truncate" title={filteredWinners[0].track}>
                               {filteredWinners[0].track || 'General'}
                             </span>
                           </div>
@@ -1837,34 +1850,36 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                       {/* 3rd Place (Bronze) */}
                       {filteredWinners.length > 2 && (
                         <div className="p-5 rounded-2xl bg-gradient-to-b from-orange-100/70 to-amber-100/40 dark:from-amber-950/30 dark:to-orange-950/40 border border-orange-300/70 dark:border-orange-900/50 shadow-md relative order-3">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-200/80 dark:bg-orange-900/60 border border-orange-300 dark:border-orange-800 text-orange-800 dark:text-orange-200 text-xs font-black">
-                              <Award className="w-3.5 h-3.5 text-orange-500" />
-                              <span>3rd Place • Bronze</span>
+                          <div className="flex items-start justify-between gap-2 mb-3">
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-200/80 dark:bg-orange-900/60 border border-orange-300 dark:border-orange-800 text-orange-800 dark:text-orange-200 text-[11px] font-black shrink-0">
+                              <Award className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                              <span>3rd • Bronze</span>
                             </div>
-                            <div className="text-xl font-black font-mono text-orange-700 dark:text-orange-400">
-                              {filteredWinners[2].aiEvaluation?.finalScore ?? filteredWinners[2].score ?? 0}
-                              <span className="text-xs text-slate-400 font-sans font-normal ml-0.5">/100</span>
+                            <div className="text-right shrink-0">
+                              <span className="text-xl font-black font-mono text-orange-700 dark:text-orange-400">
+                                {filteredWinners[2].aiEvaluation?.finalScore ?? filteredWinners[2].score ?? 0}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-sans font-normal ml-0.5">/100</span>
                             </div>
                           </div>
 
-                          <h4 className="font-black text-slate-900 dark:text-white text-base truncate mb-1">
+                          <h4 className="font-black text-slate-900 dark:text-white text-base truncate mb-1" title={filteredWinners[2].projectTitle}>
                             {filteredWinners[2].projectTitle}
                           </h4>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-3">
+                          <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-3 min-h-[32px]">
                             {filteredWinners[2].tagline || filteredWinners[2].projectDescription || 'No description'}
                           </p>
 
-                          <div className="pt-2 border-t border-orange-200 dark:border-white/[0.08] flex items-center justify-between text-[11px]">
-                            <span className="font-bold text-slate-700 dark:text-slate-300 truncate max-w-[120px]">
-                              {filteredWinners[2].submittedByName || 'Builder'}
+                          <div className="pt-2.5 border-t border-orange-200 dark:border-white/[0.08] flex items-center justify-between gap-2 text-[11px]">
+                            <span className="font-bold text-slate-700 dark:text-slate-300 truncate min-w-0" title={filteredWinners[2].submittedByName}>
+                              By {filteredWinners[2].submittedByName || 'Builder'}
                             </span>
-                            <span className="px-2 py-0.5 rounded-full bg-orange-100 dark:bg-white/[0.08] text-orange-800 dark:text-orange-300 text-[10px] font-bold">
+                            <span className="px-2 py-0.5 rounded-md bg-orange-100 dark:bg-white/[0.08] text-orange-800 dark:text-orange-300 text-[10px] font-bold shrink-0 max-w-[130px] truncate" title={filteredWinners[2].track}>
                               {filteredWinners[2].track || 'General'}
                             </span>
                           </div>
 
-                          <div className="mt-3 flex items-center gap-2">
+                          <div className="mt-3.5 flex items-center gap-2">
                             <button
                               type="button"
                               onClick={() => {
@@ -1901,112 +1916,115 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                     </div>
 
                     <div className="rounded-2xl border border-slate-200 dark:border-white/[0.08] overflow-hidden bg-slate-50/50 dark:bg-white/[0.02]">
-                      <table className="w-full text-left text-xs">
-                        <thead>
-                          <tr className="bg-slate-100 dark:bg-white/[0.04] border-b border-slate-200 dark:border-white/[0.08] text-slate-500 dark:text-slate-400 font-extrabold uppercase text-[10px]">
-                            <th className="py-2.5 px-4 text-center w-16">Rank</th>
-                            <th className="py-2.5 px-4">Project & Submitter</th>
-                            <th className="py-2.5 px-3">Track</th>
-                            <th className="py-2.5 px-3 text-center">Score</th>
-                            <th className="py-2.5 px-3">Stage</th>
-                            <th className="py-2.5 px-3">Status</th>
-                            <th className="py-2.5 px-4 text-right">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-white/[0.06]">
-                          {filteredWinners.map((sub, idx) => {
-                            const score = sub.aiEvaluation?.finalScore ?? sub.score ?? 0;
-                            const isPodium = idx < 3;
-                            return (
-                              <tr
-                                key={sub.id}
-                                className={`hover:bg-slate-100/50 dark:hover:bg-white/[0.03] transition-colors ${
-                                  sub.status === 'WINNER' ? 'bg-amber-50/60 dark:bg-amber-950/20' : ''
-                                }`}
-                              >
-                                <td className="py-3 px-4 text-center font-black">
-                                  {idx === 0 ? (
-                                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-900 font-black text-xs shadow-sm">
-                                      🥇
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs min-w-[720px]">
+                          <thead>
+                            <tr className="bg-slate-100 dark:bg-white/[0.04] border-b border-slate-200 dark:border-white/[0.08] text-slate-500 dark:text-slate-400 font-extrabold uppercase text-[10px]">
+                              <th className="py-3 px-3 text-center w-14">Rank</th>
+                              <th className="py-3 px-4 min-w-[220px]">Project & Submitter</th>
+                              <th className="py-3 px-3 min-w-[140px]">Track</th>
+                              <th className="py-3 px-3 text-center w-24">Score</th>
+                              <th className="py-3 px-3 min-w-[110px]">Stage</th>
+                              <th className="py-3 px-3 min-w-[140px]">Status</th>
+                              <th className="py-3 px-4 text-right min-w-[110px]">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 dark:divide-white/[0.06]">
+                            {filteredWinners.map((sub, idx) => {
+                              const score = sub.aiEvaluation?.finalScore ?? sub.score ?? 0;
+                              return (
+                                <tr
+                                  key={sub.id}
+                                  className={`hover:bg-slate-100/50 dark:hover:bg-white/[0.03] transition-colors ${
+                                    sub.status === 'WINNER' ? 'bg-amber-50/60 dark:bg-amber-950/20' : ''
+                                  }`}
+                                >
+                                  <td className="py-3 px-3 text-center font-black">
+                                    {idx === 0 ? (
+                                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-900 font-black text-xs shadow-sm">
+                                        🥇
+                                      </span>
+                                    ) : idx === 1 ? (
+                                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-white font-black text-xs">
+                                        🥈
+                                      </span>
+                                    ) : idx === 2 ? (
+                                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-700/30 text-amber-800 dark:text-amber-200 font-black text-xs">
+                                        🥉
+                                      </span>
+                                    ) : (
+                                      <span className="font-mono text-slate-500 dark:text-slate-400">#{idx + 1}</span>
+                                    )}
+                                  </td>
+
+                                  <td className="py-3 px-4 min-w-[220px]">
+                                    <div className="font-extrabold text-slate-900 dark:text-white truncate max-w-[220px]" title={sub.projectTitle}>
+                                      {sub.projectTitle}
+                                    </div>
+                                    <div className="text-[11px] text-slate-400 dark:text-slate-500 truncate max-w-[220px] mt-0.5" title={sub.submittedByEmail}>
+                                      {sub.submittedByName || 'Builder'} • {sub.submittedByEmail || ''}
+                                    </div>
+                                  </td>
+
+                                  <td className="py-3 px-3 min-w-[140px]">
+                                    <span className="inline-block px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 font-semibold text-[11px] max-w-[150px] truncate" title={sub.track}>
+                                      {sub.track || 'General'}
                                     </span>
-                                  ) : idx === 1 ? (
-                                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-white font-black text-xs">
-                                      🥈
+                                  </td>
+
+                                  <td className="py-3 px-3 text-center">
+                                    <div className="font-mono font-black text-slate-900 dark:text-white text-sm">{score}</div>
+                                    <div className="w-16 mx-auto bg-slate-200 dark:bg-white/[0.1] h-1.5 rounded-full overflow-hidden mt-1">
+                                      <div
+                                        className={`h-full rounded-full ${
+                                          score >= 80
+                                            ? 'bg-emerald-500'
+                                            : score >= 60
+                                            ? 'bg-sky-500'
+                                            : 'bg-amber-500'
+                                        }`}
+                                        style={{ width: `${Math.min(100, score)}%` }}
+                                      />
+                                    </div>
+                                  </td>
+
+                                  <td className="py-3 px-3 min-w-[110px]">
+                                    <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 truncate block max-w-[120px]">
+                                      {sub.aiEvaluation?.productStage || 'Evaluated'}
                                     </span>
-                                  ) : idx === 2 ? (
-                                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-700/30 text-amber-800 dark:text-amber-200 font-black text-xs">
-                                      🥉
-                                    </span>
-                                  ) : (
-                                    <span className="font-mono text-slate-500 dark:text-slate-400">#{idx + 1}</span>
-                                  )}
-                                </td>
+                                  </td>
 
-                                <td className="py-3 px-4">
-                                  <div className="font-extrabold text-slate-900 dark:text-white">{sub.projectTitle}</div>
-                                  <div className="text-[11px] text-slate-400 dark:text-slate-500">
-                                    {sub.submittedByName || 'Builder'} • {sub.submittedByEmail || ''}
-                                  </div>
-                                </td>
+                                  <td className="py-3 px-3 min-w-[140px]">
+                                    <select
+                                      value={sub.status || 'SUBMITTED'}
+                                      onChange={(e) => handleQuickStatusChange(sub.id, e.target.value as any)}
+                                      className={`w-full max-w-[135px] px-2 py-1 rounded-lg text-[10px] font-black uppercase border outline-none cursor-pointer transition-colors shadow-2xs ${getStatusBadge(
+                                        sub.status
+                                      )}`}
+                                    >
+                                      <option value="SUBMITTED" className="bg-white dark:bg-[#121824] text-slate-800 dark:text-slate-200">SUBMITTED</option>
+                                      <option value="UNDER_REVIEW" className="bg-white dark:bg-[#121824] text-sky-700 dark:text-sky-300">UNDER REVIEW</option>
+                                      <option value="ACCEPTED" className="bg-white dark:bg-[#121824] text-emerald-700 dark:text-emerald-300">ACCEPTED</option>
+                                      <option value="WINNER" className="bg-white dark:bg-[#121824] text-amber-700 dark:text-amber-300">WINNER 🏆</option>
+                                      <option value="REJECTED" className="bg-white dark:bg-[#121824] text-rose-700 dark:text-rose-300">REJECTED</option>
+                                    </select>
+                                  </td>
 
-                                <td className="py-3 px-3">
-                                  <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 font-semibold text-[11px]">
-                                    {sub.track || 'General'}
-                                  </span>
-                                </td>
-
-                                <td className="py-3 px-3 text-center">
-                                  <div className="font-mono font-black text-slate-900 dark:text-white text-sm">{score}</div>
-                                  <div className="w-16 mx-auto bg-slate-200 dark:bg-white/[0.1] h-1.5 rounded-full overflow-hidden mt-1">
-                                    <div
-                                      className={`h-full rounded-full ${
-                                        score >= 80
-                                          ? 'bg-emerald-500'
-                                          : score >= 60
-                                          ? 'bg-sky-500'
-                                          : 'bg-amber-500'
-                                      }`}
-                                      style={{ width: `${Math.min(100, score)}%` }}
-                                    />
-                                  </div>
-                                </td>
-
-                                <td className="py-3 px-3">
-                                  <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
-                                    {sub.aiEvaluation?.productStage || 'Evaluated'}
-                                  </span>
-                                </td>
-
-                                <td className="py-3 px-3">
-                                  <select
-                                    value={sub.status || 'SUBMITTED'}
-                                    onChange={(e) => handleQuickStatusChange(sub.id, e.target.value as any)}
-                                    className={`px-2 py-1 rounded-lg text-[10px] font-black border cursor-pointer ${getStatusBadge(
-                                      sub.status
-                                    )}`}
-                                  >
-                                    <option value="SUBMITTED">SUBMITTED</option>
-                                    <option value="UNDER_REVIEW">UNDER REVIEW</option>
-                                    <option value="ACCEPTED">ACCEPTED</option>
-                                    <option value="WINNER">WINNER 🏆</option>
-                                    <option value="REJECTED">REJECTED</option>
-                                  </select>
-                                </td>
-
-                                <td className="py-3 px-4 text-right">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleEvaluateWithAi(sub)}
-                                    className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-slate-800 dark:text-slate-200 font-bold text-xs transition-colors cursor-pointer"
-                                  >
-                                    View Report
-                                  </button>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
+                                  <td className="py-3 px-4 text-right min-w-[110px]">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleEvaluateWithAi(sub)}
+                                      className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-slate-800 dark:text-slate-200 font-bold text-xs transition-colors cursor-pointer"
+                                    >
+                                      View Report
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   </div>
                 </>

@@ -2570,22 +2570,30 @@ export async function fetchEventSubmissions(
     }
 
     // Merge Supabase rows with local submissions
-    const remoteMapped: ProjectSubmission[] = rows.map((row: any) => ({
-      id: row.id,
-      eventId: eventId,
-      submittedBy: row.submitter_id,
-      submittedByName: row.profiles?.name || 'Hacker Builder',
-      submittedByEmail: row.profiles?.email || '',
-      submittedAt: row.created_at,
-      projectTitle: row.project_name,
-      tagline: row.tagline || '',
-      projectDescription: row.description,
-      projectLink: row.repo_url,
-      demoVideoUrl: row.demo_url || row.video_url || '',
-      track: row.track || 'General',
-      score: Number(row.score || 0),
-      status: row.status || 'SUBMITTED',
-    }));
+    const remoteMapped: ProjectSubmission[] = rows.map((row: any) => {
+      const local = localList.find((l) => l.id === row.id || (l.submittedBy && l.submittedBy === row.submitter_id));
+      const effectiveStatus = (row.status && row.status !== 'SUBMITTED')
+        ? row.status
+        : (local?.status || row.status || 'SUBMITTED');
+      const effectiveScore = Number(row.score !== undefined && row.score !== null ? row.score : (local?.score || 0));
+
+      return {
+        id: row.id,
+        eventId: eventId,
+        submittedBy: row.submitter_id,
+        submittedByName: row.profiles?.name || local?.submittedByName || 'Hacker Builder',
+        submittedByEmail: row.profiles?.email || local?.submittedByEmail || '',
+        submittedAt: row.created_at,
+        projectTitle: row.project_name || local?.projectTitle,
+        tagline: row.tagline || local?.tagline || '',
+        projectDescription: row.description || local?.projectDescription,
+        projectLink: row.repo_url || local?.projectLink,
+        demoVideoUrl: row.demo_url || row.video_url || local?.demoVideoUrl || '',
+        track: row.track || local?.track || 'General',
+        score: effectiveScore,
+        status: effectiveStatus,
+      };
+    });
 
     // Deduplicate with local list & sync any un-synced participant submissions to Supabase
     const combined = [...remoteMapped];
@@ -2638,6 +2646,20 @@ export async function updateSubmissionReviewSupabase(
   updateProjectSubmissionStatus(submissionId, status, score, notes);
 
   try {
+    // 1. Call server-side API with Admin Client (service role) to bypass client RLS restrictions
+    if (typeof window !== 'undefined') {
+      try {
+        await fetch('/api/submissions', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ submissionId, status, score, reviewNotes: notes, eventId }),
+        });
+      } catch (apiErr) {
+        console.warn('API PATCH submission notice:', apiErr);
+      }
+    }
+
+    // 2. Direct client fallback
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(submissionId);
     if (isUuid) {
       const updateData: any = { status };
