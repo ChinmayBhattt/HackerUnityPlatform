@@ -414,7 +414,7 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
         <div>
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-[#0099e6] font-semibold mb-2 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-[#0099e6] dark:text-slate-400 dark:hover:text-[#0099e6] font-semibold mb-2 transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to Organizer Dashboard</span>
@@ -425,14 +425,14 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                   Submissions
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800/40">
                   Google Sheets Live Sync
                 </span>
               </div>
-              <p className="text-xs text-slate-500 font-medium mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                 {event?.title || 'Hackathon Event'} • Real-time judge review and continuous Google Sheets sync
               </p>
             </div>
@@ -444,18 +444,18 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
           <button
             type="button"
             onClick={() => setShowSyncModal(true)}
-            className="px-4 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-black flex items-center gap-2 transition-all cursor-pointer shadow-2xs"
+            className="px-4 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800/40 text-xs font-black flex items-center gap-2 transition-all cursor-pointer shadow-2xs"
           >
-            <Sparkles className="w-4 h-4 text-emerald-600" />
+            <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span>Google Sheets Live Sync</span>
           </button>
 
           <button
             type="button"
             onClick={handleExportCSV}
-            className="px-4 py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-xs"
+            className="px-4 py-2.5 rounded-xl bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-white/[0.06] text-slate-800 dark:text-slate-200 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-xs"
           >
-            <Download className="w-4 h-4 text-slate-600" />
+            <Download className="w-4 h-4 text-slate-600 dark:text-slate-400" />
             <span>Download CSV</span>
           </button>
 
@@ -472,32 +472,32 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
 
       {/* ─── Metric Pills Row ────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs">
-          <div className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Total Submissions</div>
-          <div className="text-2xl font-black text-slate-900 mt-1">{stats.total}</div>
+        <div className="p-4 rounded-2xl bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-white/[0.08] shadow-xs">
+          <div className="text-[10px] text-slate-400 dark:text-slate-500 font-extrabold uppercase tracking-wider">Total Submissions</div>
+          <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">{stats.total}</div>
         </div>
-        <div className="p-4 rounded-2xl bg-white border border-sky-200 shadow-xs">
-          <div className="text-[10px] text-sky-600 font-extrabold uppercase tracking-wider">Under Review</div>
-          <div className="text-2xl font-black text-sky-700 mt-1">{stats.underReview}</div>
+        <div className="p-4 rounded-2xl bg-white dark:bg-[#0c1017] border border-sky-200 dark:border-sky-800/40 shadow-xs">
+          <div className="text-[10px] text-sky-600 dark:text-sky-400 font-extrabold uppercase tracking-wider">Under Review</div>
+          <div className="text-2xl font-black text-sky-700 dark:text-sky-400 mt-1">{stats.underReview}</div>
         </div>
-        <div className="p-4 rounded-2xl bg-white border border-emerald-200 shadow-xs">
-          <div className="text-[10px] text-emerald-600 font-extrabold uppercase tracking-wider">Accepted / Shortlist</div>
-          <div className="text-2xl font-black text-emerald-700 mt-1">{stats.accepted}</div>
+        <div className="p-4 rounded-2xl bg-white dark:bg-[#0c1017] border border-emerald-200 dark:border-emerald-800/40 shadow-xs">
+          <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-extrabold uppercase tracking-wider">Accepted / Shortlist</div>
+          <div className="text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-1">{stats.accepted}</div>
         </div>
-        <div className="p-4 rounded-2xl bg-white border border-amber-200 shadow-xs">
-          <div className="text-[10px] text-amber-600 font-extrabold uppercase tracking-wider">Podium Winners</div>
-          <div className="text-2xl font-black text-amber-700 mt-1">{stats.winners}</div>
+        <div className="p-4 rounded-2xl bg-white dark:bg-[#0c1017] border border-amber-200 dark:border-amber-800/40 shadow-xs">
+          <div className="text-[10px] text-amber-600 dark:text-amber-400 font-extrabold uppercase tracking-wider">Podium Winners</div>
+          <div className="text-2xl font-black text-amber-700 dark:text-amber-400 mt-1">{stats.winners}</div>
         </div>
-        <div className="p-4 rounded-2xl bg-white border border-rose-200 shadow-xs">
-          <div className="text-[10px] text-rose-600 font-extrabold uppercase tracking-wider">Disqualified / Rejected</div>
-          <div className="text-2xl font-black text-rose-700 mt-1">{stats.rejected}</div>
+        <div className="p-4 rounded-2xl bg-white dark:bg-[#0c1017] border border-rose-200 dark:border-rose-800/40 shadow-xs">
+          <div className="text-[10px] text-rose-600 dark:text-rose-400 font-extrabold uppercase tracking-wider">Disqualified / Rejected</div>
+          <div className="text-2xl font-black text-rose-700 dark:text-rose-400 mt-1">{stats.rejected}</div>
         </div>
       </div>
 
       {/* ─── Google Sheets Interactive Table Experience ───────────────── */}
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-[#0c1017] rounded-3xl border border-slate-200 dark:border-white/[0.08] shadow-sm overflow-hidden">
         {/* Spreadsheet Top Ribbon (Sheets Toolbar) */}
-        <div className="p-4 bg-slate-50 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+        <div className="p-4 bg-slate-50 dark:bg-white/[0.02] border-b border-slate-200 dark:border-white/[0.08] flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2 flex-wrap">
             {/* Search Input */}
             <div className="relative">
@@ -507,7 +507,7 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search projects, tracks, builders..."
-                className="pl-8 pr-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0F9D58] w-64"
+                className="pl-8 pr-3 py-1.5 rounded-xl bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.08] text-xs font-medium text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#0F9D58] w-64"
               />
             </div>
 
@@ -520,7 +520,7 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                   className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
                     statusFilter === s
                       ? 'bg-[#0F9D58] text-white shadow-2xs'
-                      : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+                      : 'bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.06]'
                   }`}
                 >
                   {s === 'ALL' ? 'All Rows' : s.replace('_', ' ')}
@@ -533,7 +533,7 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
               <select
                 value={trackFilter}
                 onChange={(e) => setTrackFilter(e.target.value)}
-                className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-700 outline-none cursor-pointer"
+                className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.08] text-xs font-semibold text-slate-700 dark:text-slate-200 outline-none cursor-pointer"
               >
                 <option value="ALL">All Tracks ({availableTracks.length})</option>
                 {availableTracks.map((t) => (
@@ -545,10 +545,10 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
             )}
           </div>
 
-          <div className="flex items-center gap-3 text-slate-500 font-medium">
+          <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 font-medium">
             <button
               onClick={loadData}
-              className="flex items-center gap-1.5 text-slate-600 hover:text-slate-900 font-bold transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-bold transition-colors cursor-pointer"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Refresh Sheet</span>
@@ -559,10 +559,10 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
         </div>
 
         {/* Formula Bar Simulation */}
-        <div className="px-4 py-1.5 bg-slate-100/70 border-b border-slate-200 flex items-center gap-3 font-mono text-[11px] text-slate-600">
+        <div className="px-4 py-1.5 bg-slate-100/70 dark:bg-white/[0.03] border-b border-slate-200 dark:border-white/[0.08] flex items-center gap-3 font-mono text-[11px] text-slate-600 dark:text-slate-400">
           <span className="font-bold text-[#0F9D58] select-none">fx</span>
-          <span className="text-slate-400">|</span>
-          <span className="truncate text-slate-700">
+          <span className="text-slate-400 dark:text-slate-600">|</span>
+          <span className="truncate text-slate-700 dark:text-slate-300">
             {selectedSubmission
               ? `Selected: [${selectedSubmission.projectTitle}] by ${selectedSubmission.submittedByName || 'Builder'} (${selectedSubmission.track || 'General'})`
               : 'Continuous Live Sync Connected: New participant submissions auto-refresh in real time'}
@@ -573,29 +573,29 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-100/80 border-b border-slate-200 text-[10px] font-black text-slate-600 uppercase tracking-wider">
-                <th className="py-2.5 px-3 border-r border-slate-200 text-center w-10 font-mono text-slate-400">#</th>
-                <th className="py-2.5 px-4 border-r border-slate-200 font-mono">A • Submitted At</th>
-                <th className="py-2.5 px-4 border-r border-slate-200">B • Project Title</th>
-                <th className="py-2.5 px-4 border-r border-slate-200">C • Submitter</th>
-                <th className="py-2.5 px-4 border-r border-slate-200">D • Track</th>
-                <th className="py-2.5 px-3 border-r border-slate-200 text-center">E • Repo</th>
-                <th className="py-2.5 px-3 border-r border-slate-200 text-center">F • Demo</th>
-                <th className="py-2.5 px-3 border-r border-slate-200 text-center">G • Deck</th>
-                <th className="py-2.5 px-4 border-r border-slate-200">H • Review Status</th>
-                <th className="py-2.5 px-3 border-r border-slate-200 text-center">I • Score</th>
+              <tr className="bg-slate-100/80 dark:bg-white/[0.04] border-b border-slate-200 dark:border-white/[0.08] text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                <th className="py-2.5 px-3 border-r border-slate-200 dark:border-white/[0.08] text-center w-10 font-mono text-slate-400 dark:text-slate-500">#</th>
+                <th className="py-2.5 px-4 border-r border-slate-200 dark:border-white/[0.08] font-mono">A • Submitted At</th>
+                <th className="py-2.5 px-4 border-r border-slate-200 dark:border-white/[0.08]">B • Project Title</th>
+                <th className="py-2.5 px-4 border-r border-slate-200 dark:border-white/[0.08]">C • Submitter</th>
+                <th className="py-2.5 px-4 border-r border-slate-200 dark:border-white/[0.08]">D • Track</th>
+                <th className="py-2.5 px-3 border-r border-slate-200 dark:border-white/[0.08] text-center">E • Repo</th>
+                <th className="py-2.5 px-3 border-r border-slate-200 dark:border-white/[0.08] text-center">F • Demo</th>
+                <th className="py-2.5 px-3 border-r border-slate-200 dark:border-white/[0.08] text-center">G • Deck</th>
+                <th className="py-2.5 px-4 border-r border-slate-200 dark:border-white/[0.08]">H • Review Status</th>
+                <th className="py-2.5 px-3 border-r border-slate-200 dark:border-white/[0.08] text-center">I • Score</th>
                 <th className="py-2.5 px-4 text-center">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200">
+            <tbody className="divide-y divide-slate-200 dark:divide-white/[0.06]">
               {filteredSubmissions.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="py-16 text-center text-slate-400 font-medium">
-                    <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+                  <td colSpan={11} className="py-16 text-center text-slate-400 dark:text-slate-500 font-medium">
+                    <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-white/[0.04] text-slate-400 flex items-center justify-center mx-auto mb-3">
                       <Rocket className="w-6 h-6" />
                     </div>
-                    <div className="text-sm font-bold text-slate-800">No Project Submissions Found</div>
-                    <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                    <div className="text-sm font-bold text-slate-800 dark:text-white">No Project Submissions Found</div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
                       Participants have not submitted any prototypes for this hackathon yet or no projects match your filter.
                     </p>
                   </td>
@@ -604,15 +604,15 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                 filteredSubmissions.map((sub, idx) => (
                   <tr
                     key={sub.id}
-                    className="hover:bg-emerald-50/40 transition-colors group border-b border-slate-100"
+                    className="hover:bg-emerald-50/40 dark:hover:bg-emerald-950/20 transition-colors group border-b border-slate-100 dark:border-white/[0.04]"
                   >
                     {/* Row Index */}
-                    <td className="py-3 px-3 border-r border-slate-200 text-center font-mono text-[11px] text-slate-400 bg-slate-50/50">
+                    <td className="py-3 px-3 border-r border-slate-200 dark:border-white/[0.08] text-center font-mono text-[11px] text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-white/[0.02]">
                       {idx + 1}
                     </td>
 
                     {/* Col A: Submitted At */}
-                    <td className="py-3 px-4 border-r border-slate-200 font-mono text-[11px] text-slate-500 whitespace-nowrap">
+                    <td className="py-3 px-4 border-r border-slate-200 dark:border-white/[0.08] font-mono text-[11px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
                       {new Date(sub.submittedAt).toLocaleDateString('en-IN', {
                         month: 'short',
                         day: 'numeric',
@@ -622,43 +622,43 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                     </td>
 
                     {/* Col B: Project Title & Tagline */}
-                    <td className="py-3 px-4 border-r border-slate-200 max-w-xs">
-                      <div className="font-extrabold text-slate-900 line-clamp-1">
+                    <td className="py-3 px-4 border-r border-slate-200 dark:border-white/[0.08] max-w-xs">
+                      <div className="font-extrabold text-slate-900 dark:text-white line-clamp-1">
                         {sub.projectTitle}
                       </div>
                       {sub.tagline && (
-                        <div className="text-[11px] text-[#0099e6] font-medium line-clamp-1">
+                        <div className="text-[11px] text-[#0099e6] dark:text-[#38bdf8] font-medium line-clamp-1">
                           {sub.tagline}
                         </div>
                       )}
                     </td>
 
                     {/* Col C: Submitter */}
-                    <td className="py-3 px-4 border-r border-slate-200 whitespace-nowrap">
-                      <div className="font-bold text-slate-800">
+                    <td className="py-3 px-4 border-r border-slate-200 dark:border-white/[0.08] whitespace-nowrap">
+                      <div className="font-bold text-slate-800 dark:text-slate-200">
                         {sub.submittedByName || 'Hacker Builder'}
                       </div>
                       {sub.submittedByEmail && (
-                        <div className="text-[10px] text-slate-400 font-mono truncate max-w-[160px]">
+                        <div className="text-[10px] text-slate-400 dark:text-slate-500 font-mono truncate max-w-[160px]">
                           {sub.submittedByEmail}
                         </div>
                       )}
                     </td>
 
                     {/* Col D: Track */}
-                    <td className="py-3 px-4 border-r border-slate-200">
-                      <span className="inline-block px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[10px] font-bold">
+                    <td className="py-3 px-4 border-r border-slate-200 dark:border-white/[0.08]">
+                      <span className="inline-block px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 text-[10px] font-bold">
                         {sub.track || 'General'}
                       </span>
                     </td>
 
                     {/* Col E: Repo Link */}
-                    <td className="py-3 px-3 border-r border-slate-200 text-center">
+                    <td className="py-3 px-3 border-r border-slate-200 dark:border-white/[0.08] text-center">
                       <a
                         href={sub.projectLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex p-1.5 rounded-lg bg-slate-100 hover:bg-[#0099e6] hover:text-white text-slate-700 transition-colors"
+                        className="inline-flex p-1.5 rounded-lg bg-slate-100 dark:bg-white/[0.06] hover:bg-[#0099e6] hover:text-white dark:hover:bg-[#0099e6] text-slate-700 dark:text-slate-300 transition-colors"
                         title={sub.projectLink}
                       >
                         <Github className="w-3.5 h-3.5" />
@@ -666,45 +666,45 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                     </td>
 
                     {/* Col F: Demo Video */}
-                    <td className="py-3 px-3 border-r border-slate-200 text-center">
+                    <td className="py-3 px-3 border-r border-slate-200 dark:border-white/[0.08] text-center">
                       {sub.demoVideoUrl ? (
                         <a
                           href={sub.demoVideoUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex p-1.5 rounded-lg bg-orange-50 hover:bg-[#ea580c] hover:text-white text-[#ea580c] transition-colors"
+                          className="inline-flex p-1.5 rounded-lg bg-orange-50 dark:bg-orange-950/40 hover:bg-[#ea580c] hover:text-white text-[#ea580c] dark:text-orange-400 transition-colors"
                           title="Watch Demo Video"
                         >
                           <Video className="w-3.5 h-3.5" />
                         </a>
                       ) : (
-                        <span className="text-slate-300 font-mono">—</span>
+                        <span className="text-slate-300 dark:text-slate-600 font-mono">—</span>
                       )}
                     </td>
 
                     {/* Col G: Pitch Deck */}
-                    <td className="py-3 px-3 border-r border-slate-200 text-center">
+                    <td className="py-3 px-3 border-r border-slate-200 dark:border-white/[0.08] text-center">
                       {sub.presentationUrl ? (
                         <a
                           href={sub.presentationUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-600 hover:text-white text-emerald-700 transition-colors"
+                          className="inline-flex p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-600 hover:text-white text-emerald-700 dark:text-emerald-300 transition-colors"
                           title="View Pitch Deck"
                         >
                           <Presentation className="w-3.5 h-3.5" />
                         </a>
                       ) : (
-                        <span className="text-slate-300 font-mono">—</span>
+                        <span className="text-slate-300 dark:text-slate-600 font-mono">—</span>
                       )}
                     </td>
 
                     {/* Col H: Status Selector */}
-                    <td className="py-3 px-4 border-r border-slate-200">
+                    <td className="py-3 px-4 border-r border-slate-200 dark:border-white/[0.08]">
                       <select
                         value={sub.status || 'SUBMITTED'}
                         onChange={(e) => handleQuickStatusChange(sub.id, e.target.value as any)}
-                        className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase border outline-none cursor-pointer ${getStatusBadge(sub.status)}`}
+                        className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase border dark:bg-[#121824] dark:border-white/[0.1] outline-none cursor-pointer ${getStatusBadge(sub.status)}`}
                       >
                         <option value="SUBMITTED">SUBMITTED</option>
                         <option value="UNDER_REVIEW">UNDER REVIEW</option>
@@ -715,7 +715,7 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                     </td>
 
                     {/* Col I: Score */}
-                    <td className="py-3 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-800">
+                    <td className="py-3 px-3 border-r border-slate-200 dark:border-white/[0.08] text-center font-mono font-bold text-slate-800 dark:text-slate-200">
                       {sub.score || 0}
                     </td>
 
@@ -730,14 +730,14 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                             setEvalScore(sub.score || 85);
                             setEvalNotes(sub.reviewNotes || '');
                           }}
-                          className="px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-[#0099e6] font-bold text-[11px] transition-colors cursor-pointer"
+                          className="px-2.5 py-1 rounded-lg bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-900/50 text-[#0099e6] dark:text-sky-400 font-bold text-[11px] transition-colors cursor-pointer"
                         >
                           Evaluate
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDeleteSubmission(sub.id)}
-                          className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                          className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                           title="Delete submission"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -752,38 +752,38 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
         </div>
 
         {/* Sheet Footer Bar */}
-        <div className="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 font-medium">
+        <div className="p-3 bg-slate-50 dark:bg-white/[0.02] border-t border-slate-200 dark:border-white/[0.08] flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span>Continuous Google Sheets Sync Ready</span>
           </div>
           <div>
-            Total Projects in Roster: <strong className="text-slate-800 font-mono">{submissions.length}</strong>
+            Total Projects in Roster: <strong className="text-slate-800 dark:text-white font-mono">{submissions.length}</strong>
           </div>
         </div>
       </div>
 
       {/* ─── Modal 1: Project Evaluation Dossier Modal ─────────────────── */}
       {selectedSubmission && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in overflow-y-auto">
-          <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-6">
-            <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-emerald-50/40">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/75 backdrop-blur-sm animate-in fade-in overflow-y-auto">
+          <div className="relative w-full max-w-2xl bg-white dark:bg-[#0c1017] rounded-3xl shadow-2xl border border-slate-200 dark:border-white/[0.08] overflow-hidden my-6">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-white/[0.08] bg-gradient-to-r from-slate-50 to-emerald-50/40 dark:from-white/[0.02] dark:to-emerald-950/20">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-[#0F9D58] text-white flex items-center justify-center shadow-md shadow-emerald-500/20">
                   <Trophy className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-slate-900">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white">
                     Project Review Dossier
                   </h3>
-                  <p className="text-xs text-slate-500 font-medium">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                     {selectedSubmission.projectTitle}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setSelectedSubmission(null)}
-                className="p-2 text-slate-400 hover:text-slate-700 rounded-xl"
+                className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-xl cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -792,30 +792,30 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
             <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto text-xs">
               {/* Deliverable Metadata */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
-                  <div className="text-[10px] text-slate-400 font-bold uppercase">Submitter</div>
-                  <div className="font-extrabold text-slate-900 mt-0.5">{selectedSubmission.submittedByName || 'Builder'}</div>
+                <div className="p-3 bg-slate-50 dark:bg-white/[0.04] rounded-xl border border-slate-200/80 dark:border-white/[0.08]">
+                  <div className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">Submitter</div>
+                  <div className="font-extrabold text-slate-900 dark:text-white mt-0.5">{selectedSubmission.submittedByName || 'Builder'}</div>
                 </div>
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
-                  <div className="text-[10px] text-slate-400 font-bold uppercase">Track</div>
-                  <div className="font-extrabold text-slate-900 mt-0.5">{selectedSubmission.track || 'General'}</div>
+                <div className="p-3 bg-slate-50 dark:bg-white/[0.04] rounded-xl border border-slate-200/80 dark:border-white/[0.08]">
+                  <div className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">Track</div>
+                  <div className="font-extrabold text-slate-900 dark:text-white mt-0.5">{selectedSubmission.track || 'General'}</div>
                 </div>
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
-                  <div className="text-[10px] text-slate-400 font-bold uppercase">Submitted Date</div>
-                  <div className="font-extrabold text-slate-900 mt-0.5">{formatDate(selectedSubmission.submittedAt)}</div>
+                <div className="p-3 bg-slate-50 dark:bg-white/[0.04] rounded-xl border border-slate-200/80 dark:border-white/[0.08]">
+                  <div className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">Submitted Date</div>
+                  <div className="font-extrabold text-slate-900 dark:text-white mt-0.5">{formatDate(selectedSubmission.submittedAt)}</div>
                 </div>
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
-                  <div className="text-[10px] text-slate-400 font-bold uppercase">Current Status</div>
+                <div className="p-3 bg-slate-50 dark:bg-white/[0.04] rounded-xl border border-slate-200/80 dark:border-white/[0.08]">
+                  <div className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">Current Status</div>
                   <div className="font-black text-[#0F9D58] mt-0.5 uppercase">{selectedSubmission.status || 'Submitted'}</div>
                 </div>
               </div>
 
               {/* Description */}
               <div>
-                <div className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-1.5">
+                <div className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider mb-1.5">
                   Detailed Solution Architecture
                 </div>
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 leading-relaxed whitespace-pre-line">
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-line">
                   {selectedSubmission.projectDescription}
                 </div>
               </div>
@@ -826,7 +826,7 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                   href={selectedSubmission.projectLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-3 rounded-xl border border-sky-200 bg-sky-50 text-[#0099e6] font-bold flex items-center justify-between hover:bg-sky-100 transition-colors"
+                  className="p-3 rounded-xl border border-sky-200 dark:border-sky-800/40 bg-sky-50 dark:bg-sky-950/40 text-[#0099e6] font-bold flex items-center justify-between hover:bg-sky-100 dark:hover:bg-sky-900/50 transition-colors"
                 >
                   <span className="flex items-center gap-1.5 truncate">
                     <Github className="w-4 h-4 shrink-0" />
@@ -840,7 +840,7 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                     href={selectedSubmission.demoVideoUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-3 rounded-xl border border-orange-200 bg-orange-50 text-[#ea580c] font-bold flex items-center justify-between hover:bg-orange-100 transition-colors"
+                    className="p-3 rounded-xl border border-orange-200 dark:border-orange-800/40 bg-orange-50 dark:bg-orange-950/40 text-[#ea580c] dark:text-orange-400 font-bold flex items-center justify-between hover:bg-orange-100 dark:hover:bg-orange-900/50 transition-colors"
                   >
                     <span className="flex items-center gap-1.5 truncate">
                       <Video className="w-4 h-4 shrink-0" />
@@ -849,7 +849,7 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                     <ExternalLink className="w-3.5 h-3.5 shrink-0" />
                   </a>
                 ) : (
-                  <div className="p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-400 font-medium">
+                  <div className="p-3 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-slate-50 dark:bg-white/[0.04] text-slate-400 font-medium">
                     No Demo Video
                   </div>
                 )}
@@ -859,7 +859,7 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                     href={selectedSubmission.presentationUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 font-bold flex items-center justify-between hover:bg-emerald-100 transition-colors"
+                    className="p-3 rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold flex items-center justify-between hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors"
                   >
                     <span className="flex items-center gap-1.5 truncate">
                       <Presentation className="w-4 h-4 shrink-0" />
@@ -868,28 +868,28 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                     <ExternalLink className="w-3.5 h-3.5 shrink-0" />
                   </a>
                 ) : (
-                  <div className="p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-400 font-medium">
+                  <div className="p-3 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-slate-50 dark:bg-white/[0.04] text-slate-400 font-medium">
                     No Slide Deck
                   </div>
                 )}
               </div>
 
               {/* Evaluation Controls */}
-              <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200 space-y-4">
-                <h4 className="text-xs font-black text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
-                  <Trophy className="w-4 h-4 text-amber-600" />
+              <div className="p-4 rounded-2xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 space-y-4">
+                <h4 className="text-xs font-black text-amber-900 dark:text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Trophy className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                   <span>Organizer & Judge Scoring</span>
                 </h4>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-bold text-slate-700 block mb-1">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
                       Award Status
                     </label>
                     <select
                       value={evalStatus}
                       onChange={(e) => setEvalStatus(e.target.value as any)}
-                      className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold text-xs outline-none"
+                      className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] font-bold text-xs text-slate-900 dark:text-white outline-none"
                     >
                       <option value="UNDER_REVIEW">UNDER REVIEW</option>
                       <option value="ACCEPTED">ACCEPTED (Shortlisted)</option>
@@ -900,8 +900,8 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
 
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="text-xs font-bold text-slate-700">
-                        Score: <span className="font-mono text-base font-black text-[#0F9D58]">{evalScore}</span> / 100
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Score: <span className="font-mono text-base font-black text-[#0F9D58] dark:text-emerald-400">{evalScore}</span> / 100
                       </label>
                     </div>
                     <input
@@ -916,7 +916,7 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
                     Judge Evaluation Notes & Remarks
                   </label>
                   <textarea
@@ -924,17 +924,17 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                     value={evalNotes}
                     onChange={(e) => setEvalNotes(e.target.value)}
                     placeholder="Provide feedback on creativity, execution, architecture, and pitch presentation..."
-                    className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs outline-none resize-none"
+                    className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none resize-none"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2">
+            <div className="p-4 bg-slate-50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/[0.08] flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setSelectedSubmission(null)}
-                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-200 font-bold text-xs cursor-pointer"
               >
                 Cancel
               </button>
@@ -953,9 +953,9 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
 
       {/* ─── Modal 2: Google Sheets Live Sync Setup Modal ─────────────── */}
       {showSyncModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in overflow-y-auto">
-          <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-6">
-            <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-[#0F9D58] text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/75 backdrop-blur-sm animate-in fade-in overflow-y-auto">
+          <div className="relative w-full max-w-2xl bg-white dark:bg-[#0c1017] rounded-3xl shadow-2xl border border-slate-200 dark:border-white/[0.08] overflow-hidden my-6">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-white/[0.08] bg-[#0F9D58] text-white">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-white/20 text-white flex items-center justify-center">
                   <FileSpreadsheet className="w-5 h-5" />
@@ -979,23 +979,23 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
 
             <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto text-xs">
               {/* Method 1: Instant Formula (Zero Setup) */}
-              <div className="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-3">
+              <div className="p-5 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40 space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 font-black text-sm text-emerald-900">
+                  <div className="flex items-center gap-2 font-black text-sm text-emerald-900 dark:text-emerald-300">
                     <span className="w-6 h-6 rounded-full bg-[#0F9D58] text-white flex items-center justify-center text-xs">
                       1
                     </span>
                     <span>Method A: 1-Click Google Sheet Formula (Recommended)</span>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[10px] uppercase">
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 font-extrabold text-[10px] uppercase">
                     Zero Setup
                   </span>
                 </div>
-                <p className="text-slate-600 leading-relaxed font-medium">
+                <p className="text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
                   Open any Google Sheet and paste this formula into <strong>Cell A1</strong>. Google Sheets will continuously fetch and auto-update your sheet with live project submissions!
                 </p>
 
-                <div className="relative p-3 rounded-xl bg-white border border-emerald-300 font-mono text-[11px] text-slate-800 break-all select-all flex items-center justify-between gap-3">
+                <div className="relative p-3 rounded-xl bg-white dark:bg-[#121824] border border-emerald-300 dark:border-emerald-700/50 font-mono text-[11px] text-slate-800 dark:text-slate-200 break-all select-all flex items-center justify-between gap-3">
                   <code>{importFormula}</code>
                   <button
                     type="button"
@@ -1009,19 +1009,19 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
               </div>
 
               {/* Method 2: Google Apps Script Webhook */}
-              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+              <div className="p-5 rounded-2xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 font-black text-sm text-slate-900">
-                    <span className="w-6 h-6 rounded-full bg-slate-800 text-white flex items-center justify-center text-xs">
+                  <div className="flex items-center gap-2 font-black text-sm text-slate-900 dark:text-white">
+                    <span className="w-6 h-6 rounded-full bg-slate-800 dark:bg-slate-700 text-white flex items-center justify-center text-xs">
                       2
                     </span>
                     <span>Method B: Instant Push Webhook (Google Apps Script)</span>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 font-bold text-[10px] uppercase">
+                  <span className="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-white/[0.08] text-slate-700 dark:text-slate-300 font-bold text-[10px] uppercase">
                     Realtime Push
                   </span>
                 </div>
-                <p className="text-slate-600 leading-relaxed">
+                <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
                   To append rows the instant a participant clicks submit, create an Apps Script in your Google Sheet (Extensions → Apps Script) and deploy as Web App:
                 </p>
 
@@ -1040,7 +1040,7 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                 </div>
 
                 <div className="space-y-1.5 pt-1">
-                  <label className="font-bold text-slate-700 block">
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block">
                     Paste Deployed Apps Script Webhook URL:
                   </label>
                   <div className="flex items-center gap-2">
@@ -1049,7 +1049,7 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                       placeholder="https://script.google.com/macros/s/.../exec"
                       value={webhookUrl}
                       onChange={(e) => setWebhookUrl(e.target.value)}
-                      className="flex-1 px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs outline-none focus:border-[#0F9D58]"
+                      className="flex-1 px-3 py-2 rounded-xl bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-[#0F9D58]"
                     />
                     <button
                       type="button"
@@ -1060,7 +1060,7 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                     </button>
                   </div>
                   {savedWebhookNotice && (
-                    <p className="text-emerald-700 font-bold text-[11px] flex items-center gap-1 animate-in fade-in">
+                    <p className="text-emerald-700 dark:text-emerald-400 font-bold text-[11px] flex items-center gap-1 animate-in fade-in">
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       <span>Webhook URL saved successfully! New submissions will automatically push to your sheet.</span>
                     </p>
@@ -1069,11 +1069,11 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
               </div>
             </div>
 
-            <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end">
+            <div className="p-4 bg-slate-50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/[0.08] flex items-center justify-end">
               <button
                 type="button"
                 onClick={() => setShowSyncModal(false)}
-                className="px-6 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs cursor-pointer"
+                className="px-6 py-2 rounded-xl bg-slate-900 dark:bg-white dark:text-slate-900 hover:bg-slate-800 text-white font-bold text-xs cursor-pointer"
               >
                 Done
               </button>
@@ -1084,7 +1084,7 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
 
       {/* ─── Toast Notification ────────────────────────────────────────── */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 px-4 py-3 rounded-2xl bg-slate-900 text-white font-bold text-xs shadow-2xl flex items-center gap-2 border border-slate-700 animate-in fade-in slide-in-from-bottom-3 duration-200">
+        <div className="fixed bottom-6 right-6 z-50 px-4 py-3 rounded-2xl bg-slate-900 dark:bg-[#121824] text-white font-bold text-xs shadow-2xl flex items-center gap-2 border border-slate-700 dark:border-white/[0.1] animate-in fade-in slide-in-from-bottom-3 duration-200">
           <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
           <span>{toastMessage}</span>
         </div>
@@ -1092,10 +1092,10 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
 
       {/* ─── Modal 3: Open in Google Sheets Quick Paste Modal ──────────── */}
       {showOpenInSheetsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in overflow-y-auto">
-          <div className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/75 backdrop-blur-sm animate-in fade-in overflow-y-auto">
+          <div className="relative w-full max-w-xl bg-white dark:bg-[#0c1017] rounded-3xl shadow-2xl border border-slate-200 dark:border-white/[0.08] overflow-hidden my-6">
             {/* Header */}
-            <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-[#0F9D58] text-white">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-white/[0.08] bg-[#0F9D58] text-white">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-white/20 text-white flex items-center justify-center">
                   <FileSpreadsheet className="w-5 h-5" />
@@ -1120,15 +1120,15 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
             {/* Modal Body */}
             <div className="p-6 space-y-5 text-xs">
               {/* Success Callout */}
-              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-start gap-3">
+              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40 flex items-start gap-3">
                 <div className="w-8 h-8 rounded-xl bg-[#0F9D58] text-white flex items-center justify-center shrink-0 mt-0.5">
                   <Check className="w-5 h-5" />
                 </div>
                 <div>
-                  <div className="text-sm font-black text-emerald-900">
+                  <div className="text-sm font-black text-emerald-900 dark:text-emerald-300">
                     {submissions.length} Project Submission{submissions.length === 1 ? '' : 's'} Copied to Clipboard!
                   </div>
-                  <p className="text-xs text-emerald-800/90 font-medium mt-0.5 leading-relaxed">
+                  <p className="text-xs text-emerald-800/90 dark:text-emerald-400/90 font-medium mt-0.5 leading-relaxed">
                     Formatted with emerald headers, project links, submitter emails, review statuses, and scores ready for spreadsheet cells.
                   </p>
                 </div>
@@ -1141,25 +1141,25 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                 </div>
 
                 <div className="space-y-2.5">
-                  <div className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-                    <span className="w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-black shrink-0">
+                  <div className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08]">
+                    <span className="w-6 h-6 rounded-full bg-slate-900 dark:bg-white dark:text-slate-950 text-white flex items-center justify-center text-xs font-black shrink-0">
                       1
                     </span>
                     <div>
-                      <div className="font-extrabold text-slate-900">Switch to your new Google Sheet tab</div>
-                      <p className="text-slate-500 text-[11px] mt-0.5">
+                      <div className="font-extrabold text-slate-900 dark:text-white">Switch to your new Google Sheet tab</div>
+                      <p className="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">
                         A blank Google Sheet tab was opened in your browser.
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3 p-3.5 rounded-xl bg-sky-50 border border-sky-200">
+                  <div className="flex items-start gap-3 p-3.5 rounded-xl bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800/40">
                     <span className="w-6 h-6 rounded-full bg-[#0099e6] text-white flex items-center justify-center text-xs font-black shrink-0">
                       2
                     </span>
                     <div>
-                      <div className="font-extrabold text-slate-900">
-                        Click on Cell <span className="font-mono bg-white px-1.5 py-0.5 rounded border border-sky-200 font-black">A1</span> and press{' '}
+                      <div className="font-extrabold text-slate-900 dark:text-white">
+                        Click on Cell <span className="font-mono bg-white dark:bg-[#121824] px-1.5 py-0.5 rounded border border-sky-200 dark:border-sky-800/40 font-black">A1</span> and press{' '}
                         <kbd className="px-2 py-0.5 bg-slate-900 text-white rounded font-mono text-[11px] font-bold">
                           ⌘ + V
                         </kbd>{' '}
@@ -1168,7 +1168,7 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                           Ctrl + V
                         </kbd>
                       </div>
-                      <p className="text-sky-800 text-[11px] mt-0.5 font-medium">
+                      <p className="text-sky-800 dark:text-sky-300 text-[11px] mt-0.5 font-medium">
                         All project rows and columns will immediately fill into the spreadsheet with full styling!
                       </p>
                     </div>
@@ -1190,7 +1190,7 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                 <button
                   type="button"
                   onClick={handleExportCSV}
-                  className="px-4 py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-1.5 cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] hover:bg-slate-50 dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer"
                 >
                   <Download className="w-4 h-4 text-slate-500" />
                   <span>Download .CSV</span>
@@ -1199,21 +1199,21 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                 <button
                   type="button"
                   onClick={() => window.open('https://docs.google.com/spreadsheets/u/0/create', '_blank')}
-                  className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center gap-1.5 cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer"
                 >
-                  <ExternalLink className="w-4 h-4 text-slate-600" />
+                  <ExternalLink className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                   <span>Re-open Sheet Tab</span>
                 </button>
               </div>
             </div>
 
             {/* Footer */}
-            <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-slate-500 text-[11px]">
+            <div className="p-4 bg-slate-50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/[0.08] flex items-center justify-between text-slate-500 dark:text-slate-400 text-[11px]">
               <span>Tip: In Google Sheets, you can also use File → Import → Upload to import CSV</span>
               <button
                 type="button"
                 onClick={() => setShowOpenInSheetsModal(false)}
-                className="px-4 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold cursor-pointer"
+                className="px-4 py-1.5 rounded-xl bg-slate-200 dark:bg-white/[0.08] hover:bg-slate-300 dark:hover:bg-white/[0.12] text-slate-800 dark:text-white font-bold cursor-pointer"
               >
                 Close
               </button>

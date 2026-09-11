@@ -649,7 +649,7 @@ function HostHackathonContent() {
       participantsCount: 1,
       featured: true,
       tags: tagsInput.split(',').map((t) => t.trim()).filter(Boolean),
-      bannerGradient: 'from-sky-50 via-white to-orange-50/60',
+      bannerGradient: 'from-slate-900 via-sky-950 to-[#0c1017]',
       tracks,
       currency,
       previewToken: previewToken || getEventPreviewToken({ slug, id: editingEventId || undefined }),

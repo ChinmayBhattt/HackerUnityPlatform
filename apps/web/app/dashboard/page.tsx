@@ -392,8 +392,10 @@ export default function DashboardPage() {
     }
   };
 
+  const loadedEventIdRef = useRef<string | null>(null);
+
   // ─── Realtime Event Registrations Loader ───────────────────
-  const loadModalRegistrations = useCallback(async (evt: ExtendedEvent) => {
+  const loadModalRegistrations = useCallback(async (evt: ExtendedEvent, isInitial: boolean = false) => {
     // 1. Immediately read local registrations so user sees data without any delay
     const localById = getEventRegistrations(evt.id);
     const localBySlug = evt.slug && evt.slug !== evt.id ? getEventRegistrations(evt.slug) : [];
@@ -403,16 +405,19 @@ export default function DashboardPage() {
       if (key) map.set(key, r);
     });
 
-    // Populate immediately with zero freeze
-    setEventRegistrations(Array.from(map.values()));
+    const localList = Array.from(map.values());
+    if (localList.length > 0) {
+      setEventRegistrations(localList);
+    }
 
-    // Custom local events don't have remote DB records, or if we already have local data, stop loading
+    // Custom local events don't have remote DB records, stop loading immediately
     if (evt.id && (evt.id.startsWith('evt_custom_') || evt.id.startsWith('evt_local_'))) {
       setLoadingRegistrations(false);
       return;
     }
 
-    if (map.size === 0) {
+    // Only display spinner if it's the first time opening this event AND we have zero local cached records
+    if (isInitial && localList.length === 0 && loadedEventIdRef.current !== evt.id) {
       setLoadingRegistrations(true);
     }
 
@@ -429,6 +434,7 @@ export default function DashboardPage() {
       });
 
       setEventRegistrations(Array.from(map.values()));
+      loadedEventIdRef.current = evt.id;
     } catch (err) {
       console.warn('Failed to load event registrations:', err);
     } finally {
@@ -436,21 +442,25 @@ export default function DashboardPage() {
     }
   }, []);
 
+  const viewingEventId = viewingHackersEvent?.id;
+  const viewingEventSlug = viewingHackersEvent?.slug;
+
   useEffect(() => {
-    if (!viewingHackersEvent) {
+    if (!viewingEventId || !viewingHackersEvent) {
       setEventRegistrations([]);
       setLoadingRegistrations(false);
+      loadedEventIdRef.current = null;
       return;
     }
 
-    loadModalRegistrations(viewingHackersEvent);
+    loadModalRegistrations(viewingHackersEvent, true);
 
     let regChannel: any = null;
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(viewingHackersEvent.id);
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(viewingEventId);
 
     if (isUuid) {
       regChannel = supabase
-        .channel(`modal_event_regs_${viewingHackersEvent.id}`)
+        .channel(`modal_event_regs_${viewingEventId}`)
         .on(
           'postgres_changes',
           {
@@ -459,14 +469,14 @@ export default function DashboardPage() {
             table: 'registrations',
           },
           () => {
-            loadModalRegistrations(viewingHackersEvent);
+            loadModalRegistrations(viewingHackersEvent, false);
           }
         )
         .subscribe();
     }
 
     const handleStorage = () => {
-      loadModalRegistrations(viewingHackersEvent);
+      loadModalRegistrations(viewingHackersEvent, false);
     };
     window.addEventListener('hackers_unity_storage_change', handleStorage);
 
@@ -474,7 +484,7 @@ export default function DashboardPage() {
       if (regChannel) supabase.removeChannel(regChannel);
       window.removeEventListener('hackers_unity_storage_change', handleStorage);
     };
-  }, [viewingHackersEvent, loadModalRegistrations]);
+  }, [viewingEventId, viewingEventSlug, loadModalRegistrations]);
 
   const handleExportCSV = (eventItem: ExtendedEvent) => {
     if (eventRegistrations.length === 0) {
@@ -1727,8 +1737,14 @@ export default function DashboardPage() {
 
       {/* View Registered Hackers / Realtime Registrations Modal */}
       {viewingHackersEvent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-3xl max-h-[85vh] bg-white dark:bg-[#0c1017] rounded-3xl shadow-2xl border border-slate-200 dark:border-white/[0.08] flex flex-col overflow-hidden">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in"
+          onClick={() => setViewingHackersEvent(null)}
+        >
+          <div
+            className="w-full max-w-3xl max-h-[85vh] bg-white dark:bg-[#0c1017] rounded-3xl shadow-2xl border border-slate-200 dark:border-white/[0.08] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="p-6 border-b border-slate-100 dark:border-white/[0.08] flex items-center justify-between bg-slate-50/80 dark:bg-white/[0.02]">
               <div>
                 <div className="flex items-center gap-2 mb-0.5">

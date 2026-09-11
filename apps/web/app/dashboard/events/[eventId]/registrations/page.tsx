@@ -245,18 +245,18 @@ export default function EventRegistrationsPage({ params }: PageProps) {
         <div>
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-[#0099e6] font-semibold mb-2 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-[#0099e6] dark:hover:text-[#0099e6] font-semibold mb-2 transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to Organizer Dashboard</span>
           </Link>
-          <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
             Manage Registrations
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">
             {event ? (
               <>
-                Showing hacker applicants for <strong className="text-slate-900">{event.title}</strong>
+                Showing hacker applicants for <strong className="text-slate-900 dark:text-white">{event.title}</strong>
               </>
             ) : (
               'Loading hackathon data...'
@@ -276,19 +276,19 @@ export default function EventRegistrationsPage({ params }: PageProps) {
           <button
             onClick={handleExportCSV}
             disabled={registrations.length === 0}
-            className="px-4 py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-xs flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2.5 rounded-xl bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-white/[0.04] text-slate-700 dark:text-slate-200 text-xs font-bold transition-all shadow-xs flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span>Export CSV</span>
           </button>
 
           <button
             onClick={() => setShowClearModal(true)}
             disabled={registrations.length === 0}
-            className="px-4 py-2.5 rounded-xl bg-white border border-red-200 hover:bg-red-50 text-red-700 text-xs font-bold transition-all shadow-xs flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2.5 rounded-xl bg-white dark:bg-[#0c1017] border border-red-200 dark:border-red-900/40 hover:bg-red-50 dark:hover:bg-red-950/20 text-red-700 dark:text-red-400 text-xs font-bold transition-all shadow-xs flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             title="Delete all registration data"
           >
-            <Trash2 className="w-4 h-4 text-red-600" />
+            <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
             <span>Delete All</span>
           </button>
         </div>
@@ -299,25 +299,25 @@ export default function EventRegistrationsPage({ params }: PageProps) {
         <div
           className={`p-4 rounded-2xl border text-xs flex items-center justify-between gap-3 animate-in fade-in duration-200 ${
             notification.type === 'error'
-              ? 'bg-red-50 border-red-200 text-red-800'
+              ? 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900/40 text-red-800 dark:text-red-200'
               : notification.type === 'info'
-              ? 'bg-blue-50 border-blue-200 text-blue-800'
-              : 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              ? 'bg-blue-50 dark:bg-sky-950/30 border-blue-200 dark:border-sky-850/40 text-blue-800 dark:text-sky-200'
+              : 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-850/40 text-emerald-800 dark:text-emerald-200'
           }`}
         >
           <div className="flex items-center gap-2.5">
             {notification.type === 'error' ? (
-              <AlertTriangle className="w-5 h-5 text-red-600 shrink-0" />
+              <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0" />
             ) : notification.type === 'info' ? (
               <Users className="w-5 h-5 text-[#0099e6] shrink-0" />
             ) : (
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
             )}
             <span className="font-semibold">{notification.text}</span>
           </div>
           <button
             onClick={() => setNotification(null)}
-            className="p-1 rounded-lg hover:bg-black/5 transition-colors cursor-pointer"
+            className="p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -326,41 +326,41 @@ export default function EventRegistrationsPage({ params }: PageProps) {
 
       {/* ─── Stats Cards ────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-1">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-white/[0.08] shadow-xs space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500">Total Applicants</span>
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Total Applicants</span>
             <Users className="w-4 h-4 text-[#0099e6]" />
           </div>
-          <div className="text-2xl font-black text-slate-900 font-mono">{stats.total}</div>
+          <div className="text-2xl font-black text-slate-900 dark:text-white font-mono">{stats.total}</div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200 shadow-xs space-y-1">
+        <div className="p-5 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/30 shadow-xs space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-emerald-700">Approved</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">Approved</span>
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <div className="text-2xl font-black text-emerald-900 font-mono">{stats.approved}</div>
+          <div className="text-2xl font-black text-emerald-900 dark:text-emerald-200 font-mono">{stats.approved}</div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-amber-50/60 border border-amber-200 shadow-xs space-y-1">
+        <div className="p-5 rounded-2xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/30 shadow-xs space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-amber-700">Pending Review</span>
-            <Clock className="w-4 h-4 text-amber-600" />
+            <span className="text-xs font-bold text-amber-700 dark:text-amber-400">Pending Review</span>
+            <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
           </div>
-          <div className="text-2xl font-black text-amber-900 font-mono">{stats.pending}</div>
+          <div className="text-2xl font-black text-amber-900 dark:text-amber-200 font-mono">{stats.pending}</div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-red-50/60 border border-red-200 shadow-xs space-y-1">
+        <div className="p-5 rounded-2xl bg-red-50/60 dark:bg-red-950/20 border border-red-200 dark:border-red-800/30 shadow-xs space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-red-700">Rejected</span>
-            <XCircle className="w-4 h-4 text-red-600" />
+            <span className="text-xs font-bold text-red-700 dark:text-red-400">Rejected</span>
+            <XCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
           </div>
-          <div className="text-2xl font-black text-red-900 font-mono">{stats.rejected}</div>
+          <div className="text-2xl font-black text-red-900 dark:text-red-200 font-mono">{stats.rejected}</div>
         </div>
       </div>
 
       {/* ─── Filter & Search Bar ────────────────────────────────── */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="bg-white dark:bg-[#0c1017] p-4 rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="relative flex-1">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
@@ -368,7 +368,7 @@ export default function EventRegistrationsPage({ params }: PageProps) {
             placeholder="Search by hacker name, email, college, or city..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 outline-none focus:border-[#0099e6]"
+            className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-[#121824] border border-slate-200 dark:border-white/[0.08] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-[#0099e6] dark:focus:border-[#0099e6]"
           />
         </div>
 
@@ -380,7 +380,7 @@ export default function EventRegistrationsPage({ params }: PageProps) {
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                 statusFilter === filter
                   ? 'bg-[#0099e6] text-white shadow-2xs'
-                  : 'bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200'
+                  : 'bg-slate-50 dark:bg-[#121824] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.06] hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/[0.08]'
               }`}
             >
               {filter === 'ALL' ? 'All Applicants' : filter}
@@ -435,14 +435,14 @@ export default function EventRegistrationsPage({ params }: PageProps) {
       )}
 
       {/* ─── Registrations Table ────────────────────────────────── */}
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-[#0c1017] rounded-3xl border border-slate-200 dark:border-white/[0.08] shadow-sm overflow-hidden">
         {filteredRegistrations.length === 0 ? (
           <div className="py-16 text-center space-y-3">
-            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
+            <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center mx-auto text-slate-400 dark:text-slate-500">
               <Users className="w-6 h-6" />
             </div>
-            <h3 className="text-sm font-bold text-slate-800">No applicants found</h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            <h3 className="text-sm font-bold text-slate-800 dark:text-white">No applicants found</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
               {searchQuery || statusFilter !== 'ALL'
                 ? 'Try adjusting your search query or status filter.'
                 : 'Registrations will appear here in real-time as builders apply or when uploaded.'}
@@ -451,14 +451,14 @@ export default function EventRegistrationsPage({ params }: PageProps) {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50/80 border-b border-slate-200 text-slate-600 uppercase font-bold tracking-wider">
+              <thead className="bg-slate-50/80 dark:bg-white/[0.03] border-b border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-400 uppercase font-bold tracking-wider">
                 <tr>
                   <th className="py-3.5 px-4 w-10">
                     <input
                       type="checkbox"
                       checked={isAllPageSelected}
                       onChange={toggleSelectAllPage}
-                      className="rounded border-slate-300 text-[#0099e6] focus:ring-[#0099e6] cursor-pointer"
+                      className="rounded border-slate-300 dark:border-white/20 text-[#0099e6] focus:ring-[#0099e6] cursor-pointer"
                       title="Select all on this page"
                     />
                   </th>
@@ -470,14 +470,14 @@ export default function EventRegistrationsPage({ params }: PageProps) {
                   <th className="py-3.5 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700">
+              <tbody className="divide-y divide-slate-100 dark:divide-white/[0.06] text-slate-700 dark:text-slate-300">
                 {paginatedRegistrations.map((reg) => {
                   const isSelected = selectedIds.includes(reg.id);
                   return (
                     <tr
                       key={reg.id}
                       className={`transition-colors ${
-                        isSelected ? 'bg-blue-50/40' : 'hover:bg-slate-50/50'
+                        isSelected ? 'bg-blue-50/40 dark:bg-sky-950/20' : 'hover:bg-slate-50/50 dark:hover:bg-white/[0.02]'
                       }`}
                     >
                       <td className="py-3.5 px-4">
@@ -485,19 +485,19 @@ export default function EventRegistrationsPage({ params }: PageProps) {
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => toggleSelectRow(reg.id)}
-                          className="rounded border-slate-300 text-[#0099e6] focus:ring-[#0099e6] cursor-pointer"
+                          className="rounded border-slate-300 dark:border-white/20 text-[#0099e6] focus:ring-[#0099e6] cursor-pointer"
                         />
                       </td>
 
                       <td className="py-3.5 px-4">
-                        <div className="font-bold text-slate-900">{reg.userName}</div>
-                        <div className="text-[11px] text-slate-500 font-mono">{reg.userEmail}</div>
-                        {reg.phone && <div className="text-[10px] text-slate-400">{reg.phone}</div>}
+                        <div className="font-bold text-slate-900 dark:text-white">{reg.userName}</div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">{reg.userEmail}</div>
+                        {reg.phone && <div className="text-[10px] text-slate-400 dark:text-slate-500">{reg.phone}</div>}
                       </td>
 
                       <td className="py-3.5 px-4">
-                        <div className="font-medium text-slate-800">{reg.college || '—'}</div>
-                        <div className="text-[11px] text-slate-500">{reg.city || '—'}</div>
+                        <div className="font-medium text-slate-800 dark:text-slate-200">{reg.college || '—'}</div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400">{reg.city || '—'}</div>
                       </td>
 
                       <td className="py-3.5 px-4">
@@ -527,7 +527,7 @@ export default function EventRegistrationsPage({ params }: PageProps) {
                           {(reg.skills || []).slice(0, 3).map((s) => (
                             <span
                               key={s}
-                              className="px-1.5 py-0.5 bg-slate-100 rounded text-[10px] text-slate-600 font-mono"
+                              className="px-1.5 py-0.5 bg-slate-100 dark:bg-white/[0.06] rounded text-[10px] text-slate-600 dark:text-slate-300 font-mono"
                             >
                               {s}
                             </span>
@@ -535,21 +535,21 @@ export default function EventRegistrationsPage({ params }: PageProps) {
                         </div>
                       </td>
 
-                      <td className="py-3.5 px-4 font-mono text-[11px] text-slate-500">
+                      <td className="py-3.5 px-4 font-mono text-[11px] text-slate-500 dark:text-slate-400">
                         {formatDate(reg.registeredAt)}
                       </td>
 
                       <td className="py-3.5 px-4">
                         {reg.status === 'APPROVED' || reg.status === 'CONFIRMED' ? (
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
                             Approved
                           </span>
                         ) : reg.status === 'REJECTED' ? (
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-200">
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800/40">
                             Rejected
                           </span>
                         ) : (
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40">
                             Pending Review
                           </span>
                         )}
@@ -560,21 +560,21 @@ export default function EventRegistrationsPage({ params }: PageProps) {
                           <button
                             onClick={() => handleStatusChange(reg.id, 'APPROVED')}
                             title="Approve Applicant"
-                            className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors cursor-pointer border border-emerald-200"
+                            className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 transition-colors cursor-pointer border border-emerald-200 dark:border-emerald-800/40"
                           >
                             <Check className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => handleStatusChange(reg.id, 'REJECTED')}
                             title="Reject Applicant"
-                            className="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 transition-colors cursor-pointer border border-amber-200"
+                            className="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 text-amber-700 dark:text-amber-300 transition-colors cursor-pointer border border-amber-200 dark:border-amber-800/40"
                           >
                             <X className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => handleDeleteSingle(reg.id, reg.userName)}
                             title="Delete Applicant"
-                            className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-colors cursor-pointer border border-red-200"
+                            className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/50 text-red-600 dark:text-red-300 transition-colors cursor-pointer border border-red-200 dark:border-red-800/40"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -590,33 +590,33 @@ export default function EventRegistrationsPage({ params }: PageProps) {
 
         {/* ─── Pagination Footer ──────────────────────────────────── */}
         {filteredRegistrations.length > 0 && (
-          <div className="p-4 border-t border-slate-200 bg-slate-50/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-3 text-slate-500">
+          <div className="p-4 border-t border-slate-200 dark:border-white/[0.08] bg-slate-50/60 dark:bg-white/[0.02] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
               <span>
                 Showing{' '}
-                <strong className="text-slate-800 font-mono">
+                <strong className="text-slate-800 dark:text-slate-200 font-mono">
                   {(currentPage - 1) * pageSize + 1}
                 </strong>{' '}
                 to{' '}
-                <strong className="text-slate-800 font-mono">
+                <strong className="text-slate-800 dark:text-slate-200 font-mono">
                   {Math.min(currentPage * pageSize, filteredRegistrations.length)}
                 </strong>{' '}
                 of{' '}
-                <strong className="text-slate-800 font-mono">
+                <strong className="text-slate-800 dark:text-slate-200 font-mono">
                   {filteredRegistrations.length.toLocaleString()}
                 </strong>{' '}
                 applicants
               </span>
 
               <div className="flex items-center gap-1.5">
-                <span className="text-slate-400">Rows:</span>
+                <span className="text-slate-400 dark:text-slate-500">Rows:</span>
                 <select
                   value={pageSize}
                   onChange={(e) => {
                     setPageSize(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="px-2 py-1 bg-white border border-slate-200 rounded-lg text-slate-800 font-bold outline-none cursor-pointer"
+                  className="px-2 py-1 bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.08] rounded-lg text-slate-800 dark:text-slate-200 font-bold outline-none cursor-pointer"
                 >
                   <option value={25}>25</option>
                   <option value={50}>50</option>
@@ -630,20 +630,20 @@ export default function EventRegistrationsPage({ params }: PageProps) {
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed text-slate-700 font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#121824] hover:bg-slate-100 dark:hover:bg-white/[0.06] disabled:opacity-40 disabled:cursor-not-allowed text-slate-700 dark:text-slate-200 font-bold flex items-center gap-1 cursor-pointer transition-colors"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
                 <span>Prev</span>
               </button>
 
-              <span className="text-slate-600 font-bold font-mono px-2">
+              <span className="text-slate-600 dark:text-slate-300 font-bold font-mono px-2">
                 {currentPage} / {totalPages}
               </span>
 
               <button
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed text-slate-700 font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#121824] hover:bg-slate-100 dark:hover:bg-white/[0.06] disabled:opacity-40 disabled:cursor-not-allowed text-slate-700 dark:text-slate-200 font-bold flex items-center gap-1 cursor-pointer transition-colors"
               >
                 <span>Next</span>
                 <ChevronRight className="w-3.5 h-3.5" />
@@ -656,21 +656,21 @@ export default function EventRegistrationsPage({ params }: PageProps) {
       {/* ─── Clear All Registrations Confirmation Modal ─────────── */}
       {showClearModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-5 animate-in zoom-in-95 duration-150">
-            <div className="w-12 h-12 rounded-2xl bg-red-50 border border-red-100 text-red-600 flex items-center justify-center">
+          <div className="bg-white dark:bg-[#0c1017] rounded-3xl border border-slate-200 dark:border-white/[0.08] shadow-2xl max-w-md w-full p-6 space-y-5 animate-in zoom-in-95 duration-150">
+            <div className="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900/40 text-red-600 dark:text-red-400 flex items-center justify-center">
               <AlertTriangle className="w-6 h-6" />
             </div>
 
             <div>
-              <h3 className="text-lg font-black text-slate-900 tracking-tight">
+              <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
                 Delete All Registrations?
               </h3>
-              <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
                 Are you sure you want to permanently delete all{' '}
-                <strong className="text-slate-800 font-mono">
+                <strong className="text-slate-800 dark:text-slate-200 font-mono">
                   {registrations.length.toLocaleString()}
                 </strong>{' '}
-                registrations for <strong className="text-slate-800">{event?.title}</strong>? This
+                registrations for <strong className="text-slate-800 dark:text-slate-200">{event?.title}</strong>? This
                 action cannot be undone.
               </p>
             </div>
@@ -679,7 +679,7 @@ export default function EventRegistrationsPage({ params }: PageProps) {
               <button
                 type="button"
                 onClick={() => setShowClearModal(false)}
-                className="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold transition-all cursor-pointer"
+                className="px-4 py-2 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#121824] hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-200 text-xs font-bold transition-all cursor-pointer"
               >
                 Cancel
               </button>
