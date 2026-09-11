@@ -29,6 +29,7 @@ import {
   saveLocalTeamInvite,
   getLocalInviteByToken,
   updateLocalInviteStatus,
+  getLocalPendingInvitesForEmail,
 } from './storage';
 
 /**
@@ -1380,7 +1381,7 @@ export async function sendTeamInvite(
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const cleanEmail = invitedEmail.toLowerCase().trim();
 
-  // 1. Handle local / custom squads
+    // 1. Handle local / custom squads
   if (teamId.startsWith('team_') || eventId.startsWith('evt_custom_')) {
     const token = `inv_token_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
     const localTeam = getLocalTeamWithMembers(teamId);
@@ -1395,6 +1396,13 @@ export async function sendTeamInvite(
       status: 'PENDING',
       invite_token: token,
       created_at: new Date().toISOString(),
+      teams: {
+        name: teamName,
+      },
+      events: {
+        slug: eventId,
+        title: 'Hackathon Arena',
+      },
       profiles: {
         name: 'Squad Leader',
         email: 'leader@hackersunity.dev',
@@ -1402,6 +1410,30 @@ export async function sendTeamInvite(
     };
     saveLocalTeamInvite(teamId, localInvite);
     const inviteLink = `${origin}/hackathons/${eventId}/invite?token=${token}`;
+
+    // Realtime broadcast for local / custom squads
+    try {
+      if (typeof window !== 'undefined') {
+        const channel = supabase.channel('realtime-hub-global');
+        channel.send({
+          type: 'broadcast',
+          event: 'team_invite',
+          payload: {
+            invitedEmail: cleanEmail,
+            targetUserId: null,
+            teamName,
+            hackathonTitle: 'Hackathon Arena',
+            hackathonSlug: eventId,
+            invitedByName: 'Squad Leader',
+            inviteToken: token,
+            actionUrl: `/hackathons/${eventId}/invite?token=${token}`,
+            createdAt: new Date().toISOString(),
+          },
+        });
+      }
+    } catch (e) {
+      console.warn('Realtime broadcast warning for local team:', e);
+    }
 
     // Dispatch real email via /api/invite-email!
     try {
@@ -1505,6 +1537,108 @@ export async function sendTeamInvite(
 
     const inviteLink = `${origin}/hackathons/${eventSlug}/invite?token=${inviteRecord.invite_token}`;
 
+    // Cache local invite & trigger local UI update immediately
+    try {
+      saveLocalTeamInvite(teamId, {
+        id: inviteRecord.id,
+        team_id: teamId,
+        event_id: eventId,
+        invited_by: invitedByUserId,
+        invited_email: cleanEmail,
+        status: 'PENDING',
+        invite_token: inviteRecord.invite_token,
+        created_at: new Date().toISOString(),
+        teams: {
+          name: teamName,
+        },
+        events: {
+          slug: eventSlug,
+          title: eventTitle,
+        },
+        profiles: {
+          name: inviterName,
+        },
+      });
+    } catch (saveErr) {
+      console.warn('Local invite cache notice:', saveErr);
+    }
+
+    // 2. Create in-app notification & send realtime alert
+    try {
+      // Look up target profile by email
+      const { data: targetProfile } = await supabase
+        .from('profiles')
+        .select('id, name, email')
+        .ilike('email', cleanEmail)
+        .maybeSingle();
+
+      const isSenderUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(invitedByUserId);
+      const isEventUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(eventId);
+
+      if (targetProfile?.id) {
+        const { data: notifData } = await supabase
+          .from('notifications')
+          .insert({
+            title: `Squad Invite: ${teamName}`,
+            message: `${inviterName} invited you to join "${teamName}" for ${eventTitle}!`,
+            type: 'team',
+            icon: 'users',
+            event_id: isEventUuid ? eventId : null,
+            sender_id: isSenderUuid ? invitedByUserId : null,
+            target_type: 'specific_user',
+            action_url: `/hackathons/${eventSlug}/invite?token=${inviteRecord.invite_token}`,
+            metadata: {
+              inviteToken: inviteRecord.invite_token,
+              teamId,
+              teamName,
+              eventId,
+              eventSlug,
+              eventTitle,
+              invitedByName: inviterName,
+              invitedEmail: cleanEmail,
+              status: 'PENDING',
+            },
+          })
+          .select('id')
+          .single();
+
+        if (notifData?.id) {
+          await supabase
+            .from('user_notifications')
+            .upsert(
+              {
+                user_id: targetProfile.id,
+                notification_id: notifData.id,
+                is_read: false,
+              },
+              { onConflict: 'user_id,notification_id' }
+            );
+        }
+      }
+
+      // Realtime broadcast to online connected clients
+      if (typeof window !== 'undefined') {
+        const channel = supabase.channel('realtime-hub-global');
+        channel.send({
+          type: 'broadcast',
+          event: 'team_invite',
+          payload: {
+            invitedEmail: cleanEmail,
+            targetUserId: targetProfile?.id || null,
+            teamName,
+            hackathonTitle: eventTitle,
+            hackathonSlug: eventSlug,
+            invitedByName: inviterName,
+            inviteToken: inviteRecord.invite_token,
+            actionUrl: `/hackathons/${eventSlug}/invite?token=${inviteRecord.invite_token}`,
+            createdAt: new Date().toISOString(),
+          },
+        });
+      }
+    } catch (notifErr) {
+      console.warn('In-app notification dispatch notice:', notifErr);
+    }
+
     // Dispatch email via API route
     try {
       if (typeof window !== 'undefined') {
@@ -1562,17 +1696,26 @@ export async function fetchTeamInvites(teamId: string): Promise<any[]> {
 export async function fetchPendingInvitesForUser(email: string): Promise<any[]> {
   try {
     if (!email) return [];
-    const { data, error } = await supabase
+    const cleanEmail = email.toLowerCase().trim();
+    const { data } = await supabase
       .from('team_invitations')
-      .select('*, teams(id, name, event_id, leader_id, description, profiles:leader_id(name, email, avatar_url)), events(id, title, slug, start_date, end_date)')
-      .eq('invited_email', email.toLowerCase().trim())
+      .select('*, teams(id, name, event_id, leader_id, description, profiles:leader_id(name, email, avatar_url)), events(id, title, slug, start_date, end_date), profiles:invited_by(name, email)')
+      .ilike('invited_email', cleanEmail)
       .eq('status', 'PENDING')
       .order('created_at', { ascending: false });
 
-    if (error || !data) return [];
-    return data;
+    const localPending = getLocalPendingInvitesForEmail(cleanEmail);
+    const merged = [...(data || []), ...localPending];
+
+    const seen = new Set<string>();
+    return merged.filter((inv) => {
+      const key = inv.invite_token || inv.id;
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   } catch {
-    return [];
+    return getLocalPendingInvitesForEmail(email);
   }
 }
 
@@ -1637,6 +1780,7 @@ export async function acceptTeamInvite(
   inviteToken: string,
   userId: string
 ): Promise<{ success: boolean; teamId?: string; eventSlug?: string; error?: string }> {
+  // 1. Handle local invite if token matches
   const localInvite = getLocalInviteByToken(inviteToken);
   if (localInvite) {
     if (localInvite.status !== 'PENDING') {
@@ -1658,7 +1802,7 @@ export async function acceptTeamInvite(
   }
 
   try {
-    // 1. Get the invite
+    // 2. Get the invite from Supabase
     const { invite, error: fetchErr } = await getInviteByToken(inviteToken);
     if (fetchErr || !invite) {
       return { success: false, error: fetchErr || 'Invite not found.' };
@@ -1673,14 +1817,14 @@ export async function acceptTeamInvite(
       return { success: false, error: 'Team not found.' };
     }
 
-    // 2. Check team capacity
+    // 3. Check team capacity
     const currentMembers = team.team_members?.length || 0;
     const maxMembers = team.max_members || 4;
     if (currentMembers >= maxMembers) {
       return { success: false, error: 'This team has already reached its maximum capacity.' };
     }
 
-    // Try updating Supabase (non-blocking if table is missing)
+    // 4. Update invite status to ACCEPTED
     try {
       await supabase
         .from('team_invitations')
@@ -1688,6 +1832,58 @@ export async function acceptTeamInvite(
         .eq('invite_token', inviteToken);
     } catch {
       // ignore
+    }
+
+    // 5. Add user to team_members
+    if (userId && team.id) {
+      try {
+        await supabase
+          .from('team_members')
+          .upsert(
+            {
+              team_id: team.id,
+              user_id: userId,
+              role: 'MEMBER',
+              status: 'ACCEPTED',
+            },
+            { onConflict: 'team_id,user_id' }
+          );
+      } catch (memErr) {
+        console.warn('Could not upsert team_member:', memErr);
+      }
+    }
+
+    // 6. Update local invite status if cached
+    updateLocalInviteStatus(inviteToken, 'ACCEPTED');
+
+    // 7. Notify team leader
+    try {
+      if (team.leader_id && team.leader_id !== userId) {
+        const { data: acceptingProfile } = await supabase
+          .from('profiles')
+          .select('name')
+          .eq('id', userId)
+          .maybeSingle();
+        const userName = acceptingProfile?.name || 'A teammate';
+
+        await sendNotificationToUser(
+          team.leader_id,
+          `Squad Update: ${team.name}`,
+          `${userName} has accepted your invite and joined ${team.name}!`,
+          NotificationDbType.TEAM,
+          {
+            icon: 'users',
+            eventId: team.event_id || undefined,
+            actionUrl: `/hackathons/${invite.events?.slug || 'event'}/register`,
+          }
+        );
+      }
+    } catch {
+      // ignore
+    }
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('hackers_unity_storage_change'));
     }
 
     return {
@@ -1706,10 +1902,7 @@ export async function acceptTeamInvite(
 export async function declineTeamInvite(
   inviteToken: string
 ): Promise<{ success: boolean; error?: string }> {
-  if (inviteToken.startsWith('inv_token_')) {
-    updateLocalInviteStatus(inviteToken, 'DECLINED');
-    return { success: true };
-  }
+  updateLocalInviteStatus(inviteToken, 'DECLINED');
 
   try {
     const { error } = await supabase
@@ -1718,9 +1911,16 @@ export async function declineTeamInvite(
       .eq('invite_token', inviteToken)
       .eq('status', 'PENDING');
 
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('hackers_unity_storage_change'));
+    }
+
     if (error) return { success: false, error: error.message };
     return { success: true };
   } catch (err: any) {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('hackers_unity_storage_change'));
+    }
     return { success: false, error: err.message || 'Failed to decline invite' };
   }
 }

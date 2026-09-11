@@ -96,12 +96,24 @@ export function NotificationToast() {
 
           {/* Content */}
           <div className="flex-1 min-w-0">
-            <div className="text-xs font-extrabold text-slate-900 line-clamp-1">
-              {stripEmojis(latestToast.notification.title)}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {latestToast.notification.type === NotificationDbType.TEAM && (
+                <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-violet-100 text-violet-700 tracking-wide uppercase">
+                  Squad Invite
+                </span>
+              )}
+              <span className="text-xs font-extrabold text-slate-900 line-clamp-1">
+                {stripEmojis(latestToast.notification.title)}
+              </span>
             </div>
             <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-2 leading-snug">
               {stripEmojis(latestToast.notification.message)}
             </p>
+            {latestToast.notification.type === NotificationDbType.TEAM && (
+              <div className="mt-1 text-[10px] font-extrabold text-[#0099e6] flex items-center gap-1">
+                Click to view and Accept / Reject &rarr;
+              </div>
+            )}
           </div>
 
           {/* Close */}

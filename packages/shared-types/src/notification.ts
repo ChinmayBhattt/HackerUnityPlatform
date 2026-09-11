@@ -136,6 +136,7 @@ export interface UserNotification {
     newsId: string | null;
     actionUrl: string | null;
     createdAt: string;
+    metadata?: Record<string, any> | null;
   };
 }
 

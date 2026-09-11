@@ -854,3 +854,42 @@ export function updateLocalInviteStatus(token: string, status: 'ACCEPTED' | 'DEC
     return false;
   }
 }
+
+export function getLocalPendingInvitesForEmail(email: string): any[] {
+  if (typeof window === 'undefined' || !email) return [];
+  const cleanEmail = email.toLowerCase().trim();
+  const results: any[] = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(LOCAL_INVITES_PREFIX)) {
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          const invites: any[] = JSON.parse(raw);
+          for (const inv of invites) {
+            if (
+              inv.invited_email &&
+              inv.invited_email.toLowerCase().trim() === cleanEmail &&
+              inv.status === 'PENDING'
+            ) {
+              const team = getLocalTeamWithMembers(inv.team_id);
+              results.push({
+                ...inv,
+                teams: team || { id: inv.team_id, name: 'Squad' },
+                events: {
+                  id: inv.event_id,
+                  slug: inv.event_id,
+                  title: team?.name ? `${team.name}'s Hackathon` : 'Hackathon Arena',
+                },
+              });
+            }
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Error reading local pending invites:', e);
+  }
+  return results;
+}
+

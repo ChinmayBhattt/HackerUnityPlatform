@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { getLocalPendingInvitesForEmail } from './storage';
 import {
   UserNotification,
   NotificationDbType,
@@ -64,6 +65,7 @@ function mapDbToUserNotification(row: any): UserNotification {
       newsId: row.notifications?.news_id || null,
       actionUrl: row.notifications?.action_url || null,
       createdAt: row.notifications?.created_at || row.created_at,
+      metadata: row.notifications?.metadata || null,
     },
   };
 }
@@ -206,55 +208,162 @@ export async function fetchPublicAnnouncementsAndEvents(): Promise<UserNotificat
 
 export async function fetchUserNotifications(
   userId?: string,
-  limit = 30,
-  offset = 0
+  userEmailOrLimit?: string | number,
+  limitOrOffset = 30,
+  offsetVal = 0
 ): Promise<{ data: UserNotification[]; error?: string }> {
+  let userEmail: string | undefined;
+  let limit = 30;
+  let offset = 0;
+
+  if (typeof userEmailOrLimit === 'string') {
+    userEmail = userEmailOrLimit;
+    limit = typeof limitOrOffset === 'number' ? limitOrOffset : 30;
+    offset = typeof offsetVal === 'number' ? offsetVal : 0;
+  } else if (typeof userEmailOrLimit === 'number') {
+    limit = userEmailOrLimit;
+    offset = typeof limitOrOffset === 'number' ? limitOrOffset : 0;
+  }
+
   try {
+    const readIds = getLocalReadNotificationIds();
     const publicNotifs = await fetchPublicAnnouncementsAndEvents();
 
-    if (!userId) {
+    // 1. Fetch pending team invites for the user's email
+    const inviteNotifs: UserNotification[] = [];
+    if (userEmail) {
+      const cleanEmail = userEmail.toLowerCase().trim();
+      try {
+        // Query Supabase for pending invitations
+        const { data: dbInvites } = await supabase
+          .from('team_invitations')
+          .select(`
+            id,
+            team_id,
+            event_id,
+            invited_by,
+            invited_email,
+            status,
+            invite_token,
+            created_at,
+            teams (
+              id,
+              name,
+              leader_id,
+              profiles:leader_id (name, email, avatar_url)
+            ),
+            events (
+              id,
+              title,
+              slug
+            ),
+            profiles:invited_by (
+              name,
+              email
+            )
+          `)
+          .ilike('invited_email', cleanEmail)
+          .eq('status', 'PENDING')
+          .order('created_at', { ascending: false });
+
+        // Query local storage pending invites
+        const localInvites = getLocalPendingInvitesForEmail(cleanEmail);
+        const allPending = [...(dbInvites || []), ...localInvites];
+
+        const seenTokens = new Set<string>();
+        for (const inv of allPending) {
+          const token = inv.invite_token || inv.id;
+          if (!token || seenTokens.has(token)) continue;
+          seenTokens.add(token);
+
+          const notifId = `invite-${inv.id || token}`;
+          const isRead = readIds.has(notifId) || readIds.has(token);
+          const teamName = inv.teams?.name || 'Squad';
+          const eventTitle = inv.events?.title || 'Hackathon';
+          const eventSlug = inv.events?.slug || inv.event_id || 'wchl-2025';
+          const inviterName = inv.profiles?.name || inv.teams?.profiles?.name || 'Squad Leader';
+
+          inviteNotifs.push({
+            id: notifId,
+            userId: userId || 'public',
+            notificationId: notifId,
+            isRead,
+            createdAt: inv.created_at || new Date().toISOString(),
+            notification: {
+              id: notifId,
+              title: `Squad Invite: ${teamName}`,
+              message: `${inviterName} invited you to join "${teamName}" for ${eventTitle}!`,
+              type: NotificationDbType.TEAM,
+              icon: 'users',
+              eventId: inv.event_id || null,
+              senderId: inv.invited_by || null,
+              newsId: null,
+              actionUrl: `/hackathons/${eventSlug}/invite?token=${inv.invite_token}`,
+              createdAt: inv.created_at || new Date().toISOString(),
+              metadata: {
+                inviteToken: inv.invite_token,
+                teamId: inv.team_id,
+                teamName: teamName,
+                eventSlug: eventSlug,
+                eventTitle: eventTitle,
+                invitedByName: inviterName,
+                status: inv.status || 'PENDING',
+              },
+            },
+          });
+        }
+      } catch (inviteErr) {
+        console.warn('Error fetching team invite notifications:', inviteErr);
+      }
+    }
+
+    if (!userId && !userEmail) {
       return { data: publicNotifs.slice(offset, offset + limit) };
     }
 
-    const { data: userRows, error } = await supabase
-      .from('user_notifications')
-      .select(`
-        id,
-        user_id,
-        notification_id,
-        is_read,
-        created_at,
-        notifications (
+    let personalNotifs: UserNotification[] = [];
+    if (userId) {
+      const { data: userRows, error } = await supabase
+        .from('user_notifications')
+        .select(`
           id,
-          title,
-          message,
-          type,
-          icon,
-          event_id,
-          sender_id,
-          news_id,
-          action_url,
-          created_at
-        )
-      `)
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+          user_id,
+          notification_id,
+          is_read,
+          created_at,
+          notifications (
+            id,
+            title,
+            message,
+            type,
+            icon,
+            event_id,
+            sender_id,
+            news_id,
+            action_url,
+            metadata,
+            created_at
+          )
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
 
-    if (error) {
-      return { data: publicNotifs.slice(offset, offset + limit) };
+      if (!error && userRows) {
+        personalNotifs = userRows.map(mapDbToUserNotification);
+      }
     }
-
-    const personalNotifs: UserNotification[] = (userRows || []).map(mapDbToUserNotification);
 
     // Merge & deduplicate
-    const seenIds = new Set<string>();
+    const seenKeys = new Set<string>();
     const merged: UserNotification[] = [];
 
-    for (const notif of [...personalNotifs, ...publicNotifs]) {
-      const key = notif.notification.id || notif.id;
-      if (!seenIds.has(key)) {
-        seenIds.add(key);
+    // Prioritize pending invites first, then personal notifications, then public announcements
+    for (const notif of [...inviteNotifs, ...personalNotifs, ...publicNotifs]) {
+      const inviteToken = notif.notification.metadata?.inviteToken;
+      const key = inviteToken ? `invite-token-${inviteToken}` : notif.notification.id || notif.id;
+      if (!seenKeys.has(key)) {
+        seenKeys.add(key);
         merged.push(notif);
       }
     }
@@ -269,9 +378,9 @@ export async function fetchUserNotifications(
 
 // ─── GET UNREAD COUNT ────────────────────────────────────
 
-export async function getUnreadCount(userId?: string): Promise<number> {
+export async function getUnreadCount(userId?: string, userEmail?: string): Promise<number> {
   try {
-    const { data } = await fetchUserNotifications(userId, 50);
+    const { data } = await fetchUserNotifications(userId, userEmail, 50);
     return (data || []).filter((n) => !n.isRead).length;
   } catch {
     return 0;
@@ -321,7 +430,8 @@ export async function markAllNotificationsAsRead(
 
 export function subscribeToRealtimeNotifications(
   userId: string | undefined | null,
-  onNewNotification: (notification: UserNotification) => void
+  onNewNotification: (notification: UserNotification) => void,
+  userEmail?: string | null
 ) {
   const channelName = `realtime-hub-${userId || 'guest'}-${Date.now()}`;
   const channel = supabase
@@ -378,6 +488,50 @@ export function subscribeToRealtimeNotifications(
           newsId: null,
           actionUrl: `/hackathons/${ev.slug || ev.id}`,
           createdAt: new Date().toISOString(),
+        },
+      };
+      onNewNotification(notif);
+    })
+    // 2.5. Broadcast team invite (instant delivery to recipient by email or userId)
+    .on('broadcast', { event: 'team_invite' }, (payload: any) => {
+      const p = payload.payload;
+      if (!p) return;
+
+      const emailMatches = Boolean(
+        userEmail &&
+        p.invitedEmail &&
+        p.invitedEmail.toLowerCase().trim() === userEmail.toLowerCase().trim()
+      );
+      const userMatches = Boolean(userId && p.targetUserId && p.targetUserId === userId);
+
+      if (!emailMatches && !userMatches) return;
+
+      const notifId = `invite-live-${p.inviteToken || Date.now()}`;
+      const notif: UserNotification = {
+        id: notifId,
+        userId: userId || 'public',
+        notificationId: notifId,
+        isRead: false,
+        createdAt: p.createdAt || new Date().toISOString(),
+        notification: {
+          id: notifId,
+          title: `Squad Invite: ${p.teamName || 'Squad'}`,
+          message: `${p.invitedByName || 'A teammate'} invited you to join "${p.teamName || 'Squad'}" for ${p.hackathonTitle || 'Hackathon'}!`,
+          type: NotificationDbType.TEAM,
+          icon: 'users',
+          eventId: null,
+          senderId: null,
+          newsId: null,
+          actionUrl: p.actionUrl || `/hackathons/${p.hackathonSlug || 'wchl-2025'}/invite?token=${p.inviteToken}`,
+          createdAt: p.createdAt || new Date().toISOString(),
+          metadata: {
+            inviteToken: p.inviteToken,
+            teamName: p.teamName,
+            eventSlug: p.hackathonSlug,
+            eventTitle: p.hackathonTitle,
+            invitedByName: p.invitedByName,
+            status: 'PENDING',
+          },
         },
       };
       onNewNotification(notif);
@@ -447,6 +601,7 @@ export function subscribeToRealtimeNotifications(
             newsId: n.news_id || null,
             actionUrl: n.action_url || null,
             createdAt: n.created_at || new Date().toISOString(),
+            metadata: n.metadata || null,
           },
         };
         onNewNotification(notif);
@@ -482,6 +637,7 @@ export function subscribeToRealtimeNotifications(
               sender_id,
               news_id,
               action_url,
+              metadata,
               created_at
             )
           `)

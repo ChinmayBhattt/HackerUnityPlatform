@@ -29,23 +29,26 @@ interface NotificationContextType {
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const { user, supabaseUser } = useAuth();
   const [notifications, setNotifications] = useState<UserNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [latestToast, setLatestToast] = useState<UserNotification | null>(null);
+
+  const userId = supabaseUser?.id || user?.id;
+  const userEmail = supabaseUser?.email || user?.email;
 
   // Track subscription cleanup to prevent duplicates
   const unsubscribeRef = useRef<(() => void) | null>(null);
   const activeSubKeyRef = useRef<string | null>(null);
 
   // Load notifications (works for both guests and logged-in users!)
-  const loadNotifications = useCallback(async (userId?: string) => {
+  const loadNotifications = useCallback(async (uid?: string, email?: string) => {
     setLoading(true);
     try {
       const [notifResult, countResult] = await Promise.all([
-        fetchUserNotifications(userId, 30),
-        getUnreadCount(userId),
+        fetchUserNotifications(uid, email, 30),
+        getUnreadCount(uid, email),
       ]);
       setNotifications(notifResult.data);
       setUnreadCount(countResult);
@@ -56,9 +59,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
-  // Setup / teardown realtime subscription for events, announcements & user inbox
+  // Setup / teardown realtime subscription for events, announcements, team invites & user inbox
   useEffect(() => {
-    const currentKey = user?.id || 'guest_all';
+    const currentKey = `${userId || 'guest'}_${userEmail || 'noemail'}`;
 
     // Avoid duplicate subscriptions if key hasn't changed
     if (activeSubKeyRef.current === currentKey && unsubscribeRef.current) {
@@ -74,40 +77,56 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     activeSubKeyRef.current = currentKey;
 
     // Load initial notifications
-    loadNotifications(user?.id);
+    loadNotifications(userId, userEmail);
 
-    // Subscribe to realtime hub (events, announcements, user notifications)
-    const cleanup = subscribeToRealtimeNotifications(user?.id, (newNotif) => {
-      setNotifications((prev) => {
-        // Deduplicate
-        if (
-          prev.some(
-            (n) =>
-              n.id === newNotif.id ||
-              (n.notification?.id && n.notification.id === newNotif.notification?.id)
-          )
-        ) {
-          return prev;
-        }
-        return [newNotif, ...prev];
-      });
+    // Subscribe to realtime hub (events, announcements, team invites, user notifications)
+    const cleanup = subscribeToRealtimeNotifications(
+      userId,
+      (newNotif) => {
+        setNotifications((prev) => {
+          const inviteToken = newNotif.notification?.metadata?.inviteToken;
+          // Deduplicate
+          if (
+            prev.some((n) => {
+              if (inviteToken && n.notification?.metadata?.inviteToken === inviteToken) {
+                return true;
+              }
+              return (
+                n.id === newNotif.id ||
+                (n.notification?.id && n.notification.id === newNotif.notification?.id)
+              );
+            })
+          ) {
+            return prev;
+          }
+          return [newNotif, ...prev];
+        });
 
-      setUnreadCount((prev) => prev + 1);
+        setUnreadCount((prev) => prev + 1);
 
-      // Trigger instant toast notification popup
-      setLatestToast(newNotif);
-    });
+        // Trigger instant toast notification popup
+        setLatestToast(newNotif);
+      },
+      userEmail
+    );
 
     unsubscribeRef.current = cleanup;
+
+    // Also listen to local storage changes to reload notifications across tabs or local invite actions
+    const handleStorageChange = () => {
+      loadNotifications(userId, userEmail);
+    };
+    window.addEventListener('hackers_unity_storage_change', handleStorageChange);
 
     return () => {
       if (unsubscribeRef.current) {
         unsubscribeRef.current();
         unsubscribeRef.current = null;
       }
+      window.removeEventListener('hackers_unity_storage_change', handleStorageChange);
       activeSubKeyRef.current = null;
     };
-  }, [user?.id, loadNotifications]);
+  }, [userId, userEmail, loadNotifications]);
 
   const markAsRead = useCallback(async (userNotificationId: string) => {
     // 1. Mark in localStorage
@@ -121,13 +140,14 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
     // 3. If signed in and valid DB notification, mark in Supabase
     if (
-      user?.id &&
+      userId &&
       !userNotificationId.startsWith('event-notif-') &&
-      !userNotificationId.startsWith('announcement-')
+      !userNotificationId.startsWith('announcement-') &&
+      !userNotificationId.startsWith('invite-')
     ) {
       await markNotificationAsRead(userNotificationId);
     }
-  }, [user?.id]);
+  }, [userId]);
 
   const markAllAsRead = useCallback(async () => {
     const allIds = notifications.map((n) => n.id);
@@ -137,14 +157,14 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
     setUnreadCount(0);
 
-    if (user?.id) {
-      await markAllNotificationsAsRead(user.id);
+    if (userId) {
+      await markAllNotificationsAsRead(userId);
     }
-  }, [user?.id, notifications]);
+  }, [userId, notifications]);
 
   const refreshNotifications = useCallback(async () => {
-    await loadNotifications(user?.id);
-  }, [user?.id, loadNotifications]);
+    await loadNotifications(userId, userEmail);
+  }, [userId, userEmail, loadNotifications]);
 
   const dismissToast = useCallback(() => {
     setLatestToast(null);
