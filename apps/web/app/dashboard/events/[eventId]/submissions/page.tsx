@@ -17,6 +17,9 @@ import {
   Rocket,
   Sparkles,
   Trophy,
+  Crown,
+  Medal,
+  Award,
   Copy,
   CopyCheck,
   RefreshCw,
@@ -76,6 +79,14 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
   const [aiReportSubmission, setAiReportSubmission] = useState<ProjectSubmission | null>(null);
   const [evaluatingSubmissionId, setEvaluatingSubmissionId] = useState<string | null>(null);
   const [currentAiEvaluation, setCurrentAiEvaluation] = useState<ProductEvaluationReport | null>(null);
+
+  // Batch AI Evaluation State
+  const [isBatchEvaluating, setIsBatchEvaluating] = useState(false);
+  const [batchProgress, setBatchProgress] = useState<{ current: number; total: number; currentTitle?: string } | null>(null);
+
+  // Top Winners Leaderboard Modal State
+  const [showWinnersModal, setShowWinnersModal] = useState(false);
+  const [winnersTrackFilter, setWinnersTrackFilter] = useState<string>('ALL');
 
   // Google Sheets Live Sync Modal State
   const [showSyncModal, setShowSyncModal] = useState(false);
@@ -257,6 +268,93 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
       setEvaluatingSubmissionId(null);
     }
   };
+
+  // ─── Batch Evaluate All Submissions with Groq AI ─────────────
+  const handleEvaluateAll = async () => {
+    if (submissions.length === 0) {
+      setToastMessage('No project submissions found to evaluate.');
+      setTimeout(() => setToastMessage(null), 3000);
+      return;
+    }
+
+    setIsBatchEvaluating(true);
+    let evaluatedCount = 0;
+
+    try {
+      for (let i = 0; i < submissions.length; i++) {
+        const sub = submissions[i];
+        setBatchProgress({
+          current: i + 1,
+          total: submissions.length,
+          currentTitle: sub.projectTitle,
+        });
+
+        try {
+          const res = await fetch('/api/ai/groq', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'evaluate_product',
+              eventTitle: event?.title || 'Hackathon',
+              eventDescription: event?.description || '',
+              submission: sub,
+            }),
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            const evaluation: ProductEvaluationReport = data.evaluation;
+            saveSubmissionAiEvaluation(sub.id, evaluation);
+
+            const newStatus = sub.status && sub.status !== 'SUBMITTED' ? sub.status : 'UNDER_REVIEW';
+            await updateSubmissionReviewSupabase(
+              sub.id,
+              newStatus,
+              evaluation.finalScore,
+              evaluation.productSummary,
+              event?.id || resolvedParams.eventId
+            );
+
+            setSubmissions((prev) =>
+              prev.map((s) =>
+                s.id === sub.id
+                  ? { ...s, score: evaluation.finalScore, aiEvaluation: evaluation, status: newStatus }
+                  : s
+              )
+            );
+            evaluatedCount++;
+          }
+        } catch (itemErr) {
+          console.error(`Batch eval error on ${sub.projectTitle}:`, itemErr);
+        }
+      }
+
+      setToastMessage(`⚡ Batch AI evaluation complete! Successfully evaluated ${evaluatedCount} of ${submissions.length} projects.`);
+      setTimeout(() => setToastMessage(null), 5000);
+    } catch (err: any) {
+      console.error('Batch evaluation error:', err);
+      setToastMessage(`❌ Batch evaluation error: ${err.message}`);
+      setTimeout(() => setToastMessage(null), 5000);
+    } finally {
+      setIsBatchEvaluating(false);
+      setBatchProgress(null);
+    }
+  };
+
+  // Ranked submissions based on AI / Review Score descending
+  const rankedSubmissions = [...submissions].sort((a, b) => {
+    const scoreA = a.aiEvaluation?.finalScore ?? a.score ?? 0;
+    const scoreB = b.aiEvaluation?.finalScore ?? b.score ?? 0;
+    return scoreB - scoreA;
+  });
+
+  const uniqueWinnersTracks = Array.from(
+    new Set(submissions.map((s) => s.track).filter(Boolean))
+  ) as string[];
+
+  const filteredWinners = winnersTrackFilter === 'ALL'
+    ? rankedSubmissions
+    : rankedSubmissions.filter((s) => s.track === winnersTrackFilter);
 
   const handleApplyStatusAndScore = async (
     subId: string,
@@ -536,12 +634,12 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                 <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                   Submissions
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800/40">
-                  Google Sheets Live Sync
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-gradient-to-r from-blue-500/15 via-indigo-500/15 to-purple-500/15 text-blue-700 dark:text-blue-300 border border-blue-500/30">
+                  AI Product Intelligence Active
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                {event?.title || 'Hackathon Event'} • Real-time judge review and continuous Google Sheets sync
+                {event?.title || 'Hackathon Event'} • Automated Groq AI product evaluation & live podium ranking
               </p>
             </div>
           </div>
@@ -549,13 +647,38 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
 
         {/* Action Controls */}
         <div className="flex items-center gap-2.5 flex-wrap">
+          {/* Evaluate All Button (AI Batch Evaluation) */}
           <button
             type="button"
-            onClick={() => setShowSyncModal(true)}
-            className="px-4 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800/40 text-xs font-black flex items-center gap-2 transition-all cursor-pointer shadow-2xs"
+            onClick={handleEvaluateAll}
+            disabled={isBatchEvaluating || submissions.length === 0}
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-black flex items-center gap-2 transition-all cursor-pointer shadow-md shadow-indigo-600/20 disabled:opacity-50"
+            title="Automatically evaluate all submissions using Groq AI and Product Intelligence Criteria"
           >
-            <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>Google Sheets Live Sync</span>
+            {isBatchEvaluating ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                <span>
+                  Evaluating ({batchProgress ? `${batchProgress.current}/${batchProgress.total}` : '...'})
+                </span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4 text-amber-300" />
+                <span>Evaluate All ({submissions.length})</span>
+              </>
+            )}
+          </button>
+
+          {/* Top Winners & Ranking Leaderboard Button */}
+          <button
+            type="button"
+            onClick={() => setShowWinnersModal(true)}
+            className="px-4 py-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs font-black flex items-center gap-2 transition-all cursor-pointer shadow-2xs"
+            title="View ranked projects, podium winners, and leaderboard"
+          >
+            <Trophy className="w-4 h-4 text-amber-500" />
+            <span>Top Winners & Rankings</span>
           </button>
 
           <button
@@ -578,6 +701,32 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
         </div>
       </div>
 
+      {/* ─── Batch AI Evaluation Active Banner ───────────────────────── */}
+      {isBatchEvaluating && batchProgress && (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-600/10 via-indigo-600/10 to-sky-600/10 border border-blue-500/25 animate-in fade-in space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <RefreshCw className="w-4 h-4 text-blue-500 animate-spin" />
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                Evaluating Project {batchProgress.current} of {batchProgress.total}:
+                <span className="font-extrabold text-[#0099e6] dark:text-[#38bdf8] ml-1.5">
+                  &ldquo;{batchProgress.currentTitle}&rdquo;
+                </span>
+              </span>
+            </div>
+            <span className="text-xs font-black text-blue-600 dark:text-blue-400">
+              {Math.round((batchProgress.current / batchProgress.total) * 100)}%
+            </span>
+          </div>
+          <div className="w-full bg-slate-200 dark:bg-white/[0.1] h-2 rounded-full overflow-hidden">
+            <div
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 h-full rounded-full transition-all duration-300"
+              style={{ width: `${(batchProgress.current / batchProgress.total) * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* ─── Metric Pills Row ────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <div className="p-4 rounded-2xl bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-white/[0.08] shadow-xs">
@@ -592,9 +741,21 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
           <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-extrabold uppercase tracking-wider">Accepted / Shortlist</div>
           <div className="text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-1">{stats.accepted}</div>
         </div>
-        <div className="p-4 rounded-2xl bg-white dark:bg-[#0c1017] border border-amber-200 dark:border-amber-800/40 shadow-xs">
-          <div className="text-[10px] text-amber-600 dark:text-amber-400 font-extrabold uppercase tracking-wider">Podium Winners</div>
-          <div className="text-2xl font-black text-amber-700 dark:text-amber-400 mt-1">{stats.winners}</div>
+        <div
+          onClick={() => setShowWinnersModal(true)}
+          className="p-4 rounded-2xl bg-white dark:bg-[#0c1017] border border-amber-200 dark:border-amber-800/40 shadow-xs cursor-pointer hover:border-amber-400 dark:hover:border-amber-600 hover:shadow-md transition-all group"
+          title="Click to view Top Winners & Rankings Leaderboard"
+        >
+          <div className="flex items-center justify-between">
+            <div className="text-[10px] text-amber-600 dark:text-amber-400 font-extrabold uppercase tracking-wider">Podium Winners</div>
+            <Trophy className="w-3.5 h-3.5 text-amber-500 group-hover:scale-110 transition-transform" />
+          </div>
+          <div className="text-2xl font-black text-amber-700 dark:text-amber-400 mt-1 flex items-center justify-between">
+            <span>{stats.winners}</span>
+            <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
+              <span>View</span> →
+            </span>
+          </div>
         </div>
         <div className="p-4 rounded-2xl bg-white dark:bg-[#0c1017] border border-rose-200 dark:border-rose-800/40 shadow-xs">
           <div className="text-[10px] text-rose-600 dark:text-rose-400 font-extrabold uppercase tracking-wider">Disqualified / Rejected</div>
@@ -1388,6 +1549,392 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
         onReevaluate={(sub) => runGroqEvaluation(sub)}
         onApplyStatusAndScore={handleApplyStatusAndScore}
       />
+
+      {/* ─── Modal 5: Top Winners & Ranking Leaderboard Modal ───────────── */}
+      {showWinnersModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in overflow-y-auto">
+          <div className="relative w-full max-w-5xl bg-white dark:bg-[#0c1017] rounded-3xl shadow-2xl border border-slate-200 dark:border-white/[0.08] overflow-hidden my-6 max-h-[92vh] flex flex-col">
+            {/* Header */}
+            <div className="p-6 border-b border-slate-100 dark:border-white/[0.08] bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-transparent flex items-center justify-between gap-4 shrink-0">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 text-white flex items-center justify-center shadow-lg shadow-amber-500/30 shrink-0">
+                  <Trophy className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                      Hackathon Top Winners & Rankings
+                    </h3>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800/50">
+                      Groq AI Product Intelligence
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+                    Projects dynamically sorted by evaluated product, business, and execution scores (out of 100).
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                {/* Track Selector */}
+                {uniqueWinnersTracks.length > 0 && (
+                  <select
+                    value={winnersTrackFilter}
+                    onChange={(e) => setWinnersTrackFilter(e.target.value)}
+                    className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.1] text-xs font-bold text-slate-800 dark:text-white outline-none cursor-pointer"
+                  >
+                    <option value="ALL">All Tracks ({rankedSubmissions.length})</option>
+                    {uniqueWinnersTracks.map((tr) => (
+                      <option key={tr} value={tr}>
+                        {tr} ({rankedSubmissions.filter((s) => s.track === tr).length})
+                      </option>
+                    ))}
+                  </select>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setShowWinnersModal(false)}
+                  className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-6 flex-1">
+              {filteredWinners.length === 0 ? (
+                <div className="py-16 text-center space-y-3">
+                  <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center mx-auto text-slate-400">
+                    <Trophy className="w-8 h-8" />
+                  </div>
+                  <h4 className="text-base font-extrabold text-slate-900 dark:text-white">No submissions found in this track</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+                    Try switching to &ldquo;All Tracks&rdquo; or click &ldquo;Evaluate All&rdquo; to analyze submissions.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {/* ─── Top 3 Podium Cards ─────────────────────────────── */}
+                  <div>
+                    <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3 flex items-center gap-1.5">
+                      <Crown className="w-3.5 h-3.5 text-amber-500" />
+                      <span>Podium Winners Showcase</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                      {/* 2nd Place (Silver) */}
+                      {filteredWinners.length > 1 && (
+                        <div className="p-5 rounded-2xl bg-gradient-to-b from-slate-100/90 to-slate-200/50 dark:from-slate-800/40 dark:to-slate-900/60 border border-slate-300 dark:border-slate-700/60 shadow-md relative order-2 md:order-1">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-200 dark:bg-slate-700/70 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 text-xs font-black">
+                              <Medal className="w-3.5 h-3.5 text-slate-400" />
+                              <span>2nd Place • Silver</span>
+                            </div>
+                            <div className="text-xl font-black font-mono text-slate-800 dark:text-slate-200">
+                              {filteredWinners[1].aiEvaluation?.finalScore ?? filteredWinners[1].score ?? 0}
+                              <span className="text-xs text-slate-400 font-sans font-normal ml-0.5">/100</span>
+                            </div>
+                          </div>
+
+                          <h4 className="font-black text-slate-900 dark:text-white text-base truncate mb-1">
+                            {filteredWinners[1].projectTitle}
+                          </h4>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-3">
+                            {filteredWinners[1].tagline || filteredWinners[1].projectDescription || 'No description'}
+                          </p>
+
+                          <div className="pt-2 border-t border-slate-200 dark:border-white/[0.08] flex items-center justify-between text-[11px]">
+                            <span className="font-bold text-slate-700 dark:text-slate-300 truncate max-w-[120px]">
+                              {filteredWinners[1].submittedByName || 'Builder'}
+                            </span>
+                            <span className="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-white/[0.08] text-slate-700 dark:text-slate-300 text-[10px] font-bold">
+                              {filteredWinners[1].track || 'General'}
+                            </span>
+                          </div>
+
+                          <div className="mt-3 flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleQuickStatusChange(
+                                  filteredWinners[1].id,
+                                  filteredWinners[1].status === 'WINNER' ? 'ACCEPTED' : 'WINNER'
+                                );
+                              }}
+                              className={`flex-1 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                                filteredWinners[1].status === 'WINNER'
+                                  ? 'bg-amber-500 text-white shadow-xs'
+                                  : 'bg-white dark:bg-[#121824] hover:bg-amber-50 dark:hover:bg-amber-950/30 border border-slate-200 dark:border-white/[0.1] text-amber-600 dark:text-amber-400'
+                              }`}
+                            >
+                              {filteredWinners[1].status === 'WINNER' ? '🏆 Winner Selected' : 'Mark as Winner'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleEvaluateWithAi(filteredWinners[1])}
+                              className="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-white/[0.08] hover:bg-slate-300 dark:hover:bg-white/[0.12] text-slate-800 dark:text-white font-bold text-xs cursor-pointer"
+                            >
+                              Report
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 1st Place (Gold Winner - Elevated) */}
+                      {filteredWinners.length > 0 && (
+                        <div className="p-6 rounded-3xl bg-gradient-to-b from-amber-500/20 via-yellow-500/10 to-amber-500/5 dark:from-amber-500/25 dark:via-yellow-500/10 dark:to-transparent border-2 border-amber-400 dark:border-amber-500/60 shadow-xl shadow-amber-500/10 relative order-1 md:order-2 md:-translate-y-2">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-xs font-black shadow-sm">
+                              <Crown className="w-4 h-4" />
+                              <span>1st Place • Grand Champion</span>
+                            </div>
+                            <div className="text-2xl font-black font-mono text-amber-600 dark:text-amber-400">
+                              {filteredWinners[0].aiEvaluation?.finalScore ?? filteredWinners[0].score ?? 0}
+                              <span className="text-xs text-slate-400 font-sans font-normal ml-0.5">/100</span>
+                            </div>
+                          </div>
+
+                          <h4 className="font-black text-slate-900 dark:text-white text-lg truncate mb-1">
+                            {filteredWinners[0].projectTitle}
+                          </h4>
+                          <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 mb-3 font-medium">
+                            {filteredWinners[0].tagline || filteredWinners[0].projectDescription || 'No description'}
+                          </p>
+
+                          <div className="pt-2 border-t border-amber-300/40 dark:border-white/[0.1] flex items-center justify-between text-[11px]">
+                            <span className="font-black text-slate-800 dark:text-slate-200">
+                              By {filteredWinners[0].submittedByName || 'Builder'}
+                            </span>
+                            <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 text-[10px] font-bold border border-amber-300 dark:border-amber-800/50">
+                              {filteredWinners[0].track || 'General'}
+                            </span>
+                          </div>
+
+                          <div className="mt-3.5 flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleQuickStatusChange(
+                                  filteredWinners[0].id,
+                                  filteredWinners[0].status === 'WINNER' ? 'ACCEPTED' : 'WINNER'
+                                );
+                              }}
+                              className={`flex-1 py-2 rounded-xl font-extrabold text-xs transition-all cursor-pointer ${
+                                filteredWinners[0].status === 'WINNER'
+                                  ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-white shadow-md'
+                                  : 'bg-white dark:bg-[#121824] hover:bg-amber-50 dark:hover:bg-amber-950/30 border border-amber-300 dark:border-amber-500/40 text-amber-700 dark:text-amber-300'
+                              }`}
+                            >
+                              {filteredWinners[0].status === 'WINNER' ? '🏆 Champion Crowned' : 'Crown as Winner'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleEvaluateWithAi(filteredWinners[0])}
+                              className="px-3.5 py-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-bold text-xs cursor-pointer hover:opacity-90 transition-opacity"
+                            >
+                              Dossier
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 3rd Place (Bronze) */}
+                      {filteredWinners.length > 2 && (
+                        <div className="p-5 rounded-2xl bg-gradient-to-b from-orange-100/70 to-amber-100/40 dark:from-amber-950/30 dark:to-orange-950/40 border border-orange-300/70 dark:border-orange-900/50 shadow-md relative order-3">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-200/80 dark:bg-orange-900/60 border border-orange-300 dark:border-orange-800 text-orange-800 dark:text-orange-200 text-xs font-black">
+                              <Award className="w-3.5 h-3.5 text-orange-500" />
+                              <span>3rd Place • Bronze</span>
+                            </div>
+                            <div className="text-xl font-black font-mono text-orange-700 dark:text-orange-400">
+                              {filteredWinners[2].aiEvaluation?.finalScore ?? filteredWinners[2].score ?? 0}
+                              <span className="text-xs text-slate-400 font-sans font-normal ml-0.5">/100</span>
+                            </div>
+                          </div>
+
+                          <h4 className="font-black text-slate-900 dark:text-white text-base truncate mb-1">
+                            {filteredWinners[2].projectTitle}
+                          </h4>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-3">
+                            {filteredWinners[2].tagline || filteredWinners[2].projectDescription || 'No description'}
+                          </p>
+
+                          <div className="pt-2 border-t border-orange-200 dark:border-white/[0.08] flex items-center justify-between text-[11px]">
+                            <span className="font-bold text-slate-700 dark:text-slate-300 truncate max-w-[120px]">
+                              {filteredWinners[2].submittedByName || 'Builder'}
+                            </span>
+                            <span className="px-2 py-0.5 rounded-full bg-orange-100 dark:bg-white/[0.08] text-orange-800 dark:text-orange-300 text-[10px] font-bold">
+                              {filteredWinners[2].track || 'General'}
+                            </span>
+                          </div>
+
+                          <div className="mt-3 flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleQuickStatusChange(
+                                  filteredWinners[2].id,
+                                  filteredWinners[2].status === 'WINNER' ? 'ACCEPTED' : 'WINNER'
+                                );
+                              }}
+                              className={`flex-1 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                                filteredWinners[2].status === 'WINNER'
+                                  ? 'bg-amber-500 text-white shadow-xs'
+                                  : 'bg-white dark:bg-[#121824] hover:bg-orange-50 dark:hover:bg-orange-950/30 border border-slate-200 dark:border-white/[0.1] text-orange-600 dark:text-orange-400'
+                              }`}
+                            >
+                              {filteredWinners[2].status === 'WINNER' ? '🏆 Winner Selected' : 'Mark as Winner'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleEvaluateWithAi(filteredWinners[2])}
+                              className="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-white/[0.08] hover:bg-slate-300 dark:hover:bg-white/[0.12] text-slate-800 dark:text-white font-bold text-xs cursor-pointer"
+                            >
+                              Report
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* ─── Complete Leaderboard Ranking Table ─────────────── */}
+                  <div className="mt-6">
+                    <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3">
+                      Complete Project Standings ({filteredWinners.length} Projects)
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-200 dark:border-white/[0.08] overflow-hidden bg-slate-50/50 dark:bg-white/[0.02]">
+                      <table className="w-full text-left text-xs">
+                        <thead>
+                          <tr className="bg-slate-100 dark:bg-white/[0.04] border-b border-slate-200 dark:border-white/[0.08] text-slate-500 dark:text-slate-400 font-extrabold uppercase text-[10px]">
+                            <th className="py-2.5 px-4 text-center w-16">Rank</th>
+                            <th className="py-2.5 px-4">Project & Submitter</th>
+                            <th className="py-2.5 px-3">Track</th>
+                            <th className="py-2.5 px-3 text-center">Score</th>
+                            <th className="py-2.5 px-3">Stage</th>
+                            <th className="py-2.5 px-3">Status</th>
+                            <th className="py-2.5 px-4 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-white/[0.06]">
+                          {filteredWinners.map((sub, idx) => {
+                            const score = sub.aiEvaluation?.finalScore ?? sub.score ?? 0;
+                            const isPodium = idx < 3;
+                            return (
+                              <tr
+                                key={sub.id}
+                                className={`hover:bg-slate-100/50 dark:hover:bg-white/[0.03] transition-colors ${
+                                  sub.status === 'WINNER' ? 'bg-amber-50/60 dark:bg-amber-950/20' : ''
+                                }`}
+                              >
+                                <td className="py-3 px-4 text-center font-black">
+                                  {idx === 0 ? (
+                                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-900 font-black text-xs shadow-sm">
+                                      🥇
+                                    </span>
+                                  ) : idx === 1 ? (
+                                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-white font-black text-xs">
+                                      🥈
+                                    </span>
+                                  ) : idx === 2 ? (
+                                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-700/30 text-amber-800 dark:text-amber-200 font-black text-xs">
+                                      🥉
+                                    </span>
+                                  ) : (
+                                    <span className="font-mono text-slate-500 dark:text-slate-400">#{idx + 1}</span>
+                                  )}
+                                </td>
+
+                                <td className="py-3 px-4">
+                                  <div className="font-extrabold text-slate-900 dark:text-white">{sub.projectTitle}</div>
+                                  <div className="text-[11px] text-slate-400 dark:text-slate-500">
+                                    {sub.submittedByName || 'Builder'} • {sub.submittedByEmail || ''}
+                                  </div>
+                                </td>
+
+                                <td className="py-3 px-3">
+                                  <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 font-semibold text-[11px]">
+                                    {sub.track || 'General'}
+                                  </span>
+                                </td>
+
+                                <td className="py-3 px-3 text-center">
+                                  <div className="font-mono font-black text-slate-900 dark:text-white text-sm">{score}</div>
+                                  <div className="w-16 mx-auto bg-slate-200 dark:bg-white/[0.1] h-1.5 rounded-full overflow-hidden mt-1">
+                                    <div
+                                      className={`h-full rounded-full ${
+                                        score >= 80
+                                          ? 'bg-emerald-500'
+                                          : score >= 60
+                                          ? 'bg-sky-500'
+                                          : 'bg-amber-500'
+                                      }`}
+                                      style={{ width: `${Math.min(100, score)}%` }}
+                                    />
+                                  </div>
+                                </td>
+
+                                <td className="py-3 px-3">
+                                  <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                                    {sub.aiEvaluation?.productStage || 'Evaluated'}
+                                  </span>
+                                </td>
+
+                                <td className="py-3 px-3">
+                                  <select
+                                    value={sub.status || 'SUBMITTED'}
+                                    onChange={(e) => handleQuickStatusChange(sub.id, e.target.value as any)}
+                                    className={`px-2 py-1 rounded-lg text-[10px] font-black border cursor-pointer ${getStatusBadge(
+                                      sub.status
+                                    )}`}
+                                  >
+                                    <option value="SUBMITTED">SUBMITTED</option>
+                                    <option value="UNDER_REVIEW">UNDER REVIEW</option>
+                                    <option value="ACCEPTED">ACCEPTED</option>
+                                    <option value="WINNER">WINNER 🏆</option>
+                                    <option value="REJECTED">REJECTED</option>
+                                  </select>
+                                </td>
+
+                                <td className="py-3 px-4 text-right">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleEvaluateWithAi(sub)}
+                                    className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-slate-800 dark:text-slate-200 font-bold text-xs transition-colors cursor-pointer"
+                                  >
+                                    View Report
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 bg-slate-50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/[0.08] flex items-center justify-between text-xs">
+              <span className="text-slate-500 dark:text-slate-400 font-medium">
+                Tip: Marking a project as &ldquo;WINNER&rdquo; updates the official podium stats and Supabase records.
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowWinnersModal(false)}
+                className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-white/[0.08] hover:bg-slate-300 dark:hover:bg-white/[0.12] text-slate-800 dark:text-white font-bold cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
