@@ -1,6 +1,5 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
-import { cookies } from 'next/headers';
+import { NextResponse, type NextRequest } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
 
 /**
  * Validates the redirect target to prevent open redirect vulnerabilities.
@@ -17,7 +16,7 @@ function getSafeRedirectPath(target: string | null): string {
   return '/dashboard';
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
   const safeNext = getSafeRedirectPath(searchParams.get('next'));
@@ -31,18 +30,38 @@ export async function GET(request: Request) {
     ? `${forwardedProto}://${forwardedHost}`
     : origin || process.env.NEXT_PUBLIC_APP_URL || 'https://hackersunity.com';
 
-  if (code) {
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+  const redirectUrl = `${targetBase}${safeNext}`;
+  const response = NextResponse.redirect(redirectUrl);
 
-    if (!error) {
-      return NextResponse.redirect(`${targetBase}${safeNext}`);
-    } else {
-      console.error('[OAuth Callback] Code exchange error:', error.message);
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey =
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+    if (code && supabaseUrl && supabaseAnonKey) {
+      const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              request.cookies.set(name, value);
+              response.cookies.set(name, value, options);
+            });
+          },
+        },
+      });
+
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      if (error) {
+        console.error('[OAuth Callback] Code exchange error:', error.message);
+      }
     }
+  } catch (err: any) {
+    console.error('[OAuth Callback] Exception in callback route:', err);
   }
 
-  // Fallback redirect
-  return NextResponse.redirect(`${targetBase}${safeNext}`);
+  return response;
 }
