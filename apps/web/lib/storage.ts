@@ -84,8 +84,13 @@ export async function syncBookmarksWithSupabase(userId: string): Promise<string[
     const remoteIds = await fetchUserBookmarks(userId);
     const localIds = getBookmarkedEventIds();
     const merged = Array.from(new Set([...localIds, ...remoteIds]));
-    localStorage.setItem(STORAGE_KEYS.BOOKMARKS, JSON.stringify(merged));
-    window.dispatchEvent(new Event('hackers_unity_storage_change'));
+    const isDifferent =
+      merged.length !== localIds.length ||
+      merged.some((id) => !localIds.includes(id));
+    if (isDifferent) {
+      localStorage.setItem(STORAGE_KEYS.BOOKMARKS, JSON.stringify(merged));
+      window.dispatchEvent(new Event('hackers_unity_storage_change'));
+    }
     return merged;
   } catch {
     return getBookmarkedEventIds();

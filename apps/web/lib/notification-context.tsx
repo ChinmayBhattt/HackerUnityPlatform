@@ -38,13 +38,15 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const userId = supabaseUser?.id || user?.id;
   const userEmail = supabaseUser?.email || user?.email;
 
-  // Track subscription cleanup to prevent duplicates
+  // Track subscription cleanup and loading status to prevent duplicates and flickering
   const unsubscribeRef = useRef<(() => void) | null>(null);
   const activeSubKeyRef = useRef<string | null>(null);
+  const hasLoadedOnceRef = useRef(false);
 
   // Load notifications (works for both guests and logged-in users!)
   const loadNotifications = useCallback(async (uid?: string, email?: string, silent = false) => {
-    if (!silent) {
+    // Only show full loading spinner on true initial load before any data is cached
+    if (!silent && !hasLoadedOnceRef.current) {
       setLoading(true);
     }
     try {
@@ -54,6 +56,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       ]);
       setNotifications(notifResult.data);
       setUnreadCount(countResult);
+      hasLoadedOnceRef.current = true;
     } catch (err) {
       console.warn('Error loading notifications:', err);
     } finally {
@@ -78,8 +81,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
     activeSubKeyRef.current = currentKey;
 
-    // Load initial notifications
-    loadNotifications(userId, userEmail);
+    // Load notifications silently if we already have notifications
+    loadNotifications(userId, userEmail, hasLoadedOnceRef.current);
 
     // Subscribe to realtime hub (events, announcements, team invites, user notifications)
     const cleanup = subscribeToRealtimeNotifications(
@@ -114,19 +117,23 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
     unsubscribeRef.current = cleanup;
 
-    // Also listen to local storage changes to reload notifications across tabs or local invite actions
+    // Also listen to local storage changes to reload notifications across tabs or local invite actions (debounced)
+    let storageTimer: ReturnType<typeof setTimeout> | null = null;
     const handleStorageChange = () => {
-      loadNotifications(userId, userEmail, true);
+      if (storageTimer) clearTimeout(storageTimer);
+      storageTimer = setTimeout(() => {
+        loadNotifications(userId, userEmail, true);
+      }, 500);
     };
     window.addEventListener('hackers_unity_storage_change', handleStorageChange);
 
     return () => {
+      if (storageTimer) clearTimeout(storageTimer);
       if (unsubscribeRef.current) {
         unsubscribeRef.current();
         unsubscribeRef.current = null;
       }
       window.removeEventListener('hackers_unity_storage_change', handleStorageChange);
-      activeSubKeyRef.current = null;
     };
   }, [userId, userEmail, loadNotifications]);
 

@@ -361,7 +361,7 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
 
       {/* Notification List */}
       <div className="max-h-[380px] overflow-y-auto">
-        {loading ? (
+        {loading && notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-slate-400">
             <Loader2 className="w-6 h-6 animate-spin text-[#0099e6] mb-2" />
             <span className="text-xs font-medium">Connecting to live feed...</span>
@@ -516,7 +516,10 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
 
       {/* Footer */}
       <div className="border-t border-slate-100 dark:border-white/[0.08] px-4 py-2.5 bg-slate-50/50 dark:bg-white/[0.02] flex items-center justify-between text-[11px]">
-        <span className="text-slate-400 font-medium">Realtime sync active</span>
+        <span className="text-slate-400 font-medium flex items-center gap-1.5">
+          <span className={`w-1.5 h-1.5 rounded-full ${loading ? 'bg-[#0099e6] animate-pulse' : 'bg-emerald-500'}`} />
+          {loading ? 'Syncing updates...' : 'Realtime sync active'}
+        </span>
         <Link
           href="/hackathons"
           onClick={onClose}

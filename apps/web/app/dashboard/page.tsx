@@ -231,9 +231,13 @@ export default function DashboardPage() {
   useEffect(() => {
     loadDashboardData();
 
-    // Listen to local storage changes
+    // Listen to local storage changes with debounce
+    let storageTimer: ReturnType<typeof setTimeout> | null = null;
     const handleStorage = () => {
-      loadDashboardData();
+      if (storageTimer) clearTimeout(storageTimer);
+      storageTimer = setTimeout(() => {
+        loadDashboardData();
+      }, 500);
     };
     window.addEventListener('hackers_unity_storage_change', handleStorage);
 
@@ -284,6 +288,7 @@ export default function DashboardPage() {
     });
 
     return () => {
+      if (storageTimer) clearTimeout(storageTimer);
       window.removeEventListener('hackers_unity_storage_change', handleStorage);
       supabase.removeChannel(eventsChannel);
       unsubAllSubs();
