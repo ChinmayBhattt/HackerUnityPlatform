@@ -27,7 +27,7 @@ export const DEFAULT_USER: UserPublic = {
   name: 'Chinmay Bhatt',
   email: 'chinmay@hackersunity.dev',
   phone: '+91 99887 76655',
-  role: UserRole.ORGANIZER,
+  role: UserRole.PARTICIPANT,
   college: 'Computer Science & AI Institute',
   organization: 'Hackers Unity Core',
   graduationYear: 2026,
@@ -528,8 +528,6 @@ export function saveDraftEvent(event: ExtendedEvent): void {
     console.error(e);
   }
 }
-
-// ─── Project Submissions & AI Product Intelligence ───────────
 
 export interface CriterionEvaluation {
   score: number;

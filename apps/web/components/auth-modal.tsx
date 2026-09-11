@@ -152,8 +152,9 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'login' }:
                   setErrorMessage(null);
                   setInfoMessage(null);
                 }}
-                className={`flex-1 py-2 rounded-xl transition-all cursor-pointer ${mode === 'login' ? 'bg-white dark:bg-white/10 text-[#0099e6] dark:text-[#38bdf8] shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
+                className={`flex-1 py-2 rounded-xl transition-all cursor-pointer ${
+                  mode === 'login' ? 'bg-white dark:bg-white/10 text-[#0099e6] dark:text-[#38bdf8] shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
               >
                 Sign In
               </button>
@@ -164,8 +165,9 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'login' }:
                   setErrorMessage(null);
                   setInfoMessage(null);
                 }}
-                className={`flex-1 py-2 rounded-xl transition-all cursor-pointer ${mode === 'register' ? 'bg-white dark:bg-white/10 text-[#0099e6] dark:text-[#38bdf8] shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
+                className={`flex-1 py-2 rounded-xl transition-all cursor-pointer ${
+                  mode === 'register' ? 'bg-white dark:bg-white/10 text-[#0099e6] dark:text-[#38bdf8] shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
               >
                 Create Account
               </button>

@@ -9,7 +9,6 @@ import {
   clearStoredUser,
   getPermanentProfile,
   syncBookmarksWithSupabase,
-  DEFAULT_USER,
 } from './storage';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { formatAndValidatePhone, isValidE164Phone } from './phone-utils';
@@ -32,7 +31,6 @@ interface AuthContextType {
   verifyPhoneOtp: (phone: string, token: string) => Promise<{ error?: string }>;
   updateUserProfile: (updates: Partial<UserPublic>) => Promise<{ error?: string }>;
   updateUserPassword: (newPass: string) => Promise<{ error?: string }>;
-  devLogin: (userOverride?: Partial<UserPublic>) => void;
   signOut: () => Promise<void>;
 }
 
@@ -64,8 +62,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       skills: (meta.skills && meta.skills.length > 0)
         ? meta.skills
         : (saved?.skills && saved.skills.length > 0)
-          ? saved.skills
-          : ['Next.js', 'TypeScript', 'PostgreSQL'],
+        ? saved.skills
+        : ['Next.js', 'TypeScript', 'PostgreSQL'],
       resumeUrl: saved?.resumeUrl || null,
       socialLinks: {
         github: meta.github_url || saved?.socialLinks?.github || '',
@@ -87,15 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Load initial session
   useEffect(() => {
     // 1. Immediately hydrate cached user from storage on client mount
-    let stored = getStoredUser();
-    if (!stored && typeof window !== 'undefined') {
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      const signedOut = localStorage.getItem('hackers_unity_signed_out');
-      if (isLocalhost && !signedOut) {
-        saveStoredUser(DEFAULT_USER);
-        stored = DEFAULT_USER;
-      }
-    }
+    const stored = getStoredUser();
     if (stored) {
       setUser(stored);
     }
@@ -120,15 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser((prev) => prev || tempUser);
         await syncProfileFromSupabaseUser(session.user);
       } else {
-        let stored = getStoredUser();
-        if (!stored && typeof window !== 'undefined') {
-          const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-          const signedOut = localStorage.getItem('hackers_unity_signed_out');
-          if (isLocalhost && !signedOut) {
-            saveStoredUser(DEFAULT_USER);
-            stored = DEFAULT_USER;
-          }
-        }
+        const stored = getStoredUser();
         if (stored) {
           setUser(stored);
         }
@@ -214,10 +196,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         skills: (profile?.skills && profile.skills.length > 0)
           ? profile.skills
           : (meta.skills && meta.skills.length > 0)
-            ? meta.skills
-            : (saved?.skills && saved.skills.length > 0)
-              ? saved.skills
-              : ['Next.js', 'TypeScript', 'PostgreSQL'],
+          ? meta.skills
+          : (saved?.skills && saved.skills.length > 0)
+          ? saved.skills
+          : ['Next.js', 'TypeScript', 'PostgreSQL'],
         resumeUrl: saved?.resumeUrl || null,
         socialLinks: {
           github: profile?.github_url || meta.github_url || saved?.socialLinks?.github || '',
@@ -590,23 +572,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const devLogin = (userOverride?: Partial<UserPublic>) => {
-    const userToSave: UserPublic = {
-      ...DEFAULT_USER,
-      ...userOverride,
-    };
-    saveStoredUser(userToSave);
-    setUser(userToSave);
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('hackers_unity_signed_out');
-    }
-  };
-
   const signOut = async () => {
     try {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('hackers_unity_signed_out', 'true');
-      }
       await supabase.auth.signOut();
     } catch (e) {
       console.warn('Sign out warning:', e);
@@ -631,7 +598,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         verifyPhoneOtp,
         updateUserProfile,
         updateUserPassword,
-        devLogin,
         signOut,
       }}
     >
