@@ -2814,6 +2814,7 @@ export function subscribeToAllSubmissions(onUpdate: () => void): () => void {
 export interface ContactInquiryInput {
   name: string;
   email: string;
+  phone?: string;
   inquiryType?: string;
   subject: string;
   message: string;
@@ -2844,15 +2845,30 @@ export async function submitContactInquiry(
     }
 
     // 2. Direct client fallback
-    const { error } = await supabase.from('contact_inquiries').insert({
+    let { error } = await supabase.from('contact_inquiries').insert({
       name: input.name.trim(),
       email: input.email.trim().toLowerCase(),
+      phone: input.phone ? input.phone.trim() : null,
       inquiry_type: input.inquiryType || 'general',
       subject: input.subject.trim(),
       message: input.message.trim(),
       status: 'PENDING',
       created_at: new Date().toISOString(),
     });
+
+    if (error && (error.code === 'PGRST204' || error.message?.includes('phone'))) {
+      const fallbackMsg = input.phone ? `[Contact: ${input.phone.trim()}]\n\n${input.message.trim()}` : input.message.trim();
+      const retry = await supabase.from('contact_inquiries').insert({
+        name: input.name.trim(),
+        email: input.email.trim().toLowerCase(),
+        inquiry_type: input.inquiryType || 'general',
+        subject: input.subject.trim(),
+        message: fallbackMsg,
+        status: 'PENDING',
+        created_at: new Date().toISOString(),
+      });
+      error = retry.error;
+    }
 
     if (error) {
       return { success: false, error: error.message };

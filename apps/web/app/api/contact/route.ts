@@ -9,7 +9,7 @@ const VALID_INQUIRY_TYPES = ['general', 'host', 'sponsor', 'support'];
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { name, email, inquiryType = 'general', subject, message } = body;
+    const { name, email, phone, inquiryType = 'general', subject, message } = body;
 
     // Validate required fields
     if (!name || typeof name !== 'string' || !name.trim()) {
@@ -31,6 +31,7 @@ export async function POST(req: Request) {
     const cleanType = VALID_INQUIRY_TYPES.includes(inquiryType) ? inquiryType : 'general';
     const cleanName = name.trim();
     const cleanEmail = email.trim().toLowerCase();
+    const cleanPhone = phone && typeof phone === 'string' && phone.trim() ? phone.trim() : null;
     const cleanSubject = subject.trim();
     const cleanMessage = message.trim();
 
@@ -48,11 +49,12 @@ export async function POST(req: Request) {
     const serverSupabase = createAdminClient();
 
     // Insert into contact_inquiries table
-    const { data, error } = await serverSupabase
+    let { data, error } = await serverSupabase
       .from('contact_inquiries')
       .insert({
         name: cleanName,
         email: cleanEmail,
+        phone: cleanPhone,
         inquiry_type: cleanType,
         subject: cleanSubject,
         message: cleanMessage,
@@ -62,6 +64,32 @@ export async function POST(req: Request) {
       })
       .select('id, created_at')
       .single();
+
+    // Graceful fallback if phone column has not been created yet in Supabase
+    if (error && (error.code === 'PGRST204' || error.message?.includes('phone'))) {
+      console.warn('[Contact API] phone column missing in contact_inquiries, falling back to message prepend');
+      const fallbackMessage = cleanPhone
+        ? `[Contact Number: ${cleanPhone}]\n\n${cleanMessage}`
+        : cleanMessage;
+
+      const fallback = await serverSupabase
+        .from('contact_inquiries')
+        .insert({
+          name: cleanName,
+          email: cleanEmail,
+          inquiry_type: cleanType,
+          subject: cleanSubject,
+          message: fallbackMessage,
+          status: 'PENDING',
+          user_id: userId,
+          created_at: new Date().toISOString(),
+        })
+        .select('id, created_at')
+        .single();
+
+      data = fallback.data;
+      error = fallback.error;
+    }
 
     if (error) {
       console.error('[Contact API] Database insert error:', error);

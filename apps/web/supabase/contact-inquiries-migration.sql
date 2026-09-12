@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS public.contact_inquiries (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   name TEXT NOT NULL,
   email TEXT NOT NULL,
+  phone TEXT,
   inquiry_type TEXT NOT NULL DEFAULT 'general' CHECK (inquiry_type IN ('general', 'host', 'sponsor', 'support')),
   subject TEXT NOT NULL,
   message TEXT NOT NULL,
@@ -16,6 +17,9 @@ CREATE TABLE IF NOT EXISTS public.contact_inquiries (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Ensure phone column exists if table already existed
+ALTER TABLE public.contact_inquiries ADD COLUMN IF NOT EXISTS phone TEXT;
 
 -- 2. Enable Row Level Security (RLS)
 ALTER TABLE public.contact_inquiries ENABLE ROW LEVEL SECURITY;

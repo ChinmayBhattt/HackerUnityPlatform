@@ -31,6 +31,7 @@ export default function ContactPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     inquiryType: 'general',
     subject: '',
     message: '',
@@ -43,6 +44,7 @@ export default function ContactPage() {
         ...prev,
         name: prev.name || user.name || '',
         email: prev.email || user.email || '',
+        phone: prev.phone || (user as any).phone || '',
       }));
     }
   }, [user]);
@@ -56,6 +58,7 @@ export default function ContactPage() {
       const res = await submitContactInquiry({
         name: formData.name,
         email: formData.email,
+        phone: formData.phone,
         inquiryType: formData.inquiryType,
         subject: formData.subject,
         message: formData.message,
@@ -202,7 +205,7 @@ export default function ContactPage() {
                   <button
                     onClick={() => {
                       setFormSubmitted(false);
-                      setFormData({ name: '', email: '', inquiryType: 'general', subject: '', message: '' });
+                      setFormData({ name: '', email: '', phone: '', inquiryType: 'general', subject: '', message: '' });
                     }}
                     className="mt-4 px-6 py-2.5 rounded-xl bg-[#0099e6] text-white text-xs font-bold shadow-md shadow-sky-500/20 hover:bg-[#0284c7] transition-all cursor-pointer"
                   >
@@ -244,18 +247,33 @@ export default function ContactPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Inquiry Type</label>
-                    <select
-                      value={formData.inquiryType}
-                      onChange={(e) => setFormData({ ...formData, inquiryType: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] focus:border-[#0099e6] dark:focus:border-[#38bdf8] focus:bg-white dark:focus:bg-white/[0.06] text-xs text-slate-900 dark:text-white outline-none transition-all font-medium cursor-pointer [&>option]:bg-slate-900 [&>option]:text-white"
-                    >
-                      <option value="general">General Inquiry</option>
-                      <option value="host">Hackathon Hosting & College Partnerships</option>
-                      <option value="sponsor">Sponsorship & Brand Opportunities</option>
-                      <option value="support">Technical / Participant Support</option>
-                    </select>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Contact / WhatsApp Number
+                      </label>
+                      <input
+                        type="tel"
+                        placeholder="+91 98765 43210"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] focus:border-[#0099e6] dark:focus:border-[#38bdf8] focus:bg-white dark:focus:bg-white/[0.06] text-xs text-slate-900 dark:text-white outline-none transition-all font-medium"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Inquiry Type</label>
+                      <select
+                        value={formData.inquiryType}
+                        onChange={(e) => setFormData({ ...formData, inquiryType: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] focus:border-[#0099e6] dark:focus:border-[#38bdf8] focus:bg-white dark:focus:bg-white/[0.06] text-xs text-slate-900 dark:text-white outline-none transition-all font-medium cursor-pointer [&>option]:bg-slate-900 [&>option]:text-white"
+                      >
+                        <option value="general">General Inquiry</option>
+                        <option value="host">Hackathon Hosting & College Partnerships</option>
+                        <option value="sponsor">Sponsorship & Brand Opportunities</option>
+                        <option value="support">Technical / Participant Support</option>
+                      </select>
+                    </div>
                   </div>
 
                   <div className="space-y-1.5">
