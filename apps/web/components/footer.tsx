@@ -185,16 +185,6 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/teammates" className="text-slate-400 hover:text-white transition-colors">
-                  Find Teammates
-                </Link>
-              </li>
-              <li>
-                <Link href="/leaderboard" className="text-slate-400 hover:text-white transition-colors">
-                  Builder Leaderboard
-                </Link>
-              </li>
-              <li>
                 <Link href="/mentor" className="text-slate-400 hover:text-white transition-colors">
                   Verified Mentors
                 </Link>
