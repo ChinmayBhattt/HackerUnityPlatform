@@ -190,6 +190,16 @@ export interface SheetTabInfo {
 }
 
 export async function getSpreadsheetTabs(): Promise<SheetTabInfo[]> {
+  const appsScriptUrl = process.env.GOOGLE_APPS_SCRIPT_URL;
+  if (appsScriptUrl) {
+    return Object.values(TABLE_CONFIG).map((c, idx) => ({
+      sheetId: idx,
+      title: c.sheetName,
+      rowCount: 1000,
+      columnCount: 26,
+    }));
+  }
+
   const meta = await sheetsRequest<any>('?fields=sheets.properties');
   const sheets = meta.sheets || [];
   return sheets.map((s: any) => ({
@@ -201,6 +211,16 @@ export async function getSpreadsheetTabs(): Promise<SheetTabInfo[]> {
 }
 
 export async function ensureSheetTabExists(sheetName: string): Promise<SheetTabInfo> {
+  const appsScriptUrl = process.env.GOOGLE_APPS_SCRIPT_URL;
+  if (appsScriptUrl) {
+    return {
+      sheetId: 0,
+      title: sheetName,
+      rowCount: 1000,
+      columnCount: 26,
+    };
+  }
+
   const tabs = await getSpreadsheetTabs();
   const existing = tabs.find((t) => t.title.toLowerCase() === sheetName.toLowerCase());
 
@@ -355,6 +375,33 @@ export async function syncFullTable(tableName: string): Promise<TableSyncResult>
     values.push(rowValues);
   });
 
+  // If using Google Apps Script Web App alternative
+  const appsScriptUrl = process.env.GOOGLE_APPS_SCRIPT_URL;
+  if (appsScriptUrl) {
+    const res = await fetch(appsScriptUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'BULK_SYNC',
+        sheetName: config.sheetName,
+        rows: values,
+      }),
+    });
+    if (!res.ok) {
+      const errTxt = await res.text();
+      throw new Error(`[SheetsSync] Apps Script error (${res.status}): ${errTxt}`);
+    }
+    const durationMs = Date.now() - startTime;
+    return {
+      table: tableName,
+      sheetName: config.sheetName,
+      rowsSynced: records.length,
+      columnsCount: headers.length,
+      durationMs,
+      success: true,
+    };
+  }
+
   // 3. Clear existing values in tab
   const encodedSheetName = encodeURIComponent(config.sheetName);
   await sheetsRequest(`/values/${encodedSheetName}!A1:ZZZ:clear`, {
@@ -446,6 +493,27 @@ export async function handleDatabaseWebhook(
       action: 'IGNORED',
       table,
       message: `Table "${table}" is not configured in TABLE_CONFIG. Skipped.`,
+    };
+  }
+
+  // If using Google Apps Script Web App alternative
+  const appsScriptUrl = process.env.GOOGLE_APPS_SCRIPT_URL;
+  if (appsScriptUrl) {
+    const res = await fetch(appsScriptUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...payload,
+        sheetName: config.sheetName,
+        primaryKey: config.primaryKey,
+      }),
+    });
+    const json = await res.json().catch(() => ({}));
+    return {
+      success: json.success ?? true,
+      action: payload.type,
+      table,
+      message: json.action ? `Synced ${json.action} via Apps Script` : 'Synced via Apps Script',
     };
   }
 
