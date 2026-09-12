@@ -27,6 +27,7 @@ import { AuthModal } from '@/components/auth-modal';
 import { AiHeroPanel } from '@/components/ai-hero-panel';
 import { PodcastSection } from '@/components/podcast-section';
 import { TestimonialsSection } from '@/components/testimonials-section';
+import { JoinTeamSection } from '@/components/join-team-section';
 
 // Event gallery photos
 import galleryStage from '@/assets/hackstorm_stage.jpg';
@@ -948,6 +949,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ─── Join Hacker's Unity Team CTA ──────────────────────────── */}
+      <JoinTeamSection />
 
       {/* ─── Industry Leader Testimonials (H2S Style) ─────────────── */}
       <TestimonialsSection />

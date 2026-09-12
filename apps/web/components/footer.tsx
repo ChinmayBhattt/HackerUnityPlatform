@@ -1,6 +1,9 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Mail, Phone, MapPin } from 'lucide-react';
+import { Mail, Phone, MapPin, Clock, ArrowRight, CheckCircle2, ShieldCheck } from 'lucide-react';
 import {
   FaInstagram,
   FaXTwitter,
@@ -11,21 +14,34 @@ import {
 } from 'react-icons/fa6';
 
 export function Footer() {
+  const [email, setEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (email.trim()) {
+      setSubscribed(true);
+      setEmail('');
+      setTimeout(() => setSubscribed(false), 5000);
+    }
+  };
+
   const socials = [
-    { icon: FaInstagram, label: 'Instagram', handle: '@hackerunity', href: 'https://instagram.com/hackerunity' },
-    { icon: FaXTwitter, label: 'Twitter (X)', handle: '@Hackers_Unity', href: 'https://twitter.com/Hackers_Unity' },
-    { icon: FaLinkedin, label: 'LinkedIn', handle: '@hackerunity', href: 'https://linkedin.com/company/hackerunity' },
-    { icon: FaYoutube, label: 'YouTube', handle: '@hackerunity', href: 'https://youtube.com/@hackerunity' },
-    { icon: FaWhatsapp, label: 'WhatsApp', handle: 'Community Group', href: 'https://chat.whatsapp.com/JqVKrBiZIdND1n40ffErw3?mode=gi_t' },
-    { icon: FaDiscord, label: 'Discord', handle: 'Join Server', href: 'https://discord.com/invite/xcNNqdDhce' },
+    { icon: FaInstagram, label: 'Instagram', href: 'https://instagram.com/hackerunity' },
+    { icon: FaXTwitter, label: 'Twitter (X)', href: 'https://twitter.com/Hackers_Unity' },
+    { icon: FaLinkedin, label: 'LinkedIn', href: 'https://linkedin.com/company/hackerunity' },
+    { icon: FaYoutube, label: 'YouTube', href: 'https://youtube.com/@hackerunity' },
+    { icon: FaWhatsapp, label: 'WhatsApp', href: 'https://chat.whatsapp.com/JqVKrBiZIdND1n40ffErw3?mode=gi_t' },
+    { icon: FaDiscord, label: 'Discord', href: 'https://discord.com/invite/xcNNqdDhce' },
   ];
 
   return (
-    <footer className="border-t border-slate-800/80 bg-[#0b0e14] text-slate-400 text-xs">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12">
-          {/* Brand Col (5 cols) */}
-          <div className="md:col-span-5 space-y-4">
+    <footer className="border-t border-slate-800/80 bg-[#080c14] text-slate-400 text-xs">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16 space-y-12">
+        {/* ─── Top Row: Brand & Newsletter (Rise In / Modern Style) ─── */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 pb-10 border-b border-slate-800/80">
+          {/* Brand Info */}
+          <div className="max-w-xl space-y-3.5">
             <Link href="/" className="inline-flex items-center gap-2.5 group">
               <div className="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center overflow-hidden p-1 shadow-sm group-hover:border-[#0099e6]/40 transition-colors">
                 <Image
@@ -36,21 +52,21 @@ export function Footer() {
                   className="w-full h-full object-contain"
                 />
               </div>
-              <span className="text-base font-black text-white tracking-tight">
+              <span className="text-lg font-black text-white tracking-tight">
                 Hacker&apos;s Unity
               </span>
             </Link>
 
-            <div className="text-xs font-bold text-[#f97316] tracking-wide">
-              Build. Connect. Innovate.
+            <div className="text-xs font-bold text-[#f97316] tracking-wider uppercase">
+              Unite. Code. Create.
             </div>
 
-            <p className="text-xs text-slate-400 max-w-sm leading-relaxed">
-              Empowering the next generation of builders through hackathons, community, and collaboration.
+            <p className="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-lg">
+              India&apos;s fastest growing developer platform and builder ecosystem. Empowering students and innovators through national hackathons, mentorship, and opportunities.
             </p>
 
-            {/* Social Icons Row */}
-            <div className="flex items-center gap-2 pt-2 flex-wrap">
+            {/* Social Buttons */}
+            <div className="flex items-center gap-2 pt-1 flex-wrap">
               {socials.map((social) => {
                 const Icon = social.icon;
                 return (
@@ -59,8 +75,8 @@ export function Footer() {
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    title={`${social.label} (${social.handle})`}
-                    className="w-9 h-9 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                    title={social.label}
+                    className="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 hover:border-[#0099e6]/50 hover:bg-slate-850 text-slate-400 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-sm hover:scale-105"
                   >
                     <Icon className="w-4 h-4" />
                   </a>
@@ -69,64 +85,138 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Contact Us Col (3 cols) */}
-          <div className="md:col-span-3 space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-white mb-4">
-              Contact Us
+          {/* Newsletter / Builder Updates Subscription */}
+          <div className="w-full lg:max-w-md p-5 rounded-2xl bg-slate-900/60 border border-slate-800/90 shadow-lg">
+            <h4 className="text-sm font-bold text-white mb-1 flex items-center gap-2">
+              <span>Stay in the Builder Loop</span>
             </h4>
-            <ul className="space-y-3 text-xs">
-              <li>
-                <a
-                  href="mailto:hackerunity.community@gmail.com"
-                  className="flex items-center gap-2.5 text-slate-400 hover:text-[#0099e6] transition-colors"
-                >
-                  <Mail className="w-4 h-4 text-slate-400 shrink-0" />
-                  <span className="truncate font-medium">hackerunity.community@gmail.com</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="tel:+918852924002"
-                  className="flex items-center gap-2.5 text-slate-400 hover:text-[#0099e6] transition-colors"
-                >
-                  <Phone className="w-4 h-4 text-slate-400 shrink-0" />
-                  <span className="font-medium">+91 8852924002</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="tel:+919324264950"
-                  className="flex items-center gap-2.5 text-slate-400 hover:text-[#0099e6] transition-colors"
-                >
-                  <Phone className="w-4 h-4 text-slate-400 shrink-0" />
-                  <span className="font-medium">+91 9324264950</span>
-                </a>
-              </li>
-              <li className="flex items-center gap-2.5 text-slate-400">
-                <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
-                <a
-                  href="https://www.google.com/maps/place/Hacker's+Unity/@19.1172167,72.8642732,17z/data=!3m1!4b1!4m15!1m7!3m6!1s0x3be7c97b475f9155:0xe5b912633881889!2sHacker's+Unity!8m2!3d19.1172116!4d72.8668481!16s%2Fg%2F11zxcs0wbc!3m6!1s0x3be7c97b475f9155:0xe5b912633881889!8m2!3d19.1172116!4d72.8668481!15sCg5IYWNrZXIncyBVbml0eZIBGGV2ZW50X21hbmFnZW1lbnRfY29tcGFueeABAA!16s%2Fg%2F11zxcs0wbc?entry=ttu&g_ep=EgoyMDI2MDgzMC4wIKXMDSoASAFQAw%3D%3D"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-medium hover:text-white transition-colors cursor-pointer"
-                >
-                  A-41, Vinmar House, 1st Floor, Road no. 2, MIDC, Andheri East, Mumbai - 400093
-                </a>
-              </li>
-            </ul>
-          </div>
+            <p className="text-xs text-slate-400 mb-3.5 leading-relaxed">
+              Get notified about upcoming hackathons, $350K+ prize pools, and community sprints.
+            </p>
 
-          {/* Platform Col (2 cols) */}
-          <div className="md:col-span-2 space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-white mb-4">
-              Platform
+            {subscribed ? (
+              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>You&apos;re on the list! Welcome to Hacker&apos;s Unity updates.</span>
+              </div>
+            ) : (
+              <form onSubmit={handleSubscribe} className="flex gap-2">
+                <input
+                  type="email"
+                  required
+                  placeholder="Enter your email address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-[#0099e6] transition-colors"
+                />
+                <button
+                  type="submit"
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#0099e6] to-[#f97316] hover:opacity-95 text-white font-bold text-xs shrink-0 shadow-md transition-all cursor-pointer"
+                >
+                  Subscribe
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+
+        {/* ─── Main Links & Office Directory Grid ────────────────────── */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-12 gap-8 lg:gap-10">
+          {/* Col 1: Platform & Hackathons (3 cols) */}
+          <div className="col-span-1 md:col-span-2 lg:col-span-3 space-y-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-white border-l-2 border-[#0099e6] pl-2.5 mb-4">
+              Hackathons & Platform
             </h4>
             <ul className="space-y-2.5 text-xs">
               <li>
                 <Link href="/hackathons" className="text-slate-400 hover:text-white transition-colors">
-                  Hackathons
+                  Browse Hackathons
                 </Link>
               </li>
+              <li>
+                <Link href="/host" className="text-slate-400 hover:text-white transition-colors">
+                  Host Hackathon Free
+                </Link>
+              </li>
+              <li>
+                <Link href="/teammates" className="text-slate-400 hover:text-white transition-colors">
+                  Find Teammates
+                </Link>
+              </li>
+              <li>
+                <Link href="/leaderboard" className="text-slate-400 hover:text-white transition-colors">
+                  Builder Leaderboard
+                </Link>
+              </li>
+              <li>
+                <Link href="/mentor" className="text-slate-400 hover:text-white transition-colors">
+                  Verified Mentors
+                </Link>
+              </li>
+              <li>
+                <Link href="/dashboard" className="text-slate-400 hover:text-white transition-colors">
+                  My Dashboard
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Col 2: Community & Ecosystem (3 cols) */}
+          <div className="col-span-1 md:col-span-2 lg:col-span-3 space-y-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-white border-l-2 border-[#f97316] pl-2.5 mb-4">
+              Community & Ecosystem
+            </h4>
+            <ul className="space-y-2.5 text-xs">
+              <li>
+                <a
+                  href="https://tally.so/r/q4o22k"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sky-400 hover:text-sky-300 font-semibold inline-flex items-center gap-1 transition-colors"
+                >
+                  <span>Join Hacker&apos;s Unity Team</span>
+                  <ArrowRight className="w-3 h-3" />
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://discord.com/invite/xcNNqdDhce"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-slate-400 hover:text-white transition-colors"
+                >
+                  Discord Server (50k+ Builders)
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://chat.whatsapp.com/JqVKrBiZIdND1n40ffErw3?mode=gi_t"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-slate-400 hover:text-white transition-colors"
+                >
+                  WhatsApp Builder Groups
+                </a>
+              </li>
+              <li>
+                <Link href="/about" className="text-slate-400 hover:text-white transition-colors">
+                  Community Story & Mission
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="text-slate-400 hover:text-white transition-colors">
+                  Partner with Hacker&apos;s Unity
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Col 3: Company & Legal (2 cols) */}
+          <div className="col-span-1 md:col-span-2 lg:col-span-2 space-y-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-white border-l-2 border-slate-600 pl-2.5 mb-4">
+              Company & Policies
+            </h4>
+            <ul className="space-y-2.5 text-xs">
               <li>
                 <Link href="/about" className="text-slate-400 hover:text-white transition-colors">
                   About Us
@@ -138,39 +228,10 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/dashboard" className="text-slate-400 hover:text-white transition-colors">
-                  Dashboard
+                <Link href="/brand-guidelines" className="text-slate-400 hover:text-white transition-colors">
+                  Brand Guidelines
                 </Link>
               </li>
-              <li>
-                <Link href="/host" className="text-slate-400 hover:text-white transition-colors">
-                  Host Hackathon
-                </Link>
-              </li>
-              <li>
-                <Link href="/mentor" className="text-slate-400 hover:text-[#0099e6] transition-colors inline-flex items-center gap-1.5">
-                  <span>Mentors</span>
-                </Link>
-              </li>
-              <li>
-                <a
-                  href="https://discord.com/invite/xcNNqdDhce"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-slate-400 hover:text-white transition-colors"
-                >
-                  Community
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Legal Col (2 cols) */}
-          <div className="md:col-span-2 space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-white mb-4">
-              Legal
-            </h4>
-            <ul className="space-y-2.5 text-xs">
               <li>
                 <Link href="/privacy" className="text-slate-400 hover:text-white transition-colors">
                   Privacy Policy
@@ -181,18 +242,81 @@ export function Footer() {
                   Terms of Service
                 </Link>
               </li>
-              <li>
-                <Link href="/brand-guidelines" className="text-slate-400 hover:text-white transition-colors">
-                  Brand Guidelines
-                </Link>
+            </ul>
+          </div>
+
+          {/* Col 4: Corporate Info & Direct Support (4 cols - H2S Style) */}
+          <div className="col-span-1 md:col-span-2 lg:col-span-4 space-y-4">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-white border-l-2 border-slate-500 pl-2.5 mb-4">
+              Office & Contact
+            </h4>
+            <ul className="space-y-3.5 text-xs">
+              {/* Address */}
+              <li className="flex items-start gap-2.5">
+                <MapPin className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <span className="font-bold text-slate-300 block">Registered Headquarters</span>
+                  <a
+                    href="https://www.google.com/maps/place/Hacker's+Unity/@19.1172167,72.8642732,17z/data=!3m1!4b1!4m15!1m7!3m6!1s0x3be7c97b475f9155:0xe5b912633881889!2sHacker's+Unity!8m2!3d19.1172116!4d72.8668481!16s%2Fg%2F11zxcs0wbc!3m6!1s0x3be7c97b475f9155:0xe5b912633881889!8m2!3d19.1172116!4d72.8668481!15sCg5IYWNrZXIncyBVbml0eZIBGGV2ZW50X21hbmFnZW1lbnRfY29tcGFueeABAA!16s%2Fg%2F11zxcs0wbc?entry=ttu&g_ep=EgoyMDI2MDgzMC4wIKXMDSoASAFQAw%3D%3D"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-slate-400 hover:text-white transition-colors leading-relaxed block"
+                  >
+                    A-41, Vinmar House, 1st Floor, Road no. 2, MIDC, Andheri East, Mumbai - 400093
+                  </a>
+                </div>
+              </li>
+
+              {/* Email */}
+              <li className="flex items-start gap-2.5">
+                <Mail className="w-4 h-4 text-[#f97316] shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <span className="font-bold text-slate-300 block">General & Partnership Inquiries</span>
+                  <a
+                    href="mailto:hackerunity.community@gmail.com"
+                    className="text-slate-400 hover:text-[#0099e6] transition-colors"
+                  >
+                    hackerunity.community@gmail.com
+                  </a>
+                </div>
+              </li>
+
+              {/* Phone */}
+              <li className="flex items-start gap-2.5">
+                <Phone className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <span className="font-bold text-slate-300 block">Phone Support</span>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-slate-400">
+                    <a href="tel:+918852924002" className="hover:text-white transition-colors">
+                      +91 8852924002
+                    </a>
+                    <span>•</span>
+                    <a href="tel:+919324264950" className="hover:text-white transition-colors">
+                      +91 9324264950
+                    </a>
+                  </div>
+                  <span className="text-[11px] text-slate-500 block">Available Mon – Sat (10:00 AM – 7:00 PM IST)</span>
+                </div>
               </li>
             </ul>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="border-t border-slate-800/80 mt-12 pt-8 text-center text-xs text-slate-500 font-medium">
-          <p>© 2026 Hacker&apos;s Unity All rights reserved.</p>
+        {/* ─── Legal Disclaimer (Rise In Style) ──────────────────────── */}
+        <div className="pt-8 border-t border-slate-800/80">
+          <p className="text-[11px] text-slate-500 leading-relaxed">
+            <strong className="text-slate-400">Disclaimer:</strong> Hacker&apos;s Unity is an independent developer organization and hackathon enablement platform. All hackathons, workshops, educational challenges, and developer initiatives hosted on or facilitated through hackersunity.com are organized solely for skill-building, innovation, and networking purposes. Hacker&apos;s Unity does not guarantee employment, academic credits, or third-party sponsorship payouts. Prize distributions, evaluations, and challenge problem statements managed by external partner institutions are governed by their respective organizer guidelines. Participants are advised to review relevant event rules and guidelines prior to registration.
+          </p>
+        </div>
+
+        {/* ─── Bottom Bar ───────────────────────────────────────────── */}
+        <div className="pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 font-medium">
+          <p>© 2026 Hacker&apos;s Unity. All rights reserved.</p>
+          <div className="flex items-center gap-4 text-[11px] text-slate-400">
+            <span>India&apos;s Fastest Growing Hackathon Community</span>
+            <span>•</span>
+            <span className="text-sky-400 font-semibold">50,000+ Builders Strong</span>
+          </div>
         </div>
       </div>
     </footer>
