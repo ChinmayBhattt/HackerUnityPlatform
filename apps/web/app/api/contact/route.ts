@@ -106,12 +106,12 @@ export async function POST(req: Request) {
         type: 'broadcast',
         event: 'inquiry_created',
         payload: {
-          id: data.id,
+          id: data?.id || 'new',
           name: cleanName,
           email: cleanEmail,
           inquiryType: cleanType,
           subject: cleanSubject,
-          createdAt: data.created_at,
+          createdAt: data?.created_at || new Date().toISOString(),
         },
       });
     } catch (realtimeErr) {
@@ -121,7 +121,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       message: 'Your inquiry has been received. Our team will get back to you shortly!',
-      id: data.id,
+      id: data?.id || null,
     });
   } catch (err: any) {
     console.error('[Contact API Error]:', err);

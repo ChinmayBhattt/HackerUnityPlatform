@@ -301,7 +301,12 @@ export function Footer() {
                   type="button"
                   onClick={() => {
                     if (typeof window !== 'undefined') {
-                      window.dispatchEvent(new CustomEvent('open_cookie_consent'));
+                      if (typeof (window as unknown as { openCookieSettings?: () => void }).openCookieSettings === 'function') {
+                        (window as unknown as { openCookieSettings: () => void }).openCookieSettings();
+                      } else {
+                        window.dispatchEvent(new CustomEvent('open_cookie_settings'));
+                        window.dispatchEvent(new CustomEvent('open_cookie_consent'));
+                      }
                     }
                   }}
                   className="text-slate-400 hover:text-white transition-colors cursor-pointer text-left"
