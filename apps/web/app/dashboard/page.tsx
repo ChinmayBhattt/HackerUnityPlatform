@@ -781,11 +781,11 @@ export default function DashboardPage() {
               </div>
             </button>
 
-            {/* Admin Broadcast Studio Quick Link (for Admins & Organizers) */}
+            {/* Admin Broadcast Studio & Sheets Sync Quick Links */}
             {(user?.role === UserRole.ADMIN ||
               user?.role === UserRole.SUPER_ADMIN ||
               user?.role === UserRole.ORGANIZER) && (
-                <div className="pt-2 border-t border-slate-100 dark:border-white/[0.08] mt-2">
+                <div className="pt-2 border-t border-slate-100 dark:border-white/[0.08] mt-2 space-y-1.5">
                   <Link
                     href="/admin/notifications"
                     className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-2xl text-xs font-bold text-[#0099e6] bg-sky-50/70 hover:bg-sky-100 dark:bg-sky-950/30 dark:hover:bg-sky-900/40 transition-colors"
@@ -793,6 +793,16 @@ export default function DashboardPage() {
                     <Megaphone className="w-4 h-4 text-[#0099e6]" />
                     <span>Broadcast & News Studio</span>
                   </Link>
+
+                  {(user?.role === UserRole.ADMIN || user?.role === UserRole.SUPER_ADMIN) && (
+                    <Link
+                      href="/admin/sheets-sync"
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-2xl text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50/70 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:hover:bg-emerald-900/40 transition-colors"
+                    >
+                      <FileSpreadsheet className="w-4 h-4 text-emerald-500" />
+                      <span>Google Sheets Mirror</span>
+                    </Link>
+                  )}
                 </div>
               )}
           </div>

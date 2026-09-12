@@ -1,0 +1,653 @@
+import { JWT } from 'google-auth-library';
+import { createAdminClient } from '@/lib/api-auth';
+
+// ─── 1. CENTRAL TABLE CONFIGURATION ──────────────────────────────────────────
+export interface TableMapping {
+  sheetName: string;
+  primaryKey: string;
+  description?: string;
+}
+
+export const TABLE_CONFIG: Record<string, TableMapping> = {
+  profiles: {
+    sheetName: 'Profiles',
+    primaryKey: 'id',
+    description: 'User accounts, hacker and organizer profiles',
+  },
+  events: {
+    sheetName: 'Events',
+    primaryKey: 'id',
+    description: 'Hackathons, competitions, workshops',
+  },
+  registrations: {
+    sheetName: 'Registrations',
+    primaryKey: 'id',
+    description: 'Participant hackathon registrations',
+  },
+  submissions: {
+    sheetName: 'Submissions',
+    primaryKey: 'id',
+    description: 'Hackathon project submissions',
+  },
+  teams: {
+    sheetName: 'Teams',
+    primaryKey: 'id',
+    description: 'Formed squads and matchmaking teams',
+  },
+  team_members: {
+    sheetName: 'Team Members',
+    primaryKey: 'id',
+    description: 'Team rosters and member associations',
+  },
+  team_invitations: {
+    sheetName: 'Team Invitations',
+    primaryKey: 'id',
+    description: 'Pending and accepted squad invites',
+  },
+  bookmarks: {
+    sheetName: 'Bookmarks',
+    primaryKey: 'id',
+    description: 'User-saved hackathon bookmarks',
+  },
+  contact_inquiries: {
+    sheetName: 'Contact Inquiries',
+    primaryKey: 'id',
+    description: 'Direct contact submissions with phone',
+  },
+  contact_messages: {
+    sheetName: 'Contact Messages',
+    primaryKey: 'id',
+    description: 'Direct messages sent to organizers',
+  },
+  mentor_applications: {
+    sheetName: 'Mentor Applications',
+    primaryKey: 'id',
+    description: 'Prospective mentors and verifications',
+  },
+  news: {
+    sheetName: 'News',
+    primaryKey: 'id',
+    description: 'Platform editorial and announcement news',
+  },
+  newsletter_subscribers: {
+    sheetName: 'Newsletter Subscribers',
+    primaryKey: 'id',
+    description: 'Email newsletter subscriptions',
+  },
+  notifications: {
+    sheetName: 'Notifications',
+    primaryKey: 'id',
+    description: 'System announcements and broadcast alerts',
+  },
+  user_notifications: {
+    sheetName: 'User Notifications',
+    primaryKey: 'id',
+    description: 'Per-user delivered notifications and read states',
+  },
+};
+
+// ─── 2. CREDENTIAL RESOLUTION & AUTH ──────────────────────────────────────────
+export function getSpreadsheetId(): string {
+  return (
+    process.env.GOOGLE_SPREADSHEET_ID ||
+    '104nHo8CjXSjDLlQ6kKr28jwfC0YD2Zrip_ZY6OxAZuE'
+  );
+}
+
+function getServiceAccountCredentials(): { clientEmail: string; privateKey: string } {
+  // Option A: Full JSON credentials string in env var
+  if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
+    try {
+      const parsed = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
+      return {
+        clientEmail: parsed.client_email,
+        privateKey: parsed.private_key,
+      };
+    } catch (e) {
+      console.error('[SheetsSync] Failed to parse GOOGLE_SERVICE_ACCOUNT_KEY JSON:', e);
+    }
+  }
+
+  // Option B: Individual email and private key env vars
+  const clientEmail =
+    process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL ||
+    process.env.GOOGLE_CLIENT_EMAIL ||
+    'hackers-unity-sheets@premium-catbird-457008-b2.iam.gserviceaccount.com';
+
+  const rawKey = process.env.GOOGLE_PRIVATE_KEY || '';
+  // Support escaped \n in env strings
+  const privateKey = rawKey.replace(/\\n/g, '\n');
+
+  return { clientEmail, privateKey };
+}
+
+let cachedAuthClient: JWT | null = null;
+
+export function getGoogleAuthClient(): JWT {
+  if (cachedAuthClient) return cachedAuthClient;
+
+  const { clientEmail, privateKey } = getServiceAccountCredentials();
+
+  if (!privateKey) {
+    throw new Error(
+      '[SheetsSync] Missing GOOGLE_PRIVATE_KEY in environment variables. Please add your service account private key to .env.local.'
+    );
+  }
+
+  cachedAuthClient = new JWT({
+    email: clientEmail,
+    key: privateKey,
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+  });
+
+  return cachedAuthClient;
+}
+
+// ─── 3. GOOGLE SHEETS API HTTP HELPERS ───────────────────────────────────────
+const SHEETS_BASE_URL = 'https://sheets.googleapis.com/v4/spreadsheets';
+
+async function sheetsRequest<T = any>(
+  path: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const auth = getGoogleAuthClient();
+  const token = await auth.getAccessToken();
+
+  if (!token.token) {
+    throw new Error('[SheetsSync] Failed to acquire Google OAuth access token');
+  }
+
+  const spreadsheetId = getSpreadsheetId();
+  const url = `${SHEETS_BASE_URL}/${spreadsheetId}${path}`;
+
+  const headers = {
+    Authorization: `Bearer ${token.token}`,
+    'Content-Type': 'application/json',
+    ...(options.headers || {}),
+  };
+
+  const response = await fetch(url, {
+    ...options,
+    headers,
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(
+      `[SheetsSync] Google Sheets API Error (${response.status} ${response.statusText}): ${errText}`
+    );
+  }
+
+  return response.json();
+}
+
+// ─── 4. SHEET METADATA & TAB MANAGEMENT ──────────────────────────────────────
+export interface SheetTabInfo {
+  sheetId: number;
+  title: string;
+  rowCount: number;
+  columnCount: number;
+}
+
+export async function getSpreadsheetTabs(): Promise<SheetTabInfo[]> {
+  const meta = await sheetsRequest<any>('?fields=sheets.properties');
+  const sheets = meta.sheets || [];
+  return sheets.map((s: any) => ({
+    sheetId: s.properties.sheetId,
+    title: s.properties.title,
+    rowCount: s.properties.gridProperties?.rowCount || 0,
+    columnCount: s.properties.gridProperties?.columnCount || 0,
+  }));
+}
+
+export async function ensureSheetTabExists(sheetName: string): Promise<SheetTabInfo> {
+  const tabs = await getSpreadsheetTabs();
+  const existing = tabs.find((t) => t.title.toLowerCase() === sheetName.toLowerCase());
+
+  if (existing) {
+    return existing;
+  }
+
+  // Create new tab via batchUpdate
+  const result = await sheetsRequest<any>(':batchUpdate', {
+    method: 'POST',
+    body: JSON.stringify({
+      requests: [
+        {
+          addSheet: {
+            properties: {
+              title: sheetName,
+              gridProperties: {
+                rowCount: 1000,
+                columnCount: 26,
+                frozenRowCount: 1, // Freeze header row
+              },
+            },
+          },
+        },
+      ],
+    }),
+  });
+
+  const newSheetProps = result.replies?.[0]?.addSheet?.properties;
+  return {
+    sheetId: newSheetProps?.sheetId || 0,
+    title: sheetName,
+    rowCount: 1000,
+    columnCount: 26,
+  };
+}
+
+export async function formatSheetHeader(sheetId: number): Promise<void> {
+  try {
+    await sheetsRequest(':batchUpdate', {
+      method: 'POST',
+      body: JSON.stringify({
+        requests: [
+          // Format Row 1: Bold text, dark background, light text, frozen
+          {
+            repeatCell: {
+              range: {
+                sheetId,
+                startRowIndex: 0,
+                endRowIndex: 1,
+              },
+              cell: {
+                userEnteredFormat: {
+                  backgroundColor: { red: 0.05, green: 0.07, blue: 0.12 }, // Slate 900
+                  textFormat: {
+                    bold: true,
+                    foregroundColor: { red: 1, green: 1, blue: 1 },
+                    fontSize: 10,
+                  },
+                },
+              },
+              fields: 'userEnteredFormat(backgroundColor,textFormat)',
+            },
+          },
+        ],
+      }),
+    });
+  } catch (err) {
+    console.warn('[SheetsSync] Could not format header row styling:', err);
+  }
+}
+
+// ─── 5. DATA NORMALIZATION ───────────────────────────────────────────────────
+function formatValueForSheet(val: any): string {
+  if (val === null || val === undefined) return '';
+  if (typeof val === 'boolean') return val ? 'TRUE' : 'FALSE';
+  if (typeof val === 'number') return String(val);
+  if (typeof val === 'string') return val;
+  if (Array.isArray(val)) {
+    // Array of strings or primitives
+    if (val.length === 0) return '[]';
+    if (typeof val[0] === 'string' || typeof val[0] === 'number') {
+      return val.join(', ');
+    }
+    return JSON.stringify(val);
+  }
+  if (typeof val === 'object') {
+    return JSON.stringify(val);
+  }
+  return String(val);
+}
+
+// ─── 6. FULL SYNCHRONIZATION ENGINE ──────────────────────────────────────────
+export interface TableSyncResult {
+  table: string;
+  sheetName: string;
+  rowsSynced: number;
+  columnsCount: number;
+  durationMs: number;
+  success: boolean;
+  error?: string;
+}
+
+export async function syncFullTable(tableName: string): Promise<TableSyncResult> {
+  const startTime = Date.now();
+  const config = TABLE_CONFIG[tableName];
+
+  if (!config) {
+    throw new Error(`[SheetsSync] Table "${tableName}" is not defined in TABLE_CONFIG`);
+  }
+
+  const supabase = createAdminClient();
+
+  // 1. Fetch all rows from Supabase
+  const { data: rows, error: fetchErr } = await supabase
+    .from(tableName)
+    .select('*');
+
+  if (fetchErr) {
+    throw new Error(`[SheetsSync] Failed to fetch table "${tableName}": ${fetchErr.message}`);
+  }
+
+  const tabInfo = await ensureSheetTabExists(config.sheetName);
+  const records = rows || [];
+
+  // Determine headers (primary key first, then other fields alphabetically)
+  let headers: string[] = [config.primaryKey];
+
+  if (records.length > 0) {
+    const allKeys = new Set<string>();
+    records.forEach((row) => {
+      Object.keys(row).forEach((k) => allKeys.add(k));
+    });
+
+    const otherKeys = Array.from(allKeys)
+      .filter((k) => k !== config.primaryKey)
+      .sort();
+
+    headers = [config.primaryKey, ...otherKeys];
+  } else {
+    // Empty table fallback: if we have known common columns or at least primaryKey
+    headers = [config.primaryKey, 'created_at', 'updated_at'];
+  }
+
+  // 2. Build rows matrix
+  const values: string[][] = [headers];
+
+  records.forEach((record) => {
+    const rowValues = headers.map((header) => {
+      return formatValueForSheet(record[header]);
+    });
+    values.push(rowValues);
+  });
+
+  // 3. Clear existing values in tab
+  const encodedSheetName = encodeURIComponent(config.sheetName);
+  await sheetsRequest(`/values/${encodedSheetName}!A1:ZZZ:clear`, {
+    method: 'POST',
+    body: JSON.stringify({}),
+  });
+
+  // 4. Batch write all rows
+  await sheetsRequest(`/values/${encodedSheetName}!A1?valueInputOption=USER_ENTERED`, {
+    method: 'PUT',
+    body: JSON.stringify({
+      range: `${config.sheetName}!A1`,
+      majorDimension: 'ROWS',
+      values,
+    }),
+  });
+
+  // Format header row styling
+  await formatSheetHeader(tabInfo.sheetId);
+
+  const durationMs = Date.now() - startTime;
+  return {
+    table: tableName,
+    sheetName: config.sheetName,
+    rowsSynced: records.length,
+    columnsCount: headers.length,
+    durationMs,
+    success: true,
+  };
+}
+
+export async function syncAllTables(): Promise<{
+  results: TableSyncResult[];
+  totalRows: number;
+  totalDurationMs: number;
+  success: boolean;
+}> {
+  const overallStart = Date.now();
+  const results: TableSyncResult[] = [];
+  const tables = Object.keys(TABLE_CONFIG);
+
+  for (const table of tables) {
+    try {
+      const result = await syncFullTable(table);
+      results.push(result);
+    } catch (err: any) {
+      console.error(`[SheetsSync] Full sync failed for "${table}":`, err);
+      results.push({
+        table,
+        sheetName: TABLE_CONFIG[table].sheetName,
+        rowsSynced: 0,
+        columnsCount: 0,
+        durationMs: 0,
+        success: false,
+        error: err.message || 'Unknown sync failure',
+      });
+    }
+  }
+
+  const totalRows = results.reduce((acc, r) => acc + (r.rowsSynced || 0), 0);
+  const totalDurationMs = Date.now() - overallStart;
+
+  return {
+    results,
+    totalRows,
+    totalDurationMs,
+    success: results.every((r) => r.success),
+  };
+}
+
+// ─── 7. REALTIME DATABASE WEBHOOK HANDLER (INSERT, UPDATE, DELETE) ───────────
+export interface DatabaseWebhookPayload {
+  type: 'INSERT' | 'UPDATE' | 'DELETE';
+  table: string;
+  schema: string;
+  record: Record<string, any> | null;
+  old_record: Record<string, any> | null;
+}
+
+export async function handleDatabaseWebhook(
+  payload: DatabaseWebhookPayload
+): Promise<{ success: boolean; action: string; table: string; message: string }> {
+  const { type, table, record, old_record } = payload;
+  const config = TABLE_CONFIG[table];
+
+  if (!config) {
+    return {
+      success: true,
+      action: 'IGNORED',
+      table,
+      message: `Table "${table}" is not configured in TABLE_CONFIG. Skipped.`,
+    };
+  }
+
+  const tabInfo = await ensureSheetTabExists(config.sheetName);
+  const encodedSheetName = encodeURIComponent(config.sheetName);
+
+  // 1. Fetch current sheet values to locate headers and primary key row index
+  const sheetData = await sheetsRequest<any>(
+    `/values/${encodedSheetName}!A1:ZZZ?majorDimension=ROWS`
+  );
+
+  const existingRows: string[][] = sheetData.values || [];
+  let headers: string[] = existingRows[0] || [];
+
+  // If tab has no headers yet, initialize headers
+  const targetRecord = record || old_record || {};
+  if (headers.length === 0) {
+    const keys = Object.keys(targetRecord);
+    headers = [
+      config.primaryKey,
+      ...keys.filter((k) => k !== config.primaryKey).sort(),
+    ];
+    await sheetsRequest(
+      `/values/${encodedSheetName}!A1?valueInputOption=USER_ENTERED`,
+      {
+        method: 'PUT',
+        body: JSON.stringify({
+          range: `${config.sheetName}!A1`,
+          majorDimension: 'ROWS',
+          values: [headers],
+        }),
+      }
+    );
+    await formatSheetHeader(tabInfo.sheetId);
+  }
+
+  // Find index of primary key column (typically column 0 / A)
+  const pkColIdx = headers.indexOf(config.primaryKey);
+  const targetPk = String(
+    (record && record[config.primaryKey]) ??
+      (old_record && old_record[config.primaryKey]) ??
+      ''
+  );
+
+  if (!targetPk) {
+    throw new Error(
+      `[SheetsSync] Payload missing primary key "${config.primaryKey}" for table "${table}"`
+    );
+  }
+
+  // ─── INSERT OPERATION ───────────────────────────────────────────────────────
+  if (type === 'INSERT') {
+    if (!record) throw new Error('[SheetsSync] INSERT payload missing record');
+
+    // Check if new columns need to be added to headers
+    const newKeys = Object.keys(record).filter((k) => !headers.includes(k));
+    if (newKeys.length > 0) {
+      headers.push(...newKeys);
+      await sheetsRequest(
+        `/values/${encodedSheetName}!A1?valueInputOption=USER_ENTERED`,
+        {
+          method: 'PUT',
+          body: JSON.stringify({
+            range: `${config.sheetName}!A1`,
+            majorDimension: 'ROWS',
+            values: [headers],
+          }),
+        }
+      );
+    }
+
+    const rowValues = headers.map((h) => formatValueForSheet(record[h]));
+
+    await sheetsRequest(
+      `/values/${encodedSheetName}!A:A:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          range: `${config.sheetName}!A1`,
+          majorDimension: 'ROWS',
+          values: [rowValues],
+        }),
+      }
+    );
+
+    return {
+      success: true,
+      action: 'INSERT',
+      table,
+      message: `Appended record ${targetPk} to "${config.sheetName}"`,
+    };
+  }
+
+  // ─── UPDATE OPERATION (IN-PLACE REPLACEMENT) ────────────────────────────────
+  if (type === 'UPDATE') {
+    if (!record) throw new Error('[SheetsSync] UPDATE payload missing record');
+
+    // Look for existing row by primary key match in column pkColIdx
+    let foundRowIndex = -1; // 1-based row index for Google Sheets A1 notation
+    for (let r = 1; r < existingRows.length; r++) {
+      const cellVal = existingRows[r][pkColIdx >= 0 ? pkColIdx : 0];
+      if (String(cellVal).trim() === targetPk.trim()) {
+        foundRowIndex = r + 1; // 1-based index
+        break;
+      }
+    }
+
+    const rowValues = headers.map((h) => formatValueForSheet(record[h]));
+
+    if (foundRowIndex > 0) {
+      // Update the existing row in-place
+      await sheetsRequest(
+        `/values/${encodedSheetName}!A${foundRowIndex}?valueInputOption=USER_ENTERED`,
+        {
+          method: 'PUT',
+          body: JSON.stringify({
+            range: `${config.sheetName}!A${foundRowIndex}`,
+            majorDimension: 'ROWS',
+            values: [rowValues],
+          }),
+        }
+      );
+
+      return {
+        success: true,
+        action: 'UPDATE',
+        table,
+        message: `Updated row ${foundRowIndex} in "${config.sheetName}" for ID ${targetPk}`,
+      };
+    } else {
+      // Record not found in sheet yet; append as fallback
+      await sheetsRequest(
+        `/values/${encodedSheetName}!A:A:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            range: `${config.sheetName}!A1`,
+            majorDimension: 'ROWS',
+            values: [rowValues],
+          }),
+        }
+      );
+
+      return {
+        success: true,
+        action: 'UPDATE_INSERTED',
+        table,
+        message: `Row not found; appended record ${targetPk} to "${config.sheetName}"`,
+      };
+    }
+  }
+
+  // ─── DELETE OPERATION (REMOVE ROW DIMENSION) ────────────────────────────────
+  if (type === 'DELETE') {
+    let foundRow0Index = -1; // 0-based row index for deleteDimension API
+    for (let r = 1; r < existingRows.length; r++) {
+      const cellVal = existingRows[r][pkColIdx >= 0 ? pkColIdx : 0];
+      if (String(cellVal).trim() === targetPk.trim()) {
+        foundRow0Index = r; // 0-based
+        break;
+      }
+    }
+
+    if (foundRow0Index > 0) {
+      await sheetsRequest(':batchUpdate', {
+        method: 'POST',
+        body: JSON.stringify({
+          requests: [
+            {
+              deleteDimension: {
+                range: {
+                  sheetId: tabInfo.sheetId,
+                  dimension: 'ROWS',
+                  startIndex: foundRow0Index,
+                  endIndex: foundRow0Index + 1,
+                },
+              },
+            },
+          ],
+        }),
+      });
+
+      return {
+        success: true,
+        action: 'DELETE',
+        table,
+        message: `Deleted row ${foundRow0Index + 1} from "${config.sheetName}" for ID ${targetPk}`,
+      };
+    }
+
+    return {
+      success: true,
+      action: 'DELETE_SKIPPED',
+      table,
+      message: `Record ${targetPk} not found in "${config.sheetName}". Nothing to delete.`,
+    };
+  }
+
+  return {
+    success: false,
+    action: 'UNKNOWN',
+    table,
+    message: `Unsupported event type: ${type}`,
+  };
+}
