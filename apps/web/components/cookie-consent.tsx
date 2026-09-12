@@ -13,18 +13,31 @@ export function CookieConsent() {
 
   useEffect(() => {
     // Check if user already made a choice
+    let timer: NodeJS.Timeout | undefined;
     const stored = localStorage.getItem(CONSENT_KEY);
     if (!stored) {
       // Small delay so the page loads first, then the banner slides in
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         setVisible(true);
-        // Trigger entrance animation after mount
         requestAnimationFrame(() => {
           requestAnimationFrame(() => setAnimate(true));
         });
       }, 800);
-      return () => clearTimeout(timer);
     }
+
+    // Listen for manual open trigger (e.g. from footer Cookie Settings)
+    const handleOpen = () => {
+      setVisible(true);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setAnimate(true));
+      });
+    };
+
+    window.addEventListener('open_cookie_consent', handleOpen);
+    return () => {
+      if (timer) clearTimeout(timer);
+      window.removeEventListener('open_cookie_consent', handleOpen);
+    };
   }, []);
 
   const handleChoice = (choice: ConsentChoice) => {

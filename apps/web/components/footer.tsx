@@ -288,6 +288,27 @@ export function Footer() {
                   Terms of Service
                 </Link>
               </li>
+              <li>
+                <a
+                  href="mailto:hackerunity.community@gmail.com?subject=Platform%20Feedback%20-%20Hacker's%20Unity&body=Hi%20Hacker's%20Unity%20Team,%0A%0AMy%20Feedback:"
+                  className="text-slate-400 hover:text-white transition-colors"
+                >
+                  Send Feedback
+                </a>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (typeof window !== 'undefined') {
+                      window.dispatchEvent(new CustomEvent('open_cookie_consent'));
+                    }
+                  }}
+                  className="text-slate-400 hover:text-white transition-colors cursor-pointer text-left"
+                >
+                  Cookie Settings
+                </button>
+              </li>
             </ul>
           </div>
 
