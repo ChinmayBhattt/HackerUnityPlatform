@@ -72,11 +72,8 @@ export default function HomePage() {
   const gallerySectionRef = useRef<HTMLElement>(null);
   const [galleryVisible, setGalleryVisible] = useState(false);
 
-  // Workshop 3D scroll carousel
-  const workshopScrollRef = useRef<HTMLElement>(null);
-  const [workshopVisible, setWorkshopVisible] = useState(false);
+  // Workshop carousel (manual)
   const [activeSlide, setActiveSlide] = useState(0);
-  const [slideProgress, setSlideProgress] = useState(0);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   // Featured Hackathons manual horizontal scroll
@@ -133,53 +130,7 @@ export default function HomePage() {
     return () => observer.disconnect();
   }, []);
 
-  // Workshop scroll-reveal + 3D carousel scroll tracking
-  useEffect(() => {
-    const node = workshopScrollRef.current;
-    if (!node) return;
 
-    // Entrance reveal
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setWorkshopVisible(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.05 }
-    );
-    observer.observe(node);
-
-    // Scroll-driven slide switching (only on desktop lg screens)
-    const SLIDE_COUNT = 2;
-    const handleScroll = () => {
-      if (typeof window !== 'undefined' && window.innerWidth < 1024) return;
-      const rect = node.getBoundingClientRect();
-      const stickyHeight = window.innerHeight;
-      const scrollableDistance = node.offsetHeight - stickyHeight;
-      if (scrollableDistance <= 0) return;
-
-      // How far we've scrolled past the top of the section
-      const scrolled = -rect.top;
-      const progress = Math.max(0, Math.min(1, scrolled / scrollableDistance));
-
-      // Map progress → active slide + per-slide progress
-      const slideFloat = progress * SLIDE_COUNT;
-      const slide = Math.min(Math.floor(slideFloat), SLIDE_COUNT - 1);
-      const perSlide = slideFloat - slide;
-
-      setActiveSlide(slide);
-      setSlideProgress(perSlide);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
 
   const galleryRow1 = [
     { src: galleryStage, label: 'Hackstorm — Grand Stage' },
@@ -705,215 +656,197 @@ export default function HomePage() {
       {/* ─── Industry Leaders Podcast Section ──────────────────────── */}
       <PodcastSection />
 
-      {/* ─── AI & Blockchain Workshops — Scroll-Driven 3D Carousel (Responsive) ── */}
-      <section
-        ref={workshopScrollRef}
-        className="relative w-full py-6 sm:py-10 lg:py-0 lg:h-[250vh]"
-      >
-        {/* Sticky viewport on desktop, natural flow on mobile */}
-        <div
-          className={`relative lg:sticky lg:top-0 lg:h-screen lg:overflow-hidden flex items-center transition-opacity duration-1000 ease-out ${
-            workshopVisible ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-            <div className="w-full rounded-2xl sm:rounded-3xl bg-[#090d16] border border-slate-800/90 shadow-2xl p-5 sm:p-7 lg:p-10 relative overflow-hidden my-4 lg:my-0">
-              {/* Decorative subtle ambient glows */}
-              <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-              <div className="absolute bottom-0 left-0 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-violet-600/10 rounded-full blur-3xl pointer-events-none" />
+      {/* ─── AI & Blockchain Workshops — Manual Carousel (Responsive) ── */}
+      <section className="relative w-full py-10 sm:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+          <div className="w-full rounded-2xl sm:rounded-3xl bg-[#090d16] border border-slate-800/90 shadow-2xl p-5 sm:p-7 lg:p-10 relative overflow-hidden my-4 lg:my-0">
+            {/* Decorative subtle ambient glows */}
+            <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-violet-600/10 rounded-full blur-3xl pointer-events-none" />
 
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-10 items-center w-full relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-10 items-center w-full relative z-10">
 
-                {/* ── Left: Text content (5 cols) ── */}
-                <div className="lg:col-span-5 space-y-4 sm:space-y-6">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="px-2.5 sm:px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-violet-500/15 text-violet-300 border border-violet-500/30">
-                      Workshops &amp; Events
-                    </span>
-                    <span className="px-2.5 sm:px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-orange-500/15 text-orange-300 border border-orange-500/30">
-                      In-Person
-                    </span>
-                  </div>
+              {/* ── Left: Text content (5 cols) ── */}
+              <div className="lg:col-span-5 space-y-4 sm:space-y-6">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="px-2.5 sm:px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-violet-500/15 text-violet-300 border border-violet-500/30">
+                    Workshops &amp; Events
+                  </span>
+                  <span className="px-2.5 sm:px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-orange-500/15 text-orange-300 border border-orange-500/30">
+                    In-Person
+                  </span>
+                </div>
 
-                  <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-white tracking-tight leading-[1.15]">
-                    We Host{' '}
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00b4d8] via-[#38bdf8] to-[#f97316]">
-                      AI &amp; Blockchain
-                    </span>{' '}
-                    Workshops Across India
-                  </h2>
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-white tracking-tight leading-[1.15]">
+                  We Host{' '}
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00b4d8] via-[#38bdf8] to-[#f97316]">
+                    AI &amp; Blockchain
+                  </span>{' '}
+                  Workshops Across India
+                </h2>
 
-                  <p className="text-xs sm:text-sm lg:text-base text-slate-300 leading-relaxed font-normal">
-                    From hands-on Web3 bootcamps to AI/ML deep-dives, we bring developer-focused
-                    workshops and sprints to colleges and tech communities nationwide. Our events
-                    are designed to turn curious learners into confident builders.
-                  </p>
+                <p className="text-xs sm:text-sm lg:text-base text-slate-300 leading-relaxed font-normal">
+                  From hands-on Web3 bootcamps to AI/ML deep-dives, we bring developer-focused
+                  workshops and sprints to colleges and tech communities nationwide. Our events
+                  are designed to turn curious learners into confident builders.
+                </p>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5 pt-1">
-                    {[
-                      { label: 'AI / ML', icon: Bot, color: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20' },
-                      { label: 'Blockchain', icon: Blocks, color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
-                      { label: 'Web3', icon: Globe, color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
-                      { label: 'Cloud & DevOps', icon: Cloud, color: 'text-sky-400 bg-sky-500/10 border-sky-500/20' },
-                      { label: 'Open Source', icon: Code2, color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
-                      { label: 'Cybersecurity', icon: ShieldCheck, color: 'text-rose-400 bg-rose-500/10 border-rose-500/20' },
-                    ].map((topic) => {
-                      const Icon = topic.icon;
-                      return (
-                        <div
-                          key={topic.label}
-                          className="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 transition-colors shadow-sm"
-                        >
-                          <div className={`p-1.5 rounded-lg border flex items-center justify-center shrink-0 ${topic.color}`}>
-                            <Icon className="w-3.5 h-3.5" />
-                          </div>
-                          <span className="text-[11px] sm:text-xs font-semibold text-slate-200 truncate">{topic.label}</span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5 pt-1">
+                  {[
+                    { label: 'AI / ML', icon: Bot, color: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20' },
+                    { label: 'Blockchain', icon: Blocks, color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
+                    { label: 'Web3', icon: Globe, color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
+                    { label: 'Cloud & DevOps', icon: Cloud, color: 'text-sky-400 bg-sky-500/10 border-sky-500/20' },
+                    { label: 'Open Source', icon: Code2, color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+                    { label: 'Cybersecurity', icon: ShieldCheck, color: 'text-rose-400 bg-rose-500/10 border-rose-500/20' },
+                  ].map((topic) => {
+                    const Icon = topic.icon;
+                    return (
+                      <div
+                        key={topic.label}
+                        className="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 transition-colors shadow-sm"
+                      >
+                        <div className={`p-1.5 rounded-lg border flex items-center justify-center shrink-0 ${topic.color}`}>
+                          <Icon className="w-3.5 h-3.5" />
                         </div>
-                      );
-                    })}
-                  </div>
+                        <span className="text-[11px] sm:text-xs font-semibold text-slate-200 truncate">{topic.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
 
-                  <div className="flex items-center justify-between sm:justify-start gap-4 sm:gap-6 pt-1 border-t border-slate-800/80 sm:border-t-0 mt-2 sm:mt-0">
-                    <div>
-                      <p className="text-xl sm:text-2xl lg:text-3xl font-black text-white">30+</p>
-                      <p className="text-[10px] sm:text-[11px] text-slate-400 font-semibold">Workshops Hosted</p>
-                    </div>
-                    <div className="w-px h-8 sm:h-10 bg-slate-800" />
-                    <div>
-                      <p className="text-xl sm:text-2xl lg:text-3xl font-black text-white">10K+</p>
-                      <p className="text-[10px] sm:text-[11px] text-slate-400 font-semibold">Developers Trained</p>
-                    </div>
-                    <div className="w-px h-8 sm:h-10 bg-slate-800" />
-                    <div>
-                      <p className="text-xl sm:text-2xl lg:text-3xl font-black text-white">15+</p>
-                      <p className="text-[10px] sm:text-[11px] text-slate-400 font-semibold">Cities Reached</p>
-                    </div>
+                <div className="flex items-center justify-between sm:justify-start gap-4 sm:gap-6 pt-1 border-t border-slate-800/80 sm:border-t-0 mt-2 sm:mt-0">
+                  <div>
+                    <p className="text-xl sm:text-2xl lg:text-3xl font-black text-white">30+</p>
+                    <p className="text-[10px] sm:text-[11px] text-slate-400 font-semibold">Workshops Hosted</p>
                   </div>
-
-                  {/* Slide indicator dots */}
-                  <div className="flex items-center gap-2 pt-1 sm:pt-2">
-                    {[
-                      'JECRC Foundation',
-                      'Poornima College',
-                    ].map((label, i) => (
-                      <button
-                        key={label}
-                        type="button"
-                        onClick={() => {
-                          setActiveSlide(i);
-                          setSlideProgress(0);
-                        }}
-                        className={`h-2 sm:h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
-                          activeSlide === i
-                            ? 'w-7 sm:w-8 bg-gradient-to-r from-[#0099e6] to-[#f97316]'
-                            : 'w-2 sm:w-2.5 bg-slate-700 hover:bg-slate-600'
-                        }`}
-                        aria-label={label}
-                      />
-                    ))}
-                    <span className="text-[10px] sm:text-[11px] text-slate-400 font-medium ml-2">
-                      {activeSlide === 0 ? 'JECRC Foundation' : 'Poornima College of Engineering'}
-                    </span>
+                  <div className="w-px h-8 sm:h-10 bg-slate-800" />
+                  <div>
+                    <p className="text-xl sm:text-2xl lg:text-3xl font-black text-white">10K+</p>
+                    <p className="text-[10px] sm:text-[11px] text-slate-400 font-semibold">Developers Trained</p>
+                  </div>
+                  <div className="w-px h-8 sm:h-10 bg-slate-800" />
+                  <div>
+                    <p className="text-xl sm:text-2xl lg:text-3xl font-black text-white">15+</p>
+                    <p className="text-[10px] sm:text-[11px] text-slate-400 font-semibold">Cities Reached</p>
                   </div>
                 </div>
 
-                {/* ── Right: Slide Gallery (7 cols - responsive image focus) ── */}
+                {/* Slide indicator dots */}
+                <div className="flex items-center gap-2 pt-1 sm:pt-2">
+                  {[
+                    'JECRC Foundation',
+                    'Poornima College',
+                  ].map((label, i) => (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => setActiveSlide(i)}
+                      className={`h-2 sm:h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+                        activeSlide === i
+                          ? 'w-7 sm:w-8 bg-gradient-to-r from-[#0099e6] to-[#f97316]'
+                          : 'w-2 sm:w-2.5 bg-slate-700 hover:bg-slate-600'
+                      }`}
+                      aria-label={label}
+                    />
+                  ))}
+                  <span className="text-[10px] sm:text-[11px] text-slate-400 font-medium ml-2">
+                    {activeSlide === 0 ? 'JECRC Foundation' : 'Poornima College of Engineering'}
+                  </span>
+                </div>
+              </div>
+
+              {/* ── Right: Slide Gallery (7 cols - responsive image focus) ── */}
+              <div
+                className="lg:col-span-7 relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border border-white/10 h-[260px] xs:h-[300px] sm:h-[380px] lg:h-[520px] touch-pan-y group"
+                onTouchStart={(e) => setTouchStartX(e.touches[0].clientX)}
+                onTouchEnd={(e) => {
+                  if (touchStartX === null) return;
+                  const diff = touchStartX - e.changedTouches[0].clientX;
+                  if (diff > 40) {
+                    setActiveSlide(1);
+                  } else if (diff < -40) {
+                    setActiveSlide(0);
+                  }
+                  setTouchStartX(null);
+                }}
+              >
+                {/* Ambient glow */}
+                <div className="absolute -inset-4 bg-gradient-to-r from-cyan-500/20 via-violet-500/15 to-orange-500/20 rounded-3xl blur-2xl pointer-events-none" style={{ zIndex: -1 }} />
+
+                {/* Prev / Next buttons */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveSlide((prev) => (prev === 0 ? 1 : 0));
+                  }}
+                  aria-label="Previous event photo"
+                  className="absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/60 hover:bg-black/90 active:scale-95 backdrop-blur-md border border-white/20 text-white flex items-center justify-center transition-all shadow-lg cursor-pointer"
+                >
+                  <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveSlide((prev) => (prev === 1 ? 0 : 1));
+                  }}
+                  aria-label="Next event photo"
+                  className="absolute right-2.5 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/60 hover:bg-black/90 active:scale-95 backdrop-blur-md border border-white/20 text-white flex items-center justify-center transition-all shadow-lg cursor-pointer"
+                >
+                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+
+                {/* Slide track — slides horizontally */}
                 <div
-                  className="lg:col-span-7 relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border border-white/10 h-[260px] xs:h-[300px] sm:h-[380px] lg:h-[520px] touch-pan-y group"
-                  onTouchStart={(e) => setTouchStartX(e.touches[0].clientX)}
-                  onTouchEnd={(e) => {
-                    if (touchStartX === null) return;
-                    const diff = touchStartX - e.changedTouches[0].clientX;
-                    if (diff > 40) {
-                      setActiveSlide(1);
-                      setSlideProgress(0);
-                    } else if (diff < -40) {
-                      setActiveSlide(0);
-                      setSlideProgress(0);
-                    }
-                    setTouchStartX(null);
+                  className="flex h-full absolute inset-0 transition-transform duration-500 ease-out"
+                  style={{
+                    width: '200%',
+                    transform: `translateX(-${activeSlide * 50}%)`,
                   }}
                 >
-                  {/* Ambient glow */}
-                  <div className="absolute -inset-4 bg-gradient-to-r from-cyan-500/20 via-violet-500/15 to-orange-500/20 rounded-3xl blur-2xl pointer-events-none" style={{ zIndex: -1 }} />
-
-                  {/* Prev / Next buttons */}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActiveSlide((prev) => (prev === 0 ? 1 : 0));
-                      setSlideProgress(0);
-                    }}
-                    aria-label="Previous event photo"
-                    className="absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/60 hover:bg-black/90 active:scale-95 backdrop-blur-md border border-white/20 text-white flex items-center justify-center transition-all shadow-lg"
-                  >
-                    <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActiveSlide((prev) => (prev === 1 ? 0 : 1));
-                      setSlideProgress(0);
-                    }}
-                    aria-label="Next event photo"
-                    className="absolute right-2.5 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/60 hover:bg-black/90 active:scale-95 backdrop-blur-md border border-white/20 text-white flex items-center justify-center transition-all shadow-lg"
-                  >
-                    <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </button>
-
-                  {/* Slide track — slides horizontally */}
-                  <div
-                    className="flex h-full absolute inset-0"
-                    style={{
-                      width: '200%',
-                      transform: `translateX(${-((activeSlide + (activeSlide === 0 ? slideProgress * 0.5 : 0)) * 50)}%)`,
-                      transition: 'transform 0.35s ease-out',
-                    }}
-                  >
-                    {/* Slide 0: workshopPhoto (6.jpg) */}
-                    <div className="relative w-1/2 h-full flex-shrink-0">
-                      <Image
-                        src={workshopPhoto}
-                        alt="AI & Blockchain Workshop — JECRC Foundation"
-                        className="w-full h-full object-cover"
-                        fill
-                        placeholder="blur"
-                        sizes="(max-width: 1024px) 100vw, 60vw"
-                      />
-                      <div className="absolute inset-x-0 bottom-0 h-28 sm:h-36 bg-gradient-to-t from-black/95 via-black/60 to-transparent flex flex-col justify-end p-3.5 sm:p-6">
-                        <span className="inline-block self-start px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 backdrop-blur-sm mb-1 sm:mb-2">
-                          Hands-on Sprint
-                        </span>
-                        <p className="text-white text-xs sm:text-base lg:text-lg font-bold leading-tight sm:leading-snug">Build on Stellar Bootcamp — JECRC Foundation</p>
-                        <p className="text-slate-300 text-[10px] sm:text-xs lg:text-sm font-medium">Web3 &amp; Blockchain hands-on developer workshop</p>
-                      </div>
+                  {/* Slide 0: workshopPhoto (6.jpg) */}
+                  <div className="relative w-1/2 h-full flex-shrink-0">
+                    <Image
+                      src={workshopPhoto}
+                      alt="AI & Blockchain Workshop — JECRC Foundation"
+                      className="w-full h-full object-cover"
+                      fill
+                      placeholder="blur"
+                      sizes="(max-width: 1024px) 100vw, 60vw"
+                    />
+                    <div className="absolute inset-x-0 bottom-0 h-28 sm:h-36 bg-gradient-to-t from-black/95 via-black/60 to-transparent flex flex-col justify-end p-3.5 sm:p-6">
+                      <span className="inline-block self-start px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 backdrop-blur-sm mb-1 sm:mb-2">
+                        Hands-on Sprint
+                      </span>
+                      <p className="text-white text-xs sm:text-base lg:text-lg font-bold leading-tight sm:leading-snug">Build on Stellar Bootcamp — JECRC Foundation</p>
+                      <p className="text-slate-300 text-[10px] sm:text-xs lg:text-sm font-medium">Web3 &amp; Blockchain hands-on developer workshop</p>
                     </div>
+                  </div>
 
-                    {/* Slide 1: stellarHU (StellarHU.jpg) */}
-                    <div className="relative w-1/2 h-full flex-shrink-0">
-                      <Image
-                        src={stellarHU}
-                        alt="Stellar Bootcamp — Poornima College"
-                        className="w-full h-full object-cover"
-                        fill
-                        placeholder="blur"
-                        sizes="(max-width: 1024px) 100vw, 60vw"
-                      />
-                      <div className="absolute inset-x-0 bottom-0 h-28 sm:h-36 bg-gradient-to-t from-black/95 via-black/60 to-transparent flex flex-col justify-end p-3.5 sm:p-6">
-                        <span className="inline-block self-start px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider bg-orange-500/20 text-orange-300 border border-orange-500/30 backdrop-blur-sm mb-1 sm:mb-2">
-                          Featured Event
-                        </span>
-                        <p className="text-white text-xs sm:text-base lg:text-lg font-bold leading-tight sm:leading-snug">Build on Stellar Bootcamp — PCE</p>
-                        <p className="text-slate-300 text-[10px] sm:text-xs lg:text-sm font-medium">Poornima College of Engineering</p>
-                      </div>
+                  {/* Slide 1: stellarHU (StellarHU.jpg) */}
+                  <div className="relative w-1/2 h-full flex-shrink-0">
+                    <Image
+                      src={stellarHU}
+                      alt="Stellar Bootcamp — Poornima College"
+                      className="w-full h-full object-cover"
+                      fill
+                      placeholder="blur"
+                      sizes="(max-width: 1024px) 100vw, 60vw"
+                    />
+                    <div className="absolute inset-x-0 bottom-0 h-28 sm:h-36 bg-gradient-to-t from-black/95 via-black/60 to-transparent flex flex-col justify-end p-3.5 sm:p-6">
+                      <span className="inline-block self-start px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider bg-orange-500/20 text-orange-300 border border-orange-500/30 backdrop-blur-sm mb-1 sm:mb-2">
+                        Featured Event
+                      </span>
+                      <p className="text-white text-xs sm:text-base lg:text-lg font-bold leading-tight sm:leading-snug">Build on Stellar Bootcamp — PCE</p>
+                      <p className="text-slate-300 text-[10px] sm:text-xs lg:text-sm font-medium">Poornima College of Engineering</p>
                     </div>
                   </div>
                 </div>
-
               </div>
+
             </div>
           </div>
         </div>
