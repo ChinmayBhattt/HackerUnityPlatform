@@ -15,14 +15,42 @@ import {
 
 export function Footer() {
   const [email, setEmail] = useState('');
-  const [subscribed, setSubscribed] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const handleSubscribe = (e: React.FormEvent) => {
+  const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email.trim()) {
-      setSubscribed(true);
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail) return;
+
+    setIsSubmitting(true);
+    setStatusMessage(null);
+
+    try {
+      const res = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to subscribe. Please try again.');
+      }
+
+      setStatusMessage({
+        type: 'success',
+        text: data.message || "You're on the list! Welcome to Hacker's Unity updates.",
+      });
       setEmail('');
-      setTimeout(() => setSubscribed(false), 5000);
+    } catch (err: any) {
+      setStatusMessage({
+        type: 'error',
+        text: err?.message || 'Something went wrong. Please try again later.',
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -94,27 +122,45 @@ export function Footer() {
               Get notified about upcoming hackathons, $350K+ prize pools, and community sprints.
             </p>
 
-            {subscribed ? (
-              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
-                <span>You&apos;re on the list! Welcome to Hacker&apos;s Unity updates.</span>
+            {statusMessage?.type === 'success' ? (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-semibold">
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  <span>{statusMessage.text}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setStatusMessage(null)}
+                  className="text-[11px] text-slate-400 hover:text-white underline cursor-pointer"
+                >
+                  Subscribe another email
+                </button>
               </div>
             ) : (
-              <form onSubmit={handleSubscribe} className="flex gap-2">
-                <input
-                  type="email"
-                  required
-                  placeholder="Enter your email address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-[#0099e6] transition-colors"
-                />
-                <button
-                  type="submit"
-                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#0099e6] to-[#f97316] hover:opacity-95 text-white font-bold text-xs shrink-0 shadow-md transition-all cursor-pointer"
-                >
-                  Subscribe
-                </button>
+              <form onSubmit={handleSubscribe} className="space-y-2">
+                <div className="flex gap-2">
+                  <input
+                    type="email"
+                    required
+                    disabled={isSubmitting}
+                    placeholder="Enter your email address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-[#0099e6] disabled:opacity-50 transition-colors"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#0099e6] to-[#f97316] hover:opacity-95 disabled:opacity-50 text-white font-bold text-xs shrink-0 shadow-md transition-all cursor-pointer flex items-center justify-center min-w-[90px]"
+                  >
+                    {isSubmitting ? 'Saving...' : 'Subscribe'}
+                  </button>
+                </div>
+                {statusMessage?.type === 'error' && (
+                  <p className="text-[11px] text-rose-400 font-medium pt-0.5">
+                    {statusMessage.text}
+                  </p>
+                )}
               </form>
             )}
           </div>
