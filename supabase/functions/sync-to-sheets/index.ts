@@ -1,9 +1,10 @@
+// @ts-nocheck
 // ==============================================================================
 // Supabase Edge Function: sync-to-sheets
 // Automatically receives database webhook changes and syncs them to Google Sheets
 // ==============================================================================
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+declare const Deno: any;
 
 // Central Table Configuration (matches Next.js sync engine)
 const TABLE_CONFIG: Record<string, { sheetName: string; primaryKey: string }> = {
@@ -134,7 +135,7 @@ function formatValue(v: any): string {
 }
 
 // ─── EDGE FUNCTION HANDLER ──────────────────────────────────────────────────
-serve(async (req: Request) => {
+Deno.serve(async (req: Request) => {
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ status: 'Edge function active' }), {
       headers: { 'Content-Type': 'application/json' },

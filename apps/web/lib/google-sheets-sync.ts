@@ -94,6 +94,13 @@ export function getSpreadsheetId(): string {
   );
 }
 
+export function getAppsScriptUrl(): string | undefined {
+  return (
+    process.env.GOOGLE_APPS_SCRIPT_URL ||
+    'https://script.google.com/macros/s/AKfycbxTV-6cy3nYL7lP_OF9akdBS85QJUQPq-cnwCzA_bIkvnXPN1yvfZ40o5GMsbn5Dokavw/exec'
+  );
+}
+
 function getServiceAccountCredentials(): { clientEmail: string; privateKey: string } {
   // Option A: Full JSON credentials string in env var
   if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
@@ -190,7 +197,7 @@ export interface SheetTabInfo {
 }
 
 export async function getSpreadsheetTabs(): Promise<SheetTabInfo[]> {
-  const appsScriptUrl = process.env.GOOGLE_APPS_SCRIPT_URL;
+  const appsScriptUrl = getAppsScriptUrl();
   if (appsScriptUrl) {
     return Object.values(TABLE_CONFIG).map((c, idx) => ({
       sheetId: idx,
@@ -211,7 +218,7 @@ export async function getSpreadsheetTabs(): Promise<SheetTabInfo[]> {
 }
 
 export async function ensureSheetTabExists(sheetName: string): Promise<SheetTabInfo> {
-  const appsScriptUrl = process.env.GOOGLE_APPS_SCRIPT_URL;
+  const appsScriptUrl = getAppsScriptUrl();
   if (appsScriptUrl) {
     return {
       sheetId: 0,
@@ -376,7 +383,7 @@ export async function syncFullTable(tableName: string): Promise<TableSyncResult>
   });
 
   // If using Google Apps Script Web App alternative
-  const appsScriptUrl = process.env.GOOGLE_APPS_SCRIPT_URL;
+  const appsScriptUrl = getAppsScriptUrl();
   if (appsScriptUrl) {
     const res = await fetch(appsScriptUrl, {
       method: 'POST',
@@ -497,7 +504,7 @@ export async function handleDatabaseWebhook(
   }
 
   // If using Google Apps Script Web App alternative
-  const appsScriptUrl = process.env.GOOGLE_APPS_SCRIPT_URL;
+  const appsScriptUrl = getAppsScriptUrl();
   if (appsScriptUrl) {
     const res = await fetch(appsScriptUrl, {
       method: 'POST',
