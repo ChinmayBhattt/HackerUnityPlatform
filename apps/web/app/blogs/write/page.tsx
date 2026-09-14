@@ -72,6 +72,57 @@ const compressImage = (file: File, maxWidth = 1600, quality = 0.85): Promise<str
   });
 };
 
+// Inline markdown parser for preview and cards
+function renderInlineMarkdown(text: string): React.ReactNode[] {
+  const regex = /(\*\*.*?\*\*|\*.*?\*|`.*?`|\[.*?\]\(.*?\))/g;
+  const parts = text.split(regex);
+
+  return parts.map((part, index) => {
+    if (!part) return null;
+
+    if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
+      return (
+        <strong key={index} className="font-bold text-slate-900 dark:text-white">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    if (part.startsWith('*') && part.endsWith('*') && part.length >= 2) {
+      return (
+        <em key={index} className="italic text-slate-800 dark:text-slate-200">
+          {part.slice(1, -1)}
+        </em>
+      );
+    }
+    if (part.startsWith('`') && part.endsWith('`') && part.length >= 2) {
+      return (
+        <code
+          key={index}
+          className="px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-white/[0.08] text-sky-500 font-mono text-xs"
+        >
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    const linkMatch = part.match(/^\[(.*?)\]\((.*?)\)$/);
+    if (linkMatch) {
+      return (
+        <a
+          key={index}
+          href={linkMatch[2]}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#0099e6] hover:underline font-semibold"
+        >
+          {linkMatch[1]}
+        </a>
+      );
+    }
+
+    return <React.Fragment key={index}>{part}</React.Fragment>;
+  });
+}
+
 const DOMAINS = [
   'Agentic AI',
   'Space',
@@ -227,29 +278,174 @@ export default function WriteBlogPage() {
     return `${mins} min read`;
   }, [title, subtitle, content]);
 
-  // Insert markdown tag at cursor
-  const insertFormatting = (prefix: string, suffix: string = '') => {
+  // Insert or toggle inline markdown (Bold, Italic, Inline Code)
+  const applyInlineFormat = (prefix: string, suffix: string, defaultPlaceholder: string = 'text') => {
     const textarea = textareaRef.current;
     if (!textarea) return;
 
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const previousText = textarea.value;
-    const selected = previousText.substring(start, end) || 'text';
+    const start = textarea.selectionStart ?? 0;
+    const end = textarea.selectionEnd ?? 0;
+    const val = textarea.value;
+    const selected = val.substring(start, end);
 
-    const replacement = `${prefix}${selected}${suffix}`;
-    const newContent =
-      previousText.substring(0, start) + replacement + previousText.substring(end);
+    // Case 1: selected text itself is wrapped in prefix & suffix e.g. "**bold**"
+    if (
+      selected.length >= prefix.length + suffix.length &&
+      selected.startsWith(prefix) &&
+      selected.endsWith(suffix)
+    ) {
+      const unwrapped = selected.slice(prefix.length, -suffix.length);
+      const newContent = val.substring(0, start) + unwrapped + val.substring(end);
+      setContent(newContent);
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start, start + unwrapped.length);
+      }, 0);
+      return;
+    }
 
+    // Case 2: selection is surrounded by prefix & suffix in document
+    if (
+      start >= prefix.length &&
+      end + suffix.length <= val.length &&
+      val.substring(start - prefix.length, start) === prefix &&
+      val.substring(end, end + suffix.length) === suffix
+    ) {
+      const newContent =
+        val.substring(0, start - prefix.length) + selected + val.substring(end + suffix.length);
+      setContent(newContent);
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start - prefix.length, end - prefix.length);
+      }, 0);
+      return;
+    }
+
+    // Case 3: text is selected -> wrap it
+    if (selected.length > 0) {
+      const wrapped = `${prefix}${selected}${suffix}`;
+      const newContent = val.substring(0, start) + wrapped + val.substring(end);
+      setContent(newContent);
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + prefix.length, start + prefix.length + selected.length);
+      }, 0);
+      return;
+    }
+
+    // Case 4: nothing selected -> insert placeholder and select it for quick typing
+    const wrapped = `${prefix}${defaultPlaceholder}${suffix}`;
+    const newContent = val.substring(0, start) + wrapped + val.substring(end);
     setContent(newContent);
-
     setTimeout(() => {
       textarea.focus();
-      textarea.setSelectionRange(
-        start + prefix.length,
-        start + prefix.length + selected.length
-      );
-    }, 10);
+      textarea.setSelectionRange(start + prefix.length, start + prefix.length + defaultPlaceholder.length);
+    }, 0);
+  };
+
+  // Block formatting (Heading 2, Heading 3, Bullet list, Numbered list, Blockquote)
+  const applyBlockFormat = (linePrefix: string, defaultPlaceholder: string = 'Heading') => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart ?? 0;
+    const end = textarea.selectionEnd ?? 0;
+    const val = textarea.value;
+
+    const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+    let lineEnd = val.indexOf('\n', end);
+    if (lineEnd === -1) lineEnd = val.length;
+
+    const currentLine = val.substring(lineStart, lineEnd);
+    const selectedText = val.substring(start, end);
+
+    if (start === end && currentLine.trim().length === 0) {
+      // Empty line: insert prefix + placeholder
+      const replacement = `${linePrefix} ${defaultPlaceholder}`;
+      const newContent = val.substring(0, lineStart) + replacement + val.substring(lineEnd);
+      setContent(newContent);
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(lineStart + linePrefix.length + 1, lineStart + replacement.length);
+      }, 0);
+      return;
+    }
+
+    if (start === end) {
+      // Current line has text: replace/add prefix
+      const cleanLine = currentLine.replace(/^#{1,6}\s+|^[-*]\s+|^\d+\.\s+|^>\s+/, '');
+      const replacement = `${linePrefix} ${cleanLine}`;
+      const newContent = val.substring(0, lineStart) + replacement + val.substring(lineEnd);
+      setContent(newContent);
+      setTimeout(() => {
+        textarea.focus();
+        const cursor = lineStart + replacement.length;
+        textarea.setSelectionRange(cursor, cursor);
+      }, 0);
+      return;
+    }
+
+    // Selection across lines
+    const lines = selectedText.split('\n');
+    const formatted = lines
+      .map((l) => `${linePrefix} ${l.replace(/^#{1,6}\s+|^[-*]\s+|^\d+\.\s+|^>\s+/, '')}`)
+      .join('\n');
+    const newContent = val.substring(0, start) + formatted + val.substring(end);
+    setContent(newContent);
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start, start + formatted.length);
+    }, 0);
+  };
+
+  const applyCodeBlock = () => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart ?? 0;
+    const end = textarea.selectionEnd ?? 0;
+    const val = textarea.value;
+    const selected = val.substring(start, end);
+    const codePlaceholder = selected || '// Write code here\nconsole.log("Hello Hacker");';
+    const block = `\n\`\`\`typescript\n${codePlaceholder}\n\`\`\`\n`;
+    const newContent = val.substring(0, start) + block + val.substring(end);
+    setContent(newContent);
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + 15, start + 15 + codePlaceholder.length);
+    }, 0);
+  };
+
+  const applyLink = () => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart ?? 0;
+    const end = textarea.selectionEnd ?? 0;
+    const val = textarea.value;
+    const selected = val.substring(start, end);
+    const linkText = selected || 'link text';
+    const replacement = `[${linkText}](https://)`;
+    const newContent = val.substring(0, start) + replacement + val.substring(end);
+    setContent(newContent);
+    setTimeout(() => {
+      textarea.focus();
+      if (!selected) {
+        textarea.setSelectionRange(start + 1, start + 1 + linkText.length);
+      } else {
+        textarea.setSelectionRange(start + linkText.length + 3, start + linkText.length + 11);
+      }
+    }, 0);
+  };
+
+  const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b') {
+      e.preventDefault();
+      applyInlineFormat('**', '**', 'bold text');
+    } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'i') {
+      e.preventDefault();
+      applyInlineFormat('*', '*', 'italic text');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -675,24 +871,27 @@ export default function WriteBlogPage() {
                   <div className="flex flex-wrap items-center gap-1">
                     <button
                       type="button"
-                      onClick={() => insertFormatting('**', '**')}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => applyInlineFormat('**', '**', 'bold text')}
                       className="p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/[0.08] hover:text-[#0099e6] transition-colors cursor-pointer"
-                      title="Bold (**text**)"
+                      title="Bold (**text**) [⌘B / Ctrl+B]"
                     >
                       <Bold className="w-3.5 h-3.5" />
                     </button>
                     <button
                       type="button"
-                      onClick={() => insertFormatting('*', '*')}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => applyInlineFormat('*', '*', 'italic text')}
                       className="p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/[0.08] hover:text-[#0099e6] transition-colors cursor-pointer"
-                      title="Italic (*text*)"
+                      title="Italic (*text*) [⌘I / Ctrl+I]"
                     >
                       <Italic className="w-3.5 h-3.5" />
                     </button>
                     <div className="w-[1px] h-4 bg-slate-200 dark:bg-white/[0.1] mx-0.5" />
                     <button
                       type="button"
-                      onClick={() => insertFormatting('\n### ')}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => applyBlockFormat('###', 'Heading 3')}
                       className="p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/[0.08] hover:text-[#0099e6] transition-colors cursor-pointer"
                       title="Heading 3 (### Heading)"
                     >
@@ -700,7 +899,8 @@ export default function WriteBlogPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => insertFormatting('\n## ')}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => applyBlockFormat('##', 'Heading 2')}
                       className="p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/[0.08] hover:text-[#0099e6] transition-colors cursor-pointer"
                       title="Heading 2 (## Heading)"
                     >
@@ -709,7 +909,8 @@ export default function WriteBlogPage() {
                     <div className="w-[1px] h-4 bg-slate-200 dark:bg-white/[0.1] mx-0.5" />
                     <button
                       type="button"
-                      onClick={() => insertFormatting('\n- ')}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => applyBlockFormat('-', 'List item')}
                       className="p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/[0.08] hover:text-[#0099e6] transition-colors cursor-pointer"
                       title="Bullet List (- item)"
                     >
@@ -717,7 +918,8 @@ export default function WriteBlogPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => insertFormatting('\n1. ')}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => applyBlockFormat('1.', 'Numbered item')}
                       className="p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/[0.08] hover:text-[#0099e6] transition-colors cursor-pointer"
                       title="Numbered List (1. item)"
                     >
@@ -725,15 +927,17 @@ export default function WriteBlogPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => insertFormatting('\n```typescript\n', '\n```')}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={applyCodeBlock}
                       className="p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/[0.08] hover:text-[#0099e6] transition-colors cursor-pointer"
-                      title="Code block"
+                      title="Code block (```code```)"
                     >
                       <Code className="w-3.5 h-3.5" />
                     </button>
                     <button
                       type="button"
-                      onClick={() => insertFormatting('\n> ')}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => applyBlockFormat('>', 'Quote')}
                       className="p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/[0.08] hover:text-[#0099e6] transition-colors cursor-pointer"
                       title="Quote (> quote)"
                     >
@@ -741,7 +945,8 @@ export default function WriteBlogPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => insertFormatting('[', '](https://example.com)')}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={applyLink}
                       className="p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/[0.08] hover:text-[#0099e6] transition-colors cursor-pointer"
                       title="Link [text](url)"
                     >
@@ -760,6 +965,7 @@ export default function WriteBlogPage() {
                     rows={16}
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
+                    onKeyDown={handleTextareaKeyDown}
                     placeholder="Write your tech playbook using markdown headings, bullets, code blocks..."
                     className="w-full h-full min-h-[360px] bg-transparent text-sm sm:text-base text-slate-900 dark:text-slate-100 font-mono outline-none resize-y leading-relaxed"
                   />
@@ -771,14 +977,14 @@ export default function WriteBlogPage() {
                         if (trimmed.startsWith('### ')) {
                           return (
                             <h3 key={idx} className="text-lg sm:text-xl font-black text-slate-900 dark:text-white pt-2">
-                              {trimmed.replace(/^###\s+/, '')}
+                              {renderInlineMarkdown(trimmed.replace(/^###\s+/, ''))}
                             </h3>
                           );
                         }
                         if (trimmed.startsWith('## ')) {
                           return (
                             <h2 key={idx} className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white pt-3">
-                              {trimmed.replace(/^##\s+/, '')}
+                              {renderInlineMarkdown(trimmed.replace(/^##\s+/, ''))}
                             </h2>
                           );
                         }
@@ -793,19 +999,28 @@ export default function WriteBlogPage() {
                           return (
                             <ul key={idx} className="list-disc list-inside space-y-1 my-2 text-slate-700 dark:text-slate-300">
                               {trimmed.split('\n').map((line, lIdx) => (
-                                <li key={lIdx}>{line.replace(/^[-*]\s+/, '')}</li>
+                                <li key={lIdx}>{renderInlineMarkdown(line.replace(/^[-*]\s+/, ''))}</li>
                               ))}
                             </ul>
+                          );
+                        }
+                        if (/^\d+\.\s+/.test(trimmed)) {
+                          return (
+                            <ol key={idx} className="list-decimal list-inside space-y-1 my-2 text-slate-700 dark:text-slate-300">
+                              {trimmed.split('\n').map((line, lIdx) => (
+                                <li key={lIdx}>{renderInlineMarkdown(line.replace(/^\d+\.\s+/, ''))}</li>
+                              ))}
+                            </ol>
                           );
                         }
                         if (trimmed.startsWith('> ')) {
                           return (
                             <blockquote key={idx} className="border-l-4 border-[#0099e6] pl-4 py-1 italic text-slate-600 dark:text-slate-400">
-                              {trimmed.replace(/^>\s+/, '')}
+                              {renderInlineMarkdown(trimmed.replace(/^>\s+/, ''))}
                             </blockquote>
                           );
                         }
-                        return <p key={idx}>{trimmed}</p>;
+                        return <p key={idx}>{renderInlineMarkdown(trimmed)}</p>;
                       })
                     ) : (
                       <p className="text-slate-400 italic">No content yet. Write something in the Write tab!</p>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -21,6 +21,56 @@ import {
   Plus,
 } from 'lucide-react';
 import { BLOG_POSTS, BlogPost } from '@/lib/blogs-data';
+
+function renderInlineMarkdown(text: string): React.ReactNode[] {
+  const regex = /(\*\*.*?\*\*|\*.*?\*|`.*?`|\[.*?\]\(.*?\))/g;
+  const parts = text.split(regex);
+
+  return parts.map((part, index) => {
+    if (!part) return null;
+
+    if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
+      return (
+        <strong key={index} className="font-bold text-slate-900 dark:text-white">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    if (part.startsWith('*') && part.endsWith('*') && part.length >= 2) {
+      return (
+        <em key={index} className="italic text-slate-800 dark:text-slate-200">
+          {part.slice(1, -1)}
+        </em>
+      );
+    }
+    if (part.startsWith('`') && part.endsWith('`') && part.length >= 2) {
+      return (
+        <code
+          key={index}
+          className="px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-white/[0.08] text-sky-500 font-mono text-xs"
+        >
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    const linkMatch = part.match(/^\[(.*?)\]\((.*?)\)$/);
+    if (linkMatch) {
+      return (
+        <a
+          key={index}
+          href={linkMatch[2]}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#0099e6] hover:underline font-semibold"
+        >
+          {linkMatch[1]}
+        </a>
+      );
+    }
+
+    return <React.Fragment key={index}>{part}</React.Fragment>;
+  });
+}
 
 const CATEGORIES = [
   'ALL',
@@ -81,12 +131,8 @@ export default function BlogsPage() {
 
   const currentFeaturedBlog = useMemo(() => {
     if (!blogsList.length) return null;
-    if (activeCategory === 'ALL') {
-      return blogsList.find((b) => b.featured) || blogsList[0];
-    }
-    const inCat = blogsList.filter((b) => b.category === activeCategory);
-    return inCat.find((b) => b.featured) || inCat[0] || blogsList.find((b) => b.featured) || blogsList[0];
-  }, [blogsList, activeCategory]);
+    return blogsList.find((b) => b.featured) || blogsList[0];
+  }, [blogsList]);
 
   const filteredBlogs = useMemo(() => {
     return blogsList.filter((post) => {
@@ -153,7 +199,11 @@ export default function BlogsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-end">
             <div className="lg:col-span-7 space-y-2">
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.12]">
-                Hackathons, playbooks &amp;{' '}
+                Hackathons,{' '}
+                <span className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 dark:from-amber-400 dark:via-orange-400 dark:to-rose-400 bg-clip-text text-transparent">
+                  playbooks
+                </span>{' '}
+                &amp;{' '}
                 <span className="font-serif italic font-normal text-[#0099e6] dark:text-sky-400">
                   field notes
                 </span>
@@ -545,20 +595,20 @@ export default function BlogsPage() {
                         key={index}
                         className="text-lg sm:text-xl font-black text-slate-900 dark:text-white pt-3 pb-1 tracking-tight"
                       >
-                        {paragraph.replace('### ', '')}
+                        {renderInlineMarkdown(paragraph.replace('### ', ''))}
                       </h4>
                     );
                   }
                   if (paragraph.startsWith('- ')) {
                     return (
                       <li key={index} className="ml-4 list-disc text-slate-600 dark:text-slate-300">
-                        {paragraph.replace('- ', '')}
+                        {renderInlineMarkdown(paragraph.replace('- ', ''))}
                       </li>
                     );
                   }
                   return (
                     <p key={index} className="leading-relaxed">
-                      {paragraph}
+                      {renderInlineMarkdown(paragraph)}
                     </p>
                   );
                 })}
