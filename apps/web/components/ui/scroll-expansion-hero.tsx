@@ -321,7 +321,10 @@ export function ScrollExpandMedia({
           <motion.div
             className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-red-950/85 border border-red-500/50 shadow-md backdrop-blur-sm"
             style={{
-              transform: useTransform(subtitleTranslateX, (val) => `translateX(-${val}vw)`),
+              transform: useTransform(
+                subtitleTranslateX,
+                (val) => `translateX(calc(-${isMobile ? 18 : 36}px - ${val}vw))`
+              ),
             }}
           >
             <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-red-400 animate-ping" />
@@ -336,7 +339,10 @@ export function ScrollExpandMedia({
             onClick={handleToggleExpand}
             className="flex items-center gap-2 px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full bg-slate-950/95 border border-sky-400/50 shadow-lg backdrop-blur-sm pointer-events-auto cursor-pointer active:scale-95 transition-transform"
             style={{
-              transform: useTransform(subtitleTranslateX, (val) => `translateX(${val}vw)`),
+              transform: useTransform(
+                subtitleTranslateX,
+                (val) => `translateX(calc(${isMobile ? 18 : 36}px + ${val}vw))`
+              ),
             }}
           >
             <span className="relative flex h-2 w-2">
