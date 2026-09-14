@@ -1,0 +1,149 @@
+'use client';
+
+import { ScrollExpandMedia } from '@/components/ui/scroll-expansion-hero';
+import { 
+  Rocket, 
+  Award, 
+  Users, 
+  Gift, 
+  ArrowRight, 
+  ExternalLink 
+} from 'lucide-react';
+
+export function CampusAmbassadorSection() {
+  const benefits = [
+    {
+      icon: Rocket,
+      title: 'Host Hackathons',
+      desc: 'Platform sponsorship, judging scorecards & prize pool assistance.',
+      color: 'bg-blue-950/40 border-blue-500/30 text-sky-400',
+    },
+    {
+      icon: Users,
+      title: 'Leader Mentorship',
+      desc: 'Direct 1-on-1 AMAs with engineers & CTOs from Amazon & Microsoft.',
+      color: 'bg-orange-950/40 border-orange-500/30 text-orange-400',
+    },
+    {
+      icon: Gift,
+      title: 'Swag & VIP Perks',
+      desc: 'Ambassador hoodies, limited edition stickers & hackathon passes.',
+      color: 'bg-purple-950/40 border-purple-500/30 text-purple-400',
+    },
+    {
+      icon: Award,
+      title: 'Official LOR & Cert',
+      desc: 'Verifiable leadership credentials and LinkedIn endorsements.',
+      color: 'bg-emerald-950/40 border-emerald-500/30 text-emerald-400',
+    },
+  ];
+
+  return (
+    <section className="relative w-full overflow-hidden bg-[#05070f]" aria-label="Campus Ambassador Program">
+      <ScrollExpandMedia
+        mediaType="image"
+        mediaSrc="/assets/campus-ambassador/hackers-expanded.jpg"
+        bgImageSrc="/assets/campus-ambassador/bg-arena.jpg"
+        title="CAMPUS AMBASSADOR"
+        date="Lead Your College Chapter"
+        scrollToExpand="Tap / Scroll to Expand"
+      >
+        <div className="w-full max-w-4xl mx-auto flex flex-col items-center text-center px-3 sm:px-6 py-2 sm:py-5">
+          {/* Animated Header Badge */}
+          <div className="inline-flex items-center gap-1.5 px-3 py-0.5 sm:py-1 rounded-full bg-slate-950/90 border border-sky-500/30 shadow-md backdrop-blur-sm mb-1.5 sm:mb-3">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-gradient-to-r from-red-500 to-sky-400" />
+            </span>
+            <span className="text-[9px] sm:text-xs font-black uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-sky-300 to-white">
+              Applications Open • Nationwide Chapters 2026
+            </span>
+          </div>
+
+          {/* Core Headline */}
+          <h2 className="text-xl sm:text-3xl lg:text-5xl font-black text-white tracking-tight leading-[1.15] mb-1 sm:mb-2">
+            Become{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-rose-400 to-sky-400 drop-shadow-[0_0_25px_rgba(239,68,68,0.5)]">
+              Campus Ambassador
+            </span>
+          </h2>
+
+          <p className="max-w-xl text-[11px] sm:text-sm text-slate-300 font-medium leading-snug mb-2.5 sm:mb-5 line-clamp-2">
+            Lead Hacker’s Unity at your college. Organize premier campus hackathons, inspire student builders, 
+            and unlock exclusive industry mentorship, verified credentials & custom swag.
+          </p>
+
+          {/* 4 Feature Cards Grid (Always 2x2 for mobile compactness) */}
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full text-left mb-2.5 sm:mb-5">
+            {benefits.map((b, idx) => {
+              const Icon = b.icon;
+              return (
+                <div
+                  key={idx}
+                  className={`relative p-2 sm:p-3.5 rounded-lg sm:rounded-xl border backdrop-blur-sm transition-transform ${b.color}`}
+                >
+                  <div className="flex items-start gap-2 sm:gap-2.5">
+                    <div className="p-1 sm:p-1.5 rounded-md bg-white/10 border border-white/10 shrink-0 mt-0.5">
+                      <Icon className="w-3 h-3 sm:w-4 sm:h-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-[10px] sm:text-xs font-bold text-white truncate">
+                        {b.title}
+                      </h3>
+                      <p className="text-[9px] sm:text-[11px] text-slate-300 leading-tight line-clamp-2">
+                        {b.desc}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Quick Metrics Bar */}
+          <div className="grid grid-cols-4 gap-1.5 sm:gap-2 w-full py-1.5 sm:py-2 px-2 sm:px-4 rounded-lg sm:rounded-xl bg-slate-950/80 border border-white/10 mb-2.5 sm:mb-5">
+            <div className="text-center">
+              <div className="text-xs sm:text-lg font-black text-sky-400">50+</div>
+              <div className="text-[8px] sm:text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Colleges</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xs sm:text-lg font-black text-orange-400">50k+</div>
+              <div className="text-[8px] sm:text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Builders</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xs sm:text-lg font-black text-emerald-400">₹50L+</div>
+              <div className="text-[8px] sm:text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Grants</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xs sm:text-lg font-black text-purple-400">100%</div>
+              <div className="text-[8px] sm:text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Free</div>
+            </div>
+          </div>
+
+          {/* Action CTAs */}
+          <div className="flex flex-row items-center justify-center gap-2 sm:gap-3 w-full">
+            <a
+              href="https://tally.so/r/q4o22k"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-1.5 px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl font-black text-[11px] sm:text-xs text-white bg-gradient-to-r from-red-600 via-orange-500 to-sky-500 hover:from-red-500 hover:to-sky-400 shadow-md transition-transform active:scale-95 cursor-pointer"
+            >
+              <span>Apply for Campus Ambassador</span>
+              <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+            </a>
+
+            <a
+              href="#join-team"
+              className="inline-flex items-center justify-center gap-1 px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl font-bold text-[10px] sm:text-xs text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
+            >
+              <span>Core Roles</span>
+              <ExternalLink className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+            </a>
+          </div>
+        </div>
+      </ScrollExpandMedia>
+    </section>
+  );
+}
+
+export default CampusAmbassadorSection;

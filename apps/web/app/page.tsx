@@ -28,6 +28,7 @@ import { AiHeroPanel } from '@/components/ai-hero-panel';
 import { PodcastSection } from '@/components/podcast-section';
 import { TestimonialsSection } from '@/components/testimonials-section';
 import { JoinTeamSection } from '@/components/join-team-section';
+import { CampusAmbassadorSection } from '@/components/campus-ambassador-section';
 
 // Event gallery photos
 import galleryStage from '@/assets/hackstorm_stage.jpg';
@@ -883,6 +884,9 @@ export default function HomePage() {
 
       {/* ─── Join Hacker's Unity Team CTA ──────────────────────────── */}
       <JoinTeamSection />
+
+      {/* ─── Become Campus Ambassador (3D Scroll Media Expansion Hero) ─ */}
+      <CampusAmbassadorSection />
 
       {/* ─── Industry Leader Testimonials (H2S Style) ─────────────── */}
       <TestimonialsSection />
