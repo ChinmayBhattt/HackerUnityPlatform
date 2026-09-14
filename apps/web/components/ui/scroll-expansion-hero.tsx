@@ -37,15 +37,21 @@ export function ScrollExpandMedia({
   const [isMobile, setIsMobile] = useState(false);
   const [isFullyExpanded, setIsFullyExpanded] = useState(false);
 
-  // Target progress (0 to 1) controlled by scroll/wheel
+  // Accumulated scroll distance in pixels
+  const accumulatedRef = useRef(0);
   const progressVal = useRef(0);
   const progressMotion = useMotionValue(0);
 
+  // Calibration distances for cinematic unskippable feel
+  const START_BUFFER = 120; // 120px delay where screen rests unexpanded so user arrives properly
+  const ZOOM_DISTANCE = 750; // Distance over which zoom/split completes
+  const END_BUFFER = 150;   // 150px rest buffer where content is held expanded before scrolling down
+
   // High performance spring
   const smoothProgress = useSpring(progressMotion, {
-    stiffness: 300,
-    damping: 35,
-    mass: 0.8,
+    stiffness: 260,
+    damping: 32,
+    mass: 0.85,
     restDelta: 0.001,
   });
 
@@ -68,53 +74,81 @@ export function ScrollExpandMedia({
   // Touch handling
   const touchStartYRef = useRef<number | null>(null);
 
-  // Wheel and Touch interception logic with zero lag
+  // Wheel and Touch interception logic with zero lag and anti-skip protection
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
 
     const handleWheel = (e: WheelEvent) => {
       const rect = section.getBoundingClientRect();
-      const isAlignedAtTop = rect.top >= -35 && rect.top <= 35;
-      const isInViewport = rect.top <= 80 && rect.bottom >= window.innerHeight - 80;
+      const isAlignedAtTop = rect.top >= -25 && rect.top <= 25;
+      const isInViewport = rect.top <= 50 && rect.bottom >= window.innerHeight - 50;
 
       if (!isInViewport) return;
 
       const deltaY = e.deltaY;
+      // Clamp deltaY so fast scrolling cannot skip the animation in 1 tick
+      const maxDelta = 40;
+      const clampedDelta = Math.sign(deltaY) * Math.min(Math.abs(deltaY), maxDelta);
+
+      const maxAccumulated = START_BUFFER + ZOOM_DISTANCE + END_BUFFER;
 
       // Scrolling Down
       if (deltaY > 0) {
-        if (progressVal.current < 0.999) {
-          e.preventDefault();
+        // Only trigger lock when section has actually arrived at the top
+        if (isAlignedAtTop || rect.top <= 10) {
+          if (accumulatedRef.current < maxAccumulated) {
+            e.preventDefault();
 
-          const currentScroll = window.scrollY;
-          const targetScroll = currentScroll + rect.top;
-          if (Math.abs(rect.top) > 2) {
-            window.scrollTo({ top: targetScroll, behavior: 'instant' as ScrollBehavior });
+            // Snap cleanly to top of section
+            const currentScroll = window.scrollY;
+            const targetScroll = currentScroll + rect.top;
+            if (Math.abs(rect.top) > 1.5) {
+              window.scrollTo({ top: targetScroll, behavior: 'instant' as ScrollBehavior });
+            }
+
+            accumulatedRef.current = Math.min(maxAccumulated, accumulatedRef.current + clampedDelta);
+
+            // Calculate progress with initial rest buffer
+            let currentProgress = 0;
+            if (accumulatedRef.current > START_BUFFER) {
+              currentProgress = Math.min(
+                1,
+                (accumulatedRef.current - START_BUFFER) / ZOOM_DISTANCE
+              );
+            }
+
+            progressVal.current = currentProgress;
+            progressMotion.set(currentProgress);
           }
-
-          const sensitivity = 0.0018;
-          const next = Math.min(1, progressVal.current + deltaY * sensitivity);
-          progressVal.current = next;
-          progressMotion.set(next);
+          // If accumulatedRef reaches maxAccumulated, lock releases and user scrolls naturally down
         }
       }
       // Scrolling Up
       else if (deltaY < 0) {
-        if (isAlignedAtTop && progressVal.current > 0.001) {
+        if (isAlignedAtTop && accumulatedRef.current > 0) {
           e.preventDefault();
 
           const currentScroll = window.scrollY;
           const targetScroll = currentScroll + rect.top;
-          if (Math.abs(rect.top) > 2) {
+          if (Math.abs(rect.top) > 1.5) {
             window.scrollTo({ top: targetScroll, behavior: 'instant' as ScrollBehavior });
           }
 
-          const sensitivity = 0.0018;
-          const next = Math.max(0, progressVal.current + deltaY * sensitivity);
-          progressVal.current = next;
-          progressMotion.set(next);
+          accumulatedRef.current = Math.max(0, accumulatedRef.current + clampedDelta);
+
+          let currentProgress = 0;
+          if (accumulatedRef.current > START_BUFFER) {
+            currentProgress = Math.min(
+              1,
+              (accumulatedRef.current - START_BUFFER) / ZOOM_DISTANCE
+            );
+          }
+
+          progressVal.current = currentProgress;
+          progressMotion.set(currentProgress);
         }
+        // If accumulatedRef is 0, user scrolls naturally up
       }
     };
 
@@ -125,27 +159,40 @@ export function ScrollExpandMedia({
     const handleTouchMove = (e: TouchEvent) => {
       if (touchStartYRef.current === null) return;
       const currentY = e.touches[0].clientY;
-      const deltaY = touchStartYRef.current - currentY;
+      const rawDelta = touchStartYRef.current - currentY;
+      const clampedDelta = Math.sign(rawDelta) * Math.min(Math.abs(rawDelta), 30);
 
       const rect = section.getBoundingClientRect();
-      const isAlignedAtTop = rect.top >= -40 && rect.top <= 40;
-      const isInViewport = rect.top <= 80 && rect.bottom >= window.innerHeight - 80;
+      const isAlignedAtTop = rect.top >= -30 && rect.top <= 30;
+      const isInViewport = rect.top <= 50 && rect.bottom >= window.innerHeight - 50;
 
       if (!isInViewport) return;
 
-      if (deltaY > 0 && progressVal.current < 0.999) {
+      const maxAccumulated = START_BUFFER + ZOOM_DISTANCE + END_BUFFER;
+
+      if (rawDelta > 0 && (isAlignedAtTop || rect.top <= 10) && accumulatedRef.current < maxAccumulated) {
         e.preventDefault();
-        const sensitivity = 0.004;
-        const next = Math.min(1, progressVal.current + deltaY * sensitivity);
-        progressVal.current = next;
-        progressMotion.set(next);
+        accumulatedRef.current = Math.min(maxAccumulated, accumulatedRef.current + clampedDelta);
+
+        let currentProgress = 0;
+        if (accumulatedRef.current > START_BUFFER) {
+          currentProgress = Math.min(1, (accumulatedRef.current - START_BUFFER) / ZOOM_DISTANCE);
+        }
+
+        progressVal.current = currentProgress;
+        progressMotion.set(currentProgress);
         touchStartYRef.current = currentY;
-      } else if (deltaY < 0 && isAlignedAtTop && progressVal.current > 0.001) {
+      } else if (rawDelta < 0 && isAlignedAtTop && accumulatedRef.current > 0) {
         e.preventDefault();
-        const sensitivity = 0.004;
-        const next = Math.max(0, progressVal.current + deltaY * sensitivity);
-        progressVal.current = next;
-        progressMotion.set(next);
+        accumulatedRef.current = Math.max(0, accumulatedRef.current + clampedDelta);
+
+        let currentProgress = 0;
+        if (accumulatedRef.current > START_BUFFER) {
+          currentProgress = Math.min(1, (accumulatedRef.current - START_BUFFER) / ZOOM_DISTANCE);
+        }
+
+        progressVal.current = currentProgress;
+        progressMotion.set(currentProgress);
         touchStartYRef.current = currentY;
       }
     };
@@ -169,9 +216,15 @@ export function ScrollExpandMedia({
 
   // Click / Tap to toggle expansion
   const handleToggleExpand = useCallback(() => {
-    const next = progressVal.current < 0.5 ? 1 : 0;
-    progressVal.current = next;
-    progressMotion.set(next);
+    if (progressVal.current < 0.5) {
+      accumulatedRef.current = START_BUFFER + ZOOM_DISTANCE;
+      progressVal.current = 1;
+      progressMotion.set(1);
+    } else {
+      accumulatedRef.current = 0;
+      progressVal.current = 0;
+      progressMotion.set(0);
+    }
   }, [progressMotion]);
 
   // Derived transforms using GPU scale and translate
