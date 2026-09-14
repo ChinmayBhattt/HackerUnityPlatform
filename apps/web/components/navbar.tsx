@@ -467,6 +467,20 @@ export function Navbar() {
                     <Sparkles className="w-3.5 h-3.5 text-[#ea580c]" />
                     <span>Tech Events</span>
                   </Link>
+                  <Link
+                    href="/podcasts"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${pathname.startsWith('/podcasts')
+                        ? 'text-[#1ed760] font-bold bg-emerald-50/70 dark:bg-emerald-500/10'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/[0.04]'
+                      }`}
+                  >
+                    <Headphones className="w-3.5 h-3.5 text-[#1ed760]" />
+                    <span>Podcasts</span>
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-[#1ed760]/20 text-[#1ed760] border border-[#1ed760]/30 leading-none">
+                      NEW
+                    </span>
+                  </Link>
                 </div>
               )}
             </div>
