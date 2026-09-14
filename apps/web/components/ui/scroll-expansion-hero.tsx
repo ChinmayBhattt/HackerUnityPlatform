@@ -42,16 +42,16 @@ export function ScrollExpandMedia({
   const progressVal = useRef(0);
   const progressMotion = useMotionValue(0);
 
-  // Calibration distances for cinematic unskippable feel
-  const START_BUFFER = 120; // 120px delay where screen rests unexpanded so user arrives properly
-  const ZOOM_DISTANCE = 750; // Distance over which zoom/split completes
-  const END_BUFFER = 150;   // 150px rest buffer where content is held expanded before scrolling down
+  // Calibration distances tuned for responsive mobile & desktop
+  const START_BUFFER = isMobile ? 40 : 120;
+  const ZOOM_DISTANCE = isMobile ? 260 : 750;
+  const END_BUFFER = isMobile ? 60 : 150;
 
-  // High performance spring
+  // Ultra-fluid 60fps spring physics
   const smoothProgress = useSpring(progressMotion, {
-    stiffness: 260,
-    damping: 32,
-    mass: 0.85,
+    stiffness: isMobile ? 320 : 260,
+    damping: isMobile ? 28 : 32,
+    mass: 0.8,
     restDelta: 0.001,
   });
 
@@ -64,20 +64,25 @@ export function ScrollExpandMedia({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Update boolean fully expanded state when progress hits ~0.95
+  // Update fully expanded boolean state
   useEffect(() => {
     return smoothProgress.on('change', (val) => {
-      setIsFullyExpanded(val >= 0.95);
+      setIsFullyExpanded(val >= 0.94);
     });
   }, [smoothProgress]);
 
-  // Touch handling
+  // Touch handling references
   const touchStartYRef = useRef<number | null>(null);
 
   // Wheel and Touch interception logic with zero lag and anti-skip protection
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
+
+    const startBuffer = isMobile ? 40 : 120;
+    const zoomDistance = isMobile ? 260 : 750;
+    const endBuffer = isMobile ? 60 : 150;
+    const maxAccumulated = startBuffer + zoomDistance + endBuffer;
 
     const handleWheel = (e: WheelEvent) => {
       const rect = section.getBoundingClientRect();
@@ -87,20 +92,16 @@ export function ScrollExpandMedia({
       if (!isInViewport) return;
 
       const deltaY = e.deltaY;
-      // Clamp deltaY so fast scrolling cannot skip the animation in 1 tick
+      // Clamp deltaY so fast flick cannot skip the animation in 1 tick
       const maxDelta = 40;
       const clampedDelta = Math.sign(deltaY) * Math.min(Math.abs(deltaY), maxDelta);
 
-      const maxAccumulated = START_BUFFER + ZOOM_DISTANCE + END_BUFFER;
-
       // Scrolling Down
       if (deltaY > 0) {
-        // Only trigger lock when section has actually arrived at the top
         if (isAlignedAtTop || rect.top <= 10) {
           if (accumulatedRef.current < maxAccumulated) {
             e.preventDefault();
 
-            // Snap cleanly to top of section
             const currentScroll = window.scrollY;
             const targetScroll = currentScroll + rect.top;
             if (Math.abs(rect.top) > 1.5) {
@@ -109,19 +110,17 @@ export function ScrollExpandMedia({
 
             accumulatedRef.current = Math.min(maxAccumulated, accumulatedRef.current + clampedDelta);
 
-            // Calculate progress with initial rest buffer
             let currentProgress = 0;
-            if (accumulatedRef.current > START_BUFFER) {
+            if (accumulatedRef.current > startBuffer) {
               currentProgress = Math.min(
                 1,
-                (accumulatedRef.current - START_BUFFER) / ZOOM_DISTANCE
+                (accumulatedRef.current - startBuffer) / zoomDistance
               );
             }
 
             progressVal.current = currentProgress;
             progressMotion.set(currentProgress);
           }
-          // If accumulatedRef reaches maxAccumulated, lock releases and user scrolls naturally down
         }
       }
       // Scrolling Up
@@ -138,17 +137,16 @@ export function ScrollExpandMedia({
           accumulatedRef.current = Math.max(0, accumulatedRef.current + clampedDelta);
 
           let currentProgress = 0;
-          if (accumulatedRef.current > START_BUFFER) {
+          if (accumulatedRef.current > startBuffer) {
             currentProgress = Math.min(
               1,
-              (accumulatedRef.current - START_BUFFER) / ZOOM_DISTANCE
+              (accumulatedRef.current - startBuffer) / zoomDistance
             );
           }
 
           progressVal.current = currentProgress;
           progressMotion.set(currentProgress);
         }
-        // If accumulatedRef is 0, user scrolls naturally up
       }
     };
 
@@ -160,23 +158,23 @@ export function ScrollExpandMedia({
       if (touchStartYRef.current === null) return;
       const currentY = e.touches[0].clientY;
       const rawDelta = touchStartYRef.current - currentY;
-      const clampedDelta = Math.sign(rawDelta) * Math.min(Math.abs(rawDelta), 30);
+      // On mobile, allow responsive touch step without blocking native scroll completely
+      const clampedDelta = Math.sign(rawDelta) * Math.min(Math.abs(rawDelta), 35);
 
       const rect = section.getBoundingClientRect();
-      const isAlignedAtTop = rect.top >= -30 && rect.top <= 30;
-      const isInViewport = rect.top <= 50 && rect.bottom >= window.innerHeight - 50;
+      const isAlignedAtTop = rect.top >= -25 && rect.top <= 25;
+      const isInViewport = rect.top <= 30 && rect.bottom >= window.innerHeight - 30;
 
       if (!isInViewport) return;
 
-      const maxAccumulated = START_BUFFER + ZOOM_DISTANCE + END_BUFFER;
-
-      if (rawDelta > 0 && (isAlignedAtTop || rect.top <= 10) && accumulatedRef.current < maxAccumulated) {
+      if (rawDelta > 0 && (isAlignedAtTop || rect.top <= 5) && accumulatedRef.current < maxAccumulated) {
+        // Prevent scrolling off while zooming on mobile
         e.preventDefault();
-        accumulatedRef.current = Math.min(maxAccumulated, accumulatedRef.current + clampedDelta);
+        accumulatedRef.current = Math.min(maxAccumulated, accumulatedRef.current + clampedDelta * 1.3);
 
         let currentProgress = 0;
-        if (accumulatedRef.current > START_BUFFER) {
-          currentProgress = Math.min(1, (accumulatedRef.current - START_BUFFER) / ZOOM_DISTANCE);
+        if (accumulatedRef.current > startBuffer) {
+          currentProgress = Math.min(1, (accumulatedRef.current - startBuffer) / zoomDistance);
         }
 
         progressVal.current = currentProgress;
@@ -184,11 +182,11 @@ export function ScrollExpandMedia({
         touchStartYRef.current = currentY;
       } else if (rawDelta < 0 && isAlignedAtTop && accumulatedRef.current > 0) {
         e.preventDefault();
-        accumulatedRef.current = Math.max(0, accumulatedRef.current + clampedDelta);
+        accumulatedRef.current = Math.max(0, accumulatedRef.current + clampedDelta * 1.3);
 
         let currentProgress = 0;
-        if (accumulatedRef.current > START_BUFFER) {
-          currentProgress = Math.min(1, (accumulatedRef.current - START_BUFFER) / ZOOM_DISTANCE);
+        if (accumulatedRef.current > startBuffer) {
+          currentProgress = Math.min(1, (accumulatedRef.current - startBuffer) / zoomDistance);
         }
 
         progressVal.current = currentProgress;
@@ -212,12 +210,14 @@ export function ScrollExpandMedia({
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [progressMotion]);
+  }, [progressMotion, isMobile]);
 
-  // Click / Tap to toggle expansion
+  // Click / Tap to toggle expansion instantly with smooth 60fps spring
   const handleToggleExpand = useCallback(() => {
+    const startBuffer = isMobile ? 40 : 120;
+    const zoomDistance = isMobile ? 260 : 750;
     if (progressVal.current < 0.5) {
-      accumulatedRef.current = START_BUFFER + ZOOM_DISTANCE;
+      accumulatedRef.current = startBuffer + zoomDistance;
       progressVal.current = 1;
       progressMotion.set(1);
     } else {
@@ -225,15 +225,15 @@ export function ScrollExpandMedia({
       progressVal.current = 0;
       progressMotion.set(0);
     }
-  }, [progressMotion]);
+  }, [progressMotion, isMobile]);
 
   // Derived transforms using GPU scale and translate
-  const cardScale = useTransform(smoothProgress, [0, 0.92], [isMobile ? 0.58 : 0.44, 1.0]);
+  const cardScale = useTransform(smoothProgress, [0, 0.92], [isMobile ? 0.48 : 0.44, 1.0]);
   const cardBorderRadius = useTransform(smoothProgress, [0, 0.9], [isMobile ? 18 : 32, 0]);
 
   // Split text translation: First word left, second word right
-  const textTranslateX = useTransform(smoothProgress, [0, 0.75], [0, isMobile ? 100 : 90]);
-  const subtitleTranslateX = useTransform(smoothProgress, [0, 0.75], [0, isMobile ? 85 : 70]);
+  const textTranslateX = useTransform(smoothProgress, [0, 0.75], [0, isMobile ? 90 : 90]);
+  const subtitleTranslateX = useTransform(smoothProgress, [0, 0.75], [0, isMobile ? 80 : 70]);
   const textOpacity = useTransform(smoothProgress, [0, 0.5], [1, 0]);
 
   // Background fade
@@ -244,7 +244,7 @@ export function ScrollExpandMedia({
 
   // Revealed content animation
   const contentOpacity = useTransform(smoothProgress, [0.75, 0.96], [0, 1]);
-  const contentY = useTransform(smoothProgress, [0.75, 0.96], [30, 0]);
+  const contentY = useTransform(smoothProgress, [0.75, 0.96], [25, 0]);
   const contentScale = useTransform(smoothProgress, [0.75, 0.96], [0.96, 1]);
 
   const words = title ? title.trim().split(' ') : [];
@@ -254,7 +254,7 @@ export function ScrollExpandMedia({
   return (
     <div
       ref={sectionRef}
-      className="relative w-full h-[100dvh] min-h-[580px] max-h-[1080px] overflow-hidden bg-[#05070f] flex items-center justify-center select-none"
+      className="relative w-full h-[100dvh] min-h-[560px] max-h-[1080px] overflow-hidden bg-[#05070f] flex items-center justify-center select-none touch-pan-y"
       id="campus-ambassador"
     >
       {/* ─── Background Layer (Hackathon Arena) ────────────────────────── */}
@@ -277,12 +277,12 @@ export function ScrollExpandMedia({
       {/* ─── Center Photo Card (Zooms Forward to Front) ───────────────── */}
       <motion.div
         onClick={!isFullyExpanded ? handleToggleExpand : undefined}
-        className="relative z-10 w-full h-full overflow-hidden flex items-center justify-center origin-center cursor-default transform-gpu"
+        className="relative z-10 w-full h-full overflow-hidden flex items-center justify-center origin-center cursor-pointer transform-gpu"
         style={{
           scale: cardScale,
           borderRadius: cardBorderRadius,
           boxShadow: isMobile
-            ? '0 0 35px rgba(0, 153, 230, 0.35)'
+            ? '0 0 25px rgba(0, 153, 230, 0.3)'
             : '0 0 70px rgba(0, 153, 230, 0.35), 0 0 100px rgba(239, 68, 68, 0.25)',
         }}
       >
@@ -337,16 +337,16 @@ export function ScrollExpandMedia({
         </motion.div>
       </motion.div>
 
-      {/* ─── Big Splitting Titles (Slides Left & Right) ───────────────── */}
+      {/* ─── Big Splitting Titles (Slides Left & Right on ALL screens) ── */}
       <motion.div
-        className={`absolute inset-0 z-15 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-4 md:gap-6 pointer-events-none px-3 transform-gpu ${
+        className={`absolute inset-0 z-15 flex flex-row items-center justify-between sm:justify-center gap-2 sm:gap-6 md:gap-8 pointer-events-none px-3 sm:px-8 transform-gpu ${
           textBlend ? 'mix-blend-difference' : ''
         }`}
         style={{ opacity: textOpacity }}
       >
         {/* Left word: moves far left */}
         <motion.h2
-          className="text-2xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-rose-400 to-sky-300 drop-shadow-[0_2px_15px_rgba(239,68,68,0.7)] uppercase text-center"
+          className="text-xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-rose-400 to-sky-300 drop-shadow-[0_2px_15px_rgba(239,68,68,0.7)] uppercase text-left sm:text-center"
           style={{
             transform: useTransform(textTranslateX, (val) => `translateX(-${val}vw)`),
           }}
@@ -356,7 +356,7 @@ export function ScrollExpandMedia({
 
         {/* Right word: moves far right */}
         <motion.h2
-          className="text-2xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-blue-400 to-indigo-300 drop-shadow-[0_2px_15px_rgba(0,153,230,0.7)] uppercase text-center"
+          className="text-xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-blue-400 to-indigo-300 drop-shadow-[0_2px_15px_rgba(0,153,230,0.7)] uppercase text-right sm:text-center"
           style={{
             transform: useTransform(textTranslateX, (val) => `translateX(${val}vw)`),
           }}
@@ -365,18 +365,18 @@ export function ScrollExpandMedia({
         </motion.h2>
       </motion.div>
 
-      {/* ─── Subtitle & Scroll Hint (Below Image, slides Left & Right) ── */}
+      {/* ─── Subtitle & Scroll Hint (Below Image, Staggered Left & Right) ── */}
       <motion.div
-        className="absolute z-20 bottom-3 sm:bottom-6 md:bottom-8 inset-x-0 flex flex-col items-center justify-center gap-1.5 sm:gap-2.5 pointer-events-none px-4 transform-gpu"
+        className="absolute z-20 bottom-5 sm:bottom-7 md:bottom-8 inset-x-0 flex flex-col items-center justify-center gap-1.5 sm:gap-2.5 pointer-events-none px-4 transform-gpu"
         style={{ opacity: textOpacity }}
       >
         {date && (
           <motion.div
-            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-red-950/85 border border-red-500/50 shadow-md backdrop-blur-sm"
+            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-red-950/90 border border-red-500/50 shadow-md backdrop-blur-sm"
             style={{
               transform: useTransform(
                 subtitleTranslateX,
-                (val) => `translateX(calc(-${isMobile ? 18 : 36}px - ${val}vw))`
+                (val) => `translateX(calc(-${isMobile ? 22 : 36}px - ${val}vw))`
               ),
             }}
           >
@@ -394,7 +394,7 @@ export function ScrollExpandMedia({
             style={{
               transform: useTransform(
                 subtitleTranslateX,
-                (val) => `translateX(calc(${isMobile ? 18 : 36}px + ${val}vw))`
+                (val) => `translateX(calc(${isMobile ? 22 : 36}px + ${val}vw))`
               ),
             }}
           >

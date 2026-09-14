@@ -329,21 +329,21 @@ export function Footer() {
           </div>
 
           {/* Col 4: Corporate Info & Direct Support (4 cols - H2S Style) */}
-          <div className="col-span-1 md:col-span-2 lg:col-span-4 space-y-4">
+          <div className="col-span-2 md:col-span-2 lg:col-span-4 space-y-4 pt-2 md:pt-0">
             <h4 className="text-xs font-bold uppercase tracking-wider text-white border-l-2 border-slate-500 pl-2.5 mb-4">
               Office & Contact
             </h4>
             <ul className="space-y-3.5 text-xs">
               {/* Address */}
-              <li className="flex items-start gap-2.5">
+              <li className="flex items-start gap-2.5 min-w-0">
                 <MapPin className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
-                <div className="space-y-0.5">
+                <div className="space-y-0.5 min-w-0 flex-1">
                   <span className="font-bold text-slate-300 block">Registered Headquarters</span>
                   <a
                     href="https://www.google.com/maps/place/Hacker's+Unity/@19.1172167,72.8642732,17z/data=!3m1!4b1!4m15!1m7!3m6!1s0x3be7c97b475f9155:0xe5b912633881889!2sHacker's+Unity!8m2!3d19.1172116!4d72.8668481!16s%2Fg%2F11zxcs0wbc!3m6!1s0x3be7c97b475f9155:0xe5b912633881889!8m2!3d19.1172116!4d72.8668481!15sCg5IYWNrZXIncyBVbml0eZIBGGV2ZW50X21hbmFnZW1lbnRfY29tcGFueeABAA!16s%2Fg%2F11zxcs0wbc?entry=ttu&g_ep=EgoyMDI2MDgzMC4wIKXMDSoASAFQAw%3D%3D"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-slate-400 hover:text-white transition-colors leading-relaxed block"
+                    className="text-slate-400 hover:text-white transition-colors leading-relaxed block break-words"
                   >
                     A-41, Vinmar House, 1st Floor, Road no. 2, MIDC, Andheri East, Mumbai - 400093
                   </a>
@@ -351,13 +351,13 @@ export function Footer() {
               </li>
 
               {/* Email */}
-              <li className="flex items-start gap-2.5">
+              <li className="flex items-start gap-2.5 min-w-0">
                 <Mail className="w-4 h-4 text-[#f97316] shrink-0 mt-0.5" />
-                <div className="space-y-0.5">
+                <div className="space-y-0.5 min-w-0 flex-1">
                   <span className="font-bold text-slate-300 block">General & Partnership Inquiries</span>
                   <a
                     href="mailto:hackerunity.community@gmail.com"
-                    className="text-slate-400 hover:text-[#0099e6] transition-colors"
+                    className="text-slate-400 hover:text-[#0099e6] transition-colors break-all block"
                   >
                     hackerunity.community@gmail.com
                   </a>
@@ -365,16 +365,16 @@ export function Footer() {
               </li>
 
               {/* Phone */}
-              <li className="flex items-start gap-2.5">
+              <li className="flex items-start gap-2.5 min-w-0">
                 <Phone className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                <div className="space-y-0.5">
+                <div className="space-y-0.5 min-w-0 flex-1">
                   <span className="font-bold text-slate-300 block">Phone Support</span>
                   <div className="flex flex-wrap gap-x-3 gap-y-1 text-slate-400">
-                    <a href="tel:+918852924002" className="hover:text-white transition-colors">
+                    <a href="tel:+918852924002" className="hover:text-white transition-colors whitespace-nowrap">
                       +91 8852924002
                     </a>
                     <span>•</span>
-                    <a href="tel:+919324264950" className="hover:text-white transition-colors">
+                    <a href="tel:+919324264950" className="hover:text-white transition-colors whitespace-nowrap">
                       +91 9324264950
                     </a>
                   </div>
