@@ -138,7 +138,7 @@ function AmbassadorContent() {
 
 export function CampusAmbassadorSection() {
   return (
-    <section id="campus-ambassador" className="relative w-full overflow-hidden bg-[#05070f]" aria-label="Campus Ambassador Program">
+    <section id="campus-ambassador" className="relative w-full bg-[#05070f]" aria-label="Campus Ambassador Program">
       {/* ─── Mobile View: Static, Zero-Lag, Directly Shows Final State ───────── */}
       <div className="block md:hidden relative w-full min-h-[100dvh] flex items-center justify-center py-10 px-3 overflow-hidden bg-[#05070f]">
         {/* Hackers background photo */}
