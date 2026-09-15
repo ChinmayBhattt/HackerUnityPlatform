@@ -7,7 +7,6 @@ import {
   Play,
   Search,
   Sparkles,
-  ExternalLink,
   X,
   Clock,
   User,
@@ -20,7 +19,6 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { FaSpotify, FaYoutube } from 'react-icons/fa6';
-import { SiApplepodcasts, SiAudible } from 'react-icons/si';
 import { PODCAST_EPISODES, PodcastEpisode } from '@/lib/podcasts-data';
 
 function GooglePodcastsIcon({ className = 'w-5 h-5' }: { className?: string }) {
@@ -39,42 +37,23 @@ const STREAMING_PARTNERS = [
   {
     name: 'Spotify',
     badge: 'Official Channel',
-    url: 'https://open.spotify.com/show/033xfxrsyIWADgql3syRnL',
     icon: FaSpotify,
     iconColor: 'text-[#1DB954]',
-    color: 'hover:border-[#1DB954]/50 hover:text-[#1DB954]',
+    color: 'border-emerald-500/20 dark:border-emerald-500/15',
   },
   {
     name: 'YouTube Podcasts',
-    badge: 'Watch Episodes',
-    url: 'https://youtube.com/@hackerunity',
+    badge: 'Video & Audio Episodes',
     icon: FaYoutube,
     iconColor: 'text-[#FF0000]',
-    color: 'hover:border-red-500/50 hover:text-red-500',
+    color: 'border-red-500/20 dark:border-red-500/15',
   },
   {
     name: 'Google Podcasts',
     badge: 'Web & Android',
-    url: 'https://podcasts.google.com',
     icon: GooglePodcastsIcon,
     iconColor: 'text-amber-500',
-    color: 'hover:border-amber-500/50 hover:text-amber-400',
-  },
-  {
-    name: 'Apple Podcasts',
-    badge: 'iOS & macOS',
-    url: 'https://podcasts.apple.com',
-    icon: SiApplepodcasts,
-    iconColor: 'text-purple-400',
-    color: 'hover:border-purple-500/50 hover:text-purple-400',
-  },
-  {
-    name: 'Audible',
-    badge: 'Audio Editions',
-    url: 'https://www.audible.com',
-    icon: SiAudible,
-    iconColor: 'text-orange-400',
-    color: 'hover:border-orange-500/50 hover:text-orange-400',
+    color: 'border-amber-500/20 dark:border-amber-500/15',
   },
 ];
 
@@ -428,30 +407,26 @@ export default function PodcastsPage() {
               </span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 max-w-4xl">
               {STREAMING_PARTNERS.map((partner) => {
                 const Icon = partner.icon;
                 return (
-                  <a
+                  <div
                     key={partner.name}
-                    href={partner.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`group flex items-center gap-3 p-3.5 rounded-2xl bg-white/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] backdrop-blur-md shadow-xs hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 cursor-pointer ${partner.color}`}
+                    className={`flex items-center gap-3 p-3.5 rounded-2xl bg-white/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] backdrop-blur-md shadow-xs select-none ${partner.color}`}
                   >
-                    <div className={`p-2 rounded-xl bg-slate-100 dark:bg-white/[0.06] group-hover:scale-110 transition-transform ${partner.iconColor}`}>
+                    <div className={`p-2 rounded-xl bg-slate-100 dark:bg-white/[0.06] ${partner.iconColor}`}>
                       <Icon className="w-5 h-5" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-inherit transition-colors truncate">
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
                         {partner.name}
                       </p>
                       <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
                         {partner.badge}
                       </p>
                     </div>
-                    <ExternalLink className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </a>
+                  </div>
                 );
               })}
             </div>
