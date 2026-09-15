@@ -19,8 +19,64 @@ import {
   Tv,
   CheckCircle2,
 } from 'lucide-react';
-import { FaYoutube } from 'react-icons/fa6';
+import { FaSpotify, FaYoutube } from 'react-icons/fa6';
+import { SiApplepodcasts, SiAudible } from 'react-icons/si';
 import { PODCAST_EPISODES, PodcastEpisode } from '@/lib/podcasts-data';
+
+function GooglePodcastsIcon({ className = 'w-5 h-5' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="3" y="9.5" width="2.5" height="5" rx="1.25" fill="#EA4335" />
+      <rect x="7" y="6.5" width="2.5" height="11" rx="1.25" fill="#FBBC04" />
+      <rect x="11" y="3.5" width="2.5" height="17" rx="1.25" fill="#4285F4" />
+      <rect x="15" y="6.5" width="2.5" height="11" rx="1.25" fill="#34A853" />
+      <rect x="19" y="9.5" width="2.5" height="5" rx="1.25" fill="#EA4335" />
+    </svg>
+  );
+}
+
+const STREAMING_PARTNERS = [
+  {
+    name: 'Spotify',
+    badge: 'Official Channel',
+    url: 'https://open.spotify.com/show/033xfxrsyIWADgql3syRnL',
+    icon: FaSpotify,
+    iconColor: 'text-[#1DB954]',
+    color: 'hover:border-[#1DB954]/50 hover:text-[#1DB954]',
+  },
+  {
+    name: 'YouTube Podcasts',
+    badge: 'Watch Episodes',
+    url: 'https://youtube.com/@hackerunity',
+    icon: FaYoutube,
+    iconColor: 'text-[#FF0000]',
+    color: 'hover:border-red-500/50 hover:text-red-500',
+  },
+  {
+    name: 'Google Podcasts',
+    badge: 'Web & Android',
+    url: 'https://podcasts.google.com',
+    icon: GooglePodcastsIcon,
+    iconColor: 'text-amber-500',
+    color: 'hover:border-amber-500/50 hover:text-amber-400',
+  },
+  {
+    name: 'Apple Podcasts',
+    badge: 'iOS & macOS',
+    url: 'https://podcasts.apple.com',
+    icon: SiApplepodcasts,
+    iconColor: 'text-purple-400',
+    color: 'hover:border-purple-500/50 hover:text-purple-400',
+  },
+  {
+    name: 'Audible',
+    badge: 'Audio Editions',
+    url: 'https://www.audible.com',
+    icon: SiAudible,
+    iconColor: 'text-orange-400',
+    color: 'hover:border-orange-500/50 hover:text-orange-400',
+  },
+];
 
 const CATEGORIES = [
   { id: 'ALL', label: 'ALL' },
@@ -80,55 +136,89 @@ export default function PodcastsPage() {
 
   return (
     <div className="flex-1 min-h-screen bg-slate-50/70 dark:bg-[#05070d] text-slate-900 dark:text-slate-100 selection:bg-[#0099e6] selection:text-white relative overflow-hidden transition-colors duration-300">
-      {/* ─── Hero Section (Matching SheKunj Reference) ───────────────── */}
-      <div className="relative pt-10 pb-16 lg:pb-24 border-b border-slate-200/80 dark:border-slate-800/80 bg-gradient-to-b from-white/70 via-transparent to-transparent dark:from-[#0c1220] dark:via-[#070a13] dark:to-[#05070d] backdrop-blur-xs">
-        {/* Background Ambient Glows & Watermark */}
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#0099e6]/12 dark:bg-[#0099e6]/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-1/3 right-10 w-96 h-96 bg-[#0099e6]/12 dark:bg-[#0099e6]/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-10 right-1/4 w-80 h-80 bg-[#f97316]/10 dark:bg-[#f97316]/05 rounded-full blur-3xl pointer-events-none" />
+      {/* ─── Hero Section (Matching PlayPod Reference) ───────────────── */}
+      <div className="relative pt-10 pb-16 lg:pb-20 border-b border-slate-200/80 dark:border-slate-800/80 bg-gradient-to-b from-white/70 via-transparent to-transparent dark:from-[#0c1220] dark:via-[#070a13] dark:to-[#05070d] backdrop-blur-xs">
+        {/* Background Ambient Glows, Waves & Watermark */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#0099e6]/15 dark:bg-[#0099e6]/12 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/3 right-10 w-96 h-96 bg-[#f97316]/10 dark:bg-[#f97316]/08 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-10 right-1/4 w-80 h-80 bg-[#0099e6]/10 dark:bg-[#0099e6]/08 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Decorative Sound Wave SVG in Background */}
+        <svg
+          className="absolute inset-0 w-full h-full opacity-[0.035] dark:opacity-[0.06] pointer-events-none"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 1440 400"
+          fill="none"
+        >
+          <path
+            d="M0,160 C320,300 420,-40 720,160 C1020,360 1120,40 1440,180"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeDasharray="6 6"
+          />
+          <path
+            d="M0,220 C300,100 500,320 800,180 C1100,40 1300,280 1440,200"
+            stroke="currentColor"
+            strokeWidth="2"
+          />
+        </svg>
+
         <div className="absolute -top-10 -left-10 select-none pointer-events-none text-[120px] sm:text-[180px] font-black tracking-tighter text-slate-900/[0.02] dark:text-white/[0.02] uppercase leading-none">
           PODCASTS
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-            {/* Left Content Column */}
+            {/* ─── Left Content Column ─────────────────────────────── */}
             <div className="lg:col-span-7 space-y-6">
-              {/* Category Pill */}
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/70 dark:bg-white/[0.05] border border-slate-200/90 dark:border-white/10 text-xs font-bold text-slate-700 dark:text-slate-300 backdrop-blur-xl shadow-xs">
-                <Headphones className="w-3.5 h-3.5 text-[#0099e6]" />
-                <span className="tracking-wider uppercase text-[11px]">Hacker&apos;s Unity Podcasts</span>
+              {/* Category Pill Tag */}
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 dark:bg-white/[0.05] border border-slate-200/90 dark:border-white/10 text-xs font-mono font-bold text-[#0099e6] dark:text-[#38bdf8] backdrop-blur-xl shadow-xs">
+                <span className="text-slate-400 dark:text-slate-500 font-normal">/</span>
+                <span className="tracking-[0.25em] uppercase text-[11px]">T E C H &nbsp; P O D C A S T</span>
               </div>
 
               {/* Main Headline */}
-              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.15]">
-                Voices that <span className="text-slate-900 dark:text-white">matter</span>,{' '}
+              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.12]">
+                Podcasts that{' '}
                 <span className="bg-gradient-to-r from-[#0099e6] via-sky-400 to-[#f97316] bg-clip-text text-transparent">
-                  stories that resonate.
+                  inspire to grow
                 </span>
               </h1>
 
               {/* Description */}
               <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-xl leading-relaxed font-normal">
-                Discover the latest top-notch stories from a worldwide community of tech leaders, quality informative engineering podcasts and verified mentors.
+                Real-world career journeys, engineering leadership, and insider secrets from senior tech leaders across <strong className="text-slate-900 dark:text-white">Amazon, Microsoft, Macy&apos;s, TCS, and IEEE</strong>.
               </p>
 
-              {/* Action Buttons */}
+              {/* Action Buttons: Discover, Watch on Spotify, Watch on YouTube */}
               <div className="flex flex-wrap items-center gap-3 pt-2">
+                {/* Discover podcasts */}
                 <button
                   type="button"
                   onClick={handleScrollToEpisodes}
-                  className="px-6 py-3.5 rounded-2xl bg-[#0099e6] hover:bg-[#0088cc] text-white text-xs sm:text-sm font-bold shadow-lg shadow-sky-500/25 border border-sky-400/30 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
+                  className="px-5 py-3 rounded-2xl bg-[#0099e6] hover:bg-[#0088cc] text-white text-xs sm:text-sm font-bold shadow-lg shadow-sky-500/20 border border-sky-400/30 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
                 >
                   <span>Discover podcasts</span>
                   <ArrowDown className="w-4 h-4" />
                 </button>
 
+                {/* Watch on Spotify */}
+                <a
+                  href="https://open.spotify.com/show/033xfxrsyIWADgql3syRnL"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-5 py-3 rounded-2xl bg-[#1DB954] hover:bg-[#1aa34a] text-white text-xs sm:text-sm font-bold shadow-lg shadow-emerald-600/25 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 border border-emerald-400/30"
+                >
+                  <FaSpotify className="w-4 h-4" />
+                  <span>Watch on Spotify</span>
+                </a>
+
+                {/* Watch on YouTube */}
                 <a
                   href="https://youtube.com/@hackerunity"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-6 py-3.5 rounded-2xl bg-[#ea3323] hover:bg-[#d92215] text-white text-xs sm:text-sm font-bold shadow-lg shadow-red-600/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                  className="px-5 py-3 rounded-2xl bg-[#ea3323] hover:bg-[#d92215] text-white text-xs sm:text-sm font-bold shadow-lg shadow-red-600/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 border border-red-400/30"
                 >
                   <FaYoutube className="w-4 h-4" />
                   <span>Watch on YouTube</span>
@@ -138,93 +228,232 @@ export default function PodcastsPage() {
               {/* Listener Social Proof & Highlights */}
               <div className="pt-4 border-t border-slate-200/80 dark:border-white/[0.08] flex flex-wrap items-center gap-4 sm:gap-6 text-xs text-slate-500 dark:text-slate-400">
                 {/* Avatar stack */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
                   <div className="flex -space-x-2">
-                    <div className="w-7 h-7 rounded-full border-2 border-white dark:border-[#0c1220] overflow-hidden bg-slate-800">
-                      <Image src="/podcasts/kirshna.jpg" alt="Listener" width={28} height={28} className="w-full h-full object-cover" />
+                    <div className="w-8 h-8 rounded-full border-2 border-white dark:border-[#0c1220] overflow-hidden bg-slate-800 shadow-sm">
+                      <Image src="/podcasts/mihirshelar.jpg" alt="Mihir Shelar" width={32} height={32} className="w-full h-full object-cover" />
                     </div>
-                    <div className="w-7 h-7 rounded-full border-2 border-white dark:border-[#0c1220] overflow-hidden bg-slate-800">
-                      <Image src="/podcasts/ankur.jpg" alt="Listener" width={28} height={28} className="w-full h-full object-cover" />
+                    <div className="w-8 h-8 rounded-full border-2 border-white dark:border-[#0c1220] overflow-hidden bg-slate-800 shadow-sm">
+                      <Image src="/podcasts/kirshna.jpg" alt="Krishna Kishor" width={32} height={32} className="w-full h-full object-cover" />
                     </div>
-                    <div className="w-7 h-7 rounded-full border-2 border-white dark:border-[#0c1220] overflow-hidden bg-slate-800">
-                      <Image src="/podcasts/abhijitroy.jpg" alt="Listener" width={28} height={28} className="w-full h-full object-cover" />
+                    <div className="w-8 h-8 rounded-full border-2 border-white dark:border-[#0c1220] overflow-hidden bg-slate-800 shadow-sm">
+                      <Image src="/podcasts/ankur.jpg" alt="Ankur Bhatnagar" width={32} height={32} className="w-full h-full object-cover" />
                     </div>
-                    <div className="w-7 h-7 rounded-full border-2 border-white dark:border-[#0c1220] overflow-hidden bg-[#0099e6] text-white text-[9px] font-black flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-full border-2 border-white dark:border-[#0c1220] overflow-hidden bg-[#0099e6] text-white text-[9px] font-black flex items-center justify-center shadow-sm">
                       50K+
                     </div>
                   </div>
-                  <span className="font-semibold text-slate-600 dark:text-slate-300">
-                    <strong className="text-slate-900 dark:text-white">50K+ Listeners</strong> streaming on Hacker&apos;s Unity
-                  </span>
+                  <div>
+                    <p className="font-extrabold text-slate-900 dark:text-white text-xs">
+                      +50K Worldwide Listeners
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Builders &amp; Engineers tuning in
+                    </p>
+                  </div>
                 </div>
 
-                <div className="hidden sm:flex items-center gap-4 text-slate-400 dark:text-slate-500 text-[11px]">
+                <div className="hidden sm:flex items-center gap-3 text-slate-400 dark:text-slate-500 text-[11px]">
                   <span>•</span>
                   <span>Diverse Topics</span>
                   <span>•</span>
-                  <span>Expert Mentors</span>
+                  <span>Amazon, Microsoft, IEEE</span>
                   <span>•</span>
-                  <span>Anywhere, Anytime</span>
+                  <span>High Fidelity</span>
                 </div>
               </div>
             </div>
 
-            {/* Right: Featured Podcast Card (As in SheKunj reference) */}
+            {/* ─── Right: PlayPod-Inspired Podcast Hero Visual Composition ─── */}
             <div className="lg:col-span-5 flex justify-center lg:justify-end">
-              <div className="w-full max-w-sm rounded-3xl p-4 sm:p-5 bg-white/70 dark:bg-gradient-to-b dark:from-[#131b2e] dark:to-[#0a0f1d] border border-slate-200/90 dark:border-white/10 shadow-xl shadow-slate-200/60 dark:shadow-2xl dark:shadow-black/80 hover:border-[#0099e6]/50 transition-all duration-300 group backdrop-blur-xl">
-                {/* Image Container */}
-                <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden bg-slate-900 border border-slate-200/80 dark:border-white/10 mb-4">
+              <div className="relative w-full max-w-md rounded-[32px] p-5 sm:p-6 bg-slate-900/95 dark:bg-gradient-to-b dark:from-[#101728] dark:via-[#0b101c] dark:to-[#060812] border border-slate-700/60 dark:border-white/10 shadow-2xl shadow-sky-500/10 dark:shadow-black/90 backdrop-blur-2xl overflow-hidden group">
+                {/* Background Ambient Glow inside card */}
+                <div className="absolute -top-10 -right-10 w-44 h-44 bg-[#0099e6]/25 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -bottom-10 -left-10 w-44 h-44 bg-[#f97316]/20 rounded-full blur-3xl pointer-events-none" />
+
+                {/* Top Artwork Card with Green / Cyan Glow */}
+                <div className="relative aspect-[16/10] w-full rounded-2xl overflow-hidden bg-slate-950 border border-emerald-500/30 shadow-lg shadow-emerald-950/40 mb-5">
                   <Image
                     src={featuredEpisode.image}
                     alt={featuredEpisode.title}
-                    width={400}
-                    height={300}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    fill
+                    sizes="400px"
+                    className="object-cover object-top group-hover:scale-105 transition-transform duration-700 filter brightness-[0.9] contrast-[1.08]"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
 
-                  {/* Top-right Play circle */}
+                  {/* Top Header Tags inside Artwork */}
+                  <div className="absolute top-3 inset-x-3 flex items-center justify-between pointer-events-none">
+                    <span className="px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-md border border-white/10 text-emerald-300 font-mono font-extrabold text-[10px] tracking-wider uppercase">
+                      EPISODE 01 • LIVE
+                    </span>
+                    <span className="px-2.5 py-1 rounded-md bg-[#0099e6]/90 backdrop-blur-md text-white font-extrabold text-[10px] tracking-wider uppercase">
+                      {featuredEpisode.company}
+                    </span>
+                  </div>
+
+                  {/* Play Button Overlay on Artwork */}
                   <a
                     href={featuredEpisode.youtubeUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/40 text-white flex items-center justify-center transition-colors"
+                    className="absolute inset-0 m-auto w-12 h-12 rounded-full bg-red-600/90 hover:bg-red-500 text-white flex items-center justify-center shadow-xl shadow-red-950/60 hover:scale-115 active:scale-95 transition-all cursor-pointer backdrop-blur-xs"
+                    title="Play on YouTube"
                   >
-                    <Play className="w-4 h-4 fill-white ml-0.5" />
+                    <Play className="w-5 h-5 fill-current ml-0.5" />
                   </a>
 
-                  {/* Category Badge overlay */}
-                  <div className="absolute bottom-3 left-3">
-                    <span className="px-2.5 py-1 rounded-md bg-amber-500/90 backdrop-blur-md text-black font-extrabold text-[10px] tracking-wider uppercase">
-                      STARTUP &amp; BIG TECH
-                    </span>
+                  {/* Bottom title bar on artwork */}
+                  <div className="absolute bottom-3 left-3 right-3 pointer-events-none">
+                    <p className="text-white font-black text-sm drop-shadow-md truncate">
+                      {featuredEpisode.name}
+                    </p>
+                    <p className="text-slate-300 text-[11px] font-medium drop-shadow-xs truncate">
+                      {featuredEpisode.designation} at {featuredEpisode.company}
+                    </p>
                   </div>
                 </div>
 
-                {/* Card Text Content */}
-                <div className="space-y-2 mb-4">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-[#0099e6]">
-                    FEATURED
-                  </span>
-                  <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-[#0099e6] transition-colors">
-                    {featuredEpisode.title}
-                  </h3>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2">
-                    {featuredEpisode.tagline}
-                  </p>
-                </div>
+                {/* Floating Bottom Section: Mini Player (Left) & 3D Vinyl Record (Right) */}
+                <div className="relative flex items-center justify-between gap-3 pt-1">
+                  {/* Floating Mini Glass Audio Player Bar */}
+                  <div className="flex-1 rounded-2xl p-3.5 bg-white/[0.06] border border-white/10 backdrop-blur-xl shadow-lg space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="truncate">
+                        <p className="text-[11px] font-extrabold text-white truncate">
+                          Into The Tech Hyperscale
+                        </p>
+                        <p className="text-[10px] text-slate-400 truncate">
+                          {featuredEpisode.name} • {featuredEpisode.company}
+                        </p>
+                      </div>
 
-                {/* Watch Button */}
-                <a
-                  href={featuredEpisode.youtubeUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full py-3 rounded-xl bg-[#ea3323] hover:bg-[#d92215] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-red-600/20 transition-all hover:scale-[1.02] active:scale-95"
-                >
-                  <FaYoutube className="w-4 h-4" />
-                  <span>Watch on YouTube</span>
-                </a>
+                      {/* Equalizer Waveform Bars Animation */}
+                      <div className="flex items-end gap-0.5 h-4 shrink-0 px-1">
+                        <span className="w-0.5 h-2 bg-[#0099e6] rounded-full animate-[pulse_1s_ease-in-out_infinite]" />
+                        <span className="w-0.5 h-4 bg-emerald-400 rounded-full animate-[pulse_0.7s_ease-in-out_infinite]" />
+                        <span className="w-0.5 h-3 bg-[#f97316] rounded-full animate-[pulse_1.2s_ease-in-out_infinite]" />
+                        <span className="w-0.5 h-4 bg-sky-400 rounded-full animate-[pulse_0.8s_ease-in-out_infinite]" />
+                      </div>
+                    </div>
+
+                    {/* Progress Scrubber Bar */}
+                    <div className="space-y-1">
+                      <div className="w-full h-1 bg-white/15 rounded-full overflow-hidden">
+                        <div className="w-3/5 h-full bg-gradient-to-r from-[#0099e6] via-sky-400 to-[#f97316] rounded-full" />
+                      </div>
+                      <div className="flex justify-between text-[9px] font-mono text-slate-400">
+                        <span>18:42</span>
+                        <span>52:10</span>
+                      </div>
+                    </div>
+
+                    {/* Controls Row */}
+                    <div className="flex items-center justify-between pt-0.5 text-slate-300">
+                      <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                        STREAMING
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <a
+                          href="https://open.spotify.com/show/033xfxrsyIWADgql3syRnL"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-slate-400 hover:text-[#1DB954] transition-colors cursor-pointer"
+                          title="Open Spotify Show"
+                        >
+                          <FaSpotify className="w-3.5 h-3.5" />
+                        </a>
+                        <a
+                          href={featuredEpisode.youtubeUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-slate-400 hover:text-red-500 transition-colors cursor-pointer"
+                          title="Open on YouTube"
+                        >
+                          <FaYoutube className="w-3.5 h-3.5" />
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 3D Vinyl Record / CD (Overlapping disk matching reference) */}
+                  <div className="relative shrink-0 -mr-1">
+                    <a
+                      href="https://open.spotify.com/show/033xfxrsyIWADgql3syRnL"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group/vinyl relative block w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-tr from-[#0b0e14] via-[#1c2436] to-[#0b0e14] shadow-2xl border-2 border-slate-700/80 cursor-pointer overflow-hidden transition-transform duration-500 hover:scale-105 active:scale-95"
+                      title="Listen on Spotify"
+                    >
+                      {/* Concentric Grooves */}
+                      <div className="absolute inset-1.5 rounded-full border border-white/[0.08]" />
+                      <div className="absolute inset-3.5 rounded-full border border-white/[0.06]" />
+                      <div className="absolute inset-5 rounded-full border border-white/[0.08]" />
+                      <div className="absolute inset-7 rounded-full border border-white/[0.06]" />
+
+                      {/* Rotating Vinyl Texture */}
+                      <div
+                        className="absolute inset-0 rounded-full animate-[spin_16s_linear_infinite] group-hover/vinyl:[animation-play-state:paused]"
+                        style={{
+                          backgroundImage:
+                            'conic-gradient(from 0deg, transparent 0deg, rgba(255,255,255,0.06) 60deg, transparent 120deg, rgba(255,255,255,0.08) 240deg, transparent 360deg)',
+                        }}
+                      />
+
+                      {/* Center Hub / Label */}
+                      <div className="absolute inset-0 m-auto w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gradient-to-tr from-[#0099e6] to-[#f97316] p-0.5 shadow-inner flex items-center justify-center">
+                        <div className="w-full h-full rounded-full bg-[#0a0f1c] flex items-center justify-center text-white">
+                          <Play className="w-3.5 h-3.5 fill-white ml-0.5 group-hover/vinyl:scale-125 transition-transform" />
+                        </div>
+                      </div>
+                    </a>
+                  </div>
+                </div>
               </div>
+            </div>
+          </div>
+
+          {/* ─── Streaming Partners Strip (As in Reference) ─────────── */}
+          <div className="mt-12 pt-8 border-t border-slate-200/80 dark:border-white/[0.08]">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-5">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#0099e6] animate-pulse" />
+                <span className="text-[11px] font-mono uppercase tracking-widest text-slate-600 dark:text-slate-400 font-bold">
+                  Official Streaming Partners &amp; Platforms
+                </span>
+              </div>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:inline">
+                Stream free across web, mobile &amp; smart speakers
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+              {STREAMING_PARTNERS.map((partner) => {
+                const Icon = partner.icon;
+                return (
+                  <a
+                    key={partner.name}
+                    href={partner.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`group flex items-center gap-3 p-3.5 rounded-2xl bg-white/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] backdrop-blur-md shadow-xs hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 cursor-pointer ${partner.color}`}
+                  >
+                    <div className={`p-2 rounded-xl bg-slate-100 dark:bg-white/[0.06] group-hover:scale-110 transition-transform ${partner.iconColor}`}>
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-inherit transition-colors truncate">
+                        {partner.name}
+                      </p>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                        {partner.badge}
+                      </p>
+                    </div>
+                    <ExternalLink className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </a>
+                );
+              })}
             </div>
           </div>
         </div>
