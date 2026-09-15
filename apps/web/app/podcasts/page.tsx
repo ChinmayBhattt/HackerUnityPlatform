@@ -236,7 +236,7 @@ export default function PodcastsPage() {
                   <span>•</span>
                   <span>Diverse Topics</span>
                   <span>•</span>
-                  <span>Amazon, Microsoft, IEEE</span>
+                  <span>Amazon, Microsoft, TikTok</span>
                   <span>•</span>
                   <span>High Fidelity</span>
                 </div>
@@ -393,32 +393,33 @@ export default function PodcastsPage() {
             </div>
           </div>
 
-          {/* ─── Streaming Partners Strip (As in Reference) ─────────── */}
-          <div className="mt-12 pt-8 border-t border-slate-200/80 dark:border-white/[0.08]">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-5">
+          {/* ─── Streaming Partners Strip (Centered) ─────────── */}
+          <div className="mt-12 pt-8 border-t border-slate-200/80 dark:border-white/[0.08] flex flex-col items-center text-center">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 mb-6">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#0099e6] animate-pulse" />
                 <span className="text-[11px] font-mono uppercase tracking-widest text-slate-600 dark:text-slate-400 font-bold">
                   Official Streaming Partners &amp; Platforms
                 </span>
               </div>
-              <span className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:inline">
+              <span className="hidden sm:inline text-slate-400 dark:text-slate-600">•</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">
                 Stream free across web, mobile &amp; smart speakers
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 max-w-4xl">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5 w-full max-w-4xl mx-auto">
               {STREAMING_PARTNERS.map((partner) => {
                 const Icon = partner.icon;
                 return (
                   <div
                     key={partner.name}
-                    className={`flex items-center gap-3 p-3.5 rounded-2xl bg-white/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] backdrop-blur-md shadow-xs select-none ${partner.color}`}
+                    className={`flex items-center justify-center sm:justify-start gap-3.5 p-4 rounded-2xl bg-white/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] backdrop-blur-md shadow-xs select-none ${partner.color}`}
                   >
-                    <div className={`p-2 rounded-xl bg-slate-100 dark:bg-white/[0.06] ${partner.iconColor}`}>
+                    <div className={`p-2.5 rounded-xl bg-slate-100 dark:bg-white/[0.06] shrink-0 ${partner.iconColor}`}>
                       <Icon className="w-5 h-5" />
                     </div>
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 text-left">
                       <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
                         {partner.name}
                       </p>
