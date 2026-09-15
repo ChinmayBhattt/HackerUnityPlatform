@@ -71,17 +71,19 @@ export function ScrollExpandMedia({
     });
   }, [smoothProgress]);
 
-  // Touch handling references
-  const touchStartYRef = useRef<number | null>(null);
-
-  // Wheel and Touch interception logic with zero lag and anti-skip protection
+  // Wheel interception logic for desktop with zero lag and anti-skip protection
   useEffect(() => {
+    // Only intercept scroll expansion on desktop screens (>= 768px)
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      return;
+    }
+
     const section = sectionRef.current;
     if (!section) return;
 
-    const startBuffer = isMobile ? 40 : 120;
-    const zoomDistance = isMobile ? 260 : 750;
-    const endBuffer = isMobile ? 60 : 150;
+    const startBuffer = 120;
+    const zoomDistance = 750;
+    const endBuffer = 150;
     const maxAccumulated = startBuffer + zoomDistance + endBuffer;
 
     const handleWheel = (e: WheelEvent) => {
@@ -150,67 +152,12 @@ export function ScrollExpandMedia({
       }
     };
 
-    const handleTouchStart = (e: TouchEvent) => {
-      touchStartYRef.current = e.touches[0].clientY;
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (touchStartYRef.current === null) return;
-      const currentY = e.touches[0].clientY;
-      const rawDelta = touchStartYRef.current - currentY;
-      // On mobile, allow responsive touch step without blocking native scroll completely
-      const clampedDelta = Math.sign(rawDelta) * Math.min(Math.abs(rawDelta), 35);
-
-      const rect = section.getBoundingClientRect();
-      const isAlignedAtTop = rect.top >= -25 && rect.top <= 25;
-      const isInViewport = rect.top <= 30 && rect.bottom >= window.innerHeight - 30;
-
-      if (!isInViewport) return;
-
-      if (rawDelta > 0 && (isAlignedAtTop || rect.top <= 5) && accumulatedRef.current < maxAccumulated) {
-        // Prevent scrolling off while zooming on mobile
-        e.preventDefault();
-        accumulatedRef.current = Math.min(maxAccumulated, accumulatedRef.current + clampedDelta * 1.3);
-
-        let currentProgress = 0;
-        if (accumulatedRef.current > startBuffer) {
-          currentProgress = Math.min(1, (accumulatedRef.current - startBuffer) / zoomDistance);
-        }
-
-        progressVal.current = currentProgress;
-        progressMotion.set(currentProgress);
-        touchStartYRef.current = currentY;
-      } else if (rawDelta < 0 && isAlignedAtTop && accumulatedRef.current > 0) {
-        e.preventDefault();
-        accumulatedRef.current = Math.max(0, accumulatedRef.current + clampedDelta * 1.3);
-
-        let currentProgress = 0;
-        if (accumulatedRef.current > startBuffer) {
-          currentProgress = Math.min(1, (accumulatedRef.current - startBuffer) / zoomDistance);
-        }
-
-        progressVal.current = currentProgress;
-        progressMotion.set(currentProgress);
-        touchStartYRef.current = currentY;
-      }
-    };
-
-    const handleTouchEnd = () => {
-      touchStartYRef.current = null;
-    };
-
     window.addEventListener('wheel', handleWheel, { passive: false });
-    window.addEventListener('touchstart', handleTouchStart, { passive: true });
-    window.addEventListener('touchmove', handleTouchMove, { passive: false });
-    window.addEventListener('touchend', handleTouchEnd, { passive: true });
 
     return () => {
       window.removeEventListener('wheel', handleWheel);
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [progressMotion, isMobile]);
+  }, [progressMotion]);
 
   // Click / Tap to toggle expansion instantly with smooth 60fps spring
   const handleToggleExpand = useCallback(() => {
@@ -255,7 +202,6 @@ export function ScrollExpandMedia({
     <div
       ref={sectionRef}
       className="relative w-full h-[100dvh] min-h-[560px] max-h-[1080px] overflow-hidden bg-[#05070f] flex items-center justify-center select-none touch-pan-y"
-      id="campus-ambassador"
     >
       {/* ─── Background Layer (Hackathon Arena) ────────────────────────── */}
       <motion.div
