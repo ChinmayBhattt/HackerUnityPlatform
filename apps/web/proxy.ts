@@ -10,9 +10,14 @@ export async function proxy(request: NextRequest) {
   // Refresh session and get authenticated user
   const { supabaseResponse, user } = await updateSession(request);
 
-  const isProtectedRoute = PROTECTED_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
-  );
+  // Exclude public / semi-public invite links from protection
+  const isExcluded = pathname.startsWith('/host/join');
+
+  const isProtectedRoute =
+    !isExcluded &&
+    PROTECTED_PREFIXES.some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+    );
   const isAuthRoute = AUTH_ROUTES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
   );
@@ -21,16 +26,22 @@ export async function proxy(request: NextRequest) {
   if (isProtectedRoute && !user) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = '/login';
-    loginUrl.searchParams.set('redirectTo', pathname);
+    const fullTarget = `${pathname}${request.nextUrl.search}`;
+    loginUrl.searchParams.set('redirectTo', fullTarget);
     return NextResponse.redirect(loginUrl);
   }
 
-  // If user is authenticated and visits /login or /signup, redirect to /dashboard
+  // If user is authenticated and visits /login or /signup, redirect to redirectTo or /dashboard
   if (isAuthRoute && user) {
-    const dashboardUrl = request.nextUrl.clone();
-    dashboardUrl.pathname = '/dashboard';
-    dashboardUrl.searchParams.delete('redirectTo');
-    return NextResponse.redirect(dashboardUrl);
+    const rawRedirect =
+      request.nextUrl.searchParams.get('redirectTo') ||
+      request.nextUrl.searchParams.get('redirect');
+    const safeTarget =
+      rawRedirect && rawRedirect.startsWith('/') && !rawRedirect.startsWith('//')
+        ? rawRedirect
+        : '/dashboard';
+    const redirectUrl = new URL(safeTarget, request.nextUrl.origin);
+    return NextResponse.redirect(redirectUrl);
   }
 
   return supabaseResponse;

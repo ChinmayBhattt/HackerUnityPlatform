@@ -23,7 +23,8 @@ import { fetchInvitePreview, joinEventTeamByCode } from '@/lib/supabase-service'
 function JoinAdminContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const code = searchParams?.get('code') || searchParams?.get('token') || '';
+  const rawCode = searchParams?.get('code') || searchParams?.get('token') || '';
+  const code = rawCode.trim();
 
   const { user, supabaseUser, loading: isAuthLoading } = useAuth();
   const currentUserId = supabaseUser?.id || user?.id;
@@ -67,7 +68,7 @@ function JoinAdminContent() {
     return () => {
       isMounted = false;
     };
-  }, [code]);
+  }, [code, currentUserId]);
 
   const handleJoin = async () => {
     if (!code) return;

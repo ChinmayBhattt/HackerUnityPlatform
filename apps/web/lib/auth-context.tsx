@@ -26,7 +26,7 @@ interface AuthContextType {
     phone?: string,
     role?: UserRole
   ) => Promise<{ error?: string; needsEmailConfirmation?: boolean; message?: string }>;
-  signInWithOAuth: (provider?: 'google' | 'github') => Promise<{ error?: string }>;
+  signInWithOAuth: (provider?: 'google' | 'github', redirectTo?: string) => Promise<{ error?: string }>;
   signInWithPhone: (phone: string) => Promise<{ error?: string }>;
   verifyPhoneOtp: (phone: string, token: string) => Promise<{ error?: string }>;
   updateUserProfile: (updates: Partial<UserPublic>) => Promise<{ error?: string }>;
@@ -366,17 +366,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signInWithOAuth = async (provider: 'google' | 'github' = 'google') => {
+  const signInWithOAuth = async (provider: 'google' | 'github' = 'google', redirectTo?: string) => {
     try {
       const origin =
         typeof window !== 'undefined'
           ? window.location.origin
           : process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
+      const nextParam = redirectTo ? `?next=${encodeURIComponent(redirectTo)}` : '';
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${origin}/auth/callback`,
+          redirectTo: `${origin}/auth/callback${nextParam}`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

@@ -37,6 +37,12 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
     initialMode || (modeFromQuery === 'login' ? 'login' : 'register')
   );
 
+  const rawRedirect = searchParams.get('redirectTo') || searchParams.get('redirect');
+  const safeRedirect =
+    rawRedirect && rawRedirect.startsWith('/') && !rawRedirect.startsWith('//')
+      ? rawRedirect
+      : '/dashboard';
+
   // Form State
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -55,9 +61,9 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
   // Redirect if already logged in
   useEffect(() => {
     if (!authLoading && currentUser) {
-      router.push('/dashboard');
+      router.push(safeRedirect);
     }
-  }, [currentUser, authLoading, router]);
+  }, [currentUser, authLoading, router, safeRedirect]);
 
   // Handle Sign Up
   const handleSignUp = async (e: React.FormEvent) => {
@@ -88,7 +94,7 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
         if (res.needsEmailConfirmation) {
           setSuccessMessage(res.message || 'Check your inbox to verify your email.');
         } else {
-          router.push('/dashboard');
+          router.push(safeRedirect);
         }
       }
     } catch (err: any) {
@@ -110,7 +116,7 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
       if (res.error) {
         setErrorMessage(res.error);
       } else {
-        router.push('/dashboard');
+        router.push(safeRedirect);
       }
     } catch (err: any) {
       setErrorMessage(err.message || 'Failed to sign in. Please check your credentials.');
@@ -410,7 +416,12 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
                 <div className="space-y-2.5 pt-3">
                   <button
                     type="button"
-                    onClick={() => signInWithOAuth('google')}
+                    onClick={() =>
+                      signInWithOAuth(
+                        'google',
+                        safeRedirect !== '/dashboard' ? safeRedirect : undefined
+                      )
+                    }
                     className="w-full py-3 px-4 rounded-2xl border border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.2] hover:bg-slate-50 dark:hover:bg-white/[0.04] text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-3 transition-all cursor-pointer shadow-2xs"
                   >
                     {/* Google G SVG */}
