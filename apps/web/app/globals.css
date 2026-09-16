@@ -308,3 +308,22 @@ body {
 .gallery-row-delay-2 {
   animation-delay: 0.35s;
 }
+
+/* Metallic 3D Card Shine Animation */
+@keyframes card-shine {
+  0% {
+    transform: translateX(-100%) skewX(-25deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(350%) skewX(-25deg);
+    opacity: 0;
+  }
+}
+
+.animate-card-shine {
+  animation: card-shine 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}

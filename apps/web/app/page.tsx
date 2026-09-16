@@ -29,6 +29,7 @@ import { PodcastSection } from '@/components/podcast-section';
 import { TestimonialsSection } from '@/components/testimonials-section';
 import { JoinTeamSection } from '@/components/join-team-section';
 import { CampusAmbassadorSection } from '@/components/campus-ambassador-section';
+import { MetallicGlassCard } from '@/components/ui/metallic-glass-card';
 
 // Event gallery photos
 import galleryStage from '@/assets/hackstorm_stage.jpg';
@@ -621,35 +622,35 @@ export default function HomePage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-6 rounded-2xl bg-white dark:bg-[#0c1017] border border-slate-200/90 dark:border-white/[0.08] shadow-sm space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-500/10 border border-sky-200 dark:border-sky-500/20 flex items-center justify-center text-[#0099e6]">
+          <MetallicGlassCard glowColor="rgba(0, 153, 230, 0.25)">
+            <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-500/10 border border-sky-200/80 dark:border-sky-500/25 flex items-center justify-center text-[#0099e6] shadow-sm">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <h3 className="text-base font-bold text-slate-900 dark:text-white">A Platform to Showcase Your Talent</h3>
             <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
               Hacker’s Unity gives students the right platform to showcase their skills, ideas, creativity, and technical talent to a wider community and industry.
             </p>
-          </div>
+          </MetallicGlassCard>
 
-          <div className="p-6 rounded-2xl bg-white dark:bg-[#0c1017] border border-slate-200/90 dark:border-white/[0.08] shadow-sm space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20 flex items-center justify-center text-[#ea580c]">
+          <MetallicGlassCard glowColor="rgba(234, 88, 12, 0.25)">
+            <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-500/10 border border-orange-200/80 dark:border-orange-500/25 flex items-center justify-center text-[#ea580c] shadow-sm">
               <Zap className="w-5 h-5" />
             </div>
             <h3 className="text-base font-bold text-slate-900 dark:text-white">Don’t Just Build Projects. Build Products.</h3>
             <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
               We believe hackathons should go beyond temporary projects. Build solutions that solve real-world problems and have the potential to become real products and startups.
             </p>
-          </div>
+          </MetallicGlassCard>
 
-          <div className="p-6 rounded-2xl bg-white dark:bg-[#0c1017] border border-slate-200/90 dark:border-white/[0.08] shadow-sm space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 flex items-center justify-center text-emerald-600">
+          <MetallicGlassCard glowColor="rgba(16, 185, 129, 0.25)">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200/80 dark:border-emerald-500/25 flex items-center justify-center text-emerald-600 shadow-sm">
               <Trophy className="w-5 h-5" />
             </div>
             <h3 className="text-base font-bold text-slate-900 dark:text-white">Turn Your Idea Into a Startup</h3>
             <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
               The journey doesn't end when the hackathon does. We aim to help promising builders take their ideas forward, validate them, and grow them into impactful startups.
             </p>
-          </div>
+          </MetallicGlassCard>
         </div>
       </section>
 
