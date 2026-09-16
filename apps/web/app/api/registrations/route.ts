@@ -116,6 +116,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: insertErr.message }, { status: 500 });
     }
 
+    // Sync exact live registration count to events table
+    try {
+      const { count: exactCount } = await serverSupabase
+        .from('registrations')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_id', targetEventId);
+
+      if (typeof exactCount === 'number') {
+        await serverSupabase
+          .from('events')
+          .update({ registration_count: exactCount, updated_at: new Date().toISOString() })
+          .eq('id', targetEventId);
+      }
+    } catch (countErr) {
+      console.warn('Failed to update event registration count:', countErr);
+    }
+
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error('API /api/registrations error:', err);
