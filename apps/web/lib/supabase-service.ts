@@ -209,21 +209,14 @@ export async function fetchPublishedEvents(): Promise<ExtendedEvent[]> {
     // Merge remote list, curated platform MOCK_EVENTS, and custom events (avoiding duplicate slugs/ids)
     const map = new Map<string, ExtendedEvent>();
     
-    // 1. Seed with curated mock events
+    // 1. Seed with curated mock events (Hack in Hills #1, Code-ए-Manipal #2, etc.)
     MOCK_EVENTS.forEach((e) => {
       if (!deletedIds.includes(e.id) && !deletedIds.includes(e.slug)) {
-        map.set(e.slug, e);
+        map.set(e.id || e.slug, e);
       }
     });
 
-    // 2. Remote Supabase events overwrite or add to map
-    list.forEach((e) => {
-      if (!deletedIds.includes(e.id) && !deletedIds.includes(e.slug)) {
-        map.set(e.slug, e);
-      }
-    });
-
-    // 3. Local custom events complement (only if published/active)
+    // 2. Local custom events complement (only if published/active)
     custom.forEach((e) => {
       if (
         !deletedIds.includes(e.id) &&
@@ -231,7 +224,44 @@ export async function fetchPublishedEvents(): Promise<ExtendedEvent[]> {
         e.status !== EventStatus.PENDING_APPROVAL &&
         e.status !== EventStatus.DRAFT
       ) {
-        map.set(e.slug, e);
+        let matchedKey: string | null = null;
+        for (const [k, val] of map.entries()) {
+          if (val.id === e.id || val.slug === e.slug) {
+            matchedKey = k;
+            break;
+          }
+        }
+        if (matchedKey) {
+          map.set(matchedKey, { ...map.get(matchedKey), ...e });
+        } else {
+          map.set(e.id || e.slug, e);
+        }
+      }
+    });
+
+    // 3. Remote Supabase events overwrite everything! (True source of truth)
+    list.forEach((e) => {
+      if (!deletedIds.includes(e.id) && !deletedIds.includes(e.slug)) {
+        let matchedKey: string | null = null;
+        for (const [k, val] of map.entries()) {
+          if (
+            val.id === e.id ||
+            val.slug === e.slug ||
+            (e.id === '5d8e3b96-a647-4ecb-a24c-904729d9f7f6' &&
+              (val.id === '5d8e3b96-a647-4ecb-a24c-904729d9f7f6' ||
+                val.slug === 'code-e-manipal-2-0' ||
+                val.slug === 'evt_ai_1789569251573'))
+          ) {
+            matchedKey = k;
+            break;
+          }
+        }
+
+        if (matchedKey) {
+          map.set(matchedKey, { ...map.get(matchedKey), ...e });
+        } else {
+          map.set(e.id || e.slug, e);
+        }
       }
     });
 
@@ -296,6 +326,16 @@ export async function fetchEventBySlug(slugOrId: string): Promise<ExtendedEvent 
           .ilike('slug', decoded)
           .maybeSingle();
         data = ilikeRes.data;
+      }
+
+      // Fallback for code-e-manipal aliases
+      if (!data && (decoded === 'code-e-manipal-2-0' || decoded === 'evt_ai_1789569251573' || decoded === 'code-e-manipal')) {
+        const aliasRes = await supabase
+          .from('events')
+          .select('*')
+          .or('slug.eq.code-e-manipal-2-0,slug.eq.evt_ai_1789569251573,id.eq.5d8e3b96-a647-4ecb-a24c-904729d9f7f6')
+          .maybeSingle();
+        data = aliasRes.data;
       }
     }
 
