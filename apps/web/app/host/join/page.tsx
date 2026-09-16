@@ -58,6 +58,11 @@ function JoinAdminContent() {
         return;
       }
 
+      if (res.data?.event?.slug) {
+        router.replace(`/host/${encodeURIComponent(res.data.event.slug)}/admin/join/${encodeURIComponent(code)}`);
+        return;
+      }
+
       setEventData(res.data.event);
       setIsOwner(Boolean(res.data.isOwner));
       setIsAlreadyAdmin(Boolean(res.data.isAlreadyAdmin));

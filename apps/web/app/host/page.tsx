@@ -344,8 +344,14 @@ function HostHackathonContent() {
   };
 
   const handleCopyTeamInviteLink = () => {
-    if (!eventTeam?.inviteUrl) return;
-    navigator.clipboard.writeText(eventTeam.inviteUrl);
+    const fallbackSlug = eventTeam?.event?.slug || originalEventSlug || slug || editingEventId || 'hackathon';
+    const linkToCopy =
+      eventTeam?.inviteUrl ||
+      (typeof window !== 'undefined' && eventTeam?.inviteCode
+        ? `${window.location.origin}/host/${fallbackSlug}/admin/join/${eventTeam.inviteCode}`
+        : '');
+    if (!linkToCopy) return;
+    navigator.clipboard.writeText(linkToCopy);
     setCopiedTeamLink(true);
     setTimeout(() => setCopiedTeamLink(false), 2500);
   };
@@ -2445,8 +2451,8 @@ ${organizerName || 'Organizer'}`;
                             readOnly
                             value={
                               eventTeam?.inviteUrl ||
-                              (typeof window !== 'undefined'
-                                ? `${window.location.origin}/host/join?code=${eventTeam?.inviteCode || ''}`
+                              (typeof window !== 'undefined' && eventTeam?.inviteCode
+                                ? `${window.location.origin}/host/${eventTeam?.event?.slug || originalEventSlug || slug || editingEventId || 'hackathon'}/admin/join/${eventTeam.inviteCode}`
                                 : '')
                             }
                             className="w-full bg-transparent text-xs text-slate-800 dark:text-slate-200 font-mono focus:outline-hidden truncate"

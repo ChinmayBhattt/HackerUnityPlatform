@@ -179,7 +179,8 @@ export async function GET(req: Request) {
     }
 
     const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'https://hackersunity.com';
-    const inviteUrl = `${origin}/host/join?code=${inviteCode}`;
+    const eventSlug = event.slug || event.id;
+    const inviteUrl = `${origin}/host/${eventSlug}/admin/join/${inviteCode}`;
 
     return NextResponse.json({
       success: true,
@@ -294,7 +295,7 @@ export async function POST(req: Request) {
       }
 
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId);
-      let query = serverSupabase.from('events').select('id, organizer_id');
+      let query = serverSupabase.from('events').select('id, slug, organizer_id');
       if (isUuid) query = query.eq('id', eventId);
       else query = query.eq('slug', eventId);
 
@@ -322,10 +323,11 @@ export async function POST(req: Request) {
       }
 
       const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'https://hackersunity.com';
+      const eventSlug = event.slug || event.id;
       return NextResponse.json({
         success: true,
         inviteCode: newCode,
-        inviteUrl: `${origin}/host/join?code=${newCode}`,
+        inviteUrl: `${origin}/host/${eventSlug}/admin/join/${newCode}`,
       });
     }
 

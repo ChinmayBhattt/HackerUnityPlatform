@@ -11,7 +11,9 @@ export async function proxy(request: NextRequest) {
   const { supabaseResponse, user } = await updateSession(request);
 
   // Exclude public / semi-public invite links from protection
-  const isExcluded = pathname.startsWith('/host/join');
+  const isExcluded =
+    pathname.startsWith('/host/join') ||
+    /\/host\/[^/]+\/admin\/join/.test(pathname);
 
   const isProtectedRoute =
     !isExcluded &&
