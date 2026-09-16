@@ -325,7 +325,7 @@ function HostHackathonContent() {
 
   const loadTeamData = async (targetId?: string) => {
     const idToUse = targetId || editingEventId;
-    if (!idToUse) return;
+    if (!idToUse || idToUse.startsWith('evt_ai_') || idToUse.startsWith('draft_')) return;
     setIsLoadingTeam(true);
     setTeamError(null);
     try {
@@ -2379,7 +2379,7 @@ ${organizerName || 'Organizer'}`;
                   )}
 
                   {/* ─── INVITE LINK SECTION ─── */}
-                  {isEditMode && editingEventId ? (
+                  {isEditMode && editingEventId && !editingEventId.startsWith('evt_ai_') && !editingEventId.startsWith('draft_') ? (
                     <div className="p-5 rounded-3xl bg-gradient-to-br from-sky-50/80 via-blue-50/40 to-sky-50/80 dark:from-sky-950/30 dark:via-blue-950/20 dark:to-sky-950/30 border-2 border-sky-300/80 dark:border-sky-800/50 space-y-3.5 shadow-xs">
                       <div className="flex items-center justify-between flex-wrap gap-2">
                         <div className="flex items-center gap-2.5">

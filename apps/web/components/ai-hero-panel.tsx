@@ -387,7 +387,7 @@ export function AiHeroPanel() {
 
       sessionStorage.setItem('hackers_unity_edit_event', JSON.stringify(fullDraftEvent));
       saveDraftEvent(fullDraftEvent);
-      router.push(`/host?edit=${draftId}&step=7`);
+      router.push(`/host?edit=${draftId}&step=8`);
     } catch (err: any) {
       console.error('Error generating event with AI:', err);
       setBuildError(err.message || 'AI generation failed. Please try again.');
