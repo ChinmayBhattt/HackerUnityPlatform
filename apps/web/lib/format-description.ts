@@ -102,7 +102,17 @@ function formatInlineMarkdown(str: string): string {
 export function renderDescriptionToHtml(rawText?: string | null): string {
   if (!rawText || !rawText.trim()) return '';
 
-  const trimmed = rawText.trim();
+  let trimmed = rawText.trim();
+
+  // Decode escaped HTML tags if present (e.g. &lt;p&gt;&lt;h2&gt;...)
+  if (/&lt;\/?[a-z0-9]+(?:\s+[^&]*)?&gt;/i.test(trimmed)) {
+    trimmed = trimmed
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&amp;/g, '&');
+  }
 
   // Check if string contains HTML tags
   const hasHtml = /<\/?(?:p|div|h[1-6]|ul|ol|li|b|strong|i|em|br|a|blockquote|hr|table|span|s|strike|del)\b/i.test(trimmed);

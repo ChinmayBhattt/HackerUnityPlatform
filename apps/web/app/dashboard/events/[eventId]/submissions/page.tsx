@@ -1678,7 +1678,7 @@ export default function EventSubmissionsManagerPage({ params }: PageProps) {
                       Hackathon Top Winners & Rankings
                     </h3>
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800/50">
-                      Groq AI Product Intelligence
+                       AI Product Intelligence
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">

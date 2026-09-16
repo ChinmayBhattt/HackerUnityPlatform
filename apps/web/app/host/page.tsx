@@ -206,6 +206,7 @@ function HostHackathonContent() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [originalEventSlug, setOriginalEventSlug] = useState<string | null>(null);
+  const [existingEventStatus, setExistingEventStatus] = useState<EventStatus | string | null>(null);
   const [isLoadingEditData, setIsLoadingEditData] = useState(false);
 
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -432,6 +433,7 @@ function HostHackathonContent() {
           setIsEditMode(true);
           setEditingEventId(found.id);
           setOriginalEventSlug(found.slug);
+          setExistingEventStatus(found.status || null);
           loadTeamData(found.id);
 
           setTitle(found.title || found.name || '');
@@ -580,6 +582,13 @@ function HostHackathonContent() {
     }
     return errors;
   }, [registrationStart, registrationDeadline, startDate, endDate]);
+
+  // Check if current event is already approved / published by admins
+  const isAlreadyApproved = useMemo(() => {
+    if (!isEditMode || !existingEventStatus) return false;
+    const s = String(existingEventStatus).toUpperCase();
+    return s === 'PUBLISHED' || s === 'REGISTRATION_OPEN' || s === 'LIVE' || s === 'COMPLETED' || s === 'JUDGING';
+  }, [isEditMode, existingEventStatus]);
 
   const isDatesValid = Object.keys(dateErrors).length === 0;
 
@@ -1003,8 +1012,11 @@ ${organizerName || 'Organizer'}`;
   // ─── Publish & Draft Handlers ───────────────────────────
   const handlePublish = async () => {
     setIsSaving(true);
-    // User hosting/editing hackathon -> status is always PENDING_APPROVAL until admin approves!
-    const targetStatus = EventStatus.PENDING_APPROVAL;
+    // If the event was already approved/published by admins, keep its published status!
+    // Otherwise, new submissions go to PENDING_APPROVAL.
+    const targetStatus = isAlreadyApproved
+      ? ((existingEventStatus as EventStatus) || EventStatus.PUBLISHED)
+      : EventStatus.PENDING_APPROVAL;
     const event: ExtendedEvent = { ...previewEvent, status: targetStatus };
     const organizerId = supabaseUser?.id || user?.id;
 
@@ -1032,32 +1044,34 @@ ${organizerName || 'Organizer'}`;
       await createEventInSupabase(event, organizerId);
     }
 
-    // 3. Dispatch approval request email to hackerunity.community@gmail.com
-    try {
-      fetch('/api/host-approval-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          event,
-          organizerName: organizerName || user?.name || 'Organizer',
-          organizerEmail: user?.email || '',
-          organizerPhone: user?.phone || '',
-          hostType,
-          institutionName,
-          origin: typeof window !== 'undefined' ? window.location.origin : '',
-        }),
-      })
-        .then((r) => r.json())
-        .then((data) => {
-          if (data?.sentTo) {
-            setEmailSentSuccess(`✅ Approval notification dispatched to ${data.sentTo}`);
-          }
+    // 3. Dispatch approval request email only if the event is NOT already approved!
+    if (!isAlreadyApproved) {
+      try {
+        fetch('/api/host-approval-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            event,
+            organizerName: organizerName || user?.name || 'Organizer',
+            organizerEmail: user?.email || '',
+            organizerPhone: user?.phone || '',
+            hostType,
+            institutionName,
+            origin: typeof window !== 'undefined' ? window.location.origin : '',
+          }),
         })
-        .catch((err) => {
-          console.warn('Failed to send approval email notification:', err);
-        });
-    } catch (err) {
-      console.warn('Approval email trigger error:', err);
+          .then((r) => r.json())
+          .then((data) => {
+            if (data?.sentTo) {
+              setEmailSentSuccess(`✅ Approval notification dispatched to ${data.sentTo}`);
+            }
+          })
+          .catch((err) => {
+            console.warn('Failed to send approval email notification:', err);
+          });
+      } catch (err) {
+        console.warn('Approval email trigger error:', err);
+      }
     }
 
     setIsSaving(false);
@@ -1163,15 +1177,25 @@ ${organizerName || 'Organizer'}`;
           </div>
 
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/40 text-amber-700 dark:text-amber-400 text-xs font-bold uppercase tracking-wider">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-              <span>Appeal Submitted • Pending Review</span>
+            <div
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                isAlreadyApproved
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-400'
+                  : 'bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/40 text-amber-700 dark:text-amber-400'
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${isAlreadyApproved ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'}`} />
+              <span>{isAlreadyApproved ? 'Changes Saved • Live on Platform' : 'Appeal Submitted • Pending Review'}</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              Hackathon Appeal Submitted Successfully!
+              {isAlreadyApproved ? 'Hackathon Updated Successfully!' : 'Hackathon Appeal Submitted Successfully!'}
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-lg mx-auto leading-relaxed font-medium">
-              Your hackathon <strong className="text-slate-900 dark:text-white">&quot;{submittedEvent?.title || previewEvent.title}&quot;</strong> has been submitted for review. An approval request has been sent to <strong className="text-[#0099e6] dark:text-[#38bdf8]">hackerunity.community@gmail.com</strong>. Once approved by the admin, it will go live globally across the platform.
+              {isAlreadyApproved ? (
+                <>Your changes to <strong className="text-slate-900 dark:text-white">&quot;{submittedEvent?.title || previewEvent.title}&quot;</strong> have been saved successfully and are immediately reflected live across the platform.</>
+              ) : (
+                <>Your hackathon <strong className="text-slate-900 dark:text-white">&quot;{submittedEvent?.title || previewEvent.title}&quot;</strong> has been submitted for review. An approval request has been sent to <strong className="text-[#0099e6] dark:text-[#38bdf8]">hackerunity.community@gmail.com</strong>. Once approved by the admin, it will go live globally across the platform.</>
+              )}
             </p>
           </div>
 
@@ -2742,25 +2766,34 @@ ${organizerName || 'Organizer'}`;
                     </div>
                   </div>
 
-                  {/* Approval Notice & Email Draft Preview */}
-                  <div className="p-3.5 rounded-2xl bg-sky-50/70 dark:bg-sky-950/30 border border-sky-200/80 dark:border-sky-800/40 flex items-center justify-between flex-wrap gap-2 text-xs">
-                    <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
-                      <Mail className="w-4 h-4 text-[#0099e6] shrink-0" />
+                  {/* Approval Notice & Email Draft Preview / Approved Live Notice */}
+                  {!isAlreadyApproved ? (
+                    <div className="p-3.5 rounded-2xl bg-sky-50/70 dark:bg-sky-950/30 border border-sky-200/80 dark:border-sky-800/40 flex items-center justify-between flex-wrap gap-2 text-xs">
+                      <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                        <Mail className="w-4 h-4 text-[#0099e6] shrink-0" />
+                        <span className="font-medium">
+                          On submit, an approval request is dispatched to <strong className="text-slate-900 dark:text-white">hackerunity.community@gmail.com</strong>
+                        </span>
+                      </div>
+                      <a
+                        href={gmailDraftUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-1.5 rounded-xl bg-white dark:bg-[#121824] border border-sky-200 dark:border-sky-800/50 hover:bg-sky-50 dark:hover:bg-sky-950/40 text-[#0099e6] text-[11px] font-bold flex items-center gap-1.5 shadow-2xs cursor-pointer transition-colors"
+                      >
+                        <Mail className="w-3.5 h-3.5 text-red-600" />
+                        <span>Preview Gmail Draft</span>
+                        <ExternalLink className="w-3 h-3 opacity-70" />
+                      </a>
+                    </div>
+                  ) : (
+                    <div className="p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/40 flex items-center gap-2 text-xs text-emerald-800 dark:text-emerald-300">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                       <span className="font-medium">
-                        On submit, an approval request is dispatched to <strong className="text-slate-900 dark:text-white">hackerunity.community@gmail.com</strong>
+                        <strong>Event is Approved & Live.</strong> Any changes saved here will update the public event page directly without needing re-approval.
                       </span>
                     </div>
-                    <a
-                      href={gmailDraftUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-3 py-1.5 rounded-xl bg-white dark:bg-[#121824] border border-sky-200 dark:border-sky-800/50 hover:bg-sky-50 dark:hover:bg-sky-950/40 text-[#0099e6] text-[11px] font-bold flex items-center gap-1.5 shadow-2xs cursor-pointer transition-colors"
-                    >
-                      <Mail className="w-3.5 h-3.5 text-red-600" />
-                      <span>Preview Gmail Draft</span>
-                      <ExternalLink className="w-3 h-3 opacity-70" />
-                    </a>
-                  </div>
+                  )}
 
                   {/* Action Buttons */}
                   <div className="pt-4 flex flex-wrap gap-3">
@@ -2781,12 +2814,18 @@ ${organizerName || 'Organizer'}`;
                     >
                       {isSaving ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : isAlreadyApproved ? (
+                        <Save className="w-4 h-4" />
                       ) : (
                         <Send className="w-4 h-4" />
                       )}
                       <span>
                         {isSaving
-                          ? 'Submitting Appeal...'
+                          ? isAlreadyApproved
+                            ? 'Saving Changes...'
+                            : 'Submitting Appeal...'
+                          : isAlreadyApproved
+                          ? 'Save Changes'
                           : 'Submit Appeal'}
                       </span>
                     </button>

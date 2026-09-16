@@ -204,26 +204,34 @@ export async function fetchPublishedEvents(): Promise<ExtendedEvent[]> {
     let list: ExtendedEvent[] = [];
     if (!error && data && data.length > 0) {
       list = data.map(mapDbEventToExtended);
-    } else {
-      list = [...MOCK_EVENTS];
     }
 
-    // Merge custom events with remote list (avoiding duplicate slugs/ids)
+    // Merge remote list, curated platform MOCK_EVENTS, and custom events (avoiding duplicate slugs/ids)
     const map = new Map<string, ExtendedEvent>();
-    list.forEach((e) => {
+    
+    // 1. Seed with curated mock events
+    MOCK_EVENTS.forEach((e) => {
       if (!deletedIds.includes(e.id) && !deletedIds.includes(e.slug)) {
-        map.set(e.id, e);
+        map.set(e.slug, e);
       }
     });
+
+    // 2. Remote Supabase events overwrite or add to map
+    list.forEach((e) => {
+      if (!deletedIds.includes(e.id) && !deletedIds.includes(e.slug)) {
+        map.set(e.slug, e);
+      }
+    });
+
+    // 3. Local custom events complement (only if published/active)
     custom.forEach((e) => {
-      // Local custom events will take priority or complement (only if published/active)
       if (
         !deletedIds.includes(e.id) &&
         !deletedIds.includes(e.slug) &&
         e.status !== EventStatus.PENDING_APPROVAL &&
         e.status !== EventStatus.DRAFT
       ) {
-        map.set(e.id, e);
+        map.set(e.slug, e);
       }
     });
 
