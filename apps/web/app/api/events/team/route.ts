@@ -131,20 +131,30 @@ export async function GET(req: Request) {
     if (event.organizer_id) {
       const { data: ownerProf } = await serverSupabase
         .from('profiles')
-        .select('id, full_name, email, avatar_url, phone, college, company')
+        .select('id, name, email, avatar_url, college, organization')
         .eq('id', event.organizer_id)
         .maybeSingle();
-      ownerProfile = ownerProf || {
-        id: event.organizer_id,
-        full_name: event.organizer_name,
-        email: '',
-        avatar_url: event.organizer_avatar,
-      };
+      ownerProfile = ownerProf
+        ? {
+            id: ownerProf.id,
+            full_name: ownerProf.name || event.organizer_name || 'Event Owner',
+            name: ownerProf.name || event.organizer_name || 'Event Owner',
+            email: ownerProf.email || '',
+            avatar_url: ownerProf.avatar_url || event.organizer_avatar,
+          }
+        : {
+            id: event.organizer_id,
+            full_name: event.organizer_name || 'Event Owner',
+            name: event.organizer_name || 'Event Owner',
+            email: '',
+            avatar_url: event.organizer_avatar,
+          };
     }
 
     // Fetch co-host admins
     let adminsList: any[] = [];
     try {
+      // 1. Try relational join with profiles (matching `name` column)
       const { data: admins, error: adminsErr } = await serverSupabase
         .from('event_admins')
         .select(`
@@ -155,7 +165,7 @@ export async function GET(req: Request) {
           joined_at,
           profiles:user_id (
             id,
-            full_name,
+            name,
             email,
             avatar_url
           )
@@ -163,16 +173,45 @@ export async function GET(req: Request) {
         .eq('event_id', event.id)
         .order('joined_at', { ascending: true });
 
-      if (!adminsErr && admins) {
+      if (!adminsErr && admins && admins.length > 0) {
         adminsList = admins.map((item: any) => ({
           id: item.id,
           userId: item.user_id,
           role: item.role || 'ADMIN',
           joinedAt: item.joined_at,
-          fullName: item.profiles?.full_name || 'Co-Host Admin',
+          fullName: item.profiles?.name || 'Co-Host Admin',
           email: item.profiles?.email || '',
           avatarUrl: item.profiles?.avatar_url || null,
         }));
+      } else {
+        // Fallback: Query raw records and fetch profiles manually to guarantee reliability
+        const { data: rawAdmins } = await serverSupabase
+          .from('event_admins')
+          .select('id, event_id, user_id, role, joined_at')
+          .eq('event_id', event.id)
+          .order('joined_at', { ascending: true });
+
+        if (rawAdmins && rawAdmins.length > 0) {
+          const userIds = rawAdmins.map((a: any) => a.user_id);
+          const { data: userProfiles } = await serverSupabase
+            .from('profiles')
+            .select('id, name, email, avatar_url')
+            .in('id', userIds);
+
+          const profileMap = new Map((userProfiles || []).map((p: any) => [p.id, p]));
+          adminsList = rawAdmins.map((item: any) => {
+            const prof: any = profileMap.get(item.user_id);
+            return {
+              id: item.id,
+              userId: item.user_id,
+              role: item.role || 'ADMIN',
+              joinedAt: item.joined_at,
+              fullName: prof?.name || 'Co-Host Admin',
+              email: prof?.email || '',
+              avatarUrl: prof?.avatar_url || null,
+            };
+          });
+        }
       }
     } catch (e) {
       console.warn('Could not query event_admins table:', e);

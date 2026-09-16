@@ -326,7 +326,7 @@ function HostHackathonContent() {
 
   const loadTeamData = async (targetId?: string) => {
     const idToUse = targetId || editingEventId;
-    if (!idToUse || idToUse.startsWith('evt_ai_') || idToUse.startsWith('draft_')) return;
+    if (!idToUse || idToUse.startsWith('draft_')) return;
     setIsLoadingTeam(true);
     setTeamError(null);
     try {
@@ -342,6 +342,12 @@ function HostHackathonContent() {
       setIsLoadingTeam(false);
     }
   };
+
+  useEffect(() => {
+    if (step === 7 && editingEventId) {
+      loadTeamData(editingEventId);
+    }
+  }, [step, editingEventId]);
 
   const handleCopyTeamInviteLink = () => {
     const fallbackSlug = eventTeam?.event?.slug || originalEventSlug || slug || editingEventId || 'hackathon';
