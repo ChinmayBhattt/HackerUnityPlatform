@@ -30,7 +30,6 @@ import { TestimonialsSection } from '@/components/testimonials-section';
 import { JoinTeamSection } from '@/components/join-team-section';
 import { CampusAmbassadorSection } from '@/components/campus-ambassador-section';
 import { MetallicGlassCard } from '@/components/ui/metallic-glass-card';
-import { HeroCube } from '@/components/ui/hero-cube';
 
 // Event gallery photos
 import galleryStage from '@/assets/hackstorm_stage.jpg';
@@ -180,9 +179,6 @@ export default function HomePage() {
         <div className="absolute top-1/3 left-1/3 w-80 h-80 bg-[#f97316]/10 dark:bg-[#f97316]/15 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center">
-          {/* 3D Rotating Black Cube (Resend Style) */}
-          <HeroCube className="mb-4 sm:mb-6" />
-
           {/* Top Pill */}
           <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-white/[0.08] text-slate-800 dark:text-slate-200 text-[11px] sm:text-xs font-bold mb-6 shadow-sm animate-in fade-in slide-in-from-top-4 duration-500 max-w-full justify-center">
             <span className="flex h-2 w-2 relative shrink-0">
@@ -749,8 +745,8 @@ export default function HomePage() {
                       type="button"
                       onClick={() => setActiveSlide(i)}
                       className={`h-2 sm:h-2.5 rounded-full transition-all duration-300 cursor-pointer ${activeSlide === i
-                          ? 'w-7 sm:w-8 bg-gradient-to-r from-[#0099e6] to-[#f97316]'
-                          : 'w-2 sm:w-2.5 bg-slate-700 hover:bg-slate-600'
+                        ? 'w-7 sm:w-8 bg-gradient-to-r from-[#0099e6] to-[#f97316]'
+                        : 'w-2 sm:w-2.5 bg-slate-700 hover:bg-slate-600'
                         }`}
                       aria-label={label}
                     />
