@@ -57,6 +57,7 @@ import {
   RefreshCw,
   Trash2,
   AlertCircle,
+  Pencil,
 } from 'lucide-react';
 import { EventCategory, EventStatus, EventType, CustomQuestion } from '@hackers-unity/shared-types';
 import { ExtendedEvent, MOCK_EVENTS } from '@/lib/mock-data';
@@ -314,6 +315,7 @@ function HostHackathonContent() {
     return `hu_prv_${rand}`;
   });
   const [copiedPrivateLink, setCopiedPrivateLink] = useState(false);
+  const [copiedPublicLink, setCopiedPublicLink] = useState(false);
 
   // ─── STEP 7: TEAM & CO-HOST ADMIN STATE ───────────────────
   const [eventTeam, setEventTeam] = useState<EventTeamData | null>(null);
@@ -867,6 +869,21 @@ function HostHackathonContent() {
     }
   };
 
+  // ─── PUBLIC LIVE LINK (FOR PUBLISHED / APPROVED HACKATHONS) ──
+  const publicLiveSlug = submittedEvent?.slug || previewEvent.slug || originalEventSlug || editingEventId || '';
+  const publicLiveUrl = useMemo(() => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://hackersunity.com';
+    return `${origin}/hackathons/${publicLiveSlug}`;
+  }, [publicLiveSlug]);
+
+  const handleCopyPublicLink = () => {
+    if (typeof navigator !== 'undefined') {
+      navigator.clipboard.writeText(publicLiveUrl);
+      setCopiedPublicLink(true);
+      setTimeout(() => setCopiedPublicLink(false), 2500);
+    }
+  };
+
   // ─── EMAIL DRAFT & NOTIFICATION GENERATORS ──────────────
   const emailSubject = useMemo(() => {
     return `[Hackathon Approval Request] "${title || previewEvent.title}" hosted by ${organizerName || 'Organizer'}`;
@@ -1211,140 +1228,204 @@ ${organizerName || 'Organizer'}`;
             </p>
           </div>
 
-          {/* ═══ PRIVATE SHAREABLE LINK CARD ═══════════════════ */}
-          <div className="w-full p-5 rounded-3xl bg-gradient-to-br from-amber-50/90 via-orange-50/40 to-amber-50/90 dark:from-amber-950/30 dark:via-orange-950/20 dark:to-amber-950/30 border-2 border-amber-300/80 dark:border-amber-800/50 text-left space-y-3.5 shadow-sm">
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-amber-500 to-[#ea580c] flex items-center justify-center text-white shadow-xs">
-                  <Lock className="w-4 h-4" />
+          {/* ═══ PUBLIC LIVE LINK CARD (FOR APPROVED / LIVE EVENTS) ══════ */}
+          {isAlreadyApproved ? (
+            <div className="w-full p-5 rounded-3xl bg-gradient-to-br from-emerald-50/90 via-teal-50/40 to-emerald-50/90 dark:from-emerald-950/30 dark:via-teal-950/20 dark:to-emerald-950/30 border-2 border-emerald-300/80 dark:border-emerald-800/50 text-left space-y-3.5 shadow-sm">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-xs">
+                    <Globe className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                      <span>Live Public Hackathon Link</span>
+                      <span className="text-[10px] font-extrabold text-emerald-800 dark:text-emerald-300 bg-emerald-200/80 dark:bg-emerald-900/50 px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-emerald-300 dark:border-emerald-700/50">
+                        Live on Platform
+                      </span>
+                    </h4>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
+                      This hackathon is published and accessible globally by all participants
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-                    <span>Private Shareable Link</span>
-                    <span className="text-[10px] font-extrabold text-amber-800 dark:text-amber-300 bg-amber-200/80 dark:bg-amber-900/50 px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-amber-300 dark:border-amber-700/50">
-                      Private Access
-                    </span>
-                  </h4>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
-                    Anyone with this link can view the event specifications right now
-                  </p>
+              </div>
+
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                Your hackathon is public! Anyone with this link can view event specifications, register, submit projects, and share it:
+              </p>
+
+              {/* Input & Copy Row */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white dark:bg-[#121824] p-2 rounded-2xl border border-emerald-200 dark:border-emerald-800/40 shadow-2xs">
+                <div className="flex-1 flex items-center gap-2 px-2 overflow-hidden">
+                  <Link2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <input
+                    type="text"
+                    readOnly
+                    value={publicLiveUrl}
+                    className="w-full bg-transparent text-xs font-mono font-bold text-slate-800 dark:text-slate-200 outline-none truncate select-all"
+                    onClick={(e) => (e.target as HTMLInputElement).select()}
+                  />
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleCopyPublicLink}
+                    className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-all"
+                  >
+                    {copiedPublicLink ? <Check className="w-3.5 h-3.5 text-white" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedPublicLink ? 'Copied Link!' : 'Copy Link'}</span>
+                  </button>
+                  <a
+                    href={publicLiveUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>View Live Page</span>
+                    <ExternalLink className="w-3 h-3 opacity-60" />
+                  </a>
                 </div>
               </div>
             </div>
-
-            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
-              This hackathon is not publicly listed on the platform yet. However, <strong>anyone you share this private link with</strong> can open and preview all event details, prizes, timeline, and rules without restrictions:
-            </p>
-
-            {/* Input & Copy Row */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white dark:bg-[#121824] p-2 rounded-2xl border border-amber-200 dark:border-amber-800/40 shadow-2xs">
-              <div className="flex-1 flex items-center gap-2 px-2 overflow-hidden">
-                <Link2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                <input
-                  type="text"
-                  readOnly
-                  value={privateLink}
-                  className="w-full bg-transparent text-xs font-mono font-bold text-slate-800 dark:text-slate-200 outline-none truncate select-all"
-                  onClick={(e) => (e.target as HTMLInputElement).select()}
-                />
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={handleCopyPrivateLink}
-                  className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-all"
-                >
-                  {copiedPrivateLink ? <Check className="w-3.5 h-3.5 text-white" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copiedPrivateLink ? 'Copied Link!' : 'Copy Private Link'}</span>
-                </button>
-                <a
-                  href={privateLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
-                >
-                  <Eye className="w-3.5 h-3.5" />
-                  <span>Open Preview</span>
-                  <ExternalLink className="w-3 h-3 opacity-60" />
-                </a>
-              </div>
-            </div>
-          </div>
-
-          {/* Email Dispatch & Gmail Draft Action Box */}
-          <div className="w-full p-5 rounded-2xl bg-sky-50/80 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800/40 text-left space-y-3.5 shadow-xs">
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-[#0099e6] flex items-center justify-center text-white shadow-xs">
-                  <Mail className="w-4 h-4" />
+          ) : (
+            <>
+              {/* ═══ PRIVATE SHAREABLE LINK CARD (FOR PENDING REVIEW) ═══════════════════ */}
+              <div className="w-full p-5 rounded-3xl bg-gradient-to-br from-amber-50/90 via-orange-50/40 to-amber-50/90 dark:from-amber-950/30 dark:via-orange-950/20 dark:to-amber-950/30 border-2 border-amber-300/80 dark:border-amber-800/50 text-left space-y-3.5 shadow-sm">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-amber-500 to-[#ea580c] flex items-center justify-center text-white shadow-xs">
+                      <Lock className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>Private Shareable Link</span>
+                        <span className="text-[10px] font-extrabold text-amber-800 dark:text-amber-300 bg-amber-200/80 dark:bg-amber-900/50 px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-amber-300 dark:border-amber-700/50">
+                          Private Access
+                        </span>
+                      </h4>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
+                        Anyone with this link can view the event specifications right now
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">
-                    Send Details to hackerunity.community@gmail.com
-                  </h4>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                    One-click draft creation with full hackathon specifications
-                  </p>
+
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                  This hackathon is not publicly listed on the platform yet. However, <strong>anyone you share this private link with</strong> can open and preview all event details, prizes, timeline, and rules without restrictions:
+                </p>
+
+                {/* Input & Copy Row */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white dark:bg-[#121824] p-2 rounded-2xl border border-amber-200 dark:border-amber-800/40 shadow-2xs">
+                  <div className="flex-1 flex items-center gap-2 px-2 overflow-hidden">
+                    <Link2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                    <input
+                      type="text"
+                      readOnly
+                      value={privateLink}
+                      className="w-full bg-transparent text-xs font-mono font-bold text-slate-800 dark:text-slate-200 outline-none truncate select-all"
+                      onClick={(e) => (e.target as HTMLInputElement).select()}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={handleCopyPrivateLink}
+                      className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-all"
+                    >
+                      {copiedPrivateLink ? <Check className="w-3.5 h-3.5 text-white" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copiedPrivateLink ? 'Copied Link!' : 'Copy Private Link'}</span>
+                    </button>
+                    <a
+                      href={privateLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>Open Preview</span>
+                      <ExternalLink className="w-3 h-3 opacity-60" />
+                    </a>
+                  </div>
                 </div>
               </div>
-              <span className="text-[11px] font-mono font-bold text-[#0099e6] dark:text-[#38bdf8] bg-white dark:bg-[#121824] px-3 py-1 rounded-full border border-sky-200 dark:border-sky-800/40 shadow-2xs">
-                hackerunity.community@gmail.com
-              </span>
-            </div>
 
-            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
-              Click <strong className="text-slate-900 dark:text-white">&quot;Open in Gmail Draft&quot;</strong> below to instantly open Gmail with a pre-filled draft containing all event specifications (prizes, dates, venue, rules, links) addressed to <strong className="text-slate-900 dark:text-white">hackerunity.community@gmail.com</strong>:
-            </p>
+              {/* Email Dispatch & Gmail Draft Action Box */}
+              <div className="w-full p-5 rounded-2xl bg-sky-50/80 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800/40 text-left space-y-3.5 shadow-xs">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-[#0099e6] flex items-center justify-center text-white shadow-xs">
+                      <Mail className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-white">
+                        Send Details to hackerunity.community@gmail.com
+                      </h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                        One-click draft creation with full hackathon specifications
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[11px] font-mono font-bold text-[#0099e6] dark:text-[#38bdf8] bg-white dark:bg-[#121824] px-3 py-1 rounded-full border border-sky-200 dark:border-sky-800/40 shadow-2xs">
+                    hackerunity.community@gmail.com
+                  </span>
+                </div>
 
-            <div className="flex flex-wrap items-center gap-2.5 pt-1">
-              {/* Gmail Draft Button */}
-              <a
-                href={gmailDraftUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-all cursor-pointer"
-              >
-                <Mail className="w-3.5 h-3.5" />
-                <span>Open in Gmail Draft</span>
-                <ExternalLink className="w-3 h-3 opacity-80" />
-              </a>
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                  Click <strong className="text-slate-900 dark:text-white">&quot;Open in Gmail Draft&quot;</strong> below to instantly open Gmail with a pre-filled draft containing all event specifications (prizes, dates, venue, rules, links) addressed to <strong className="text-slate-900 dark:text-white">hackerunity.community@gmail.com</strong>:
+                </p>
 
-              {/* Direct Resend Dispatch */}
-              <button
-                type="button"
-                onClick={handleTriggerResend}
-                disabled={isSendingEmail}
-                className="px-4 py-2.5 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-all cursor-pointer disabled:opacity-50"
-              >
-                {isSendingEmail ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                <span>{isSendingEmail ? 'Dispatching...' : 'Send via Resend API'}</span>
-              </button>
+                <div className="flex flex-wrap items-center gap-2.5 pt-1">
+                  {/* Gmail Draft Button */}
+                  <a
+                    href={gmailDraftUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-all cursor-pointer"
+                  >
+                    <Mail className="w-3.5 h-3.5" />
+                    <span>Open in Gmail Draft</span>
+                    <ExternalLink className="w-3 h-3 opacity-80" />
+                  </a>
 
-              {/* Default Mail Client */}
-              <a
-                href={mailtoUrl}
-                className="px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] hover:bg-slate-50 dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
-              >
-                <span>Default Mail App</span>
-              </a>
+                  {/* Direct Resend Dispatch */}
+                  <button
+                    type="button"
+                    onClick={handleTriggerResend}
+                    disabled={isSendingEmail}
+                    className="px-4 py-2.5 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {isSendingEmail ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                    <span>{isSendingEmail ? 'Dispatching...' : 'Send via Resend API'}</span>
+                  </button>
 
-              {/* Copy Information Button */}
-              <button
-                type="button"
-                onClick={handleCopyAllInfo}
-                className="px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] hover:bg-slate-50 dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
-              >
-                {copiedDetails ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
-                <span>{copiedDetails ? 'Details Copied!' : 'Copy All Details'}</span>
-              </button>
-            </div>
+                  {/* Default Mail Client */}
+                  <a
+                    href={mailtoUrl}
+                    className="px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] hover:bg-slate-50 dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                  >
+                    <span>Default Mail App</span>
+                  </a>
 
-            {emailSentSuccess && (
-              <div className="p-3 rounded-xl bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.08] text-xs font-semibold text-slate-800 dark:text-slate-200 animate-in fade-in flex items-center gap-2">
-                <span>{emailSentSuccess}</span>
+                  {/* Copy Information Button */}
+                  <button
+                    type="button"
+                    onClick={handleCopyAllInfo}
+                    className="px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] hover:bg-slate-50 dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                  >
+                    {copiedDetails ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
+                    <span>{copiedDetails ? 'Details Copied!' : 'Copy All Details'}</span>
+                  </button>
+                </div>
+
+                {emailSentSuccess && (
+                  <div className="p-3 rounded-xl bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.08] text-xs font-semibold text-slate-800 dark:text-slate-200 animate-in fade-in flex items-center gap-2">
+                    <span>{emailSentSuccess}</span>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </>
+          )}
 
           {/* Quick Details Card */}
           <div className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-[#121824] border border-slate-200/80 dark:border-white/[0.08] text-left text-xs space-y-2.5">
@@ -1362,33 +1443,72 @@ ${organizerName || 'Organizer'}`;
             </div>
             <div className="flex justify-between items-center text-slate-500 dark:text-slate-400 font-medium">
               <span>Review Status:</span>
-              <span className="text-amber-700 dark:text-amber-300 font-bold bg-amber-100 dark:bg-amber-950/50 px-2.5 py-0.5 rounded-full text-[10px] border border-amber-200 dark:border-amber-800/40">
-                {isEditMode ? 'Saved' : '⏳ Pending Review'}
+              <span
+                className={`font-bold px-2.5 py-0.5 rounded-full text-[10px] border ${
+                  isAlreadyApproved
+                    ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800/40'
+                    : 'text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/50 border-amber-200 dark:border-amber-800/40'
+                }`}
+              >
+                {isAlreadyApproved ? '🟢 Live & Published' : isEditMode ? 'Saved' : '⏳ Pending Review'}
               </span>
             </div>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full justify-center pt-2">
-            <button
-              type="button"
-              onClick={() => router.push('/dashboard')}
-              className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-bold text-xs shadow-md shadow-sky-500/20 flex items-center justify-center gap-2 cursor-pointer transition-all"
-            >
-              <span>Go to Organizer Dashboard</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setIsSuccess(false);
-                setStep(1);
-                setTitle('');
-                setDescription('');
-              }}
-              className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-300 font-bold text-xs transition-colors cursor-pointer"
-            >
-              <span>Host Another Hackathon</span>
-            </button>
+            {isAlreadyApproved ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setIsSuccess(false)}
+                  className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-white dark:bg-[#121824] border border-slate-200 dark:border-white/[0.1] hover:bg-slate-50 dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-200 font-bold text-xs shadow-xs flex items-center justify-center gap-2 cursor-pointer transition-all"
+                >
+                  <Pencil className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Continue Editing</span>
+                </button>
+                <a
+                  href={publicLiveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer transition-all"
+                >
+                  <Eye className="w-4 h-4" />
+                  <span>View Live Hackathon Page</span>
+                  <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+                </a>
+                <button
+                  type="button"
+                  onClick={() => router.push('/dashboard')}
+                  className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-bold text-xs shadow-md shadow-sky-500/20 flex items-center justify-center gap-2 cursor-pointer transition-all"
+                >
+                  <span>Go to Organizer Dashboard</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => router.push('/dashboard')}
+                  className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-bold text-xs shadow-md shadow-sky-500/20 flex items-center justify-center gap-2 cursor-pointer transition-all"
+                >
+                  <span>Go to Organizer Dashboard</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSuccess(false);
+                    setStep(1);
+                    setTitle('');
+                    setDescription('');
+                  }}
+                  className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-300 font-bold text-xs transition-colors cursor-pointer"
+                >
+                  <span>Host Another Hackathon</span>
+                </button>
+              </>
+            )}
           </div>
         </div>
       ) : (
