@@ -19,6 +19,7 @@ import { usePublishedEvents } from '@/lib/hooks/use-events';
 import { ExtendedEvent } from '@/lib/mock-data';
 import { formatCurrency, getDaysLeft, getStatusBadge, getCategoryBadge } from '@/lib/utils';
 import { RegistrationModal } from '@/components/registration-modal';
+import { stripHtmlAndMarkdown } from '@/lib/format-description';
 
 export default function HackathonsDirectoryPage() {
   const { events, loading, error } = usePublishedEvents();
@@ -291,7 +292,7 @@ export default function HackathonsDirectoryPage() {
                   </Link>
 
                   <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-1 max-w-3xl font-medium">
-                    {event.description}
+                    {stripHtmlAndMarkdown(event.description)}
                   </p>
 
                   <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400 pt-1 flex-wrap font-medium">

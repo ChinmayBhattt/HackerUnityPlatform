@@ -47,6 +47,7 @@ import { supabase } from '@/lib/supabase';
 import { formatCurrency } from '@/lib/utils';
 import { Logo } from '@/components/logo';
 import { AdminBlogsModeration } from '@/components/admin-blogs-moderation';
+import { RichDescription } from '@/components/rich-description';
 
 interface AdminEvent {
   id: string;
@@ -1095,8 +1096,8 @@ export default function AdminCsapPortal() {
                 <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Description &amp; Overview
                 </h4>
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.08] text-slate-700 dark:text-slate-300 text-xs leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto">
-                  {selectedEvent.description}
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.08] text-slate-700 dark:text-slate-300 text-xs leading-relaxed max-h-60 overflow-y-auto">
+                  <RichDescription content={selectedEvent.description} />
                 </div>
               </div>
 

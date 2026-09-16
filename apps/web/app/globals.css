@@ -329,3 +329,177 @@ body {
 .animate-card-shine {
   animation: card-shine 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
+
+/* ─── Rich Description / Markdown & WYSIWYG Content Styles ───── */
+.rich-description-content {
+  color: #334155;
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+
+.dark .rich-description-content {
+  color: #cbd5e1;
+}
+
+.rich-description-content h1,
+.rich-description-content h2 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.rich-description-content h1:first-child,
+.rich-description-content h2:first-child,
+.rich-description-content h3:first-child,
+.rich-description-content p:first-child {
+  margin-top: 0;
+}
+
+.rich-description-content h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-top: 1.25rem;
+  margin-bottom: 0.4rem;
+  line-height: 1.4;
+}
+
+.rich-description-content h4,
+.rich-description-content h5 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-top: 1rem;
+  margin-bottom: 0.35rem;
+}
+
+.dark .rich-description-content h1,
+.dark .rich-description-content h2,
+.dark .rich-description-content h3 {
+  color: #f8fafc;
+}
+
+.dark .rich-description-content h4,
+.dark .rich-description-content h5 {
+  color: #e2e8f0;
+}
+
+.rich-description-content p {
+  margin-top: 0.4rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.7;
+}
+
+.rich-description-content ul {
+  list-style-type: disc;
+  padding-left: 1.4rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.rich-description-content ol {
+  list-style-type: decimal;
+  padding-left: 1.4rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.rich-description-content li {
+  display: list-item;
+  margin-top: 0.35rem;
+  margin-bottom: 0.35rem;
+  line-height: 1.6;
+}
+
+.rich-description-content ul li::marker {
+  color: #0099e6;
+}
+
+.dark .rich-description-content ul li::marker {
+  color: #38bdf8;
+}
+
+.rich-description-content ol li::marker {
+  color: #0099e6;
+  font-weight: 700;
+}
+
+.dark .rich-description-content ol li::marker {
+  color: #38bdf8;
+}
+
+.rich-description-content strong,
+.rich-description-content b {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.dark .rich-description-content strong,
+.dark .rich-description-content b {
+  color: #f8fafc;
+}
+
+.rich-description-content a {
+  color: #0099e6;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 600;
+  transition: color 0.15s ease;
+}
+
+.dark .rich-description-content a {
+  color: #38bdf8;
+}
+
+.rich-description-content a:hover {
+  color: #0284c7;
+}
+
+.dark .rich-description-content a:hover {
+  color: #7dd3fc;
+}
+
+.rich-description-content blockquote {
+  border-left: 3px solid #0099e6;
+  background-color: rgba(0, 153, 230, 0.06);
+  padding: 0.5rem 0.85rem;
+  margin: 0.75rem 0;
+  border-radius: 0 0.5rem 0.5rem 0;
+  font-style: italic;
+  color: #475569;
+}
+
+.dark .rich-description-content blockquote {
+  background-color: rgba(0, 153, 230, 0.12);
+  color: #94a3b8;
+}
+
+.rich-description-content code {
+  background-color: rgba(15, 23, 42, 0.06);
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  color: #ea580c;
+  font-weight: 600;
+}
+
+.dark .rich-description-content code {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #fb923c;
+}
+
+.rich-description-content hr {
+  border: 0;
+  height: 1px;
+  background-color: #e2e8f0;
+  margin: 1.25rem 0;
+}
+
+.dark .rich-description-content hr {
+  background-color: rgba(255, 255, 255, 0.08);
+}

@@ -68,6 +68,7 @@ import {
 } from '@/lib/storage';
 import { ExtendedEvent } from '@/lib/mock-data';
 import { useAuth } from '@/lib/auth-context';
+import { stripHtmlAndMarkdown } from '@/lib/format-description';
 import {
   updateEventInSupabase,
   deleteEventInSupabase,
@@ -1238,7 +1239,7 @@ export default function DashboardPage() {
                             </h4>
                             {matchedEvent && (
                               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-                                {matchedEvent.description}
+                                {stripHtmlAndMarkdown(matchedEvent.description)}
                               </p>
                             )}
                           </div>

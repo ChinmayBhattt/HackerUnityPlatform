@@ -51,6 +51,7 @@ import {
 import { RegistrationModal } from '@/components/registration-modal';
 import { TeamRegistrationModal } from '@/components/team-registration-modal';
 import { ProjectSubmissionModal } from '@/components/project-submission-modal';
+import { RichDescription } from '@/components/rich-description';
 import { fetchUserTeamForEvent } from '@/lib/supabase-service';
 import { EventStatus } from '@hackers-unity/shared-types';
 import { useAuth } from '@/lib/auth-context';
@@ -503,9 +504,7 @@ function HackathonDetailContent({ params }: PageProps) {
                 {/* Description */}
                 <div className="bg-white dark:bg-[#0c1017] p-6 rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-sm space-y-4">
                   <h3 className="text-lg font-bold text-slate-900 dark:text-white">About the Hackathon</h3>
-                  <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line font-medium">
-                    {event.description}
-                  </p>
+                  <RichDescription content={event.description} />
                   <div className="flex flex-wrap gap-2 pt-2">
                     {event.tags.map((tag) => (
                       <span
@@ -877,9 +876,7 @@ function HackathonDetailContent({ params }: PageProps) {
               <div className="bg-white dark:bg-[#0c1017] p-6 rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-sm space-y-4 animate-in fade-in">
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white">Rules & Guidelines</h3>
                 {event.rulesText ? (
-                  <p className="text-xs text-slate-700 dark:text-slate-300 font-medium whitespace-pre-line leading-relaxed">
-                    {event.rulesText}
-                  </p>
+                  <RichDescription content={event.rulesText} />
                 ) : (
                   <ul className="space-y-3 text-xs text-slate-700 dark:text-slate-300 font-medium">
                     <li className="flex items-start gap-2.5">

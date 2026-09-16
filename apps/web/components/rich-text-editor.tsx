@@ -15,6 +15,7 @@ import {
   X,
   Check,
 } from 'lucide-react';
+import { renderDescriptionToHtml } from '@/lib/format-description';
 
 interface RichTextEditorProps {
   value: string;
@@ -28,94 +29,7 @@ interface RichTextEditorProps {
 
 // Convert text with markdown or bullets into clean semantic HTML
 function convertTextOrMarkdownToHtml(rawText: string): string {
-  if (!rawText || !rawText.trim()) return '';
-
-  // If HTML is already provided
-  if (
-    rawText.includes('<p>') ||
-    rawText.includes('<ul>') ||
-    rawText.includes('<ol>') ||
-    rawText.includes('<li>') ||
-    rawText.includes('<b>') ||
-    rawText.includes('<strong>') ||
-    rawText.includes('<div>')
-  ) {
-    try {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(rawText, 'text/html');
-      doc.body.querySelectorAll('*').forEach((el) => {
-        el.removeAttribute('style');
-        el.removeAttribute('face');
-        el.removeAttribute('color');
-        el.removeAttribute('size');
-        if (el.tagName === 'SPAN' && el.attributes.length === 0) {
-          el.replaceWith(...Array.from(el.childNodes));
-        }
-      });
-      return doc.body.innerHTML;
-    } catch {
-      // fallback to plain text parsing
-    }
-  }
-
-  const formatInline = (str: string) => {
-    return str
-      .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
-      .replace(/__(.*?)__/g, '<b>$1</b>')
-      .replace(/\*(.*?)\*/g, '<i>$1</i>')
-      .replace(/_(.*?)_/g, '<i>$1</i>')
-      .replace(/~~(.*?)~~/g, '<strike>$1</strike>')
-      .replace(/\[(.*?)\]\((https?:\/\/[^\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-  };
-
-  const lines = rawText.split(/\r?\n/);
-  let html = '';
-  let inUl = false;
-  let inOl = false;
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) {
-      if (inUl) { html += '</ul>'; inUl = false; }
-      if (inOl) { html += '</ol>'; inOl = false; }
-      continue;
-    }
-
-    // Bullet detection (•, -, *, ◦, ⁃)
-    const bulletMatch = line.match(/^([•\-\*◦⁃]|\u2022)\s*(.*)$/);
-    // Numbered list detection
-    const olMatch = line.match(/^(\d+)[\.\)]\s*(.*)$/);
-    // Headings
-    const h1Match = line.match(/^#\s+(.*)$/);
-    const h2Match = line.match(/^##\s+(.*)$/);
-
-    if (h1Match) {
-      if (inUl) { html += '</ul>'; inUl = false; }
-      if (inOl) { html += '</ol>'; inOl = false; }
-      html += `<h2>${formatInline(h1Match[1])}</h2>`;
-    } else if (h2Match) {
-      if (inUl) { html += '</ul>'; inUl = false; }
-      if (inOl) { html += '</ol>'; inOl = false; }
-      html += `<h3>${formatInline(h2Match[1])}</h3>`;
-    } else if (bulletMatch) {
-      if (inOl) { html += '</ol>'; inOl = false; }
-      if (!inUl) { html += '<ul>'; inUl = true; }
-      html += `<li>${formatInline(bulletMatch[2] || '')}</li>`;
-    } else if (olMatch) {
-      if (inUl) { html += '</ul>'; inUl = false; }
-      if (!inOl) { html += '<ol>'; inOl = true; }
-      html += `<li>${formatInline(olMatch[2] || '')}</li>`;
-    } else {
-      if (inUl) { html += '</ul>'; inUl = false; }
-      if (inOl) { html += '</ol>'; inOl = false; }
-      html += `<p>${formatInline(line)}</p>`;
-    }
-  }
-
-  if (inUl) html += '</ul>';
-  if (inOl) html += '</ol>';
-
-  return html || `<p>${formatInline(rawText)}</p>`;
+  return renderDescriptionToHtml(rawText);
 }
 
 export function RichTextEditor({

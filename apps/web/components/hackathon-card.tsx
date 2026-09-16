@@ -19,6 +19,7 @@ import { toggleBookmarkEvent, getBookmarkedEventIds } from '@/lib/storage';
 import { useAuth } from '@/lib/auth-context';
 import { useEffect } from 'react';
 import { RegistrationModal } from './registration-modal';
+import { stripHtmlAndMarkdown } from '@/lib/format-description';
 
 interface HackathonCardProps {
   event: ExtendedEvent;
@@ -151,7 +152,7 @@ export function HackathonCard({ event, isBookmarked, onBookmarkChange }: Hackath
 
             {/* Description */}
             <p className="text-xs text-slate-600 dark:text-slate-400 mt-2.5 line-clamp-2 leading-relaxed">
-              {event.description}
+              {stripHtmlAndMarkdown(event.description)}
             </p>
           </div>
 
