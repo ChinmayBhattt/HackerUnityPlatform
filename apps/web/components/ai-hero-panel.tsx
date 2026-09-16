@@ -235,8 +235,8 @@ export function AiHeroPanel() {
       setTimeout(() => {
         setBuildStepMessage(
           attachedFile?.isImage
-            ? 'Extracting poster tracks, prizes & dates via Groq...'
-            : 'Architecting tracks & prizes via Groq...'
+            ? 'Extracting poster tracks, prizes & dates...'
+            : 'Architecting tracks & prizes...'
         );
       }, 900);
 

@@ -200,7 +200,7 @@ Generated via Groq AI on Hacker's Unity`;
               <div className="flex items-center gap-2 flex-wrap mb-1">
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#0099e6]/10 dark:bg-sky-950/50 text-[#0099e6] dark:text-sky-300 border border-sky-200 dark:border-sky-800/50 flex items-center gap-1">
                   <Cpu className="w-3 h-3" />
-                  Groq AI Product Intelligence
+                   AI Product Intelligence
                 </span>
                 {evaluation?.productStage && (
                   <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${getStageBadgeColor(evaluation.productStage)}`}>
@@ -228,7 +228,7 @@ Generated via Groq AI on Hacker's Unity`;
                 onClick={() => onReevaluate(submission)}
                 disabled={isEvaluating}
                 className="px-3.5 py-2 rounded-xl bg-white dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-200 text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                title="Re-run product evaluation via Groq AI"
+                title="Re-run product evaluation AI"
               >
                 <RefreshCw className={`w-3.5 h-3.5 text-[#0099e6] ${isEvaluating ? 'animate-spin' : ''}`} />
                 <span>{isEvaluating ? 'Analyzing...' : 'Re-Evaluate'}</span>
@@ -288,7 +288,7 @@ Generated via Groq AI on Hacker's Unity`;
                 <RefreshCw className="w-6 h-6 animate-spin" />
               </div>
               <h3 className="text-base font-black text-slate-900 dark:text-white">
-                Evaluating Product with Groq AI...
+                Evaluating Product with AI...
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm">
                 Analyzing problem validation, product value, market potential, business sustainability, and tech stack suitability.
@@ -313,7 +313,7 @@ Generated via Groq AI on Hacker's Unity`;
                   className="px-5 py-2.5 rounded-xl bg-linear-to-r from-[#0099e6] to-[#0077b6] hover:from-[#0088cc] hover:to-[#00669e] text-white font-bold text-xs shadow-md shadow-sky-500/20 cursor-pointer inline-flex items-center gap-2"
                 >
                   <Sparkles className="w-4 h-4" />
-                  <span>Run Groq AI Evaluation</span>
+                  <span>Run AI Evaluation</span>
                 </button>
               )}
             </div>
