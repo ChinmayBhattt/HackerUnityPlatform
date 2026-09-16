@@ -171,7 +171,18 @@ export async function PATCH(req: Request) {
     const isOwner = existingEvent?.organizer_id === auth.userId;
     const isAdmin = userRole === 'ADMIN' || auth.email === process.env.ADMIN_EMAIL;
 
+    let isCoHost = false;
     if (existingEvent && !isOwner && !isAdmin) {
+      const { data: coHostRecord } = await serverSupabase
+        .from('event_admins')
+        .select('id')
+        .eq('event_id', existingEvent.id)
+        .eq('user_id', auth.userId)
+        .maybeSingle();
+      isCoHost = Boolean(coHostRecord);
+    }
+
+    if (existingEvent && !isOwner && !isCoHost && !isAdmin) {
       return forbiddenResponse('You are not authorized to update this event.');
     }
 
@@ -379,6 +390,7 @@ export async function DELETE(req: Request) {
         serverSupabase.from('submissions').delete().eq('event_id', finalId),
         serverSupabase.from('teams').delete().eq('event_id', finalId),
         serverSupabase.from('notifications').delete().eq('event_id', finalId),
+        serverSupabase.from('event_admins').delete().eq('event_id', finalId),
       ]);
     }
 

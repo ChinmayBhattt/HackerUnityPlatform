@@ -342,6 +342,35 @@ export async function fetchOrganizerEvents(organizerId: string): Promise<Extende
 
     const remoteEvents = (!error && data) ? data.map(mapDbEventToExtended) : [];
 
+    // Also query events where user is a co-host / event admin
+    let coHostedEvents: ExtendedEvent[] = [];
+    try {
+      const { data: adminRows } = await supabase
+        .from('event_admins')
+        .select('event_id')
+        .eq('user_id', organizerId);
+
+      if (adminRows && adminRows.length > 0) {
+        const coHostEventIds = adminRows.map((r: any) => r.event_id).filter(Boolean);
+        if (coHostEventIds.length > 0) {
+          const { data: coHostData } = await supabase
+            .from('events')
+            .select('*')
+            .in('id', coHostEventIds);
+
+          if (coHostData && coHostData.length > 0) {
+            coHostedEvents = coHostData.map((d: any) => {
+              const mapped = mapDbEventToExtended(d);
+              (mapped as any).isCoHost = true;
+              return mapped;
+            });
+          }
+        }
+      }
+    } catch (adminErr) {
+      console.warn('Could not query co-hosted events:', adminErr);
+    }
+
     const custom = typeof window !== 'undefined' ? getCustomEvents() : [];
     // Strictly match only events belonging to THIS organizer
     const customOrganizerEvents = custom.filter(
@@ -354,8 +383,13 @@ export async function fetchOrganizerEvents(organizerId: string): Promise<Extende
         map.set(e.id, e);
       }
     });
+    coHostedEvents.forEach((e) => {
+      if (!deletedIds.includes(e.id) && !deletedIds.includes(e.slug) && !map.has(e.id)) {
+        map.set(e.id, e);
+      }
+    });
     customOrganizerEvents.forEach((e) => {
-      if (!deletedIds.includes(e.id) && !deletedIds.includes(e.slug)) {
+      if (!deletedIds.includes(e.id) && !deletedIds.includes(e.slug) && !map.has(e.id)) {
         map.set(e.id, e);
       }
     });
@@ -3062,4 +3096,122 @@ export async function submitContactInquiry(
     return { success: false, error: err.message || 'Failed to submit inquiry' };
   }
 }
+
+/**
+ * ─── 15. EVENT ORGANIZING TEAM & CO-HOST ADMINS ──────────────────────────────
+ */
+
+export interface EventAdminMember {
+  id: string;
+  userId: string;
+  role: string;
+  joinedAt: string;
+  fullName: string;
+  email: string;
+  avatarUrl: string | null;
+}
+
+export interface EventTeamData {
+  event: { id: string; slug: string; title: string };
+  isOwner: boolean;
+  isCoHost: boolean;
+  inviteCode: string;
+  inviteUrl: string;
+  owner: {
+    id: string;
+    full_name: string;
+    email?: string;
+    avatar_url?: string;
+  };
+  admins: EventAdminMember[];
+}
+
+export async function fetchEventTeam(
+  eventId: string
+): Promise<{ success: boolean; data?: EventTeamData; error?: string }> {
+  try {
+    const res = await fetch(`/api/events/team?eventId=${encodeURIComponent(eventId)}`);
+    const json = await res.json();
+    if (!res.ok) {
+      return { success: false, error: json.error || 'Failed to fetch event team' };
+    }
+    return { success: true, data: json };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Network error' };
+  }
+}
+
+export async function fetchInvitePreview(
+  code: string
+): Promise<{ success: boolean; data?: any; error?: string }> {
+  try {
+    const res = await fetch(`/api/events/team?code=${encodeURIComponent(code)}`);
+    const json = await res.json();
+    if (!res.ok) {
+      return { success: false, error: json.error || 'Invalid or expired invite link' };
+    }
+    return { success: true, data: json };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Network error' };
+  }
+}
+
+export async function joinEventTeamByCode(
+  code: string
+): Promise<{ success: boolean; data?: any; error?: string }> {
+  try {
+    const res = await fetch('/api/events/team', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'join', code }),
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      return { success: false, error: json.error || 'Failed to join event team' };
+    }
+    return { success: true, data: json };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Network error' };
+  }
+}
+
+export async function regenerateEventInviteCode(
+  eventId: string
+): Promise<{ success: boolean; inviteCode?: string; inviteUrl?: string; error?: string }> {
+  try {
+    const res = await fetch('/api/events/team', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'regenerate_code', eventId }),
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      return { success: false, error: json.error || 'Failed to regenerate invite link' };
+    }
+    return { success: true, inviteCode: json.inviteCode, inviteUrl: json.inviteUrl };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Network error' };
+  }
+}
+
+export async function removeEventAdmin(
+  eventId: string,
+  adminUserId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const res = await fetch('/api/events/team', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ eventId, adminUserId }),
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      return { success: false, error: json.error || 'Failed to remove admin' };
+    }
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Network error' };
+  }
+}
+
 

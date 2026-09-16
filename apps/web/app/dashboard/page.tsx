@@ -14,6 +14,7 @@ import {
   Mail,
   User as UserIcon,
   Shield,
+  Crown,
   Loader2,
   Plus,
   X as XIcon,
@@ -1495,6 +1496,18 @@ export default function DashboardPage() {
                                     ? 'Draft'
                                     : 'Live / Active'}
                             </span>
+
+                            {(evt as any).isCoHost ? (
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-sky-50 dark:bg-sky-950/40 text-[#0099e6] dark:text-[#38bdf8] border border-sky-200 dark:border-sky-800/40 inline-flex items-center gap-1 shrink-0">
+                                <Shield className="w-3 h-3 text-[#0099e6]" />
+                                <span>Co-Host</span>
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40 inline-flex items-center gap-1 shrink-0">
+                                <Crown className="w-3 h-3 text-amber-500" />
+                                <span>Owner</span>
+                              </span>
+                            )}
 
                             <span className="text-xs text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap shrink-0 flex items-center gap-1">
                               <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />

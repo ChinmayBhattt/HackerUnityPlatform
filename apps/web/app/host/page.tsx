@@ -49,11 +49,28 @@ import {
   Presentation,
   Link2,
   FileCheck,
+  Users,
+  UserMinus,
+  UserCheck,
+  Crown,
+  Shield,
+  RefreshCw,
+  Trash2,
+  AlertCircle,
 } from 'lucide-react';
 import { EventCategory, EventStatus, EventType, CustomQuestion } from '@hackers-unity/shared-types';
 import { ExtendedEvent, MOCK_EVENTS } from '@/lib/mock-data';
 import { saveHostedEvent, saveDraftEvent, updateHostedEvent, getCustomEvents } from '@/lib/storage';
-import { createEventInSupabase, updateEventInSupabase, fetchEventBySlug, uploadHackathonAsset } from '@/lib/supabase-service';
+import {
+  createEventInSupabase,
+  updateEventInSupabase,
+  fetchEventBySlug,
+  uploadHackathonAsset,
+  fetchEventTeam,
+  regenerateEventInviteCode,
+  removeEventAdmin,
+  EventTeamData,
+} from '@/lib/supabase-service';
 import { getEventPreviewToken, getEventPrivateLink } from '@/lib/utils';
 import { HackathonCard } from '@/components/hackathon-card';
 import { getEventImageSrc } from '@/lib/event-images';
@@ -61,7 +78,7 @@ import { RichTextEditor } from '@/components/rich-text-editor';
 import { VenuePicker } from '@/components/venue-picker';
 import { useAuth } from '@/lib/auth-context';
 
-const TOTAL_STEPS = 7;
+const TOTAL_STEPS = 8;
 
 const CURRENCIES = [
   { code: 'INR', symbol: '₹', label: 'INR (₹)' },
@@ -179,7 +196,7 @@ function HostHackathonContent() {
     const s = searchParams?.get('step');
     if (s) {
       const p = parseInt(s, 10);
-      if (!isNaN(p) && p >= 1 && p <= 7) return p;
+      if (!isNaN(p) && p >= 1 && p <= 8) return p;
     }
     return 1;
   });
@@ -297,6 +314,79 @@ function HostHackathonContent() {
   });
   const [copiedPrivateLink, setCopiedPrivateLink] = useState(false);
 
+  // ─── STEP 7: TEAM & CO-HOST ADMIN STATE ───────────────────
+  const [eventTeam, setEventTeam] = useState<EventTeamData | null>(null);
+  const [isLoadingTeam, setIsLoadingTeam] = useState(false);
+  const [copiedTeamLink, setCopiedTeamLink] = useState(false);
+  const [isRegeneratingTeamLink, setIsRegeneratingTeamLink] = useState(false);
+  const [removingAdminId, setRemovingAdminId] = useState<string | null>(null);
+  const [teamError, setTeamError] = useState<string | null>(null);
+  const [teamSuccessMsg, setTeamSuccessMsg] = useState<string | null>(null);
+
+  const loadTeamData = async (targetId?: string) => {
+    const idToUse = targetId || editingEventId;
+    if (!idToUse) return;
+    setIsLoadingTeam(true);
+    setTeamError(null);
+    try {
+      const res = await fetchEventTeam(idToUse);
+      if (res.success && res.data) {
+        setEventTeam(res.data);
+      } else {
+        setTeamError(res.error || 'Failed to load team data.');
+      }
+    } catch (e: any) {
+      setTeamError(e.message || 'Error fetching team');
+    } finally {
+      setIsLoadingTeam(false);
+    }
+  };
+
+  const handleCopyTeamInviteLink = () => {
+    if (!eventTeam?.inviteUrl) return;
+    navigator.clipboard.writeText(eventTeam.inviteUrl);
+    setCopiedTeamLink(true);
+    setTimeout(() => setCopiedTeamLink(false), 2500);
+  };
+
+  const handleRegenerateTeamLink = async () => {
+    const targetId = editingEventId;
+    if (!targetId) return;
+    if (!confirm('Are you sure you want to regenerate the invite link? Any previous link will be immediately invalidated.')) {
+      return;
+    }
+    setIsRegeneratingTeamLink(true);
+    setTeamError(null);
+    const res = await regenerateEventInviteCode(targetId);
+    setIsRegeneratingTeamLink(false);
+    if (res.success && res.inviteCode) {
+      setTeamSuccessMsg('Invite link regenerated successfully!');
+      setTimeout(() => setTeamSuccessMsg(null), 3000);
+      loadTeamData(targetId);
+    } else {
+      setTeamError(res.error || 'Failed to regenerate invite link.');
+    }
+  };
+
+  const handleRemoveAdmin = async (adminUserId: string, adminName: string) => {
+    const targetId = editingEventId;
+    if (!targetId) return;
+    if (!confirm(`Are you sure you want to remove "${adminName}" from the organizing team? They will immediately lose admin access to edit this event.`)) {
+      return;
+    }
+    setRemovingAdminId(adminUserId);
+    setTeamError(null);
+    const res = await removeEventAdmin(targetId, adminUserId);
+    setRemovingAdminId(null);
+    if (res.success) {
+      setTeamSuccessMsg(`${adminName} has been removed from the organizing team.`);
+      setTimeout(() => setTeamSuccessMsg(null), 3000);
+      loadTeamData(targetId);
+    } else {
+      setTeamError(res.error || 'Failed to remove admin.');
+    }
+  };
+
   // ─── LOAD EVENT FOR EDIT MODE ────────────────────────────
   useEffect(() => {
     if (!editParam) return;
@@ -342,6 +432,7 @@ function HostHackathonContent() {
           setIsEditMode(true);
           setEditingEventId(found.id);
           setOriginalEventSlug(found.slug);
+          loadTeamData(found.id);
 
           setTitle(found.title || found.name || '');
           setTagline(found.tagline || '');
@@ -1020,7 +1111,8 @@ ${organizerName || 'Organizer'}`;
     { num: 4, label: 'Prizes', icon: Trophy },
     { num: 5, label: 'Registration', icon: Settings },
     { num: 6, label: 'Submission', icon: Rocket },
-    { num: 7, label: 'Review', icon: Eye },
+    { num: 7, label: 'Team', icon: Users },
+    { num: 8, label: 'Review', icon: Eye },
   ];
 
   return (
@@ -2253,14 +2345,269 @@ ${organizerName || 'Organizer'}`;
                       onClick={goNext}
                       className="px-5 py-2 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
                     >
+                      <span>Continue to Team</span> <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ═══ STEP 7: Organizing Team & Co-Host Admins ══════════ */}
+              {step === 7 && (
+                <div className="space-y-6 animate-in fade-in">
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <Users className="w-4 h-4 text-[#0099e6]" />
+                      <span>Organizing Team & Co-Host Admins</span>
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      Give full admin access to your friends or co-organizers via a dedicated invite link. They can edit and manage this hackathon just like you.
+                    </p>
+                  </div>
+
+                  {teamSuccessMsg && (
+                    <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 text-emerald-800 dark:text-emerald-300 text-xs font-bold flex items-center gap-2 animate-in fade-in">
+                      <CheckCircle2 className="w-4 h-4 shrink-0" />
+                      <span>{teamSuccessMsg}</span>
+                    </div>
+                  )}
+
+                  {teamError && (
+                    <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/40 text-rose-800 dark:text-rose-300 text-xs font-bold flex items-center gap-2 animate-in fade-in">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span>{teamError}</span>
+                    </div>
+                  )}
+
+                  {/* ─── INVITE LINK SECTION ─── */}
+                  {isEditMode && editingEventId ? (
+                    <div className="p-5 rounded-3xl bg-gradient-to-br from-sky-50/80 via-blue-50/40 to-sky-50/80 dark:from-sky-950/30 dark:via-blue-950/20 dark:to-sky-950/30 border-2 border-sky-300/80 dark:border-sky-800/50 space-y-3.5 shadow-xs">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-9 h-9 rounded-2xl bg-[#0099e6] flex items-center justify-center text-white shadow-xs">
+                            <Shield className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                              <span>Co-Host Admin Invite Link</span>
+                              <span className="text-[10px] font-extrabold text-[#0099e6] dark:text-[#38bdf8] bg-sky-200/70 dark:bg-sky-900/50 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                                Full Admin Access
+                              </span>
+                            </h4>
+                            <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
+                              Anyone with this link can join as an event co-host and edit this hackathon
+                            </p>
+                          </div>
+                        </div>
+
+                        {eventTeam?.isOwner && (
+                          <button
+                            type="button"
+                            onClick={handleRegenerateTeamLink}
+                            disabled={isRegeneratingTeamLink}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-white/[0.08] hover:bg-slate-100 dark:hover:bg-white/[0.14] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/[0.08] text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                            title="Invalidates current link and creates a new one"
+                          >
+                            <RefreshCw className={`w-3.5 h-3.5 ${isRegeneratingTeamLink ? 'animate-spin' : ''}`} />
+                            <span>{isRegeneratingTeamLink ? 'Generating...' : 'Regenerate Link'}</span>
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white dark:bg-[#121824] p-2 rounded-2xl border border-sky-200 dark:border-sky-800/40 shadow-2xs">
+                        <div className="flex-1 flex items-center gap-2 px-2 overflow-hidden">
+                          <Link2 className="w-3.5 h-3.5 text-[#0099e6] shrink-0" />
+                          <input
+                            type="text"
+                            readOnly
+                            value={
+                              eventTeam?.inviteUrl ||
+                              (typeof window !== 'undefined'
+                                ? `${window.location.origin}/host/join?code=${eventTeam?.inviteCode || ''}`
+                                : '')
+                            }
+                            className="w-full bg-transparent text-xs text-slate-800 dark:text-slate-200 font-mono focus:outline-hidden truncate"
+                          />
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={handleCopyTeamInviteLink}
+                          className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0 ${
+                            copiedTeamLink
+                              ? 'bg-emerald-600 text-white'
+                              : 'bg-[#0099e6] hover:bg-[#0284c7] text-white shadow-xs'
+                          }`}
+                        >
+                          {copiedTeamLink ? (
+                            <>
+                              <Check className="w-3.5 h-3.5" />
+                              <span>Copied Link!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3.5 h-3.5" />
+                              <span>Copy Invite Link</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                        💡 <strong>How it works:</strong> Send this link to your friend. When they open it and click &quot;Accept&quot;, they will instantly become a verified Co-Host for this hackathon with full permissions to edit dates, tracks, rules, and review registrations.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="p-5 rounded-3xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] space-y-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
+                          <Users className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                            Co-Host Invites Activate on Save
+                          </h4>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                            Save your hackathon draft or submit for review to unlock your unique co-host invite link.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ─── TEAM MEMBERS LIST ─── */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                        <span>Event Administrators</span>
+                        <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.08] text-[10px] text-slate-600 dark:text-slate-400">
+                          {1 + (eventTeam?.admins?.length || 0)} Total
+                        </span>
+                      </h4>
+                      {isLoadingTeam && (
+                        <span className="text-[11px] text-[#0099e6] flex items-center gap-1">
+                          <Loader2 className="w-3 h-3 animate-spin" /> Loading team...
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Primary Owner Card */}
+                    <div className="p-4 rounded-2xl bg-white dark:bg-[#0c1017] border border-amber-200 dark:border-amber-900/40 shadow-2xs flex items-center justify-between flex-wrap gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold shadow-xs text-sm overflow-hidden">
+                          {eventTeam?.owner?.avatar_url ? (
+                            <img src={eventTeam.owner.avatar_url} alt="Owner" className="w-full h-full object-cover" />
+                          ) : (
+                            <Crown className="w-5 h-5 text-white" />
+                          )}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h5 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                              {eventTeam?.owner?.full_name || organizerName || user?.name || 'Primary Host'}
+                            </h5>
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/40 text-amber-700 dark:text-amber-400 text-[10px] font-extrabold uppercase tracking-wider">
+                              <Crown className="w-3 h-3 text-amber-500" />
+                              <span>Host • Owner</span>
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                            {eventTeam?.owner?.email || user?.email || 'Created this hackathon'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 italic">
+                        Primary Host (Cannot be removed)
+                      </span>
+                    </div>
+
+                    {/* Co-Host Admins */}
+                    {eventTeam?.admins && eventTeam.admins.length > 0 ? (
+                      <div className="space-y-2">
+                        {eventTeam.admins.map((admin) => (
+                          <div
+                            key={admin.id}
+                            className="p-3.5 rounded-2xl bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-white/[0.08] shadow-2xs flex items-center justify-between flex-wrap gap-3"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-[#0099e6] font-bold text-sm overflow-hidden">
+                                {admin.avatarUrl ? (
+                                  <img src={admin.avatarUrl} alt={admin.fullName} className="w-full h-full object-cover" />
+                                ) : (
+                                  <span>{admin.fullName.charAt(0).toUpperCase()}</span>
+                                )}
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h5 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                                    {admin.fullName}
+                                  </h5>
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/40 text-[#0099e6] dark:text-[#38bdf8] text-[10px] font-extrabold uppercase tracking-wider">
+                                    <Shield className="w-3 h-3" />
+                                    <span>Co-Host Admin</span>
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                                  {admin.email || 'Authorized Event Admin'} • Joined {new Date(admin.joinedAt).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Remove button for Owner */}
+                            {eventTeam?.isOwner && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveAdmin(admin.userId, admin.fullName)}
+                                disabled={removingAdminId === admin.userId}
+                                className="px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/40 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                                title="Remove admin rights"
+                              >
+                                {removingAdminId === admin.userId ? (
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  <Trash2 className="w-3 h-3" />
+                                )}
+                                <span>Remove</span>
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-6 rounded-2xl bg-slate-50/80 dark:bg-white/[0.02] border border-dashed border-slate-300 dark:border-white/[0.1] text-center space-y-2">
+                        <Users className="w-8 h-8 text-slate-400 mx-auto" />
+                        <h5 className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                          No Co-Hosts Added Yet
+                        </h5>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+                          Share your unique invite link with friends, colleagues, or faculty members so they can collaborate on this hackathon.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Navigation Buttons */}
+                  <div className="pt-2 flex justify-between">
+                    <button
+                      type="button"
+                      onClick={goBack}
+                      className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" /> <span>Back</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={goNext}
+                      className="px-5 py-2 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                    >
                       <span>Continue to Review</span> <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* ═══ STEP 7: Review & Publish ═══════════════════════ */}
-              {step === 7 && (
+              {/* ═══ STEP 8: Review & Publish ═══════════════════════ */}
+              {step === 8 && (
                 <div className="space-y-4 animate-in fade-in">
                   <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <Eye className="w-4 h-4 text-[#0099e6]" />
@@ -2373,6 +2720,24 @@ ${organizerName || 'Organizer'}`;
                             <span className="text-[10px] text-slate-400 dark:text-slate-500 italic">None enabled</span>
                           )}
                         </div>
+                      </div>
+                    </div>
+
+                    {/* Organizing Team Summary */}
+                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                          <Users className="w-3.5 h-3.5 text-[#0099e6]" />
+                          <span>Organizing Team</span>
+                        </span>
+                        <button type="button" onClick={() => setStep(7)} className="text-[10px] text-[#0099e6] font-bold cursor-pointer hover:underline">Edit</button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                        <div><span className="text-slate-500 dark:text-slate-400">Primary Host:</span> <span className="font-semibold text-slate-900 dark:text-white">{eventTeam?.owner?.full_name || organizerName || user?.name || 'Owner'}</span></div>
+                        <div><span className="text-slate-500 dark:text-slate-400">Co-Host Admins:</span> <span className="font-semibold text-[#0099e6] dark:text-[#38bdf8]">{eventTeam?.admins?.length || 0} Added</span></div>
+                        {eventTeam?.inviteCode && (
+                          <div className="col-span-2"><span className="text-slate-500 dark:text-slate-400">Invite Link:</span> <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300">Active • Co-Host Admin Mode</span></div>
+                        )}
                       </div>
                     </div>
                   </div>
