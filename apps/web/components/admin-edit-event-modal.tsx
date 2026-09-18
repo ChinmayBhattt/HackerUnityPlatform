@@ -23,6 +23,8 @@ import {
   FileText,
   Sliders,
   Image as ImageIcon,
+  Users,
+  FileSpreadsheet,
 } from 'lucide-react';
 
 export interface AdminEvent {
@@ -67,6 +69,8 @@ export interface AdminEvent {
   custom_questions?: any[];
   admin_feedback?: string;
   reviewed_at?: string;
+  registration_count?: number;
+  submission_count?: number;
   created_at: string;
   updated_at: string;
 }
@@ -253,14 +257,36 @@ export function AdminEditEventModal({
             </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+            <Link
+              href={`/dashboard/events/${event.id || event.slug}/registrations`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30 text-xs font-bold transition shadow-2xs whitespace-nowrap"
+              title="Open registrations table in new tab"
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>Registrations ({event.registration_count || 0})</span>
+            </Link>
+
+            <Link
+              href={`/dashboard/events/${event.id || event.slug}/submissions`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 text-xs font-bold transition shadow-2xs whitespace-nowrap"
+              title="Open submissions spreadsheet in new tab"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <span>Submissions ({event.submission_count || 0})</span>
+            </Link>
+
             <Link
               href={`/host?edit=${encodeURIComponent(event.slug)}`}
               target="_blank"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-300 text-xs font-bold transition"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-300 text-xs font-bold transition whitespace-nowrap"
               title="Open full studio wizard in new tab"
             >
-              <span>Full Studio Editor</span>
+              <span>Full Studio</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </Link>
             <button

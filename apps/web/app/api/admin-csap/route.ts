@@ -134,6 +134,41 @@ export async function GET(req: NextRequest) {
     }
 
     const allEvents = events || [];
+
+    // Query registration counts
+    const { data: regRows } = await supabase
+      .from('registrations')
+      .select('event_id');
+
+    // Query submission counts
+    const { data: subRows } = await supabase
+      .from('submissions')
+      .select('event_id');
+
+    const regCounts: Record<string, number> = {};
+    regRows?.forEach((r: any) => {
+      if (r.event_id) {
+        regCounts[r.event_id] = (regCounts[r.event_id] || 0) + 1;
+      }
+    });
+
+    const subCounts: Record<string, number> = {};
+    subRows?.forEach((s: any) => {
+      if (s.event_id) {
+        subCounts[s.event_id] = (subCounts[s.event_id] || 0) + 1;
+      }
+    });
+
+    const eventsWithCounts = allEvents.map((evt: any) => {
+      const regCount = (regCounts[evt.id] || 0) + (evt.slug ? (regCounts[evt.slug] || 0) : 0);
+      const subCount = (subCounts[evt.id] || 0) + (evt.slug ? (subCounts[evt.slug] || 0) : 0);
+      return {
+        ...evt,
+        registration_count: regCount,
+        submission_count: subCount,
+      };
+    });
+
     const stats = {
       total: allEvents.length,
       pending: allEvents.filter(
@@ -149,11 +184,23 @@ export async function GET(req: NextRequest) {
       rejected: allEvents.filter((e) => e.status === 'REJECTED').length,
     };
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       authenticated: true,
-      events: allEvents,
+      events: eventsWithCounts,
       stats,
     });
+
+    res.cookies.set({
+      name: 'is_admin_csap',
+      value: '1',
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60,
+    });
+
+    return res;
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Internal error' }, { status: 500 });
   }
@@ -190,6 +237,16 @@ export async function POST(req: NextRequest) {
         maxAge: 7 * 24 * 60 * 60, // 7 days
       });
 
+      res.cookies.set({
+        name: 'is_admin_csap',
+        value: '1',
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60,
+      });
+
       return res;
     }
 
@@ -205,6 +262,16 @@ export async function POST(req: NextRequest) {
         path: '/',
         maxAge: 0,
       });
+      res.cookies.set({
+        name: 'is_admin_csap',
+        value: '',
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 0,
+      });
+
       return res;
     }
 

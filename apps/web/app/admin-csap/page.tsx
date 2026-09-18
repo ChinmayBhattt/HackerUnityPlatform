@@ -42,6 +42,7 @@ import {
   Award,
   SlidersHorizontal,
   PenTool,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { formatCurrency } from '@/lib/utils';
@@ -92,6 +93,8 @@ interface AdminEvent {
   custom_questions?: any[];
   admin_feedback?: string;
   reviewed_at?: string;
+  registration_count?: number;
+  submission_count?: number;
   created_at: string;
   updated_at: string;
 }
@@ -948,8 +951,8 @@ export default function AdminCsapPortal() {
                     )}
                   </div>
 
-                  {/* Metadata: Host, Dates, Prize */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs pt-1">
+                  {/* Metadata: Host, Dates, Prize, Registrations, Submissions */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 text-xs pt-1">
                     {/* Organizer */}
                     <div className="flex items-center gap-2.5">
                       <div className="w-8 h-8 rounded-xl bg-sky-50 dark:bg-sky-500/10 text-[#0099e6] dark:text-[#38bdf8] flex items-center justify-center shrink-0">
@@ -978,7 +981,7 @@ export default function AdminCsapPortal() {
                     </div>
 
                     {/* Prize */}
-                    <div className="flex items-center gap-2.5 col-span-2 sm:col-span-1">
+                    <div className="flex items-center gap-2.5">
                       <div className="w-8 h-8 rounded-xl bg-orange-50 dark:bg-orange-500/10 text-[#ea580c] dark:text-[#fb923c] flex items-center justify-center shrink-0">
                         <Trophy className="w-4 h-4" />
                       </div>
@@ -989,15 +992,41 @@ export default function AdminCsapPortal() {
                         </span>
                       </div>
                     </div>
+
+                    {/* Registrations Stat */}
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                        <Users className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="text-slate-400 dark:text-slate-500 block text-[10px] font-bold uppercase tracking-wider">Registrations</span>
+                        <span className="font-bold text-slate-800 dark:text-slate-200 block">
+                          {event.registration_count || 0} Registered
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Submissions Stat */}
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                        <FileSpreadsheet className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="text-slate-400 dark:text-slate-500 block text-[10px] font-bold uppercase tracking-wider">Submissions</span>
+                        <span className="font-bold text-slate-800 dark:text-slate-200 block">
+                          {event.submission_count || 0} Projects
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
                 {/* Right Action Buttons */}
                 <div className="flex flex-row lg:flex-col items-center lg:items-end justify-end gap-2.5 shrink-0 pt-4 lg:pt-0 border-t lg:border-t-0 border-slate-100 dark:border-white/[0.06]">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center flex-wrap gap-2 justify-end">
                     <button
                       onClick={() => setSelectedEvent(event)}
-                      className="px-3.5 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                      className="px-3.5 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
                     >
                       <Eye className="w-3.5 h-3.5 text-[#0099e6]" />
                       <span>Review Details</span>
@@ -1005,12 +1034,34 @@ export default function AdminCsapPortal() {
 
                     <button
                       onClick={() => setEditingEvent(event)}
-                      className="px-3.5 py-2.5 rounded-2xl bg-sky-50 hover:bg-sky-100 dark:bg-sky-500/10 dark:hover:bg-sky-500/20 border border-sky-200 dark:border-sky-500/30 text-[#0099e6] dark:text-[#38bdf8] text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                      className="px-3.5 py-2 rounded-2xl bg-sky-50 hover:bg-sky-100 dark:bg-sky-500/10 dark:hover:bg-sky-500/20 border border-sky-200 dark:border-sky-500/30 text-[#0099e6] dark:text-[#38bdf8] text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
                       title="Edit this hackathon as platform admin"
                     >
                       <PenTool className="w-3.5 h-3.5" />
                       <span>Edit Event</span>
                     </button>
+
+                    <Link
+                      href={`/dashboard/events/${event.id || event.slug}/registrations`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3.5 py-2 rounded-2xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 border border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-400 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow-2xs"
+                      title="View participant registrations"
+                    >
+                      <Users className="w-3.5 h-3.5 text-indigo-500" />
+                      <span>Registrations ({event.registration_count || 0})</span>
+                    </Link>
+
+                    <Link
+                      href={`/dashboard/events/${event.id || event.slug}/submissions`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3.5 py-2 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow-2xs"
+                      title="View project submissions"
+                    >
+                      <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span>Submissions ({event.submission_count || 0})</span>
+                    </Link>
                   </div>
 
                   {isPending && (
@@ -1091,19 +1142,39 @@ export default function AdminCsapPortal() {
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium mt-0.5">{selectedEvent.tagline}</p>
               </div>
 
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
                 <button
                   onClick={() => {
                     const evtToEdit = selectedEvent;
                     setSelectedEvent(null);
                     setEditingEvent(evtToEdit);
                   }}
-                  className="px-3.5 py-1.5 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  className="px-3.5 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 dark:bg-sky-500/10 dark:hover:bg-sky-500/20 border border-sky-200 dark:border-sky-500/30 text-[#0099e6] dark:text-[#38bdf8] text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
                   title="Edit this event"
                 >
                   <PenTool className="w-3.5 h-3.5" />
                   <span>Edit Event</span>
                 </button>
+                <Link
+                  href={`/dashboard/events/${selectedEvent.id || selectedEvent.slug}/registrations`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 border border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-400 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap"
+                  title="View attendee registrations"
+                >
+                  <Users className="w-3.5 h-3.5" />
+                  <span>Registrations ({selectedEvent.registration_count || 0})</span>
+                </Link>
+                <Link
+                  href={`/dashboard/events/${selectedEvent.id || selectedEvent.slug}/submissions`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap"
+                  title="View project submissions"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5" />
+                  <span>Submissions ({selectedEvent.submission_count || 0})</span>
+                </Link>
                 <button
                   onClick={() => setSelectedEvent(null)}
                   className="p-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition cursor-pointer"
@@ -1115,6 +1186,50 @@ export default function AdminCsapPortal() {
 
             {/* Modal Body */}
             <div className="p-6 overflow-y-auto space-y-6 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
+              {/* Registrations & Submissions Quick Card */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="p-4 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-800/30 flex items-center justify-between">
+                  <div>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 block">Total Registrations</span>
+                    <span className="text-xl font-black text-slate-900 dark:text-white">
+                      {selectedEvent.registration_count || 0}
+                    </span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
+                      Builders &amp; team applicants
+                    </span>
+                  </div>
+                  <Link
+                    href={`/dashboard/events/${selectedEvent.id || selectedEvent.slug}/registrations`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+                  >
+                    <span>Open Table</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </Link>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-800/30 flex items-center justify-between">
+                  <div>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block">Project Submissions</span>
+                    <span className="text-xl font-black text-slate-900 dark:text-white">
+                      {selectedEvent.submission_count || 0}
+                    </span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
+                      Projects submitted for judging
+                    </span>
+                  </div>
+                  <Link
+                    href={`/dashboard/events/${selectedEvent.id || selectedEvent.slug}/submissions`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+                  >
+                    <span>Open Sheets</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </Link>
+                </div>
+              </div>
               {/* Organizer Card */}
               <div className="p-5 rounded-2xl bg-sky-50/60 dark:bg-sky-950/20 border border-sky-100 dark:border-sky-800/30 space-y-3">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-[#0099e6] dark:text-[#38bdf8] flex items-center gap-2">
