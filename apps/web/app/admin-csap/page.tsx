@@ -48,6 +48,7 @@ import { formatCurrency } from '@/lib/utils';
 import { Logo } from '@/components/logo';
 import { AdminBlogsModeration } from '@/components/admin-blogs-moderation';
 import { RichDescription } from '@/components/rich-description';
+import { AdminEditEventModal } from '@/components/admin-edit-event-modal';
 
 interface AdminEvent {
   id: string;
@@ -114,6 +115,7 @@ export default function AdminCsapPortal() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'DRAFT'>('PENDING');
   const [selectedEvent, setSelectedEvent] = useState<AdminEvent | null>(null);
+  const [editingEvent, setEditingEvent] = useState<AdminEvent | null>(null);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [notificationMsg, setNotificationMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [rejectModalEvent, setRejectModalEvent] = useState<AdminEvent | null>(null);
@@ -322,6 +324,75 @@ export default function AdminCsapPortal() {
       setNotificationMsg({ type: 'error', text: err.message || 'Network error' });
     } finally {
       setActionLoadingId(null);
+    }
+  };
+
+  // ─── 8. Edit Event as Admin ────────────────────────────────────────────────
+  const handleAdminEditSave = async (updatedEvent: AdminEvent): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/admin-csap', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update_event',
+          eventId: updatedEvent.id,
+          updates: {
+            title: updatedEvent.title,
+            tagline: updatedEvent.tagline,
+            organizer_name: updatedEvent.organizer_name,
+            institution_name: updatedEvent.institution_name,
+            host_type: updatedEvent.host_type,
+            organizer_email: updatedEvent.organizer_email,
+            organizer_phone: updatedEvent.organizer_phone,
+            category: updatedEvent.category,
+            event_type: updatedEvent.event_type,
+            location: updatedEvent.location,
+            status: updatedEvent.status,
+            start_date: updatedEvent.start_date,
+            end_date: updatedEvent.end_date,
+            registration_deadline: updatedEvent.registration_deadline,
+            total_prize_value: updatedEvent.total_prize_value,
+            currency: updatedEvent.currency,
+            description: updatedEvent.description,
+            rules_text: updatedEvent.rules_text,
+            eligibility: updatedEvent.eligibility,
+            difficulty: updatedEvent.difficulty,
+            min_team_size: updatedEvent.min_team_size,
+            max_team_size: updatedEvent.max_team_size,
+            is_team_event: updatedEvent.is_team_event,
+            featured: updatedEvent.featured,
+            tags: updatedEvent.tags,
+            banner_url: updatedEvent.banner_url,
+            logo_url: updatedEvent.logo_url,
+            admin_feedback: updatedEvent.admin_feedback,
+          },
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setNotificationMsg({
+          type: 'success',
+          text: `✅ "${updatedEvent.title}" updated successfully!`,
+        });
+        // Optimistic local update
+        setEvents((prev) =>
+          prev.map((e) => (e.id === updatedEvent.id ? { ...e, ...data.event } : e))
+        );
+        if (selectedEvent?.id === updatedEvent.id) {
+          setSelectedEvent((prev) => (prev ? { ...prev, ...data.event } : null));
+        }
+        return true;
+      } else {
+        setNotificationMsg({
+          type: 'error',
+          text: `Failed to update event: ${data.error || 'Unknown error'}`,
+        });
+        return false;
+      }
+    } catch (err: any) {
+      setNotificationMsg({ type: 'error', text: err.message || 'Network error updating event' });
+      return false;
     }
   };
 
@@ -923,13 +994,24 @@ export default function AdminCsapPortal() {
 
                 {/* Right Action Buttons */}
                 <div className="flex flex-row lg:flex-col items-center lg:items-end justify-end gap-2.5 shrink-0 pt-4 lg:pt-0 border-t lg:border-t-0 border-slate-100 dark:border-white/[0.06]">
-                  <button
-                    onClick={() => setSelectedEvent(event)}
-                    className="px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <Eye className="w-3.5 h-3.5 text-[#0099e6]" />
-                    <span>Review Details</span>
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setSelectedEvent(event)}
+                      className="px-3.5 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Eye className="w-3.5 h-3.5 text-[#0099e6]" />
+                      <span>Review Details</span>
+                    </button>
+
+                    <button
+                      onClick={() => setEditingEvent(event)}
+                      className="px-3.5 py-2.5 rounded-2xl bg-sky-50 hover:bg-sky-100 dark:bg-sky-500/10 dark:hover:bg-sky-500/20 border border-sky-200 dark:border-sky-500/30 text-[#0099e6] dark:text-[#38bdf8] text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                      title="Edit this hackathon as platform admin"
+                    >
+                      <PenTool className="w-3.5 h-3.5" />
+                      <span>Edit Event</span>
+                    </button>
+                  </div>
 
                   {isPending && (
                     <div className="flex items-center gap-2">
@@ -1009,12 +1091,26 @@ export default function AdminCsapPortal() {
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium mt-0.5">{selectedEvent.tagline}</p>
               </div>
 
-              <button
-                onClick={() => setSelectedEvent(null)}
-                className="p-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => {
+                    const evtToEdit = selectedEvent;
+                    setSelectedEvent(null);
+                    setEditingEvent(evtToEdit);
+                  }}
+                  className="px-3.5 py-1.5 rounded-xl bg-[#0099e6] hover:bg-[#0284c7] text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  title="Edit this event"
+                >
+                  <PenTool className="w-3.5 h-3.5" />
+                  <span>Edit Event</span>
+                </button>
+                <button
+                  onClick={() => setSelectedEvent(null)}
+                  className="p-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Modal Body */}
@@ -1168,39 +1264,53 @@ export default function AdminCsapPortal() {
             </div>
 
             {/* Modal Footer Actions */}
-            <div className="p-5 border-t border-slate-100 dark:border-white/[0.08] bg-slate-50/70 dark:bg-white/[0.02] flex items-center justify-end gap-3">
-              <button
-                onClick={() => setSelectedEvent(null)}
-                className="px-5 py-2.5 rounded-2xl bg-white dark:bg-white/[0.06] hover:bg-slate-100 dark:hover:bg-white/[0.1] border border-slate-200 dark:border-white/[0.08] text-slate-700 dark:text-slate-200 font-bold text-xs transition cursor-pointer"
-              >
-                Close
-              </button>
-
+            <div className="p-5 border-t border-slate-100 dark:border-white/[0.08] bg-slate-50/70 dark:bg-white/[0.02] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
               <button
                 onClick={() => {
-                  setRejectModalEvent(selectedEvent);
+                  const evtToEdit = selectedEvent;
                   setSelectedEvent(null);
+                  setEditingEvent(evtToEdit);
                 }}
-                className="px-5 py-2.5 rounded-2xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40 font-bold text-xs transition cursor-pointer"
+                className="px-5 py-2.5 rounded-2xl bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/40 dark:hover:bg-sky-900/40 border border-sky-200 dark:border-sky-800/50 text-[#0099e6] dark:text-[#38bdf8] font-bold text-xs transition flex items-center justify-center gap-2 cursor-pointer shadow-xs"
               >
-                Reject Request
+                <PenTool className="w-4 h-4" />
+                <span>Edit Event Details</span>
               </button>
 
-              <button
-                onClick={() => {
-                  handleApprove(selectedEvent);
-                  setSelectedEvent(null);
-                }}
-                disabled={actionLoadingId === selectedEvent.id}
-                className="px-6 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs transition flex items-center gap-2 shadow-md shadow-emerald-600/20 cursor-pointer"
-              >
-                {actionLoadingId === selectedEvent.id ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Check className="w-4 h-4" />
-                )}
-                <span>Approve &amp; Publish to Website</span>
-              </button>
+              <div className="flex items-center justify-end gap-2.5 flex-wrap">
+                <button
+                  onClick={() => setSelectedEvent(null)}
+                  className="px-5 py-2.5 rounded-2xl bg-white dark:bg-white/[0.06] hover:bg-slate-100 dark:hover:bg-white/[0.1] border border-slate-200 dark:border-white/[0.08] text-slate-700 dark:text-slate-200 font-bold text-xs transition cursor-pointer"
+                >
+                  Close
+                </button>
+
+                <button
+                  onClick={() => {
+                    setRejectModalEvent(selectedEvent);
+                    setSelectedEvent(null);
+                  }}
+                  className="px-5 py-2.5 rounded-2xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40 font-bold text-xs transition cursor-pointer"
+                >
+                  Reject Request
+                </button>
+
+                <button
+                  onClick={() => {
+                    handleApprove(selectedEvent);
+                    setSelectedEvent(null);
+                  }}
+                  disabled={actionLoadingId === selectedEvent.id}
+                  className="px-6 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs transition flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 cursor-pointer"
+                >
+                  {actionLoadingId === selectedEvent.id ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Check className="w-4 h-4" />
+                  )}
+                  <span>Approve &amp; Publish to Website</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1265,6 +1375,14 @@ export default function AdminCsapPortal() {
           </div>
         </div>
       )}
+
+      {/* ─── Admin Edit Event Modal ────────────────────────────────────── */}
+      <AdminEditEventModal
+        isOpen={Boolean(editingEvent)}
+        event={editingEvent}
+        onClose={() => setEditingEvent(null)}
+        onSave={handleAdminEditSave}
+      />
         </>
       )}
     </div>

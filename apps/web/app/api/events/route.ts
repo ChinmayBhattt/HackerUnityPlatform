@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import {
   authenticateRequest,
   createAdminClient,
   unauthorizedResponse,
   forbiddenResponse,
+  verifyAdminCsapSession,
 } from '@/lib/api-auth';
 
 function slugify(text: string): string {
@@ -134,6 +136,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    // Broadcast creation to realtime sync channels so admins and visitors see it immediately
+    try {
+      const channel = serverSupabase.channel('public:events_realtime');
+      await channel.send({
+        type: 'broadcast',
+        event: 'event_created',
+        payload: { event: data },
+      });
+      const csapChannel = serverSupabase.channel('public:admin_csap_events_sync');
+      await csapChannel.send({
+        type: 'broadcast',
+        event: 'event_created',
+        payload: { event: data },
+      });
+    } catch (bcErr) {
+      console.warn('Realtime broadcast warning on event creation:', bcErr);
+    }
+
     return NextResponse.json({ success: true, data });
   } catch (err: any) {
     console.error('Server error creating event:', err);
@@ -143,8 +163,12 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
-    const auth = await authenticateRequest();
-    if (!auth) {
+    const cookieStore = await cookies();
+    const csapToken = cookieStore.get('admin_csap_session')?.value;
+    const isCsapAdmin = verifyAdminCsapSession(csapToken);
+
+    const auth = await authenticateRequest(req);
+    if (!auth && !isCsapAdmin) {
       return unauthorizedResponse('You must be signed in to update an event.');
     }
 
@@ -167,12 +191,18 @@ export async function PATCH(req: Request) {
     }
     const { data: existingEvent } = await existingEventQuery.maybeSingle();
 
-    const userRole = auth.user.user_metadata?.role;
-    const isOwner = existingEvent?.organizer_id === auth.userId;
-    const isAdmin = userRole === 'ADMIN' || auth.email === process.env.ADMIN_EMAIL;
+    const userRole = auth?.user?.user_metadata?.role;
+    const isOwner = Boolean(auth && existingEvent?.organizer_id === auth.userId);
+    const isAdmin =
+      isCsapAdmin ||
+      userRole === 'ADMIN' ||
+      userRole === 'SUPER_ADMIN' ||
+      auth?.email === 'chinmaybhatt26@gmail.com' ||
+      auth?.email === 'hackerunity.community@gmail.com' ||
+      auth?.email === process.env.ADMIN_EMAIL;
 
     let isCoHost = false;
-    if (existingEvent && !isOwner && !isAdmin) {
+    if (existingEvent && !isOwner && !isAdmin && auth) {
       const { data: coHostRecord } = await serverSupabase
         .from('event_admins')
         .select('id')
@@ -258,8 +288,8 @@ export async function PATCH(req: Request) {
         category: updates.category || 'HACKATHON',
         event_type: updates.eventType || 'ONLINE',
         location: updates.location || 'Online',
-        organizer_id: auth.userId,
-        organizer_name: updates.organizerName || auth.user.user_metadata?.name || 'Organizer',
+        organizer_id: auth?.userId || existingEvent?.organizer_id || null,
+        organizer_name: updates.organizerName || auth?.user?.user_metadata?.name || 'Organizer',
         organizer_avatar: updates.organizerAvatar || '⚡',
         start_date: updates.startDate || new Date().toISOString(),
         end_date: updates.endDate || new Date(Date.now() + 7 * 86400000).toISOString(),

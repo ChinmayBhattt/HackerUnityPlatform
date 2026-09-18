@@ -1569,9 +1569,8 @@ export default function DashboardPage() {
                               const localRegCount =
                                 (evt.id ? getEventRegistrationsCount(evt.id) : 0) +
                                 (evt.slug && evt.slug !== evt.id ? getEventRegistrationsCount(evt.slug) : 0);
-                              const displayBuilders = isPending
-                                ? `${localRegCount} Builder${localRegCount === 1 ? '' : 's'}`
-                                : evt.participantsDisplay || `${evt.participantsCount || 500}+ Builders`;
+                              const count = isPending ? localRegCount : (typeof evt.participantsCount === 'number' ? evt.participantsCount : localRegCount);
+                              const displayBuilders = `${count} Builder${count === 1 ? '' : 's'}`;
 
                               return (
                                 <span className="flex items-center gap-1 text-[#0099e6] font-bold whitespace-nowrap shrink-0 bg-sky-50 dark:bg-sky-950/40 px-2.5 py-1 rounded-lg border border-sky-100 dark:border-sky-800/40">

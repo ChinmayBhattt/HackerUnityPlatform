@@ -14,7 +14,7 @@ import {
 import { EventCategory, EventStatus } from '@hackers-unity/shared-types';
 import { ExtendedEvent } from '@/lib/mock-data';
 import { EVENT_IMAGE_MAP, getEventImageSrc } from '@/lib/event-images';
-import { formatCurrency, getDaysLeft, getStatusBadge, getCategoryBadge } from '@/lib/utils';
+import { formatCurrency, getDaysLeft, getStatusBadge, getCategoryBadge, formatRegistrationCount } from '@/lib/utils';
 import { toggleBookmarkEvent, getBookmarkedEventIds } from '@/lib/storage';
 import { useAuth } from '@/lib/auth-context';
 import { useEffect } from 'react';
@@ -194,7 +194,7 @@ export function HackathonCard({ event, isBookmarked, onBookmarkChange }: Hackath
               <div>
                 <div className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider font-semibold">Hackers</div>
                 <div className="font-bold text-slate-800 dark:text-slate-200 text-xs">
-                  {event.participantsDisplay || `${event.participantsCount.toLocaleString()}+`} Registered
+                  {formatRegistrationCount(event.participantsCount)}
                 </div>
               </div>
             </div>

@@ -172,3 +172,32 @@ export function rateLimitedResponse(retryAfterMs: number) {
     }
   );
 }
+
+/**
+ * Validates the CSAP admin session token (from admin_csap_session cookie).
+ */
+export function verifyAdminCsapSession(token: string | undefined): boolean {
+  if (!token) return false;
+  try {
+    const crypto = require('crypto');
+    const SECRET_SALT = process.env.SUPABASE_SECRET_KEY || 'hackers-unity-admin-csap-secret-salt-2026';
+    const raw = Buffer.from(token, 'base64').toString('utf8');
+    const { u, t, s } = JSON.parse(raw);
+    if (!u || !t || !s) return false;
+
+    // Check expiration (7 days)
+    const ageMs = Date.now() - Number(t);
+    if (ageMs > 7 * 24 * 60 * 60 * 1000) return false;
+
+    // Verify HMAC signature
+    const expectedSig = crypto
+      .createHmac('sha256', SECRET_SALT)
+      .update(`${u}:${t}`)
+      .digest('hex');
+
+    return crypto.timingSafeEqual(Buffer.from(s), Buffer.from(expectedSig));
+  } catch {
+    return false;
+  }
+}
+

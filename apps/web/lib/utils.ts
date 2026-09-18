@@ -148,3 +148,19 @@ export function getEventPrivateLink(event: { slug?: string; id?: string; preview
   const slug = event.slug || event.id || 'preview';
   return `${base}/hackathons/${slug}?preview_key=${token}`;
 }
+
+export function formatRegistrationCount(count: number | null | undefined): string {
+  const num = typeof count === 'number' && !isNaN(count) ? Math.max(0, Math.floor(count)) : 0;
+  if (num === 0) return '0 Registered';
+  if (num === 1) return '1 Registered';
+  if (num < 100) return `${num} Registered`;
+  return `${num.toLocaleString()}+ Registered`;
+}
+
+export function formatBuildersCount(count: number | null | undefined): string {
+  const num = typeof count === 'number' && !isNaN(count) ? Math.max(0, Math.floor(count)) : 0;
+  if (num === 0) return '0 Builders';
+  if (num === 1) return '1 Builder';
+  if (num < 100) return `${num} Builders`;
+  return `${num.toLocaleString()}+ Builders`;
+}

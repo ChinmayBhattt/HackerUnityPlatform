@@ -128,6 +128,18 @@ export async function POST(req: Request) {
           .from('events')
           .update({ registration_count: exactCount, updated_at: new Date().toISOString() })
           .eq('id', targetEventId);
+
+        // Realtime broadcast to all clients
+        try {
+          const channel = serverSupabase.channel('public:events_realtime');
+          await channel.send({
+            type: 'broadcast',
+            event: 'registration_created',
+            payload: { eventId: targetEventId, count: exactCount },
+          });
+        } catch (bcErr) {
+          console.warn('Realtime broadcast warning:', bcErr);
+        }
       }
     } catch (countErr) {
       console.warn('Failed to update event registration count:', countErr);
@@ -139,3 +151,69 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
   }
 }
+
+/**
+ * GET: Fetch exact realtime registration count for an event
+ */
+export async function GET(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const eventId = searchParams.get('eventId');
+    const slug = searchParams.get('slug');
+
+    if (!eventId && !slug) {
+      return NextResponse.json({ error: 'Missing eventId or slug' }, { status: 400 });
+    }
+
+    const serverSupabase = createAdminClient();
+
+    let targetEventId = eventId;
+    const isUuid = Boolean(eventId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId));
+    if (!isUuid) {
+      const slugQuery = eventId || slug;
+      if (slugQuery) {
+        const { data: eventData } = await serverSupabase
+          .from('events')
+          .select('id, registration_count')
+          .eq('slug', slugQuery)
+          .maybeSingle();
+        if (eventData?.id) {
+          targetEventId = eventData.id;
+        } else {
+          targetEventId = null;
+        }
+      }
+    }
+
+    if (!targetEventId) {
+      return NextResponse.json({ success: true, count: 0 });
+    }
+
+    // Query exact count of real rows in registrations table using service client (bypasses RLS)
+    const { count, error } = await serverSupabase
+      .from('registrations')
+      .select('id', { count: 'exact', head: true })
+      .eq('event_id', targetEventId);
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    const exactCount = count ?? 0;
+
+    // Keep events.registration_count accurately synced in database
+    await serverSupabase
+      .from('events')
+      .update({ registration_count: exactCount })
+      .eq('id', targetEventId);
+
+    return NextResponse.json({
+      success: true,
+      eventId: targetEventId,
+      count: exactCount,
+    });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+  }
+}
+

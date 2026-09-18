@@ -28,6 +28,7 @@ import {
   Lock,
   Copy,
   Check,
+  PenTool,
 } from 'lucide-react';
 import { useEvent } from '@/lib/hooks/use-events';
 import { useEventRegistration } from '@/lib/hooks/use-registration';
@@ -47,12 +48,13 @@ import {
   getEventTypeBadge,
   getEventPreviewToken,
   getEventPrivateLink,
+  formatBuildersCount,
 } from '@/lib/utils';
 import { RegistrationModal } from '@/components/registration-modal';
 import { TeamRegistrationModal } from '@/components/team-registration-modal';
 import { ProjectSubmissionModal } from '@/components/project-submission-modal';
 import { RichDescription } from '@/components/rich-description';
-import { fetchUserTeamForEvent } from '@/lib/supabase-service';
+import { fetchUserTeamForEvent, fetchLiveRegistrationCount } from '@/lib/supabase-service';
 import { EventStatus } from '@hackers-unity/shared-types';
 import { useAuth } from '@/lib/auth-context';
 
@@ -86,6 +88,19 @@ function HackathonDetailContent({ params }: PageProps) {
   const [userSquad, setUserSquad] = useState<any | null>(null);
 
   const [isBookmarked, setIsBookmarked] = useState<boolean>(false);
+  const [liveParticipantCount, setLiveParticipantCount] = useState<number>(0);
+
+  useEffect(() => {
+    if (!event) return;
+    const initial = typeof event.participantsCount === 'number' ? event.participantsCount : 0;
+    setLiveParticipantCount(initial);
+
+    fetchLiveRegistrationCount(event.id || event.slug).then((cnt) => {
+      if (typeof cnt === 'number') {
+        setLiveParticipantCount(cnt);
+      }
+    });
+  }, [event?.id, event?.slug, event?.participantsCount]);
 
   useEffect(() => {
     setUserSquad(null);
@@ -404,6 +419,17 @@ function HackathonDetailContent({ params }: PageProps) {
                     : (isUnpublished ? 'Private Share' : 'Share')}
                 </span>
               </button>
+
+              {isOrganizerOrAdmin && (
+                <Link
+                  href={`/host?edit=${encodeURIComponent(event.slug)}`}
+                  className="p-3 rounded-2xl border border-sky-200 dark:border-sky-800/60 bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-900/40 text-[#0099e6] dark:text-[#38bdf8] transition-all flex items-center gap-2 text-xs font-bold shadow-2xs"
+                  title="Edit this event in Host Studio"
+                >
+                  <PenTool className="w-4 h-4" />
+                  <span>Edit Event</span>
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -1130,9 +1156,15 @@ function HackathonDetailContent({ params }: PageProps) {
                   <span className="font-bold text-slate-900 dark:text-white">{formatDate(event.endDate)}</span>
                 </div>
                 <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
-                  <span className="font-medium">Live Participants</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-medium">Live Participants</span>
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                  </div>
                   <span className="font-bold text-[#0099e6] dark:text-[#38bdf8] font-mono">
-                    {event.participantsCount || 1}+ Builders
+                    {formatBuildersCount(liveParticipantCount)}
                   </span>
                 </div>
               </div>
@@ -1153,6 +1185,7 @@ function HackathonDetailContent({ params }: PageProps) {
         onClose={() => setShowRegModal(false)}
         onSuccess={() => {
           setShowRegModal(false);
+          setLiveParticipantCount((prev) => prev + 1);
           refresh();
         }}
       />
@@ -1163,6 +1196,7 @@ function HackathonDetailContent({ params }: PageProps) {
         onClose={() => setShowTeamModal(false)}
         onSuccess={() => {
           setShowTeamModal(false);
+          setLiveParticipantCount((prev) => prev + 1);
           refresh();
         }}
       />

@@ -84,8 +84,8 @@ export function mapDbEventToExtended(item: any): ExtendedEvent {
     isTeamEvent: isTeam,
     location: item.location || 'Online',
     createdAt: item.created_at || new Date().toISOString(),
-    participantsCount: item.registration_count || item.participants_count || 1,
-    participantsDisplay: `${item.registration_count || item.participants_count || 1}+`,
+    participantsCount: typeof item.registration_count === 'number' ? item.registration_count : (item.participants_count ?? 0),
+    participantsDisplay: `${typeof item.registration_count === 'number' ? item.registration_count : (item.participants_count ?? 0)}`,
     featured: Boolean(item.featured),
     tags: item.tags || ['Hackathon', 'Innovation'],
     bannerGradient: item.banner_gradient || 'from-sky-950/60 via-slate-900/80 to-black',
@@ -2571,11 +2571,48 @@ export function subscribeToEventDetails(
       )
       .subscribe();
 
+    // Also listen on public:events_realtime channel for broadcast updates
+    const globalChannelName = `public:events_realtime_${eventIdOrSlug}`;
+    const globalChannel = supabase
+      .channel(globalChannelName)
+      .on('broadcast', { event: 'registration_created' }, (payload) => {
+        if (!payload?.payload?.eventId || payload.payload.eventId === eventIdOrSlug) {
+          onUpdate(payload);
+        }
+      })
+      .on('broadcast', { event: 'event_updated' }, (payload) => {
+        onUpdate(payload);
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(globalChannel);
     };
   } catch {
     return () => {};
+  }
+}
+
+/**
+ * Fetch exact live registration count from server API (bypassing RLS safely)
+ */
+export async function fetchLiveRegistrationCount(eventIdOrSlug: string): Promise<number> {
+  if (!eventIdOrSlug) return 0;
+  try {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventIdOrSlug);
+    const params = new URLSearchParams();
+    if (isUuid) {
+      params.set('eventId', eventIdOrSlug);
+    } else {
+      params.set('slug', eventIdOrSlug);
+    }
+    const res = await fetch(`/api/registrations?${params.toString()}`, { cache: 'no-store' });
+    if (!res.ok) return 0;
+    const json = await res.json();
+    return typeof json.count === 'number' ? json.count : 0;
+  } catch {
+    return 0;
   }
 }
 

@@ -323,6 +323,95 @@ export async function PATCH(req: NextRequest) {
 
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId);
 
+    // ── Update Hackathon Event by Admin ──
+    if (action === 'update_event' || action === 'edit_event') {
+      const updates = body.updates || {};
+      const updateData: any = {
+        updated_at: new Date().toISOString(),
+      };
+
+      const allowedFields = [
+        'title',
+        'tagline',
+        'description',
+        'category',
+        'event_type',
+        'location',
+        'organizer_name',
+        'organizer_email',
+        'organizer_phone',
+        'institution_name',
+        'host_type',
+        'start_date',
+        'end_date',
+        'registration_deadline',
+        'registration_start',
+        'total_prize_value',
+        'currency',
+        'status',
+        'min_team_size',
+        'max_team_size',
+        'is_team_event',
+        'featured',
+        'banner_url',
+        'logo_url',
+        'rules_text',
+        'eligibility',
+        'difficulty',
+        'timezone',
+        'tags',
+        'admin_feedback',
+        'prizes',
+        'tracks',
+        'stages',
+        'faqs',
+        'sponsors',
+      ];
+
+      for (const field of allowedFields) {
+        if (updates[field] !== undefined) {
+          updateData[field] = updates[field];
+        }
+      }
+
+      let query = supabase.from('events').update(updateData);
+      query = isUuid ? query.eq('id', eventId) : query.eq('slug', eventId);
+      let { data, error } = await query.select('*').single();
+
+      // Graceful column fallback if optional columns missing
+      if (error && (error.code === '42703' || error.code === 'PGRST204' || error.message?.includes('column'))) {
+        delete updateData.reviewed_at;
+        delete updateData.admin_feedback;
+        let retry = supabase.from('events').update(updateData);
+        retry = isUuid ? retry.eq('id', eventId) : retry.eq('slug', eventId);
+        const result = await retry.select('*').single();
+        data = result.data;
+        error = result.error;
+      }
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      // Broadcast update to realtime channel
+      try {
+        const channel = supabase.channel('public:events_realtime');
+        await channel.send({
+          type: 'broadcast',
+          event: 'event_updated',
+          payload: { eventId, status: data.status, event: data },
+        });
+      } catch (broadcastErr) {
+        console.warn('Realtime broadcast warning:', broadcastErr);
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: `Event "${data.title}" updated successfully!`,
+        event: data,
+      });
+    }
+
     if (action === 'approve') {
       // Transition to PUBLISHED so it appears live across website
       const updateData: any = {
