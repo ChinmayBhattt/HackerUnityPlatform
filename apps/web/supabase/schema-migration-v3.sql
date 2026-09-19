@@ -44,8 +44,9 @@ ALTER TABLE public.events
   ADD COLUMN IF NOT EXISTS registration_count INTEGER DEFAULT 0;
 
 -- ─── 3. IMPROVED RLS POLICIES FOR EVENTS ───────────────────────────────────
--- Drop the old overly-permissive SELECT policy
+-- Drop old policies before creating
 DROP POLICY IF EXISTS "Published events are viewable by everyone" ON public.events;
+DROP POLICY IF EXISTS "Public can view published events" ON public.events;
 
 -- New: Published events are public, drafts only visible to organizer
 CREATE POLICY "Public can view published events" ON public.events
@@ -55,12 +56,14 @@ CREATE POLICY "Public can view published events" ON public.events
   );
 
 -- Add DELETE policy for organizers
+DROP POLICY IF EXISTS "Organizers can delete own events" ON public.events;
 CREATE POLICY "Organizers can delete own events" ON public.events
   FOR DELETE USING (auth.uid() = organizer_id);
 
 -- ─── 4. IMPROVED RLS FOR REGISTRATIONS ─────────────────────────────────────
 -- Drop old policies to recreate with improvements
 DROP POLICY IF EXISTS "Users can view their own registrations" ON public.registrations;
+DROP POLICY IF EXISTS "Users and organizers can view registrations" ON public.registrations;
 
 -- Users can view their own registrations, organizers can view registrations for their events
 CREATE POLICY "Users and organizers can view registrations" ON public.registrations
@@ -140,8 +143,18 @@ CREATE INDEX IF NOT EXISTS idx_team_members_team_id ON public.team_members (team
 CREATE INDEX IF NOT EXISTS idx_team_members_user_id ON public.team_members (user_id);
 
 -- ─── 8. ENABLE SUPABASE REALTIME ───────────────────────────────────────────
--- Enable realtime on the events table so new published events appear automatically
-ALTER PUBLICATION supabase_realtime ADD TABLE public.events;
+-- Enable realtime on the events table safely if not already added
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' 
+    AND schemaname = 'public' 
+    AND tablename = 'events'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.events;
+  END IF;
+END $$;
 
 -- ─── 9. SEED MOCK EVENTS ──────────────────────────────────────────────────
 -- Insert the 7 existing events as seed data (skip if already exist)
@@ -271,13 +284,17 @@ INSERT INTO public.events (
   1, 5, true, true,
   11000, 11000, 'COMPLETED', 'from-sky-950/60 via-blue-950/80 to-black', '2025-06-01T00:00:00Z'
 )
-ON CONFLICT (slug) DO NOTHING;
+ON CONFLICT (slug) DO UPDATE SET
+  participants_count = GREATEST(events.participants_count, EXCLUDED.participants_count),
+  registration_count = GREATEST(events.registration_count, EXCLUDED.registration_count);
 
 -- ─── 10. SYNC EXISTING REGISTRATION COUNTS ────────────────────────────────
--- Update registration_count for any events that already have registrations
+-- Update registration_count for any events that already have registrations (preserving showcase baseline)
 UPDATE public.events e
-SET registration_count = (
-  SELECT COUNT(*) FROM public.registrations r WHERE r.event_id = e.id
+SET registration_count = GREATEST(
+  COALESCE(e.participants_count, 0),
+  COALESCE(e.registration_count, 0),
+  (SELECT COUNT(*) FROM public.registrations r WHERE r.event_id = e.id)
 )
 WHERE EXISTS (SELECT 1 FROM public.registrations r WHERE r.event_id = e.id);
 
