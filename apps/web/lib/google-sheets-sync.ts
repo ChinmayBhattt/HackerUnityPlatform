@@ -97,7 +97,7 @@ export function getSpreadsheetId(): string {
 export function getAppsScriptUrl(): string | undefined {
   return (
     process.env.GOOGLE_APPS_SCRIPT_URL ||
-    'https://script.google.com/macros/s/AKfycbxTV-6cy3nYL7lP_OF9akdBS85QJUQPq-cnwCzA_bIkvnXPN1yvfZ40o5GMsbn5Dokavw/exec'
+    'https://script.google.com/macros/s/AKfycbxi0FOE3vQNpn50l-CcjC7mfrb5eHKhtF3ibh3EswYk30Y5kA8VBEzhojJrBXSeH2eNhQ/exec'
   );
 }
 
