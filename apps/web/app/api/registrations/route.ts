@@ -201,16 +201,26 @@ export async function GET(req: Request) {
 
     const exactCount = count ?? 0;
 
+    // Fetch existing event to preserve showcase / seeded baseline counts
+    const { data: currentEvent } = await serverSupabase
+      .from('events')
+      .select('registration_count, participants_count')
+      .eq('id', targetEventId)
+      .maybeSingle();
+
+    const baseline = Math.max(currentEvent?.participants_count ?? 0, currentEvent?.registration_count ?? 0);
+    const finalCount = Math.max(baseline, exactCount);
+
     // Keep events.registration_count accurately synced in database
     await serverSupabase
       .from('events')
-      .update({ registration_count: exactCount })
+      .update({ registration_count: finalCount })
       .eq('id', targetEventId);
 
     return NextResponse.json({
       success: true,
       eventId: targetEventId,
-      count: exactCount,
+      count: finalCount,
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });

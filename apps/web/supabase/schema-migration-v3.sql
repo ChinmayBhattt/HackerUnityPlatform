@@ -167,7 +167,7 @@ INSERT INTO public.events (
   '[{"name":"Hacker''s Unity","tier":"Title Partner","logoText":"HU"},{"name":"ACEIT","tier":"Host Partner","logoText":"ACEIT"}]'::jsonb,
   ARRAY['AI/ML', 'Blockchain', 'Web3', 'IoT', 'FinTech', 'Open Innovation'],
   2, 4, true, true,
-  500, 500, 'COMPLETED', 'from-amber-900/60 via-orange-950/80 to-black', '2026-08-01T00:00:00Z'
+  1900, 1900, 'COMPLETED', 'from-amber-900/60 via-orange-950/80 to-black', '2026-08-01T00:00:00Z'
 ),
 (
   'clash-of-coders',
@@ -201,7 +201,7 @@ INSERT INTO public.events (
   '[{"name":"Hacker''s Unity","tier":"Organizer","logoText":"HU"},{"name":"BlockseBlock","tier":"Co-Organizer","logoText":"BSB"}]'::jsonb,
   ARRAY['OpenAI', 'CodexHackathon2026', 'Codex', 'Innovation'],
   1, 1, false, true,
-  500, 500, 'COMPLETED', 'from-emerald-950/60 via-teal-950/80 to-black', '2026-07-01T00:00:00Z'
+  5000, 5000, 'COMPLETED', 'from-emerald-950/60 via-teal-950/80 to-black', '2026-07-01T00:00:00Z'
 ),
 (
   'kestra-orchestration',
@@ -213,12 +213,12 @@ INSERT INTO public.events (
   4000,
   '[{"position":"🥇 Top Tier Rewards","amount":4000,"description":"Apple MacBook, iPad, iPhone + Kestra Goodies worth $4,000 USD"}]'::jsonb,
   '[{"title":"Workflow Orchestration with Kestra","prize":"$4,000 Pool","description":"Declarative YAML data orchestration workflows."}]'::jsonb,
-  '[{"id":"stg_koc_1","eventId":"kestra-orchestration","stageName":"Challenge Completed","stageOrder":1,"startDate":"2026-05-01T00:00:00Z","endDate":"2026-06-30T23:59:59Z","description":"Event completed with 1000+ participating builders."}]'::jsonb,
+  '[{"id":"stg_koc_1","eventId":"kestra-orchestration","stageName":"Challenge Completed","stageOrder":1,"startDate":"2026-05-01T00:00:00Z","endDate":"2026-06-30T23:59:59Z","description":"Event completed with 10,000+ participating builders."}]'::jsonb,
   '[{"id":"faq_koc_1","eventId":"kestra-orchestration","question":"What was the community role of Hacker''s Unity?","answer":"Hacker''s Unity was the official community partner.","createdAt":"2026-04-20T00:00:00Z"}]'::jsonb,
   '[{"name":"WeMakeDevs","tier":"Host","logoText":"WMD"},{"name":"Kestra","tier":"Powered By","logoText":"KESTRA"}]'::jsonb,
   ARRAY['Open Source', 'DevOps', 'Workflow Automation'],
   1, 1, false, true,
-  1000, 1000, 'COMPLETED', 'from-purple-950/60 via-slate-900/80 to-black', '2026-04-20T00:00:00Z'
+  10000, 10000, 'COMPLETED', 'from-purple-950/60 via-slate-900/80 to-black', '2026-04-20T00:00:00Z'
 ),
 (
   'hackvision-2026',
@@ -235,7 +235,7 @@ INSERT INTO public.events (
   '[{"name":"Hacker''s Unity","tier":"Host","logoText":"HU"}]'::jsonb,
   ARRAY['Innovation', 'Development', 'Open Ended'],
   1, 3, true, true,
-  1500, 1500, 'COMPLETED', 'from-violet-950/60 via-slate-900/80 to-black', '2026-03-01T00:00:00Z'
+  400, 400, 'COMPLETED', 'from-violet-950/60 via-slate-900/80 to-black', '2026-03-01T00:00:00Z'
 ),
 (
   'hackstorm-2025',
@@ -252,7 +252,7 @@ INSERT INTO public.events (
   '[{"name":"Hacker''s Unity","tier":"Organizer","logoText":"HU"}]'::jsonb,
   ARRAY['AI', 'Agents & Automation', 'Web3/Blockchain'],
   2, 6, true, true,
-  800, 800, 'COMPLETED', 'from-amber-950/60 via-yellow-950/80 to-black', '2025-09-01T00:00:00Z'
+  1500, 1500, 'COMPLETED', 'from-amber-950/60 via-yellow-950/80 to-black', '2025-09-01T00:00:00Z'
 ),
 (
   'wchl-2025',
@@ -269,7 +269,7 @@ INSERT INTO public.events (
   '[{"name":"ICP HUBS Network","tier":"Lead Organizer","logoText":"ICP"},{"name":"Hacker''s Unity","tier":"Community Partner","logoText":"HU"}]'::jsonb,
   ARRAY['Web3', 'Blockchain', 'ICP'],
   1, 5, true, true,
-  2000, 2000, 'COMPLETED', 'from-sky-950/60 via-blue-950/80 to-black', '2025-06-01T00:00:00Z'
+  11000, 11000, 'COMPLETED', 'from-sky-950/60 via-blue-950/80 to-black', '2025-06-01T00:00:00Z'
 )
 ON CONFLICT (slug) DO NOTHING;
 

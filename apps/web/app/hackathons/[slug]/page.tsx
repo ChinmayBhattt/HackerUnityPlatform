@@ -96,8 +96,8 @@ function HackathonDetailContent({ params }: PageProps) {
     setLiveParticipantCount(initial);
 
     fetchLiveRegistrationCount(event.id || event.slug).then((cnt) => {
-      if (typeof cnt === 'number') {
-        setLiveParticipantCount(cnt);
+      if (typeof cnt === 'number' && cnt > 0) {
+        setLiveParticipantCount(Math.max(initial, cnt));
       }
     });
   }, [event?.id, event?.slug, event?.participantsCount]);

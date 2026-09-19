@@ -84,8 +84,14 @@ export function mapDbEventToExtended(item: any): ExtendedEvent {
     isTeamEvent: isTeam,
     location: item.location || 'Online',
     createdAt: item.created_at || new Date().toISOString(),
-    participantsCount: typeof item.registration_count === 'number' ? item.registration_count : (item.participants_count ?? 0),
-    participantsDisplay: `${typeof item.registration_count === 'number' ? item.registration_count : (item.participants_count ?? 0)}`,
+    participantsCount: Math.max(
+      typeof item.registration_count === 'number' ? item.registration_count : 0,
+      typeof item.participants_count === 'number' ? item.participants_count : 0
+    ),
+    participantsDisplay: `${Math.max(
+      typeof item.registration_count === 'number' ? item.registration_count : 0,
+      typeof item.participants_count === 'number' ? item.participants_count : 0
+    )}`,
     featured: Boolean(item.featured),
     tags: item.tags || ['Hackathon', 'Innovation'],
     bannerGradient: item.banner_gradient || 'from-sky-950/60 via-slate-900/80 to-black',
@@ -258,7 +264,15 @@ export async function fetchPublishedEvents(): Promise<ExtendedEvent[]> {
         }
 
         if (matchedKey) {
-          map.set(matchedKey, { ...map.get(matchedKey), ...e });
+          const existing = map.get(matchedKey)!;
+          const mergedParticipants = Math.max(existing.participantsCount || 0, e.participantsCount || 0);
+          map.set(matchedKey, {
+            ...existing,
+            ...e,
+            participantsCount: mergedParticipants,
+            registrationCount: Math.max(existing.registrationCount || 0, e.registrationCount || 0, mergedParticipants),
+            participantsDisplay: existing.participantsDisplay && (existing.participantsCount || 0) > (e.participantsCount || 0) ? existing.participantsDisplay : e.participantsDisplay,
+          });
         } else {
           map.set(e.id || e.slug, e);
         }
