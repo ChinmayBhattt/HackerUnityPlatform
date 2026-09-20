@@ -252,7 +252,7 @@ export function BulkRegistrationModal({
     document.body.removeChild(link);
   };
 
-  const handleImport = () => {
+  const handleImport = async () => {
     const validCandidates = parsedRows.filter((r) => r.valid);
     if (validCandidates.length === 0) return;
 
@@ -275,6 +275,21 @@ export function BulkRegistrationModal({
     }));
 
     const result = bulkSaveEventRegistrations(eventId, newRegistrations);
+
+    // Also persist into Supabase database via API
+    try {
+      await fetch('/api/registrations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'bulk_insert',
+          eventId,
+          registrations: newRegistrations,
+        }),
+      });
+    } catch (e) {
+      console.warn('DB bulk sync notice:', e);
+    }
 
     setIsProcessing(false);
     onSuccess(result);

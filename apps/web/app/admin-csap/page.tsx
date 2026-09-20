@@ -891,7 +891,7 @@ export default function AdminCsapPortal() {
                 className="bg-white dark:bg-[#0c1017] border border-slate-200/90 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.16] rounded-3xl p-6 shadow-xs hover:shadow-md transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-6"
               >
                 {/* Left details */}
-                <div className="flex-1 space-y-3">
+                <div className="flex-1 min-w-0 space-y-3">
                   {/* Status badge & categories */}
                   <div className="flex flex-wrap items-center gap-2 text-xs">
                     {isPending && (
@@ -930,14 +930,14 @@ export default function AdminCsapPortal() {
                   </div>
 
                   {/* Title & Tagline */}
-                  <div>
-                    <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                      {event.title}
+                  <div className="min-w-0">
+                    <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate">
+                      <span className="truncate">{event.title}</span>
                       {isApproved && (
                         <Link
                           href={`/hackathons/${event.slug}`}
                           target="_blank"
-                          className="text-[#0099e6] hover:text-[#0284c7] transition"
+                          className="text-[#0099e6] hover:text-[#0284c7] transition shrink-0"
                           title="View on main site"
                         >
                           <ExternalLink className="w-4 h-4" />
@@ -954,11 +954,11 @@ export default function AdminCsapPortal() {
                   {/* Metadata: Host, Dates, Prize, Registrations, Submissions */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 text-xs pt-1">
                     {/* Organizer */}
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-2.5 min-w-0" title={event.organizer_name || 'Independent'}>
                       <div className="w-8 h-8 rounded-xl bg-sky-50 dark:bg-sky-500/10 text-[#0099e6] dark:text-[#38bdf8] flex items-center justify-center shrink-0">
                         <Building2 className="w-4 h-4" />
                       </div>
-                      <div className="truncate">
+                      <div className="truncate min-w-0">
                         <span className="text-slate-400 dark:text-slate-500 block text-[10px] font-bold uppercase tracking-wider">Host / Org</span>
                         <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">
                           {event.organizer_name || 'Independent'}
@@ -967,13 +967,13 @@ export default function AdminCsapPortal() {
                     </div>
 
                     {/* Timeline */}
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-2.5 min-w-0">
                       <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-slate-400 flex items-center justify-center shrink-0">
                         <Calendar className="w-4 h-4" />
                       </div>
-                      <div>
+                      <div className="truncate min-w-0">
                         <span className="text-slate-400 dark:text-slate-500 block text-[10px] font-bold uppercase tracking-wider">Event Timeline</span>
-                        <span className="font-bold text-slate-800 dark:text-slate-200 block">
+                        <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">
                           {new Date(event.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} -{' '}
                           {new Date(event.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         </span>
@@ -981,39 +981,39 @@ export default function AdminCsapPortal() {
                     </div>
 
                     {/* Prize */}
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-2.5 min-w-0">
                       <div className="w-8 h-8 rounded-xl bg-orange-50 dark:bg-orange-500/10 text-[#ea580c] dark:text-[#fb923c] flex items-center justify-center shrink-0">
                         <Trophy className="w-4 h-4" />
                       </div>
-                      <div>
+                      <div className="truncate min-w-0">
                         <span className="text-slate-400 dark:text-slate-500 block text-[10px] font-bold uppercase tracking-wider">Prize Pool</span>
-                        <span className="font-black text-[#ea580c] dark:text-[#fb923c] block">
+                        <span className="font-black text-[#ea580c] dark:text-[#fb923c] truncate block">
                           {formatCurrency(event.total_prize_value || 0, (event.currency as 'INR' | 'USD') || 'INR')}
                         </span>
                       </div>
                     </div>
 
                     {/* Registrations Stat */}
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-2.5 min-w-0">
                       <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
                         <Users className="w-4 h-4" />
                       </div>
-                      <div>
+                      <div className="truncate min-w-0">
                         <span className="text-slate-400 dark:text-slate-500 block text-[10px] font-bold uppercase tracking-wider">Registrations</span>
-                        <span className="font-bold text-slate-800 dark:text-slate-200 block">
+                        <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">
                           {event.registration_count || 0} Registered
                         </span>
                       </div>
                     </div>
 
                     {/* Submissions Stat */}
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-2.5 min-w-0">
                       <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                         <FileSpreadsheet className="w-4 h-4" />
                       </div>
-                      <div>
+                      <div className="truncate min-w-0">
                         <span className="text-slate-400 dark:text-slate-500 block text-[10px] font-bold uppercase tracking-wider">Submissions</span>
-                        <span className="font-bold text-slate-800 dark:text-slate-200 block">
+                        <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">
                           {event.submission_count || 0} Projects
                         </span>
                       </div>
@@ -1022,92 +1022,96 @@ export default function AdminCsapPortal() {
                 </div>
 
                 {/* Right Action Buttons */}
-                <div className="flex flex-row lg:flex-col items-center lg:items-end justify-end gap-2.5 shrink-0 pt-4 lg:pt-0 border-t lg:border-t-0 border-slate-100 dark:border-white/[0.06]">
-                  <div className="flex items-center flex-wrap gap-2 justify-end">
+                <div className="w-full lg:w-[490px] xl:w-[510px] shrink-0 flex flex-col items-stretch lg:items-end justify-center gap-2.5 pt-4 lg:pt-0 border-t lg:border-t-0 border-slate-100 dark:border-white/[0.06]">
+                  {/* Action buttons in uniform 4-column grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full">
                     <button
                       onClick={() => setSelectedEvent(event)}
-                      className="px-3.5 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                      className="w-full px-2.5 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs text-center"
                     >
-                      <Eye className="w-3.5 h-3.5 text-[#0099e6]" />
-                      <span>Review Details</span>
+                      <Eye className="w-3.5 h-3.5 text-[#0099e6] shrink-0" />
+                      <span className="truncate">Review Details</span>
                     </button>
 
                     <button
                       onClick={() => setEditingEvent(event)}
-                      className="px-3.5 py-2 rounded-2xl bg-sky-50 hover:bg-sky-100 dark:bg-sky-500/10 dark:hover:bg-sky-500/20 border border-sky-200 dark:border-sky-500/30 text-[#0099e6] dark:text-[#38bdf8] text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                      className="w-full px-2.5 py-2 rounded-2xl bg-sky-50 hover:bg-sky-100 dark:bg-sky-500/10 dark:hover:bg-sky-500/20 border border-sky-200 dark:border-sky-500/30 text-[#0099e6] dark:text-[#38bdf8] text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs text-center"
                       title="Edit this hackathon as platform admin"
                     >
-                      <PenTool className="w-3.5 h-3.5" />
-                      <span>Edit Event</span>
+                      <PenTool className="w-3.5 h-3.5 shrink-0" />
+                      <span className="truncate">Edit Event</span>
                     </button>
 
                     <Link
                       href={`/dashboard/events/${event.id || event.slug}/registrations`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-3.5 py-2 rounded-2xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 border border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-400 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow-2xs"
+                      className="w-full px-2 py-2 rounded-2xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 border border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-400 text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap shadow-2xs text-center"
                       title="View participant registrations"
                     >
-                      <Users className="w-3.5 h-3.5 text-indigo-500" />
-                      <span>Registrations ({event.registration_count || 0})</span>
+                      <Users className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                      <span className="truncate">Registrations ({event.registration_count || 0})</span>
                     </Link>
 
                     <Link
                       href={`/dashboard/events/${event.id || event.slug}/submissions`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-3.5 py-2 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow-2xs"
+                      className="w-full px-2 py-2 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap shadow-2xs text-center"
                       title="View project submissions"
                     >
-                      <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                      <span>Submissions ({event.submission_count || 0})</span>
+                      <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <span className="truncate">Submissions ({event.submission_count || 0})</span>
                     </Link>
                   </div>
 
-                  {isPending && (
-                    <div className="flex items-center gap-2">
+                  {/* Status action control */}
+                  <div className="flex items-center justify-end w-full">
+                    {isPending && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleApprove(event)}
+                          disabled={actionLoadingId === event.id}
+                          className="px-5 py-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20 cursor-pointer disabled:opacity-50"
+                        >
+                          {actionLoadingId === event.id ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Check className="w-3.5 h-3.5" />
+                          )}
+                          <span>Approve</span>
+                        </button>
+                        <button
+                          onClick={() => setRejectModalEvent(event)}
+                          disabled={actionLoadingId === event.id}
+                          className="px-4 py-2 rounded-2xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                          <span>Reject</span>
+                        </button>
+                      </div>
+                    )}
+
+                    {isApproved && (
+                      <button
+                        onClick={() => setRejectModalEvent(event)}
+                        className="px-4 py-2 rounded-2xl bg-slate-50 hover:bg-rose-50 dark:bg-white/[0.04] dark:hover:bg-rose-950/30 text-slate-500 hover:text-rose-700 dark:text-slate-400 dark:hover:text-rose-400 border border-slate-200 dark:border-white/[0.08] hover:border-rose-200 dark:hover:border-rose-900/40 text-xs font-bold transition cursor-pointer"
+                      >
+                        Revoke Live Status
+                      </button>
+                    )}
+
+                    {isRejected && (
                       <button
                         onClick={() => handleApprove(event)}
                         disabled={actionLoadingId === event.id}
-                        className="px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20 cursor-pointer disabled:opacity-50"
+                        className="px-4 py-2 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:hover:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-400 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer"
                       >
-                        {actionLoadingId === event.id ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          <Check className="w-3.5 h-3.5" />
-                        )}
-                        <span>Approve</span>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Re-Approve</span>
                       </button>
-                      <button
-                        onClick={() => setRejectModalEvent(event)}
-                        disabled={actionLoadingId === event.id}
-                        className="px-4 py-2.5 rounded-2xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                        <span>Reject</span>
-                      </button>
-                    </div>
-                  )}
-
-                  {isApproved && (
-                    <button
-                      onClick={() => setRejectModalEvent(event)}
-                      className="px-4 py-2 rounded-2xl bg-slate-50 hover:bg-rose-50 dark:bg-white/[0.04] dark:hover:bg-rose-950/30 text-slate-500 hover:text-rose-700 dark:text-slate-400 dark:hover:text-rose-400 border border-slate-200 dark:border-white/[0.08] hover:border-rose-200 dark:hover:border-rose-900/40 text-xs font-bold transition cursor-pointer"
-                    >
-                      Revoke Live Status
-                    </button>
-                  )}
-
-                  {isRejected && (
-                    <button
-                      onClick={() => handleApprove(event)}
-                      disabled={actionLoadingId === event.id}
-                      className="px-4 py-2 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:hover:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-400 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                      <span>Re-Approve</span>
-                    </button>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
             );

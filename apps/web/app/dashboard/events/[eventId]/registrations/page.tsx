@@ -112,13 +112,39 @@ export default function EventRegistrationsPage({ params }: PageProps) {
     }
     if (found) {
       setEvent(found);
+
+      // 1. Fetch live participant registrations from database via API
+      let dbRegistrations: any[] = [];
+      try {
+        const res = await fetch(`/api/registrations?eventId=${encodeURIComponent(resolvedParams.eventId)}&list=true`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.registrations)) {
+            dbRegistrations = json.registrations;
+          }
+        }
+      } catch (apiErr) {
+        console.warn('Could not fetch DB registrations, using local storage fallback:', apiErr);
+      }
+
+      // 2. Also read localStorage for any locally saved or uploaded applicants
       const localById = getEventRegistrations(found.id);
       const localBySlug = found.slug && found.slug !== found.id ? getEventRegistrations(found.slug) : [];
+
+      // 3. Merge: Database registrations take priority, then local entries
       const map = new Map<string, any>();
-      [...localById, ...localBySlug].forEach((r: any) => {
-        const key = r.userEmail || r.user_email || r.id;
+      dbRegistrations.forEach((r) => {
+        const key = (r.userEmail || r.id || '').toLowerCase().trim();
         if (key) map.set(key, r);
       });
+
+      [...localById, ...localBySlug].forEach((r: any) => {
+        const key = (r.userEmail || r.user_email || r.id || '').toLowerCase().trim();
+        if (key && !map.has(key)) {
+          map.set(key, r);
+        }
+      });
+
       const combined = Array.from(map.values());
       setRegistrations(combined);
       setStats({
@@ -141,17 +167,45 @@ export default function EventRegistrationsPage({ params }: PageProps) {
   }, [resolvedParams.eventId]);
 
   // Status changes
-  const handleStatusChange = (regId: string, newStatus: 'APPROVED' | 'REJECTED') => {
+  const handleStatusChange = async (regId: string, newStatus: 'APPROVED' | 'REJECTED') => {
     if (!event) return;
     updateRegistrationStatus(event.id, regId, newStatus);
+    setRegistrations((prev) =>
+      prev.map((r) => (r.id === regId ? { ...r, status: newStatus } : r))
+    );
+
+    try {
+      await fetch('/api/registrations', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update_status',
+          id: regId,
+          status: newStatus,
+          eventId: event.id,
+        }),
+      });
+    } catch (err) {
+      console.warn('Failed to sync status to DB:', err);
+    }
     loadData();
   };
 
   // Single delete
-  const handleDeleteSingle = (regId: string, name: string) => {
+  const handleDeleteSingle = async (regId: string, name: string) => {
     if (!event) return;
     deleteEventRegistration(event.id, regId);
     setSelectedIds((prev) => prev.filter((id) => id !== regId));
+    setRegistrations((prev) => prev.filter((r) => r.id !== regId));
+
+    try {
+      await fetch(`/api/registrations?id=${encodeURIComponent(regId)}&eventId=${encodeURIComponent(event.id)}`, {
+        method: 'DELETE',
+      });
+    } catch (err) {
+      console.warn('Failed to delete from DB:', err);
+    }
+
     loadData();
     setNotification({
       text: `Deleted registration for ${name}.`,
@@ -163,9 +217,28 @@ export default function EventRegistrationsPage({ params }: PageProps) {
   };
 
   // Bulk status update
-  const handleBulkStatusChange = (status: 'APPROVED' | 'REJECTED') => {
+  const handleBulkStatusChange = async (status: 'APPROVED' | 'REJECTED') => {
     if (!event || selectedIds.length === 0) return;
     selectedIds.forEach((id) => updateRegistrationStatus(event.id, id, status));
+    setRegistrations((prev) =>
+      prev.map((r) => (selectedIds.includes(r.id) ? { ...r, status } : r))
+    );
+
+    try {
+      await fetch('/api/registrations', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'bulk_status',
+          ids: selectedIds,
+          status,
+          eventId: event.id,
+        }),
+      });
+    } catch (err) {
+      console.warn('Failed to bulk sync status to DB:', err);
+    }
+
     loadData();
     setNotification({
       text: `Updated ${selectedIds.length} applicants to ${status}.`,
@@ -178,10 +251,27 @@ export default function EventRegistrationsPage({ params }: PageProps) {
   };
 
   // Bulk delete selected
-  const handleBulkDeleteSelected = () => {
+  const handleBulkDeleteSelected = async () => {
     if (!event || selectedIds.length === 0) return;
     const count = deleteBulkEventRegistrations(event.id, selectedIds);
+    const toDeleteIds = [...selectedIds];
     setSelectedIds([]);
+    setRegistrations((prev) => prev.filter((r) => !toDeleteIds.includes(r.id)));
+
+    try {
+      await fetch('/api/registrations', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'delete_bulk',
+          ids: toDeleteIds,
+          eventId: event.id,
+        }),
+      });
+    } catch (err) {
+      console.warn('Failed to bulk delete from DB:', err);
+    }
+
     loadData();
     setNotification({
       text: `Successfully deleted ${count} registrations.`,
@@ -193,11 +283,26 @@ export default function EventRegistrationsPage({ params }: PageProps) {
   };
 
   // Clear all registrations
-  const handleClearAll = () => {
+  const handleClearAll = async () => {
     if (!event) return;
     const count = clearAllEventRegistrations(event.id);
     setShowClearModal(false);
     setSelectedIds([]);
+    setRegistrations([]);
+
+    try {
+      await fetch('/api/registrations', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'clear_all',
+          eventId: event.id,
+        }),
+      });
+    } catch (err) {
+      console.warn('Failed to clear registrations from DB:', err);
+    }
+
     loadData();
     setNotification({
       text: `Cleared all ${count} registrations successfully.`,
