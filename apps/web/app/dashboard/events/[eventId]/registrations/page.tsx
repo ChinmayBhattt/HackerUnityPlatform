@@ -663,7 +663,7 @@ export default function EventRegistrationsPage({ params }: PageProps) {
                   <th className="py-3.5 px-4">College / City</th>
                   <th className="py-3.5 px-4">Profiles & Skills</th>
                   <th className="py-3.5 px-4">Registered Date</th>
-                  <th className="py-3.5 px-4">Status</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap">Status</th>
                   <th className="py-3.5 px-4 text-right">Actions</th>
                 </tr>
               </thead>
@@ -736,17 +736,17 @@ export default function EventRegistrationsPage({ params }: PageProps) {
                         {formatDate(reg.registeredAt)}
                       </td>
 
-                      <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
                         {reg.status === 'APPROVED' || reg.status === 'CONFIRMED' ? (
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold whitespace-nowrap bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
                             Approved
                           </span>
                         ) : reg.status === 'REJECTED' ? (
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800/40">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold whitespace-nowrap bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800/40">
                             Rejected
                           </span>
                         ) : (
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold whitespace-nowrap bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40">
                             Pending Review
                           </span>
                         )}
