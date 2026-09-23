@@ -19,6 +19,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const {
       userId,
+      username,
       name,
       phone,
       bio,
@@ -45,6 +46,40 @@ export async function POST(req: Request) {
 
     const effectiveUserId = auth.userId;
     const supabaseAdmin = createAdminClient();
+
+    // 2.5. Sanitize and validate username if provided
+    let cleanUsername: string | null = null;
+    if (username !== undefined && username !== null) {
+      const trimmed = String(username).trim().toLowerCase().replace(/^@/, '');
+      if (trimmed.length > 0) {
+        if (!/^[a-z0-9_-]{3,30}$/.test(trimmed)) {
+          return NextResponse.json(
+            { error: 'Username must be 3-30 characters and contain only letters, numbers, underscores, or hyphens.' },
+            { status: 400 }
+          );
+        }
+        // Check uniqueness in profiles table
+        try {
+          const { data: existingUser } = await supabaseAdmin
+            .from('profiles')
+            .select('id')
+            .eq('username', trimmed)
+            .neq('id', effectiveUserId)
+            .maybeSingle();
+
+          if (existingUser) {
+            return NextResponse.json(
+              { error: `@${trimmed} is already taken. Please choose another username.` },
+              { status: 400 }
+            );
+          }
+        } catch (checkErr) {
+          // Continue if column not created yet
+          console.warn('[Profile Update] Username uniqueness check warning:', checkErr);
+        }
+        cleanUsername = trimmed;
+      }
+    }
 
     let finalAvatarUrl: string | null = avatarUrl || null;
     let finalBannerUrl: string | null = bannerUrl || null;
@@ -144,6 +179,7 @@ export async function POST(req: Request) {
       updated_at: new Date().toISOString(),
     };
     if (userEmail) profileUpdateData.email = userEmail;
+    if (cleanUsername !== null) profileUpdateData.username = cleanUsername;
     if (cleanName !== undefined) profileUpdateData.name = cleanName;
     if (cleanCollege !== undefined) profileUpdateData.college = cleanCollege;
     if (cleanOrg !== undefined) profileUpdateData.organization = cleanOrg;
@@ -161,6 +197,12 @@ export async function POST(req: Request) {
 
       if (profileDbError) {
         console.warn('[Profile Update] Database profiles upsert warning:', profileDbError);
+        // Fallback: If username column does not exist yet in Postgres, retry without username column
+        if ((profileDbError as any).code === '42703' && profileUpdateData.username) {
+          const fallbackData = { ...profileUpdateData };
+          delete fallbackData.username;
+          await supabaseAdmin.from('profiles').upsert(fallbackData, { onConflict: 'id' });
+        }
       }
     } catch (dbErr) {
       console.warn('[Profile Update] DB upsert exception:', dbErr);
@@ -171,6 +213,7 @@ export async function POST(req: Request) {
       await supabaseAdmin.auth.admin.updateUserById(effectiveUserId, {
         user_metadata: {
           ...existingMeta,
+          username: cleanUsername || existingMeta.username,
           name: cleanName || existingMeta.name,
           full_name: cleanName || existingMeta.full_name,
           phone: cleanPhone !== null ? cleanPhone : existingMeta.phone,
@@ -199,6 +242,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
+      username: cleanUsername,
       avatarUrl: finalAvatarUrl,
       bannerUrl: finalBannerUrl,
     });

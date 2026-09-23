@@ -3313,4 +3313,137 @@ export async function removeEventAdmin(
   }
 }
 
+/**
+ * ─── 13. REAL-TIME BUILDERS & PROFILE OPERATIONS ──────────────────────────────
+ */
+
+export interface PublicProfileResult {
+  id: string;
+  username: string;
+  name: string;
+  avatarUrl: string | null;
+  bannerUrl: string | null;
+  role: string;
+  college: string | null;
+  organization: string | null;
+  professionType: string;
+  bio: string | null;
+  skills: string[];
+  socialLinks: {
+    github: string | null;
+    linkedin: string | null;
+    portfolio: string | null;
+  };
+  winningsCount: number;
+  participationsCount: number;
+  createdAt: string;
+}
+
+export interface FullPublicProfileData {
+  user: UserPublic;
+  winnings: Array<{
+    id: string;
+    projectTitle: string;
+    tagline?: string;
+    projectDescription?: string;
+    repoUrl?: string;
+    demoUrl?: string;
+    track?: string;
+    eventTitle?: string;
+    eventSlug?: string;
+    totalPrizeValue?: number;
+    awardedAt?: string;
+  }>;
+  participations: Array<{
+    registrationId: string;
+    eventId: string;
+    eventTitle: string;
+    eventSlug: string;
+    role: string;
+    status: string;
+    teamName: string | null;
+    registeredAt: string;
+    category: string;
+    eventType: string;
+    location: string;
+    totalPrizeValue: number;
+    organizerName: string;
+  }>;
+  submissions: any[];
+  stats: {
+    totalParticipations: number;
+    totalWinnings: number;
+    totalSubmissions: number;
+  };
+}
+
+/**
+ * Live search builders across Supabase by username, name, or skills
+ */
+export async function searchProfilesRealtime(query: string = '', limit = 20): Promise<PublicProfileResult[]> {
+  try {
+    const clean = query.trim();
+    const url = `/api/users/search?q=${encodeURIComponent(clean)}&limit=${limit}`;
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.users || [];
+  } catch (err) {
+    console.warn('[searchProfilesRealtime] Fetch warning:', err);
+    return [];
+  }
+}
+
+/**
+ * Fetch a user's full public profile with social links, winnings, and participations
+ */
+export async function getPublicUserProfileByUsername(username: string): Promise<FullPublicProfileData | null> {
+  try {
+    const clean = username.trim().toLowerCase().replace(/^@/, '');
+    if (!clean) return null;
+    const res = await fetch(`/api/users/${encodeURIComponent(clean)}`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    console.warn('[getPublicUserProfileByUsername] Fetch warning:', err);
+    return null;
+  }
+}
+
+/**
+ * Realtime subscription to profiles table changes
+ */
+export function subscribeToProfilesRealtime(onChange: () => void): () => void {
+  const channelName = `realtime_profiles_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  const channel = supabase
+    .channel(channelName)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'profiles' },
+      () => {
+        onChange();
+      }
+    )
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'submissions' },
+      () => {
+        onChange();
+      }
+    )
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'registrations' },
+      () => {
+        onChange();
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
 

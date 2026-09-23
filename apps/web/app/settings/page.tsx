@@ -170,6 +170,7 @@ export default function SettingsPage() {
   const [showPublicPreview, setShowPublicPreview] = useState(false);
 
   // Profile Form States
+  const [username, setUsername] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -230,6 +231,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (user) {
+      setUsername(user.username || (user.email ? user.email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '') : ''));
       setName(user.name || '');
       setEmail(user.email || '');
       setPhone(user.phone || '');
@@ -351,7 +353,15 @@ export default function SettingsPage() {
     setLinkedin(finalLinkedin);
     setPortfolio(finalPortfolio);
 
+    const cleanUsername = username.trim().toLowerCase().replace(/^@/, '');
+    if (cleanUsername && !/^[a-z0-9_-]{3,30}$/.test(cleanUsername)) {
+      setProfileError('Username must be 3-30 characters with lowercase letters, numbers, hyphens, or underscores.');
+      setIsSavingProfile(false);
+      return;
+    }
+
     const res = await updateUserProfile({
+      username: cleanUsername || undefined,
       name: name.trim() || undefined,
       phone: phone.trim() || undefined,
       bio: bio.trim() || undefined,
@@ -652,6 +662,45 @@ export default function SettingsPage() {
                     onAvatarChange={(newUrl) => setAvatar(newUrl)}
                     onAvatarRemove={() => setAvatar(null)}
                   />
+                </div>
+
+                {/* Username (@handle) & Public Profile Link */}
+                <div className="p-4 rounded-2xl bg-sky-50/60 dark:bg-sky-500/[0.04] border border-sky-100 dark:border-sky-500/10">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                      Public Username (@handle) *
+                    </label>
+                    {username && (
+                      <Link
+                        href={`/profile/${username.toLowerCase().replace(/^@/, '')}`}
+                        target="_blank"
+                        className="text-[11px] font-bold text-[#0099e6] hover:underline flex items-center gap-1"
+                      >
+                        Preview Profile <ExternalLink className="w-3 h-3" />
+                      </Link>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-mono font-bold text-[#0099e6]">
+                      @
+                    </span>
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => {
+                        const val = e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+                        setUsername(val);
+                      }}
+                      placeholder="e.g. chinmaybhatt"
+                      className="w-full pl-8 pr-4 py-2.5 rounded-xl bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-white/10 text-xs font-mono font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0099e6]"
+                    />
+                  </div>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1.5 block">
+                    Your public URL:{' '}
+                    <span className="font-mono text-[#0099e6]">
+                      hackersunity.com/profile/{username || 'your-handle'}
+                    </span>
+                  </span>
                 </div>
 
                 {/* Name & Phone */}

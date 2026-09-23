@@ -49,6 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const saved = getPermanentProfile(sbUser.id) || (sbUser.email ? getPermanentProfile(sbUser.email) : null);
     return {
       id: sbUser.id,
+      username: meta.username || saved?.username || (sbUser.email ? sbUser.email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '') : null),
       name: meta.name || meta.full_name || saved?.name || sbUser.email?.split('@')[0] || 'Hacker',
       email: sbUser.email || saved?.email || '',
       phone: meta.phone || sbUser.phone || saved?.phone || null,
@@ -183,6 +184,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       const fullUser: UserPublic = {
         id: sbUser.id,
+        username: profile?.username || meta.username || saved?.username || (sbUser.email ? sbUser.email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '') : null),
         name: profile?.name || meta.name || meta.full_name || saved?.name || sbUser.email?.split('@')[0] || 'Hacker',
         email: profile?.email || sbUser.email || saved?.email || '',
         phone: meta.phone || sbUser.phone || saved?.phone || null,
@@ -483,6 +485,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         await supabase.auth.updateUser({
           data: {
+            username: updatedUser.username,
             name: updatedUser.name,
             full_name: updatedUser.name,
             phone: updatedUser.phone,
@@ -517,6 +520,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           body: JSON.stringify({
             userId: user.id,
             email: user.email,
+            username: updatedUser.username,
             name: updatedUser.name,
             phone: updatedUser.phone,
             bio: updatedUser.bio,

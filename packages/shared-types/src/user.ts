@@ -4,6 +4,7 @@ import { UserRole } from './auth';
 
 export interface UserPublic {
   id: string;
+  username?: string | null;
   name: string;
   email: string;
   phone: string | null;
@@ -37,6 +38,7 @@ export interface SocialLinks {
 }
 
 export interface UpdateProfileDto {
+  username?: string;
   name?: string;
   phone?: string;
   college?: string;
