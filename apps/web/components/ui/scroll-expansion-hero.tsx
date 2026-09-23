@@ -122,7 +122,7 @@ export function ScrollExpandMedia({
             priority
             sizes="100vw"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-950/80 via-transparent to-red-950/70 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-sky-950/80 via-transparent to-amber-950/70 pointer-events-none" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#05070f] via-transparent to-[#05070f]/90 pointer-events-none" />
         </motion.div>
 
@@ -133,7 +133,7 @@ export function ScrollExpandMedia({
           style={{
             scale: cardScale,
             borderRadius: cardBorderRadius,
-            boxShadow: '0 0 70px rgba(0, 153, 230, 0.35), 0 0 100px rgba(239, 68, 68, 0.25)',
+            boxShadow: '0 0 70px rgba(0, 153, 230, 0.4), 0 0 100px rgba(255, 120, 0, 0.35)',
           }}
         >
           {/* Border glow on card */}
@@ -187,16 +187,16 @@ export function ScrollExpandMedia({
           </motion.div>
         </motion.div>
 
-        {/* ─── Big Splitting Titles (Slides Left & Right on ALL screens) ── */}
+        {/* ─── Big Splitting Titles: Hacker's Unity Metallic Chrome Text ── */}
         <motion.div
           className={`absolute inset-0 z-15 flex flex-row items-center justify-between sm:justify-center gap-2 sm:gap-6 md:gap-8 pointer-events-none px-3 sm:px-8 transform-gpu ${
             textBlend ? 'mix-blend-difference' : ''
           }`}
           style={{ opacity: textOpacity }}
         >
-          {/* Left word: moves far left */}
+          {/* Left word (CAMPUS): Hacker's Unity Cyan Metallic Chrome */}
           <motion.h2
-            className="text-xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-rose-400 to-sky-300 drop-shadow-[0_2px_15px_rgba(239,68,68,0.7)] uppercase text-left sm:text-center"
+            className="text-xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight uppercase text-left sm:text-center metal-text-cyan"
             style={{
               transform: useTransform(textTranslateX, (val) => `translateX(-${val}vw)`),
             }}
@@ -204,9 +204,9 @@ export function ScrollExpandMedia({
             {firstWord}
           </motion.h2>
 
-          {/* Right word: moves far right */}
+          {/* Right word (AMBASSADOR): Hacker's Unity Orange Metallic Chrome */}
           <motion.h2
-            className="text-xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-blue-400 to-indigo-300 drop-shadow-[0_2px_15px_rgba(0,153,230,0.7)] uppercase text-right sm:text-center"
+            className="text-xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight uppercase text-right sm:text-center metal-text-orange"
             style={{
               transform: useTransform(textTranslateX, (val) => `translateX(${val}vw)`),
             }}
@@ -222,7 +222,7 @@ export function ScrollExpandMedia({
         >
           {date && (
             <motion.div
-              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-red-950/90 border border-red-500/50 shadow-md backdrop-blur-sm"
+              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-slate-950/90 border border-[#ff7800]/50 shadow-md shadow-orange-500/10 backdrop-blur-sm"
               style={{
                 transform: useTransform(
                   subtitleTranslateX,
@@ -230,8 +230,8 @@ export function ScrollExpandMedia({
                 ),
               }}
             >
-              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-red-400 animate-ping" />
-              <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-red-200">
+              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#ff7800] animate-ping" />
+              <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-orange-200">
                 {date}
               </span>
             </motion.div>

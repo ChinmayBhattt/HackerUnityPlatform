@@ -44,20 +44,19 @@ function AmbassadorContent() {
       {/* Animated Header Badge */}
       <div className="inline-flex items-center gap-1.5 px-3 py-0.5 sm:py-1 rounded-full bg-slate-950/90 border border-sky-500/30 shadow-md backdrop-blur-sm mb-1.5 sm:mb-3">
         <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-gradient-to-r from-red-500 to-sky-400" />
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ff7800] opacity-75" />
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-gradient-to-r from-[#0099e6] to-[#ff7800]" />
         </span>
-        <span className="text-[9px] sm:text-xs font-black uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-sky-300 to-white">
+        <span className="text-[9px] sm:text-xs font-black uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-[#0099e6] via-white to-[#ff7800]">
           Applications Open • Nationwide Chapters 2026
         </span>
       </div>
 
-      {/* Core Headline */}
-      <h2 className="text-xl sm:text-3xl lg:text-5xl font-black text-white tracking-tight leading-[1.15] mb-1 sm:mb-2">
-        Become{' '}
-        <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-rose-400 to-sky-400 drop-shadow-[0_0_25px_rgba(239,68,68,0.5)]">
-          Campus Ambassador
-        </span>
+      {/* Core Headline with Hacker's Unity Metallic Chrome Text */}
+      <h2 className="text-xl sm:text-3xl lg:text-5xl font-black tracking-tight leading-[1.15] mb-1 sm:mb-2">
+        <span className="metal-text-silver">Become</span>{' '}
+        <span className="metal-text-cyan">Campus</span>{' '}
+        <span className="metal-text-orange">Ambassador</span>
       </h2>
 
       <p className="max-w-xl text-[11px] sm:text-sm text-slate-300 font-medium leading-snug mb-2.5 sm:mb-5 line-clamp-2 sm:line-clamp-none">
@@ -118,7 +117,7 @@ function AmbassadorContent() {
           href="https://tally.so/r/q4o22k"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center justify-center gap-1.5 px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl font-black text-[11px] sm:text-xs text-white bg-gradient-to-r from-red-600 via-orange-500 to-sky-500 hover:from-red-500 hover:to-sky-400 shadow-md transition-transform active:scale-95 cursor-pointer"
+          className="inline-flex items-center justify-center gap-1.5 px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl font-black text-[11px] sm:text-xs text-white bg-gradient-to-r from-[#0099e6] via-[#0284c7] to-[#ff7800] hover:from-[#38bdf8] hover:to-[#ffa040] shadow-lg shadow-sky-500/20 hover:shadow-orange-500/30 border border-white/20 transition-all active:scale-95 cursor-pointer"
         >
           <span>Apply for Campus Ambassador</span>
           <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />

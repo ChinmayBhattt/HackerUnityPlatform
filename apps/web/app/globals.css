@@ -503,3 +503,69 @@ body {
 .dark .rich-description-content hr {
   background-color: rgba(255, 255, 255, 0.08);
 }
+
+/* ─── Hacker's Unity Metallic Chrome Text Typography ───── */
+.metal-text-cyan {
+  background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #e0f2fe 18%,
+    #7dd3fc 32%,
+    #0099e6 50%,
+    #0284c7 52%,
+    #38bdf8 70%,
+    #ffffff 88%,
+    #0369a1 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.95))
+          drop-shadow(0 0 25px rgba(0, 153, 230, 0.7))
+          drop-shadow(0 0 55px rgba(0, 153, 230, 0.35));
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.3);
+}
+
+.metal-text-orange {
+  background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #fef3c7 18%,
+    #fdba74 32%,
+    #ff7800 50%,
+    #ea580c 52%,
+    #fb923c 70%,
+    #ffffff 88%,
+    #c2410c 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.95))
+          drop-shadow(0 0 25px rgba(255, 120, 0, 0.7))
+          drop-shadow(0 0 55px rgba(255, 120, 0, 0.35));
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.3);
+}
+
+.metal-text-silver {
+  background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #f1f5f9 20%,
+    #cbd5e1 45%,
+    #64748b 50%,
+    #475569 52%,
+    #94a3b8 72%,
+    #ffffff 88%,
+    #334155 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.95))
+          drop-shadow(0 0 20px rgba(255, 255, 255, 0.35));
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.3);
+}
