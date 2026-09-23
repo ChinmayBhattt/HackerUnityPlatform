@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   X,
   Trophy,
@@ -18,7 +20,6 @@ import {
   Layers,
   Code2,
 } from 'lucide-react';
-import Link from 'next/link';
 import { FullPublicProfileData, getPublicUserProfileByUsername, PublicProfileResult } from '@/lib/supabase-service';
 import { formatCurrency } from '@/lib/utils';
 
@@ -28,6 +29,7 @@ interface ProfilePreviewModalProps {
   // Can be initialized with quick search result or username
   initialProfile?: PublicProfileResult | null;
   username?: string | null;
+  onNavigateToFullProfile?: () => void;
 }
 
 export function ProfilePreviewModal({
@@ -35,7 +37,9 @@ export function ProfilePreviewModal({
   onClose,
   initialProfile,
   username,
+  onNavigateToFullProfile,
 }: ProfilePreviewModalProps) {
+  const router = useRouter();
   const [data, setData] = useState<FullPublicProfileData | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'winnings' | 'participations' | 'projects'>('winnings');
@@ -176,14 +180,22 @@ export function ProfilePreviewModal({
               </button>
 
               {targetUsername && (
-                <Link
-                  href={`/profile/${encodeURIComponent(targetUsername)}`}
-                  onClick={onClose}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onClose();
+                    if (onNavigateToFullProfile) {
+                      onNavigateToFullProfile();
+                    }
+                    router.push(`/profile/${encodeURIComponent(targetUsername)}`);
+                  }}
                   className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#0099e6] hover:bg-[#0088cc] text-xs font-bold text-white shadow-md shadow-sky-500/20 transition-all cursor-pointer"
                 >
                   <span>Full Profile</span>
                   <ExternalLink className="w-3.5 h-3.5" />
-                </Link>
+                </button>
               )}
             </div>
           </div>
@@ -197,11 +209,6 @@ export function ProfilePreviewModal({
               {targetUsername && (
                 <span className="text-xs font-mono font-bold text-[#0099e6] bg-sky-50 dark:bg-sky-500/10 px-2 py-0.5 rounded-md border border-sky-200/60 dark:border-sky-500/20">
                   @{targetUsername}
-                </span>
-              )}
-              {user?.role && (
-                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-slate-400">
-                  {user.role}
                 </span>
               )}
             </div>
@@ -225,7 +232,7 @@ export function ProfilePreviewModal({
             {/* Bio */}
             {user?.bio && (
               <div
-                className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-3 [&_ul]:list-disc [&_ul]:pl-4 [&_li]:my-0.5"
+                className="mt-2.5 max-h-48 sm:max-h-56 overflow-y-auto pr-1 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed [&_ul]:list-disc [&_ul]:pl-4 [&_ul]:space-y-1 [&_li]:my-0.5"
                 dangerouslySetInnerHTML={{ __html: user.bio }}
               />
             )}
@@ -466,7 +473,12 @@ export function ProfilePreviewModal({
 
                     <Link
                       href={`/hackathons/${part.eventSlug}`}
-                      onClick={onClose}
+                      onClick={() => {
+                        onClose();
+                        if (onNavigateToFullProfile) {
+                          onNavigateToFullProfile();
+                        }
+                      }}
                       className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-[#0099e6] hover:text-white dark:bg-white/[0.06] dark:hover:bg-[#0099e6] text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors shrink-0"
                     >
                       View Event

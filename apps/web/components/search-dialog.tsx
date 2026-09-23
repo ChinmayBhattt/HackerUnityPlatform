@@ -14,6 +14,7 @@ import {
   ExternalLink,
   GraduationCap,
   Sparkles,
+  Flame,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePublishedEvents } from '@/lib/hooks/use-events';
@@ -115,6 +116,22 @@ export function SearchDialog({ isOpen, onClose }: SearchDialogProps) {
       e.tags.some((t) => t.toLowerCase().includes(cleanQ))
   );
 
+  // Realtime Trending Hackathons & Domains derived from live events
+  const trendingHackathons = Array.from(
+    new Set(events.filter((e) => e.title).map((e) => e.title))
+  ).slice(0, 4);
+
+  const trendingDomains = Array.from(
+    new Set(
+      events
+        .flatMap((e) => e.tags || [])
+        .filter((t) => t && t.length > 1 && !t.startsWith('@'))
+    )
+  ).slice(0, 6);
+
+  const fallbackDomains = ['AI & ML', 'Autonomous Agents', 'Web3', 'Blockchain', 'Fullstack', 'DevOps'];
+  const displayDomains = trendingDomains.length > 0 ? trendingDomains : fallbackDomains;
+
   return (
     <>
       <div
@@ -199,23 +216,53 @@ export function SearchDialog({ isOpen, onClose }: SearchDialogProps) {
 
           {/* Results Area */}
           <div className="flex-1 overflow-y-auto p-4 space-y-6">
-            {/* Quick Trending Tags when no query */}
+            {/* Realtime Trending Tags when no query */}
             {!query && (
-              <div>
-                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                  <Zap className="w-3.5 h-3.5 text-[#f97316]" />
-                  <span>Trending & Popular Searches</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {['@SCareBlue', '@chinmay', 'GenAI', 'Autonomous Agents', 'ZK-Proofs', 'Robotics', 'DeFi'].map((tag) => (
-                    <button
-                      key={tag}
-                      onClick={() => setQuery(tag)}
-                      className="px-3 py-1 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-sky-50 dark:hover:bg-sky-500/10 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-[#0099e6] border border-slate-200 dark:border-white/[0.08] hover:border-[#0099e6]/30 transition-colors cursor-pointer"
-                    >
-                      {tag.startsWith('@') ? tag : `#${tag}`}
-                    </button>
-                  ))}
+              <div className="space-y-3.5">
+                {/* Realtime Trending Hackathons */}
+                {trendingHackathons.length > 0 && (
+                  <div>
+                    <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                      <Flame className="w-3.5 h-3.5 text-[#ea580c]" />
+                      <span>Trending Hackathons</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {trendingHackathons.map((hackathon) => (
+                        <button
+                          key={hackathon}
+                          onClick={() => {
+                            setQuery(hackathon);
+                            setFilterType('HACKATHONS');
+                          }}
+                          className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-xs font-semibold text-amber-700 dark:text-amber-300 border border-amber-500/20 hover:border-amber-500/40 transition-colors cursor-pointer"
+                        >
+                          <Trophy className="w-3 h-3 text-amber-500" />
+                          <span>{hackathon}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Realtime Popular Domains & Tracks */}
+                <div>
+                  <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <Zap className="w-3.5 h-3.5 text-[#0099e6]" />
+                    <span>Popular Domains & Tracks</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {displayDomains.map((domain) => (
+                      <button
+                        key={domain}
+                        onClick={() => {
+                          setQuery(domain);
+                        }}
+                        className="px-3 py-1 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-sky-50 dark:hover:bg-sky-500/10 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-[#0099e6] border border-slate-200 dark:border-white/[0.08] hover:border-[#0099e6]/30 transition-colors cursor-pointer"
+                      >
+                        #{domain}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -264,27 +311,26 @@ export function SearchDialog({ isOpen, onClose }: SearchDialogProps) {
                               )}
                             </div>
 
-                            {/* Info */}
+                            {/* Info: Name on line 1, @username + college on line 2 (NO PARTICIPANT TAG) */}
                             <div className="min-w-0">
-                              <div className="flex items-center gap-2">
-                                <h4 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-[#0099e6] transition-colors truncate">
-                                  {builder.name}
-                                </h4>
+                              <h4 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-[#0099e6] transition-colors truncate">
+                                {builder.name}
+                              </h4>
+
+                              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
                                 {builder.username && (
-                                  <span className="text-[11px] font-mono font-bold text-[#0099e6] bg-sky-50 dark:bg-sky-500/10 px-1.5 py-0.2 rounded border border-sky-200/50 dark:border-sky-500/20 shrink-0">
+                                  <span className="font-mono font-semibold text-[#0099e6]">
                                     @{builder.username}
                                   </span>
                                 )}
-                              </div>
-
-                              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 truncate">
-                                {builder.college ? (
-                                  <span className="flex items-center gap-1 truncate">
-                                    <GraduationCap className="w-3 h-3 shrink-0" />
-                                    <span className="truncate">{builder.college}</span>
-                                  </span>
-                                ) : (
-                                  <span>{builder.role}</span>
+                                {builder.college && (
+                                  <>
+                                    <span className="text-slate-300 dark:text-white/20">•</span>
+                                    <span className="flex items-center gap-1 truncate text-slate-500 dark:text-slate-400">
+                                      <GraduationCap className="w-3 h-3 shrink-0" />
+                                      <span className="truncate">{builder.college}</span>
+                                    </span>
+                                  </>
                                 )}
                               </div>
                             </div>
@@ -432,6 +478,7 @@ export function SearchDialog({ isOpen, onClose }: SearchDialogProps) {
         <ProfilePreviewModal
           isOpen={!!selectedBuilder}
           onClose={() => setSelectedBuilder(null)}
+          onNavigateToFullProfile={onClose}
           initialProfile={selectedBuilder}
           username={selectedBuilder.username}
         />

@@ -86,12 +86,11 @@ export async function GET(req: Request, context: RouteContext) {
     // 2. Fetch Participations (from registrations table, joined with events)
     let participations: any[] = [];
     try {
-      const { data: regs, error: regsError } = await supabaseAdmin
+      let regQuery = supabaseAdmin
         .from('registrations')
         .select(`
           id,
           event_id,
-          team_id,
           team_name,
           role,
           status,
@@ -108,9 +107,15 @@ export async function GET(req: Request, context: RouteContext) {
             total_prize_value,
             organizer_name
           )
-        `)
-        .eq('user_id', userId)
-        .order('registered_at', { ascending: false });
+        `);
+
+      if (profile.email) {
+        regQuery = regQuery.or(`user_id.eq.${userId},user_email.eq.${profile.email}`);
+      } else {
+        regQuery = regQuery.eq('user_id', userId);
+      }
+
+      const { data: regs, error: regsError } = await regQuery.order('registered_at', { ascending: false });
 
       if (!regsError && regs) {
         participations = regs.map((r: any) => ({
@@ -152,7 +157,6 @@ export async function GET(req: Request, context: RouteContext) {
           track,
           status,
           score,
-          feedback,
           created_at,
           events (
             id,
@@ -178,7 +182,7 @@ export async function GET(req: Request, context: RouteContext) {
           track: s.track || 'General Open Track',
           status: s.status || 'SUBMITTED',
           score: s.score || 0,
-          feedback: s.feedback || '',
+          feedback: '',
           createdAt: s.created_at,
           eventTitle: s.events?.title || 'Hackathon',
           eventSlug: s.events?.slug || s.event_id,

@@ -250,9 +250,6 @@ export default function PublicProfilePage() {
                     <span className="text-sm font-mono font-bold text-[#0099e6] bg-sky-50 dark:bg-sky-500/10 px-2.5 py-0.5 rounded-lg border border-sky-200/70 dark:border-sky-500/20">
                       @{user.username || username}
                     </span>
-                    <span className="text-xs font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.08] text-slate-600 dark:text-slate-300">
-                      {user.role}
-                    </span>
                   </div>
 
                   {/* University & Organization line */}
