@@ -208,6 +208,26 @@ export async function GET(req: Request, context: RouteContext) {
       }));
 
     // 5. Structure final profile response
+    let resolvedBannerUrl = profile.banner_url || null;
+    let resolvedAvatarUrl = profile.avatar_url || null;
+    let resolvedBio = profile.bio || null;
+    let resolvedSkills = Array.isArray(profile.skills) ? profile.skills : [];
+
+    if (!resolvedBannerUrl || !resolvedAvatarUrl || !resolvedBio || resolvedSkills.length === 0) {
+      try {
+        const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(profile.id);
+        const meta = authUser?.user?.user_metadata;
+        if (meta) {
+          if (!resolvedBannerUrl && meta.banner_url) resolvedBannerUrl = meta.banner_url;
+          if (!resolvedAvatarUrl && (meta.avatar_url || meta.picture)) resolvedAvatarUrl = meta.avatar_url || meta.picture;
+          if (!resolvedBio && meta.bio) resolvedBio = meta.bio;
+          if (resolvedSkills.length === 0 && Array.isArray(meta.skills)) resolvedSkills = meta.skills;
+        }
+      } catch (authErr) {
+        // ignore
+      }
+    }
+
     const finalUsername =
       profile.username ||
       (profile.email ? profile.email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '') : null) ||
@@ -219,8 +239,8 @@ export async function GET(req: Request, context: RouteContext) {
         username: finalUsername,
         name: profile.name || 'Anonymous Builder',
         email: profile.email || '',
-        avatarUrl: profile.avatar_url || null,
-        bannerUrl: profile.banner_url || null,
+        avatarUrl: resolvedAvatarUrl,
+        bannerUrl: resolvedBannerUrl,
         role: profile.role || 'PARTICIPANT',
         college: profile.college || null,
         organization: profile.organization || null,
@@ -232,8 +252,8 @@ export async function GET(req: Request, context: RouteContext) {
         jobTitle: profile.job_title || null,
         experienceYears: profile.experience_years || null,
         industry: profile.industry || null,
-        bio: profile.bio || null,
-        skills: Array.isArray(profile.skills) ? profile.skills : [],
+        bio: resolvedBio,
+        skills: resolvedSkills,
         socialLinks: {
           github: profile.github_url || null,
           linkedin: profile.linkedin_url || null,

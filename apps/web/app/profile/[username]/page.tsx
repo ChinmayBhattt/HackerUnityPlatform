@@ -28,8 +28,6 @@ import {
 import { FullPublicProfileData, getPublicUserProfileByUsername } from '@/lib/supabase-service';
 import { useAuth } from '@/lib/auth-context';
 import { formatCurrency } from '@/lib/utils';
-import { Navbar } from '@/components/navbar';
-import { Footer } from '@/components/footer';
 
 export default function PublicProfilePage() {
   const params = useParams();
@@ -103,11 +101,8 @@ export default function PublicProfilePage() {
   const portfolioLink = formatExternalLink(user?.socialLinks?.portfolio);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#080b11] text-slate-900 dark:text-white flex flex-col font-sans selection:bg-[#0099e6] selection:text-white">
-      <Navbar />
-
-      <main className="flex-1 pb-20">
-        {loading ? (
+    <div className="w-full pb-20 pt-4 sm:pt-6 font-sans">
+      {loading ? (
           <div className="max-w-5xl mx-auto px-4 pt-32 pb-20 text-center flex flex-col items-center justify-center">
             <div className="w-12 h-12 rounded-full border-3 border-[#0099e6] border-t-transparent animate-spin mb-4" />
             <h2 className="text-lg font-bold text-slate-700 dark:text-slate-300">
@@ -287,9 +282,10 @@ export default function PublicProfilePage() {
 
                   {/* Bio statement */}
                   {user.bio ? (
-                    <p className="mt-3 text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed max-w-3xl">
-                      {user.bio}
-                    </p>
+                    <div
+                      className="mt-3 text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed max-w-3xl [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1 [&_li]:my-1"
+                      dangerouslySetInnerHTML={{ __html: user.bio }}
+                    />
                   ) : (
                     <p className="mt-3 text-xs sm:text-sm text-slate-400 italic">
                       Active builder on Hacker&apos;s Unity competing across AI, Web3, and Fullstack challenges.
@@ -654,9 +650,6 @@ export default function PublicProfilePage() {
             </div>
           </div>
         )}
-      </main>
-
-      <Footer />
     </div>
   );
 }

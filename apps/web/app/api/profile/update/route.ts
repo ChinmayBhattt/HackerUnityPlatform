@@ -186,6 +186,7 @@ export async function POST(req: Request) {
     if (cleanBio !== undefined) profileUpdateData.bio = cleanBio;
     if (cleanSkills !== undefined) profileUpdateData.skills = cleanSkills;
     if (finalAvatarUrl !== undefined) profileUpdateData.avatar_url = finalAvatarUrl;
+    if (finalBannerUrl !== undefined) profileUpdateData.banner_url = finalBannerUrl;
     if (cleanGithub !== undefined) profileUpdateData.github_url = cleanGithub;
     if (cleanLinkedin !== undefined) profileUpdateData.linkedin_url = cleanLinkedin;
     if (cleanPortfolio !== undefined) profileUpdateData.portfolio_url = cleanPortfolio;
