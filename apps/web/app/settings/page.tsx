@@ -538,8 +538,8 @@ export default function SettingsPage() {
             <button
               onClick={() => setActiveTab('profile')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${activeTab === 'profile'
-                  ? 'bg-[#0099e6] text-white shadow-xs'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                ? 'bg-[#0099e6] text-white shadow-xs'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 }`}
             >
               <UserIcon className="w-4 h-4 shrink-0" />
@@ -554,8 +554,8 @@ export default function SettingsPage() {
             <button
               onClick={() => setActiveTab('socials')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${activeTab === 'socials'
-                  ? 'bg-[#0099e6] text-white shadow-xs'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                ? 'bg-[#0099e6] text-white shadow-xs'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 }`}
             >
               <Globe className="w-4 h-4 shrink-0" />
@@ -570,8 +570,8 @@ export default function SettingsPage() {
             <button
               onClick={() => setActiveTab('security')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${activeTab === 'security'
-                  ? 'bg-[#0099e6] text-white shadow-xs'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                ? 'bg-[#0099e6] text-white shadow-xs'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 }`}
             >
               <Lock className="w-4 h-4 shrink-0" />
@@ -586,8 +586,8 @@ export default function SettingsPage() {
             <button
               onClick={() => setActiveTab('notifications')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${activeTab === 'notifications'
-                  ? 'bg-[#0099e6] text-white shadow-xs'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                ? 'bg-[#0099e6] text-white shadow-xs'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 }`}
             >
               <Bell className="w-4 h-4 shrink-0" />
@@ -602,8 +602,8 @@ export default function SettingsPage() {
             <button
               onClick={() => setActiveTab('danger')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer text-left ${activeTab === 'danger'
-                  ? 'bg-rose-600 text-white shadow-xs'
-                  : 'text-rose-600 hover:bg-rose-50'
+                ? 'bg-rose-600 text-white shadow-xs'
+                : 'text-rose-600 hover:bg-rose-50'
                 }`}
             >
               <Trash2 className="w-4 h-4 shrink-0" />
@@ -778,8 +778,8 @@ export default function SettingsPage() {
                       type="button"
                       onClick={() => setProfessionType('STUDENT')}
                       className={`p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer flex flex-col justify-between gap-2 ${professionType === 'STUDENT'
-                          ? 'border-[#0099e6] bg-sky-50/60 shadow-xs ring-2 ring-[#0099e6]/20'
-                          : 'border-slate-200 bg-white hover:border-slate-300'
+                        ? 'border-[#0099e6] bg-sky-50/60 shadow-xs ring-2 ring-[#0099e6]/20'
+                        : 'border-slate-200 bg-white hover:border-slate-300'
                         }`}
                     >
                       <div className="flex items-center justify-between">
@@ -805,8 +805,8 @@ export default function SettingsPage() {
                       type="button"
                       onClick={() => setProfessionType('PROFESSIONAL')}
                       className={`p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer flex flex-col justify-between gap-2 ${professionType === 'PROFESSIONAL'
-                          ? 'border-[#0099e6] bg-sky-50/60 shadow-xs ring-2 ring-[#0099e6]/20'
-                          : 'border-slate-200 bg-white hover:border-slate-300'
+                        ? 'border-[#0099e6] bg-sky-50/60 shadow-xs ring-2 ring-[#0099e6]/20'
+                        : 'border-slate-200 bg-white hover:border-slate-300'
                         }`}
                     >
                       <div className="flex items-center justify-between">
@@ -832,8 +832,8 @@ export default function SettingsPage() {
                       type="button"
                       onClick={() => setProfessionType('FREELANCER')}
                       className={`p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer flex flex-col justify-between gap-2 ${professionType === 'FREELANCER'
-                          ? 'border-[#0099e6] bg-sky-50/60 shadow-xs ring-2 ring-[#0099e6]/20'
-                          : 'border-slate-200 bg-white hover:border-slate-300'
+                        ? 'border-[#0099e6] bg-sky-50/60 shadow-xs ring-2 ring-[#0099e6]/20'
+                        : 'border-slate-200 bg-white hover:border-slate-300'
                         }`}
                     >
                       <div className="flex items-center justify-between">
@@ -1334,8 +1334,8 @@ export default function SettingsPage() {
               {passwordMsg && (
                 <div
                   className={`p-3.5 rounded-2xl text-xs font-semibold flex items-center gap-2 ${passwordMsg.type === 'success'
-                      ? 'bg-emerald-50 border border-emerald-200 text-emerald-700'
-                      : 'bg-rose-50 border border-rose-200 text-rose-700'
+                    ? 'bg-emerald-50 border border-emerald-200 text-emerald-700'
+                    : 'bg-rose-50 border border-rose-200 text-rose-700'
                     }`}
                 >
                   {passwordMsg.type === 'success' ? (

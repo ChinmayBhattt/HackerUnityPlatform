@@ -188,9 +188,9 @@ export default function PublicProfilePage() {
 
               {/* Main Info */}
               <div className="px-6 sm:px-8 pb-8 pt-0">
-                <div className="flex flex-col sm:flex-row sm:items-end justify-between -mt-16 sm:-mt-20 gap-4 mb-5">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-5 pt-4 sm:pt-6">
                   {/* Avatar */}
-                  <div className="relative shrink-0">
+                  <div className="relative shrink-0 -mt-20 sm:-mt-24">
                     <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-3xl border-4 border-white dark:border-[#0e131d] bg-gradient-to-br from-slate-800 to-slate-900 shadow-2xl overflow-hidden flex items-center justify-center text-white text-4xl font-black">
                       {user.avatarUrl && user.avatarUrl.length > 4 ? (
                         <img
@@ -208,7 +208,7 @@ export default function PublicProfilePage() {
                   </div>
 
                   {/* High-level stats pill row */}
-                  <div className="grid grid-cols-3 gap-2 sm:gap-4 shrink-0">
+                  <div className="grid grid-cols-3 gap-2 sm:gap-4 shrink-0 sm:mt-2">
                     <div className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200/60 dark:border-white/[0.06] text-center">
                       <div className="text-base sm:text-xl font-black text-amber-500 flex items-center justify-center gap-1">
                         <Trophy className="w-4 h-4 fill-amber-500" />

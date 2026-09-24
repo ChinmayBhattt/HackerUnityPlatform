@@ -42,10 +42,26 @@ export function SearchDialog({ isOpen, onClose }: SearchDialogProps) {
 
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Live search builders
+  // Reset search dialog state on close
+  useEffect(() => {
+    if (!isOpen) {
+      setQuery('');
+      setBuilders([]);
+      setFilterType('ALL');
+      setSelectedBuilder(null);
+    }
+  }, [isOpen]);
+
+  // Live search builders (only when query has text)
   const fetchBuilders = useCallback((q: string) => {
+    const clean = q.trim().replace(/^@/, '');
+    if (!clean) {
+      setBuilders([]);
+      setLoadingBuilders(false);
+      return;
+    }
     setLoadingBuilders(true);
-    searchProfilesRealtime(q, 15)
+    searchProfilesRealtime(clean, 15)
       .then((res) => {
         setBuilders(res);
         setLoadingBuilders(false);
@@ -66,6 +82,13 @@ export function SearchDialog({ isOpen, onClose }: SearchDialogProps) {
       setFilterType('BUILDERS');
     }
 
+    const clean = query.trim().replace(/^@/, '');
+    if (!clean) {
+      setBuilders([]);
+      setLoadingBuilders(false);
+      return;
+    }
+
     debounceTimerRef.current = setTimeout(() => {
       fetchBuilders(query);
     }, 200);
@@ -75,9 +98,10 @@ export function SearchDialog({ isOpen, onClose }: SearchDialogProps) {
     };
   }, [isOpen, query, fetchBuilders, filterType]);
 
-  // Realtime Supabase listener
+  // Realtime Supabase listener (only when query is active)
   useEffect(() => {
-    if (!isOpen) return;
+    const clean = query.trim().replace(/^@/, '');
+    if (!isOpen || !clean) return;
 
     fetchBuilders(query);
 
@@ -197,7 +221,7 @@ export function SearchDialog({ isOpen, onClose }: SearchDialogProps) {
               }`}
             >
               <Users className="w-3.5 h-3.5" />
-              <span>Builders & Hackers ({builders.length})</span>
+              <span>Builders & Hackers{cleanQ.length > 0 ? ` (${builders.length})` : ''}</span>
             </button>
 
             <button
@@ -217,7 +241,7 @@ export function SearchDialog({ isOpen, onClose }: SearchDialogProps) {
           {/* Results Area */}
           <div className="flex-1 overflow-y-auto p-4 space-y-6">
             {/* Realtime Trending Tags when no query */}
-            {!query && (
+            {!cleanQ && (
               <div className="space-y-3.5">
                 {/* Realtime Trending Hackathons */}
                 {trendingHackathons.length > 0 && (
@@ -267,8 +291,23 @@ export function SearchDialog({ isOpen, onClose }: SearchDialogProps) {
               </div>
             )}
 
-            {/* BUILDERS & HACKERS RESULTS */}
-            {(filterType === 'ALL' || filterType === 'BUILDERS') && (
+            {/* BUILDERS & HACKERS RESULTS (Only shown when user actively searches for a person or clicks Builders tab) */}
+            {filterType === 'BUILDERS' && !cleanQ && (
+              <div className="text-center py-10 px-4">
+                <div className="w-12 h-12 rounded-2xl bg-sky-500/10 text-[#0099e6] flex items-center justify-center mx-auto mb-3">
+                  <Users className="w-6 h-6" />
+                </div>
+                <h3 className="text-sm font-bold text-slate-800 dark:text-white mb-1">
+                  Search Builders & Profiles
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+                  Type a name or @username in the search box to find builders, hackers, and teammates.
+                </p>
+              </div>
+            )}
+
+            {((filterType === 'ALL' && cleanQ.length > 0 && (builders.length > 0 || loadingBuilders)) ||
+              (filterType === 'BUILDERS' && cleanQ.length > 0)) && (
               <div>
                 <div className="text-[11px] font-bold text-[#0099e6] uppercase tracking-wider mb-2.5 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
@@ -412,13 +451,13 @@ export function SearchDialog({ isOpen, onClose }: SearchDialogProps) {
               </div>
             )}
 
-            {/* HACKATHONS RESULTS */}
+            {/* HACKATHONS & EVENTS RESULTS */}
             {(filterType === 'ALL' || filterType === 'HACKATHONS') && (
               <div>
                 <div className="text-[11px] font-bold text-[#ea580c] uppercase tracking-wider mb-2.5 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
                     <Trophy className="w-3.5 h-3.5" />
-                    Hackathons ({filteredEvents.length})
+                    {!cleanQ ? `Hackathons & Events (${filteredEvents.length})` : `Hackathons (${filteredEvents.length})`}
                   </span>
                   <Link
                     href="/hackathons"
@@ -432,7 +471,7 @@ export function SearchDialog({ isOpen, onClose }: SearchDialogProps) {
                   <p className="text-xs text-slate-400 py-2">No hackathons matching &quot;{query}&quot;</p>
                 ) : (
                   <div className="space-y-2">
-                    {filteredEvents.slice(0, 5).map((event) => (
+                    {filteredEvents.slice(0, !cleanQ ? 8 : 5).map((event) => (
                       <Link
                         key={event.id}
                         href={`/hackathons/${event.slug}`}
@@ -451,8 +490,12 @@ export function SearchDialog({ isOpen, onClose }: SearchDialogProps) {
                           <span>{event.organizerName}</span>
                           <span>•</span>
                           <span>{event.eventType}</span>
-                          <span>•</span>
-                          <span className="text-[#0099e6] font-semibold">{event.tags.slice(0, 3).join(', ')}</span>
+                          {event.tags && event.tags.length > 0 && (
+                            <>
+                              <span>•</span>
+                              <span className="text-[#0099e6] font-semibold">{event.tags.slice(0, 3).join(', ')}</span>
+                            </>
+                          )}
                         </div>
                       </Link>
                     ))}
@@ -460,6 +503,19 @@ export function SearchDialog({ isOpen, onClose }: SearchDialogProps) {
                 )}
               </div>
             )}
+
+            {/* Empty state when searching in ALL and nothing found */}
+            {filterType === 'ALL' &&
+              cleanQ.length > 0 &&
+              !loadingBuilders &&
+              builders.length === 0 &&
+              filteredEvents.length === 0 && (
+                <div className="text-center py-8">
+                  <p className="text-xs text-slate-400">
+                    No hackathons or builders found matching &quot;{query}&quot;.
+                  </p>
+                </div>
+              )}
           </div>
 
           {/* Footer Info */}
