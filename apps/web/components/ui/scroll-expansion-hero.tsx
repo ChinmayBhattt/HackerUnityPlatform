@@ -96,8 +96,8 @@ export function ScrollExpandMedia({
   // Background fade
   const bgOpacity = useTransform(smoothProgress, [0, 0.65], [1, 0.05]);
 
-  // Rich dark overlay on card for crystal-clear readability when expanded
-  const cardDarkOverlay = useTransform(smoothProgress, [0.25, 0.75], [0.15, 0.94]);
+  // Dark overlay on card: keeps the hackathon photo visible while ensuring text readability
+  const cardDarkOverlay = useTransform(smoothProgress, [0.25, 0.75], [0.1, 0.72]);
 
   // Revealed content animation
   const contentOpacity = useTransform(smoothProgress, [0.68, 0.88], [0, 1]);
@@ -172,15 +172,12 @@ export function ScrollExpandMedia({
             />
           )}
 
-          {/* Darkening overlays for high-contrast text readability */}
+          {/* Darkening overlay that preserves the background photo atmosphere while keeping text readable */}
           <motion.div
-            className="absolute inset-0 bg-[#05070f] z-15 pointer-events-none"
+            className="absolute inset-0 bg-black z-15 pointer-events-none"
             style={{ opacity: cardDarkOverlay }}
           />
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-t from-[#05070f] via-slate-950/85 to-[#05070f]/90 z-15 pointer-events-none"
-            style={{ opacity: cardDarkOverlay }}
-          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#05070f] via-transparent to-[#05070f]/80 z-16 pointer-events-none" />
 
           {/* ─── Fully Expanded Content: "( Become Campus Ambassador )" ──── */}
           <motion.div
