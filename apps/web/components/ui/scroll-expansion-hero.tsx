@@ -8,7 +8,7 @@ import {
   ReactNode,
 } from 'react';
 import Image from 'next/image';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 
 export interface ScrollExpandMediaProps {
   mediaType?: 'video' | 'image';
@@ -29,7 +29,7 @@ export function ScrollExpandMedia({
   bgImageSrc,
   title = 'CAMPUS AMBASSADOR',
   date = 'Lead Your College Chapter',
-  scrollToExpand = 'Scroll down to expand',
+  scrollToExpand,
   textBlend = false,
   children,
 }: ScrollExpandMediaProps) {
@@ -37,20 +37,28 @@ export function ScrollExpandMedia({
   const [isFullyExpanded, setIsFullyExpanded] = useState(false);
   const currentProgressRef = useRef(0);
 
-  // Native Framer Motion scroll tracker attached to container in DOM (0ms latency, zero lag)
+  // Native Framer Motion scroll tracker attached to container in DOM
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ['start start', 'end end'],
   });
 
-  // Track expansion state efficiently without unnecessary re-renders
+  // Silky 60fps spring physics for natural momentum across all scroll speeds
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 260,
+    damping: 32,
+    mass: 0.5,
+    restDelta: 0.001,
+  });
+
+  // Track expansion state for pointer interactions
   useEffect(() => {
-    return scrollYProgress.on('change', (val) => {
+    return smoothProgress.on('change', (val) => {
       currentProgressRef.current = val;
       const expanded = val >= 0.82;
       setIsFullyExpanded((prev) => (prev !== expanded ? expanded : prev));
     });
-  }, [scrollYProgress]);
+  }, [smoothProgress]);
 
   // Click / Tap to toggle expansion smoothly
   const handleToggleExpand = useCallback(() => {
@@ -72,29 +80,29 @@ export function ScrollExpandMedia({
     }
   }, []);
 
-  // GPU-accelerated transforms
-  const cardScale = useTransform(scrollYProgress, [0, 0.78], [0.44, 1.0]);
-  const cardBorderRadius = useTransform(scrollYProgress, [0, 0.75], [24, 0]);
+  // Derived transforms using GPU scale and translate
+  const cardScale = useTransform(smoothProgress, [0, 0.78], [0.44, 1.0]);
+  const cardBorderRadius = useTransform(smoothProgress, [0, 0.75], [32, 0]);
 
-  // Split text translation on GPU compositor thread (x property)
-  const textTranslateLeft = useTransform(scrollYProgress, [0, 0.55], ['0vw', '-75vw']);
-  const textTranslateRight = useTransform(scrollYProgress, [0, 0.55], ['0vw', '75vw']);
-  const textOpacity = useTransform(scrollYProgress, [0, 0.42], [1, 0]);
+  // Split text translation: First word far left, second word far right
+  const textTranslateLeft = useTransform(smoothProgress, [0, 0.55], ['0vw', '-85vw']);
+  const textTranslateRight = useTransform(smoothProgress, [0, 0.55], ['0vw', '85vw']);
+  const textOpacity = useTransform(smoothProgress, [0, 0.4], [1, 0]);
 
   // Subtitle/badge fade and exit translation
-  const badgeY = useTransform(scrollYProgress, [0, 0.38], [0, 24]);
-  const badgeOpacity = useTransform(scrollYProgress, [0, 0.35], [1, 0]);
+  const badgeY = useTransform(smoothProgress, [0, 0.35], [0, 30]);
+  const badgeOpacity = useTransform(smoothProgress, [0, 0.3], [1, 0]);
 
   // Background fade
-  const bgOpacity = useTransform(scrollYProgress, [0, 0.65], [1, 0.05]);
+  const bgOpacity = useTransform(smoothProgress, [0, 0.65], [1, 0.05]);
 
-  // Dark overlay on card
-  const cardDarkOverlay = useTransform(scrollYProgress, [0.3, 0.75], [0.15, 0.82]);
+  // Rich dark overlay on card for crystal-clear readability when expanded
+  const cardDarkOverlay = useTransform(smoothProgress, [0.25, 0.75], [0.15, 0.94]);
 
   // Revealed content animation
-  const contentOpacity = useTransform(scrollYProgress, [0.7, 0.88], [0, 1]);
-  const contentY = useTransform(scrollYProgress, [0.7, 0.88], [24, 0]);
-  const contentScale = useTransform(scrollYProgress, [0.7, 0.88], [0.97, 1]);
+  const contentOpacity = useTransform(smoothProgress, [0.68, 0.88], [0, 1]);
+  const contentY = useTransform(smoothProgress, [0.68, 0.88], [35, 0]);
+  const contentScale = useTransform(smoothProgress, [0.68, 0.88], [0.95, 1]);
 
   const words = title ? title.trim().split(' ') : [];
   const firstWord = words[0] || '';
@@ -103,12 +111,12 @@ export function ScrollExpandMedia({
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-[220vh] bg-[#05070f]"
+      className="relative w-full h-[240vh] bg-[#05070f]"
     >
       <div className="sticky top-0 w-full h-screen min-h-[560px] overflow-hidden bg-[#05070f] flex items-center justify-center select-none">
         {/* ─── Background Layer (Hackathon Arena) ────────────────────────── */}
         <motion.div
-          className="absolute inset-0 z-0 h-full w-full pointer-events-none transform-gpu will-change-transform"
+          className="absolute inset-0 z-0 h-full w-full pointer-events-none transform-gpu"
           style={{ opacity: bgOpacity }}
         >
           <Image
@@ -126,18 +134,18 @@ export function ScrollExpandMedia({
         {/* ─── Center Photo Card (Zooms Forward to Front) ───────────────── */}
         <motion.div
           onClick={!isFullyExpanded ? handleToggleExpand : undefined}
-          className="relative z-10 w-full h-full overflow-hidden flex items-center justify-center origin-center cursor-pointer transform-gpu will-change-transform"
+          className="relative z-10 w-full h-full overflow-hidden flex items-center justify-center origin-center cursor-pointer transform-gpu"
           style={{
             scale: cardScale,
             borderRadius: cardBorderRadius,
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.75), 0 0 30px rgba(0, 153, 230, 0.15)',
+            boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 35px rgba(0, 153, 230, 0.18)',
           }}
         >
           {/* Subtle border glow on card */}
           <motion.div
             className="absolute inset-0 border border-sky-400/30 z-20 pointer-events-none rounded-[inherit]"
             style={{
-              opacity: useTransform(scrollYProgress, [0, 0.75], [1, 0]),
+              opacity: useTransform(smoothProgress, [0, 0.75], [1, 0]),
             }}
           />
 
@@ -164,9 +172,13 @@ export function ScrollExpandMedia({
             />
           )}
 
-          {/* Darkening overlay for readability */}
+          {/* Darkening overlays for high-contrast text readability */}
           <motion.div
-            className="absolute inset-0 bg-black z-15 pointer-events-none"
+            className="absolute inset-0 bg-[#05070f] z-15 pointer-events-none"
+            style={{ opacity: cardDarkOverlay }}
+          />
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-t from-[#05070f] via-slate-950/85 to-[#05070f]/90 z-15 pointer-events-none"
             style={{ opacity: cardDarkOverlay }}
           />
 
@@ -193,7 +205,7 @@ export function ScrollExpandMedia({
         >
           {/* Left word (CAMPUS): Hacker's Unity Clean Cyan Gradient */}
           <motion.h2
-            className="text-xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight uppercase text-left sm:text-center metal-text-cyan select-none will-change-transform"
+            className="text-xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight uppercase text-left sm:text-center metal-text-cyan select-none"
             style={{
               x: textTranslateLeft,
             }}
@@ -203,7 +215,7 @@ export function ScrollExpandMedia({
 
           {/* Right word (AMBASSADOR): Hacker's Unity Clean Orange Gradient */}
           <motion.h2
-            className="text-xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight uppercase text-right sm:text-center metal-text-orange select-none will-change-transform"
+            className="text-xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight uppercase text-right sm:text-center metal-text-orange select-none"
             style={{
               x: textTranslateRight,
             }}
@@ -215,7 +227,7 @@ export function ScrollExpandMedia({
         {/* ─── Subtitle Badge: Centered, Elevated & Animated ── */}
         {date && (
           <motion.div
-            className="absolute z-20 bottom-8 sm:bottom-12 md:bottom-16 inset-x-0 flex items-center justify-center pointer-events-none px-4 transform-gpu will-change-transform"
+            className="absolute z-20 bottom-8 sm:bottom-12 md:bottom-16 inset-x-0 flex items-center justify-center pointer-events-none px-4 transform-gpu"
             style={{
               opacity: badgeOpacity,
               y: badgeY,

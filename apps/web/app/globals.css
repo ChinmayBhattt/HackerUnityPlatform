@@ -506,28 +506,28 @@ body {
 
 /* ─── Hacker's Unity Modern Brand Gradient Typography ───── */
 .metal-text-cyan {
-  background: linear-gradient(135deg, #e0f2fe 0%, #38bdf8 40%, #0099e6 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #7dd3fc 40%, #0099e6 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.7));
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.85));
 }
 
 .metal-text-orange {
-  background: linear-gradient(135deg, #fed7aa 0%, #fb923c 40%, #ff7800 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #fed7aa 25%, #ff7800 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.7));
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.85));
 }
 
 .metal-text-silver {
-  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #94a3b8 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 45%, #cbd5e1 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6));
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.85));
 }
