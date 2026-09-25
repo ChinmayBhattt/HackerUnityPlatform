@@ -169,7 +169,6 @@ export function CampusAmbassadorSection() {
           bgImageSrc="/assets/campus-ambassador/bg-arena.jpg"
           title="CAMPUS AMBASSADOR"
           date="Lead Your College Chapter"
-          scrollToExpand="Tap / Scroll to Expand"
         >
           <AmbassadorContent />
         </ScrollExpandMedia>

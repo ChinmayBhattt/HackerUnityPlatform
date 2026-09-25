@@ -81,17 +81,9 @@ export function ScrollExpandMedia({
   const textTranslateRight = useTransform(scrollYProgress, [0, 0.55], ['0vw', '75vw']);
   const textOpacity = useTransform(scrollYProgress, [0, 0.42], [1, 0]);
 
-  // Subtitle translation
-  const subtitleTranslateLeft = useTransform(
-    scrollYProgress,
-    [0, 0.5],
-    ['-36px', 'calc(-36px - 60vw)']
-  );
-  const subtitleTranslateRight = useTransform(
-    scrollYProgress,
-    [0, 0.5],
-    ['36px', 'calc(36px + 60vw)']
-  );
+  // Subtitle/badge fade and exit translation
+  const badgeY = useTransform(scrollYProgress, [0, 0.38], [0, 24]);
+  const badgeOpacity = useTransform(scrollYProgress, [0, 0.35], [1, 0]);
 
   // Background fade
   const bgOpacity = useTransform(scrollYProgress, [0, 0.65], [1, 0.05]);
@@ -220,43 +212,47 @@ export function ScrollExpandMedia({
           </motion.h2>
         </motion.div>
 
-        {/* ─── Subtitle & Scroll Hint (Below Image, Staggered Left & Right) ── */}
-        <motion.div
-          className="absolute z-20 bottom-5 sm:bottom-7 md:bottom-8 inset-x-0 flex flex-col items-center justify-center gap-1.5 sm:gap-2.5 pointer-events-none px-4 transform-gpu"
-          style={{ opacity: textOpacity }}
-        >
-          {date && (
-            <motion.div
-              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-slate-950/90 border border-[#ff7800]/40 shadow-md backdrop-blur-sm will-change-transform"
-              style={{
-                x: subtitleTranslateLeft,
-              }}
-            >
-              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#ff7800]" />
-              <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-orange-200">
-                {date}
-              </span>
-            </motion.div>
-          )}
-
-          {scrollToExpand && (
+        {/* ─── Subtitle Badge: Centered, Elevated & Animated ── */}
+        {date && (
+          <motion.div
+            className="absolute z-20 bottom-8 sm:bottom-12 md:bottom-16 inset-x-0 flex items-center justify-center pointer-events-none px-4 transform-gpu will-change-transform"
+            style={{
+              opacity: badgeOpacity,
+              y: badgeY,
+            }}
+          >
             <motion.div
               onClick={handleToggleExpand}
-              className="flex items-center gap-2 px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full bg-slate-950/95 border border-sky-400/40 shadow-lg backdrop-blur-sm pointer-events-auto cursor-pointer active:scale-95 transition-transform will-change-transform"
-              style={{
-                x: subtitleTranslateRight,
+              animate={{
+                y: [0, -6, 0],
+                boxShadow: [
+                  '0 4px 20px -2px rgba(255, 120, 0, 0.25), 0 0 15px rgba(255, 120, 0, 0.15)',
+                  '0 10px 30px -2px rgba(255, 120, 0, 0.4), 0 0 25px rgba(255, 120, 0, 0.3)',
+                  '0 4px 20px -2px rgba(255, 120, 0, 0.25), 0 0 15px rgba(255, 120, 0, 0.15)',
+                ],
               }}
+              transition={{
+                duration: 2.8,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.96 }}
+              className="group flex items-center gap-2 sm:gap-2.5 px-4 sm:px-6 py-2 sm:py-2.5 rounded-full bg-slate-950/90 border border-[#ff7800]/50 backdrop-blur-md cursor-pointer pointer-events-auto select-none transition-colors hover:border-[#ff7800]"
             >
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-400" />
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ff7800] opacity-80" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-gradient-to-r from-[#ff7800] to-[#ffa040]" />
               </span>
-              <span className="text-[10px] sm:text-xs font-medium text-sky-200 tracking-wide">
-                {scrollToExpand}
+              <span className="text-[11px] sm:text-xs font-black uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-orange-200 via-white to-orange-300 group-hover:from-white group-hover:to-orange-200 transition-all">
+                {date}
+              </span>
+              <span className="inline-block transition-transform duration-300 group-hover:translate-y-0.5 text-[#ff7800] text-xs">
+                ↓
               </span>
             </motion.div>
-          )}
-        </motion.div>
+          </motion.div>
+        )}
       </div>
     </div>
   );
