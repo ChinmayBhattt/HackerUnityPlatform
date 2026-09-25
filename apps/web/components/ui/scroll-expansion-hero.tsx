@@ -8,7 +8,7 @@ import {
   ReactNode,
 } from 'react';
 import Image from 'next/image';
-import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 
 export interface ScrollExpandMediaProps {
   mediaType?: 'video' | 'image';
@@ -37,27 +37,20 @@ export function ScrollExpandMedia({
   const [isFullyExpanded, setIsFullyExpanded] = useState(false);
   const currentProgressRef = useRef(0);
 
-  // Native Framer Motion scroll tracker attached to container in DOM
+  // Native Framer Motion scroll tracker attached to container in DOM (0ms latency, zero lag)
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ['start start', 'end end'],
   });
 
-  // Silky 60fps spring physics for natural momentum across all scroll speeds
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 280,
-    damping: 34,
-    mass: 0.5,
-    restDelta: 0.001,
-  });
-
-  // Track expansion state for pointer interactions
+  // Track expansion state efficiently without unnecessary re-renders
   useEffect(() => {
-    return smoothProgress.on('change', (val) => {
+    return scrollYProgress.on('change', (val) => {
       currentProgressRef.current = val;
-      setIsFullyExpanded(val >= 0.85);
+      const expanded = val >= 0.82;
+      setIsFullyExpanded((prev) => (prev !== expanded ? expanded : prev));
     });
-  }, [smoothProgress]);
+  }, [scrollYProgress]);
 
   // Click / Tap to toggle expansion smoothly
   const handleToggleExpand = useCallback(() => {
@@ -79,25 +72,37 @@ export function ScrollExpandMedia({
     }
   }, []);
 
-  // Derived transforms using GPU scale and translate
-  const cardScale = useTransform(smoothProgress, [0, 0.78], [0.44, 1.0]);
-  const cardBorderRadius = useTransform(smoothProgress, [0, 0.75], [32, 0]);
+  // GPU-accelerated transforms
+  const cardScale = useTransform(scrollYProgress, [0, 0.78], [0.44, 1.0]);
+  const cardBorderRadius = useTransform(scrollYProgress, [0, 0.75], [24, 0]);
 
-  // Split text translation: First word left, second word right
-  const textTranslateX = useTransform(smoothProgress, [0, 0.55], [0, 85]);
-  const subtitleTranslateX = useTransform(smoothProgress, [0, 0.5], [0, 70]);
-  const textOpacity = useTransform(smoothProgress, [0, 0.4], [1, 0]);
+  // Split text translation on GPU compositor thread (x property)
+  const textTranslateLeft = useTransform(scrollYProgress, [0, 0.55], ['0vw', '-75vw']);
+  const textTranslateRight = useTransform(scrollYProgress, [0, 0.55], ['0vw', '75vw']);
+  const textOpacity = useTransform(scrollYProgress, [0, 0.42], [1, 0]);
+
+  // Subtitle translation
+  const subtitleTranslateLeft = useTransform(
+    scrollYProgress,
+    [0, 0.5],
+    ['-36px', 'calc(-36px - 60vw)']
+  );
+  const subtitleTranslateRight = useTransform(
+    scrollYProgress,
+    [0, 0.5],
+    ['36px', 'calc(36px + 60vw)']
+  );
 
   // Background fade
-  const bgOpacity = useTransform(smoothProgress, [0, 0.65], [1, 0.05]);
+  const bgOpacity = useTransform(scrollYProgress, [0, 0.65], [1, 0.05]);
 
   // Dark overlay on card
-  const cardDarkOverlay = useTransform(smoothProgress, [0.3, 0.75], [0.15, 0.82]);
+  const cardDarkOverlay = useTransform(scrollYProgress, [0.3, 0.75], [0.15, 0.82]);
 
   // Revealed content animation
-  const contentOpacity = useTransform(smoothProgress, [0.7, 0.88], [0, 1]);
-  const contentY = useTransform(smoothProgress, [0.7, 0.88], [30, 0]);
-  const contentScale = useTransform(smoothProgress, [0.7, 0.88], [0.96, 1]);
+  const contentOpacity = useTransform(scrollYProgress, [0.7, 0.88], [0, 1]);
+  const contentY = useTransform(scrollYProgress, [0.7, 0.88], [24, 0]);
+  const contentScale = useTransform(scrollYProgress, [0.7, 0.88], [0.97, 1]);
 
   const words = title ? title.trim().split(' ') : [];
   const firstWord = words[0] || '';
@@ -106,19 +111,19 @@ export function ScrollExpandMedia({
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-[240vh] bg-[#05070f]"
+      className="relative w-full h-[220vh] bg-[#05070f]"
     >
       <div className="sticky top-0 w-full h-screen min-h-[560px] overflow-hidden bg-[#05070f] flex items-center justify-center select-none">
         {/* ─── Background Layer (Hackathon Arena) ────────────────────────── */}
         <motion.div
-          className="absolute inset-0 z-0 h-full w-full pointer-events-none transform-gpu"
+          className="absolute inset-0 z-0 h-full w-full pointer-events-none transform-gpu will-change-transform"
           style={{ opacity: bgOpacity }}
         >
           <Image
             src={bgImageSrc}
             alt="Hackathon Background Arena"
             fill
-            className="object-cover object-center filter brightness-[0.6] contrast-[1.15]"
+            className="object-cover object-center"
             priority
             sizes="100vw"
           />
@@ -129,18 +134,18 @@ export function ScrollExpandMedia({
         {/* ─── Center Photo Card (Zooms Forward to Front) ───────────────── */}
         <motion.div
           onClick={!isFullyExpanded ? handleToggleExpand : undefined}
-          className="relative z-10 w-full h-full overflow-hidden flex items-center justify-center origin-center cursor-pointer transform-gpu"
+          className="relative z-10 w-full h-full overflow-hidden flex items-center justify-center origin-center cursor-pointer transform-gpu will-change-transform"
           style={{
             scale: cardScale,
             borderRadius: cardBorderRadius,
-            boxShadow: '0 0 70px rgba(0, 153, 230, 0.4), 0 0 100px rgba(255, 120, 0, 0.35)',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.75), 0 0 30px rgba(0, 153, 230, 0.15)',
           }}
         >
-          {/* Border glow on card */}
+          {/* Subtle border glow on card */}
           <motion.div
-            className="absolute inset-0 border-2 border-sky-400/40 z-20 pointer-events-none rounded-[inherit]"
+            className="absolute inset-0 border border-sky-400/30 z-20 pointer-events-none rounded-[inherit]"
             style={{
-              opacity: useTransform(smoothProgress, [0, 0.75], [1, 0]),
+              opacity: useTransform(scrollYProgress, [0, 0.75], [1, 0]),
             }}
           />
 
@@ -161,7 +166,7 @@ export function ScrollExpandMedia({
               src={mediaSrc}
               alt={title || 'Hackathon Builders'}
               fill
-              className="object-cover object-center filter brightness-[0.95] contrast-[1.05]"
+              className="object-cover object-center"
               priority
               sizes="100vw"
             />
@@ -187,28 +192,28 @@ export function ScrollExpandMedia({
           </motion.div>
         </motion.div>
 
-        {/* ─── Big Splitting Titles: Hacker's Unity Metallic Chrome Text ── */}
+        {/* ─── Big Splitting Titles: Hacker's Unity Clean Brand Gradient ── */}
         <motion.div
           className={`absolute inset-0 z-15 flex flex-row items-center justify-between sm:justify-center gap-2 sm:gap-6 md:gap-8 pointer-events-none px-3 sm:px-8 transform-gpu ${
             textBlend ? 'mix-blend-difference' : ''
           }`}
           style={{ opacity: textOpacity }}
         >
-          {/* Left word (CAMPUS): Hacker's Unity Cyan Metallic Chrome */}
+          {/* Left word (CAMPUS): Hacker's Unity Clean Cyan Gradient */}
           <motion.h2
-            className="text-xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight uppercase text-left sm:text-center metal-text-cyan"
+            className="text-xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight uppercase text-left sm:text-center metal-text-cyan select-none will-change-transform"
             style={{
-              transform: useTransform(textTranslateX, (val) => `translateX(-${val}vw)`),
+              x: textTranslateLeft,
             }}
           >
             {firstWord}
           </motion.h2>
 
-          {/* Right word (AMBASSADOR): Hacker's Unity Orange Metallic Chrome */}
+          {/* Right word (AMBASSADOR): Hacker's Unity Clean Orange Gradient */}
           <motion.h2
-            className="text-xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight uppercase text-right sm:text-center metal-text-orange"
+            className="text-xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight uppercase text-right sm:text-center metal-text-orange select-none will-change-transform"
             style={{
-              transform: useTransform(textTranslateX, (val) => `translateX(${val}vw)`),
+              x: textTranslateRight,
             }}
           >
             {restOfTitle}
@@ -222,16 +227,13 @@ export function ScrollExpandMedia({
         >
           {date && (
             <motion.div
-              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-slate-950/90 border border-[#ff7800]/50 shadow-md shadow-orange-500/10 backdrop-blur-sm"
+              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-slate-950/90 border border-[#ff7800]/40 shadow-md backdrop-blur-sm will-change-transform"
               style={{
-                transform: useTransform(
-                  subtitleTranslateX,
-                  (val) => `translateX(calc(-36px - ${val}vw))`
-                ),
+                x: subtitleTranslateLeft,
               }}
             >
-              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#ff7800] animate-ping" />
-              <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-orange-200">
+              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#ff7800]" />
+              <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-orange-200">
                 {date}
               </span>
             </motion.div>
@@ -240,19 +242,16 @@ export function ScrollExpandMedia({
           {scrollToExpand && (
             <motion.div
               onClick={handleToggleExpand}
-              className="flex items-center gap-2 px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full bg-slate-950/95 border border-sky-400/50 shadow-lg backdrop-blur-sm pointer-events-auto cursor-pointer active:scale-95 transition-transform"
+              className="flex items-center gap-2 px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full bg-slate-950/95 border border-sky-400/40 shadow-lg backdrop-blur-sm pointer-events-auto cursor-pointer active:scale-95 transition-transform will-change-transform"
               style={{
-                transform: useTransform(
-                  subtitleTranslateX,
-                  (val) => `translateX(calc(36px + ${val}vw))`
-                ),
+                x: subtitleTranslateRight,
               }}
             >
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-400" />
               </span>
-              <span className="text-[10px] sm:text-xs font-bold text-sky-200 tracking-wide">
+              <span className="text-[10px] sm:text-xs font-medium text-sky-200 tracking-wide">
                 {scrollToExpand}
               </span>
             </motion.div>

@@ -146,7 +146,7 @@ export function CampusAmbassadorSection() {
             src="/assets/campus-ambassador/hackstorm-developers.jpg"
             alt="Campus Ambassador"
             fill
-            className="object-cover object-center filter brightness-[0.95] contrast-[1.05]"
+            className="object-cover object-center"
             priority
             sizes="100vw"
           />
