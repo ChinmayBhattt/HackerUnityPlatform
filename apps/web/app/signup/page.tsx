@@ -20,6 +20,8 @@ import {
   PASSWORD_STRENGTH_LABELS,
   PASSWORD_STRENGTH_COLORS,
 } from '@/lib/password-validation';
+import { CountryCodeSelector } from '@/components/country-code-selector';
+import { formatAndValidatePhone } from '@/lib/phone-utils';
 
 function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
   const router = useRouter();
@@ -52,6 +54,7 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [phone, setPhone] = useState('');
   const [countryCode, setCountryCode] = useState('+91');
+  const [phonePlaceholder, setPhonePlaceholder] = useState('95561 47082');
 
   // Status State
   const [submitting, setSubmitting] = useState(false);
@@ -83,7 +86,15 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
     }
 
     const role = UserRole.PARTICIPANT;
-    const fullPhone = phone ? `${countryCode}${phone}` : undefined;
+    let fullPhone: string | undefined = undefined;
+    if (phone.trim()) {
+      const phoneValidation = formatAndValidatePhone(phone, countryCode);
+      if (!phoneValidation.isValid) {
+        setErrorMessage(phoneValidation.error || 'Please enter a valid mobile number');
+        return;
+      }
+      fullPhone = phoneValidation.formattedPhone;
+    }
 
     setSubmitting(true);
     try {
@@ -382,13 +393,19 @@ function SignupForm({ initialMode }: { initialMode?: 'login' | 'register' }) {
                   )}
 
                   {mode === 'register' && (
-                    <div className="flex gap-2">
-                      <div className="px-3.5 py-3 rounded-2xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center">
-                        +91
-                      </div>
+                    <div className="flex gap-2 items-center">
+                      <CountryCodeSelector
+                        value={countryCode}
+                        onChange={(selected) => {
+                          setCountryCode(selected.code);
+                          if (selected.placeholder) {
+                            setPhonePlaceholder(selected.placeholder);
+                          }
+                        }}
+                      />
                       <input
                         type="tel"
-                        placeholder="Mobile Number"
+                        placeholder={phonePlaceholder ? `e.g. ${phonePlaceholder}` : "Mobile Number"}
                         value={phone}
                         onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                         className="flex-1 px-4 py-3 rounded-2xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] focus:border-[#0099e6] dark:focus:border-[#38bdf8] focus:bg-white dark:focus:bg-white/[0.06] text-xs font-medium text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-all"
